@@ -1,0 +1,15 @@
+
+# name of base pypsa network
+network: resources/network.nc
+
+# Define the uncertain parameters
+parameters: config/parameters.csv
+
+# Choose a solver
+solver: cbc # (cbc|gurobi|cplex|highs)
+
+# Sampling - how large should the sample be?
+replicates: 10
+
+# Scale Elementary Effects (True/False)
+scale: False
