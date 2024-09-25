@@ -1,0 +1,70 @@
+import pandas as pd
+import sys
+
+configfile: "config/config.yaml"
+localrules: all, clean
+wildcard_constraints:
+    result_file="[^(objective)][a-zA-Z_\-]+",
+    scenario="\d+",
+    model_run="\d+"
+
+# container: "docker://condaforge/mambaforge:4.10.1-0"
+
+SCENARIOS = pd.read_csv(config["scenarios"]).set_index('name')
+GROUPS = pd.read_csv(config['parameters'])['group'].unique()
+
+# Calculates number of model runs for the Method of Morris
+MODELRUNS = range((len(GROUPS) + 1) * config['replicates'])
+RESULTS = pd.read_csv(config["results"])
+RESULT_FILES = RESULTS['filename'].to_list()
+
+
+include: "rules/sample.smk"
+include: "rules/results.smk"
+
+    
+# onstart:
+#     if "skip_checks" not in config:
+#         print('Checking user inputs...')
+#         shell("python workflow/scripts/check_inputs.py {}".format(config_path))
+
+onsuccess:
+    print('Workflow finished successfully!')
+
+rule all:
+    input:
+        expand("results/{scenario}_summary/SA_objective.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png']),
+        expand("results/{scenario}_summary/SA_{result_file}.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png'], result_file=RESULT_FILES),
+        # expand("results/{scenario}_summary/SA_interactions.png", scenario=SCENARIOS.index),
+        expand("results/{scenario}/model_{model_run}/results/{x}.csv", x=OUTPUT_FILES, model_run=MODELRUNS, scenario=SCENARIOS.index),
+        expand("results/{scenario}_summary/{result_file}_heatmap.png", scenario=SCENARIOS.index, result_file=RESULT_FILES),
+               
+    message: "Running pipeline to generate the sensitivity analysis results"
+
+rule clean:
+    shell:
+        "rm -rf results/* && rm -rf results/* && rm -rf modelruns/* && rm -rf temp/* "
+
+rule clean_plots:
+    shell:
+        "rm -f results/{modelrun}/*.pdf"
+
+rule plot:
+    input: "results/{modelrun}/{result}.csv"
+    output: "results/{modelrun}/{result}.pdf"
+    conda: "envs/plot.yaml"
+    message: "Generating plot using '{input}' and writing to '{output}'"
+    shell:
+        "python workflow/scripts/plot_results.py {input} {output}"
+
+rule make_dag:
+    output: pipe("dag.txt")
+    shell:
+        "snakemake --dag > {output}"
+
+rule plot_dag:
+    input: "dag.txt"
+    output: "dag.png"
+    conda: "envs/dag.yaml"
+    shell:
+        "dot -Tpng {input} > dag.png && xdg-open dag.png"

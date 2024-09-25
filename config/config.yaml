@@ -1,6 +1,8 @@
 
 # name of base pypsa network
-network: resources/network.nc
+scenario: 
+  name: "Western"
+  network: resources/elec_s50_c35_ec_lv1.0_48SEG_E-G.nc
 
 # Define the uncertain parameters
 parameters: config/parameters.csv
