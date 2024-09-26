@@ -15,6 +15,7 @@ import pypsa
 from constants import CONVENTIONAL_CARRIERS
 
 from typing import Optional
+import yaml
 
 
 def add_land_use_constraint_perfect(n):
@@ -158,8 +159,8 @@ def add_interface_limits(n, itl: pd.DataFrame, transport: bool = True):
 
         if not n.lines.empty:
             line_flows = n.model["Line-s"].loc[:, interface_lines_b1.index].sum(
-                dims="Line",
-            ) - n.model["Line-s"].loc[:, interface_lines_b0.index].sum(dims="Line")
+                dim="Line",
+            ) - n.model["Line-s"].loc[:, interface_lines_b0.index].sum(dim="Line")
         else:
             line_flows = 0.0
         lhs = line_flows
@@ -172,8 +173,8 @@ def add_interface_limits(n, itl: pd.DataFrame, transport: bool = True):
             "RESOLVE" in interface.interface or transport
         ):
             link_flows = n.model["Link-p"].loc[:, interface_links_b1.index].sum(
-                dims="Link",
-            ) - n.model["Link-p"].loc[:, interface_links_b0.index].sum(dims="Link")
+                dim="Link",
+            ) - n.model["Link-p"].loc[:, interface_links_b0.index].sum(dim="Link")
             lhs += link_flows
 
         rhs_pos = interface.MW_f0 * -1
@@ -401,12 +402,12 @@ def extra_functionality(n, sns):
     if "rps" in opts and n.generators.p_nom_extendable.any():
         add_RPS_constraints(n, opts["rps"])
     if "safer" in opts and n.generators.p_nom_extendable.any():
-        add_SAFER_constraints(n, opts["rps"])
+        add_SAFER_constraints(n, opts["safer"])
     if "itl" in opts:
         transport = True
-        add_interface_limits(n, opts["rps"], transport)
+        add_interface_limits(n, opts["itl"], transport)
     if "co2L" in opts:
-        add_sector_co2_constraints(n, opts["rps"])
+        add_sector_co2_constraints(n, opts["co2L"])
 
     add_battery_constraints(n)
 
@@ -562,30 +563,35 @@ if __name__ == "__main__":
         solver_name = snakemake.params.solver
         solver_opts = snakemake.params.solver_opts
         solving_opts = snakemake.params.solving_opts
-        solving_log = snakemake.logs.solver
+        solving_log = snakemake.log.solver
         out_network = snakemake.output.network
         # extra constraints
-        itl_f = snakemake.inputs.itl
-        safer_f = snakemake.inputs.safer
-        rps_f = snakemake.inputs.rps
-        co2L_f = snakemake.inputs.co2L
+        itl_f = snakemake.input.itl
+        safer_f = snakemake.input.safer
+        rps_f = snakemake.input.rps
+        co2L_f = snakemake.input.co2L
     else:
-        in_network = ""
-        solver_name = ""
-        solver_opts = ""
-        solving_opts = ""
+        in_network = "results/Western/modelruns/0/n.nc"
+        solver_name = "gurobi"
+        solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
         # extra constraints
-        itl_f = ""
+        itl_f = "results/Western/constraints/itl.csv"
         safer_f = ""
-        rps_f = ""
-        co2L_f = ""
+        rps_f = "results/Western/constraints/rps.csv"
+        co2L_f = "results/Western/constraints/co2L.csv"
+
+        with open(solving_opts_config, "r") as f:
+            solving_opts_all = yaml.safe_load(f)
+
+        solving_opts = solving_opts_all["solving"]["options"]
+        solver_opts = solving_opts_all["solving"]["solver_options"]["gurobi-default"]
 
     n = pypsa.Network(in_network)
 
     # for land use constraint
-    solving_opts["forsight"] = "perfect"
+    solving_opts["foresight"] = "perfect"
 
     np.random.seed(solving_opts.get("seed", 123))
 

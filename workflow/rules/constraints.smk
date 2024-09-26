@@ -9,7 +9,7 @@ rule rps_policy:
     output:
         csv = "results/{scenario}/constraints/rps.csv"
     script:
-        "../scripts/rps_policy.py"
+        "../scripts/rps.py"
 
 rule interface_transmission_limits:
     message: "Preparing ReEDS ITL constraints for {wildcards.scenario} Scenario"

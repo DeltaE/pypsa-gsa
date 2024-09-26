@@ -30,4 +30,4 @@ rule solve_network:
         python = "logs/solve_{scenario}_{run}_python.log",
         solver = "logs/solve_{scenario}_{run}_solver.log",
     script:
-        "../scripts/solve_network.py"
+        "../scripts/solve.py"

@@ -45,12 +45,7 @@ def process_ces(n: pypsa.Network, ces: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def collapse(
-    rps: pd.DataFrame, ces: pd.DataFrame, years: int | list[int]
-) -> pd.DataFrame:
-
-    if isinstance(years, int):
-        years = [years]
+def collapse(rps: pd.DataFrame, ces: pd.DataFrame) -> pd.DataFrame:
 
     df = pd.concat([rps, ces])
     df = df[df.pct > 0.0]
@@ -73,14 +68,14 @@ def filter_policy(n: pypsa.Network, policy: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
 
     if "snakemake" in globals():
-        network = snakemake.inputs.network
-        reeds_rps = snakemake.inputs.reeds_rps
-        reeds_ces = snakemake.inputs.reeds_ces
-        csv = snakemake.outputs.csv
+        network = snakemake.input.network
+        reeds_rps = snakemake.input.rps
+        reeds_ces = snakemake.input.ces
+        csv = snakemake.output.csv
     else:
-        network = ""
-        reeds_rps = ""
-        reeds_ces = ""
+        network = "resources/elec_s50_c35_ec_lv1.0_48SEG_E-G.nc"
+        reeds_rps = "resources/reeds/rps_fraction.csv"
+        reeds_ces = "resources/reeds/ces_fraction.csv"
         csv = ""
 
     n = pypsa.Network(network)
@@ -95,4 +90,4 @@ if __name__ == "__main__":
 
     policy = filter_policy(n, policy)
 
-    policy.to_csv(csv)
+    policy.to_csv(csv, index=True)
