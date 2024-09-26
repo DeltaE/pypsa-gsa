@@ -1,5 +1,39 @@
 """Constants"""
 
+CONVENTIONAL_CARRIERS = [
+    "nuclear", 
+    "oil", 
+    "OCGT", 
+    "CCGT", 
+    "coal", 
+    "geothermal", 
+    "biomass", 
+    "waste"
+]
+
+RPS_CARRIERS = [
+    "onwind",
+    "offwind",
+    "offwind_floating",
+    "solar",
+    "hydro",
+    "geothermal",
+    "biomass",
+    "EGS",
+]
+
+CES_CARRIERS = [
+    "onwind",
+    "offwind",
+    "offwind_floating",
+    "solar",
+    "hydro",
+    "geothermal",
+    "EGS",
+    "biomass",
+    "nuclear",
+]
+
 DEFAULT_LINK_ATTRS = [
     "name",
     "bus0",
@@ -47,6 +81,7 @@ DEFAULT_LINK_ATTRS = [
     "efficiency2",
     "p2",
 ]
+
 DEFAULT_GENERATOR_ATTRS = [
     "name",
     "bus",
@@ -92,6 +127,7 @@ DEFAULT_GENERATOR_ATTRS = [
     "mu_ramp_limit_up",
     "mu_ramp_limit_down",
 ]
+
 DEFAULT_STORE_ATTRS = [
     "name",
     "bus",

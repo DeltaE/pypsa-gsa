@@ -4,6 +4,7 @@ results/*
 resources/*.nc
 resources/*.ipynb
 config/*.ipynb
+logs/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

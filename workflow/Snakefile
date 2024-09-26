@@ -2,25 +2,30 @@ import pandas as pd
 import sys
 
 configfile: "config/config.yaml"
+configfile: "config/solving.yaml"
+
 localrules: all, clean
 wildcard_constraints:
-    result_file="[^(objective)][a-zA-Z_\-]+",
-    scenario="\d+",
-    model_run="\d+"
+    # result_file="[^(objective)][a-zA-Z_\-]+",
+    scenario="[a-zA-Z0-9_]+",
+    model_run=r"\d+"
 
 # container: "docker://condaforge/mambaforge:4.10.1-0"
 
-SCENARIOS = pd.read_csv(config["scenarios"]).set_index('name')
-GROUPS = pd.read_csv(config['parameters'])['group'].unique()
+PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
+RESULTS = pd.read_csv(config["gsa"]["results"])
+
+SCENARIO = config["scenario"]["name"]
+GROUPS = PARAMETERS.group.unique()
 
 # Calculates number of model runs for the Method of Morris
-MODELRUNS = range((len(GROUPS) + 1) * config['replicates'])
-RESULTS = pd.read_csv(config["results"])
-RESULT_FILES = RESULTS['filename'].to_list()
+MODELRUNS = range((len(GROUPS) + 1) * config["gsa"]["replicates"])
+# RESULT_FILES = RESULTS["filename"].to_list()
 
 
 include: "rules/sample.smk"
-include: "rules/results.smk"
+include: "rules/constraints.smk"
+include: "rules/solve.smk"
 
     
 # onstart:
@@ -33,13 +38,17 @@ onsuccess:
 
 rule all:
     input:
-        expand("results/{scenario}_summary/SA_objective.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png']),
-        expand("results/{scenario}_summary/SA_{result_file}.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png'], result_file=RESULT_FILES),
-        # expand("results/{scenario}_summary/SA_interactions.png", scenario=SCENARIOS.index),
-        expand("results/{scenario}/model_{model_run}/results/{x}.csv", x=OUTPUT_FILES, model_run=MODELRUNS, scenario=SCENARIOS.index),
-        expand("results/{scenario}_summary/{result_file}_heatmap.png", scenario=SCENARIOS.index, result_file=RESULT_FILES),
+        expand("results/{scenario}/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
+
+# rule all:
+#     input:
+#         expand("results/{scenario}_summary/SA_objective.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png']),
+#         expand("results/{scenario}_summary/SA_{result_file}.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png'], result_file=RESULT_FILES),
+#         # expand("results/{scenario}_summary/SA_interactions.png", scenario=SCENARIOS.index),
+#         expand("results/{scenario}/model_{model_run}/results/{x}.csv", x=OUTPUT_FILES, model_run=MODELRUNS, scenario=SCENARIOS.index),
+#         expand("results/{scenario}_summary/{result_file}_heatmap.png", scenario=SCENARIOS.index, result_file=RESULT_FILES),
                
-    message: "Running pipeline to generate the sensitivity analysis results"
+#     message: "Running pipeline to generate the sensitivity analysis results"
 
 rule clean:
     shell:
