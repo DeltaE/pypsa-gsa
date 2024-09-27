@@ -16,16 +16,17 @@ PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
 RESULTS = pd.read_csv(config["gsa"]["results"])
 
 SCENARIO = config["scenario"]["name"]
-GROUPS = PARAMETERS.group.unique()
+RESULT_FILES = RESULTS.name.to_list()
 
 # Calculates number of model runs for the Method of Morris
+GROUPS = PARAMETERS.group.unique()
 MODELRUNS = range((len(GROUPS) + 1) * config["gsa"]["replicates"])
-# RESULT_FILES = RESULTS["filename"].to_list()
 
 
 include: "rules/sample.smk"
 include: "rules/constraints.smk"
 include: "rules/solve.smk"
+include: "rules/results.smk"
 
     
 # onstart:
@@ -39,16 +40,7 @@ onsuccess:
 rule all:
     input:
         expand("results/{scenario}/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
-
-# rule all:
-#     input:
-#         expand("results/{scenario}_summary/SA_objective.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png']),
-#         expand("results/{scenario}_summary/SA_{result_file}.{extension}", scenario=SCENARIOS.index, extension=['csv', 'png'], result_file=RESULT_FILES),
-#         # expand("results/{scenario}_summary/SA_interactions.png", scenario=SCENARIOS.index),
-#         expand("results/{scenario}/model_{model_run}/results/{x}.csv", x=OUTPUT_FILES, model_run=MODELRUNS, scenario=SCENARIOS.index),
-#         expand("results/{scenario}_summary/{result_file}_heatmap.png", scenario=SCENARIOS.index, result_file=RESULT_FILES),
-               
-#     message: "Running pipeline to generate the sensitivity analysis results"
+        expand("results/{scenario}/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES)
 
 rule clean:
     shell:
