@@ -13,6 +13,8 @@ energy system optimization models, and the accompanying code [2].
 
 ## How to use 
 
+To add
+
 ## Install 
 
 Install dependencies using conda or mamba into a new environment called `pypsa-gsa`. Activate the new environment. 
