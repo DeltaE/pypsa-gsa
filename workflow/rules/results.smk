@@ -10,6 +10,7 @@ rule extract_results:
     message: "Extracting result"
     params:
         component = "links",
+        results = config["gsa"]["results"]
     input:
         network = "results/{scenario}/modelruns/{run}/network.nc",
         results = config["gsa"]["results"]
@@ -23,12 +24,12 @@ rule combine_results:
     input:
         results = expand("results/{{scenario}}/modelruns/{run}/results.csv", run=MODELRUNS)
     output:
-        temp("results/{scenario}/results/all.csv")
+        csv = temp("results/{scenario}/results/all.csv")
     run:
         import pandas as pd
-        data = [pd.read_csv(x) for x in input.results]
+        data = [pd.read_csv(str(x)) for x in input.results]
         df = pd.concat(data)
-        df.to_csv(output, index=False)
+        df.to_csv(output.csv, index=False)
 
 rule parse_results:
     message: "Parsing results by results file"
@@ -45,7 +46,7 @@ rule parse_results:
         for name in df.name.unique():
             parsed = df[df.name == name].sort_values(by=["run"]).drop(columns=["name"])
             p = Path(params.base_dir, f"{name}.csv")
-            parsed.to_csv(str(p))
+            parsed.to_csv(str(p), index=False)
 
 rule calculate_SA:
     message:
