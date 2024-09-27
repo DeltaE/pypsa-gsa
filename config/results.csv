@@ -1,0 +1,21 @@
+name,component,carriers,variable
+res_gas_furnace_capacity,link,res-rural-space-gas-furnace; res-urban-space-gas-furnace,p_nom_opt
+com_gas_furnace_capacity,link,com-rural-space-gas-furnace;com-urban-space-gas-furnace,p_nom_opt
+res_lpg_furnace_capacity,link,res-rural-space-lpg-furnace; res-urban-space-lpg-furnace,p_nom_opt
+com_lpg_furnace_capacity,link,com-rural-space-lpg-furnace;com-urban-space-lpg-furnace,p_nom_opt
+res_elec_furnace_capacity,link,res-rural-space-elec-furnace; res-urban-space-elec-furnace,p_nom_opt
+com_elec_furnace_capacity,link,com-rural-space-elec-furnace;com-urban-space-elec-furnace,p_nom_opt
+res_ashp_capacity,link,res-urban-ashp,p_nom_opt
+com_ashp_capacity,link,com-urban-ashp,p_nom_opt
+res_gshp_capacity,link,res-rural-gshp,p_nom_opt
+com_gshp_capacity,link,com-rural-gshp,p_nom_opt
+res_gas_furnace_generation,link,res-rural-space-gas-furnace; res-urban-space-gas-furnace,p_total
+com_gas_furnace_generation,link,com-rural-space-gas-furnace;com-urban-space-gas-furnace,p_total
+res_lpg_furnace_generation,link,res-rural-space-lpg-furnace; res-urban-space-lpg-furnace,p_total
+com_lpg_furnace_generation,link,com-rural-space-lpg-furnace;com-urban-space-lpg-furnace,p_total
+res_elec_furnace_generation,link,res-rural-space-elec-furnace; res-urban-space-elec-furnace,p_total
+com_elec_furnace_generation,link,com-rural-space-elec-furnace;com-urban-space-elec-furnace,p_total
+res_ashp_generation,link,res-urban-ashp,p_total
+com_ashp_generation,link,com-urban-ashp,p_total
+res_gshp_generation,link,res-rural-gshp,p_total
+com_gshp_generation,link,com-rural-gshp,p_total

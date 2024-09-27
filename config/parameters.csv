@@ -1,0 +1,17 @@
+name,group,component,carrier,attribute,min_value,max_value
+capex_com_rural_gas_furnace,capex_gas_furnace,link,com-rural-space-gas-furnace,capital_cost,2751.5,8254.5
+capex_com_urban_gas_furnace,capex_gas_furnace,link,com-urban-space-gas-furnace,capital_cost,2751.5,8254.5
+capex_res_rural_gas_furnace,capex_gas_furnace,link,res-rural-space-gas-furnace,capital_cost,2751.5,8254.5
+capex_res_urban_gas_furnace,capex_gas_furnace,link,res-urban-space-gas-furnace,capital_cost,2751.5,8254.5
+capex_com_rural_lpg_furnace,capex_lpg_furnace,link,com-rural-space-lpg-furnace,capital_cost,2084.1,6252.3
+capex_com_urban_lpg_furnace,capex_lpg_furnace,link,com-urban-space-lpg-furnace,capital_cost,2084.1,6252.3
+capex_res_rural_lpg_furnace,capex_lpg_furnace,link,res-rural-space-lpg-furnace,capital_cost,2084.1,6252.3
+capex_res_urban_lpg_furnace,capex_lpg_furnace,link,res-urban-space-lpg-furnace,capital_cost,2084.1,6252.3
+capex_com_rural_elec_furnace,capex_elec_furnace,link,com-rural-space-elec-furnace,capital_cost,6214.8,18644.4
+capex_com_urban_elec_furnace,capex_elec_furnace,link,com-urban-space-elec-furnace,capital_cost,6214.8,18644.4
+capex_res_rural_elec_furnace,capex_elec_furnace,link,res-rural-space-elec-furnace,capital_cost,6214.8,18644.4
+capex_res_urban_elec_furnace,capex_elec_furnace,link,res-urban-space-elec-furnace,capital_cost,6214.8,18644.4
+capex_res_ashp,capex_ashp,link,res-urban-ashp,capital_cost,10444.2,31332.6
+capex_com_ashp,capex_ashp,link,com-urban-ashp,capital_cost,8584.75,25754.25
+capex_res_gshp,capex_gshp,link,res-rural-ashp,capital_cost,26744.25,80232.75
+capex_com_gshp,capex_gshp,link,com-rural-ashp,capital_cost,24316.95,72950.85
