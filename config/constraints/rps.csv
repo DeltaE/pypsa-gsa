@@ -1,0 +1,9 @@
+name,planning_horizon,pct,region,carrier
+AZ,2030,0.086690195,"p27, p28, p29, p30","onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
+CA,2030,0.571429838,"p10, p10, p10, p11, p8, p9","onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
+CO,2030,0.197471993,"p33, p34","onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
+NM,2030,0.454619663,p31,"onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
+NV,2030,0.435675577,"p12, p13","onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
+OR,2030,0.261984944,"p5, p6, p7","onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
+TX,2030,0.038183251,p59,"onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
+WA,2030,0.130415819,"p1, p2, p3, p4","onwind, offwind, offwind_floating, solar, hydro, geothermal, biomass, EGS"
