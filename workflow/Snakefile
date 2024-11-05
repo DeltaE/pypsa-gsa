@@ -34,8 +34,8 @@ include: "rules/results.smk"
 #         print('Checking user inputs...')
 #         shell("python workflow/scripts/check_inputs.py {}".format(config_path))
 
-onsuccess:
-    print('Workflow finished successfully!')
+# onsuccess:
+#     print('Workflow finished successfully!')
 
 rule all:
     input:
@@ -59,13 +59,5 @@ rule plot:
         "python workflow/scripts/plot_results.py {input} {output}"
 
 rule make_dag:
-    output: pipe("dag.txt")
     shell:
-        "snakemake --dag > {output}"
-
-rule plot_dag:
-    input: "dag.txt"
-    output: "dag.png"
-    conda: "envs/dag.yaml"
-    shell:
-        "dot -Tpng {input} > dag.png && xdg-open dag.png"
+        "snakemake all --dag | dot -Tpdf > dag.pdf"
