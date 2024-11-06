@@ -472,7 +472,6 @@ def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFra
 
                 n.model.add_constraints(lhs >= rhs, name=f"ng_limit-{year}-{link}")
 
-    
     dom_imports = ng_trade["dom_imports"].copy()
     dom_exports = ng_trade["dom_exports"].copy()
     int_imports = ng_trade["int_imports"].copy()
@@ -484,7 +483,7 @@ def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFra
     exports = _format_domestic_data(dom_exports, " export")
 
     # add_import_limits(n, imports)
-    add_export_limits(n, exports)
+    # add_export_limits(n, exports)
 
     # add international limits
 
@@ -492,7 +491,7 @@ def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFra
     exports = _format_international_data(int_exports, " export")
 
     # add_import_limits(n, imports)
-    add_export_limits(n, exports)
+    # add_export_limits(n, exports)
 
 
 def add_cooling_heat_pump_constraints(n):
@@ -622,7 +621,7 @@ def extra_functionality(n, sns):
     if "ng_limits" in opts:
         add_ng_import_export_limits(n, opts["ng_limits"])
     if "hp_cooling" in opts:
-        add_cooling_heat_pump_constraints(n, opts)
+        add_cooling_heat_pump_constraints(n)
 
     add_battery_constraints(n)
 
@@ -786,25 +785,25 @@ if __name__ == "__main__":
         safer_f = snakemake.input.safer
         rps_f = snakemake.input.rps
         co2L_f = snakemake.input.co2L
-        # pypsa-usa specific 
-        pop_f = snakemake.input.pop_layout
-        ng_dom_imports = snakemake.input.ng_domestic_imports
-        ng_dom_exports = snakemake.input.ng_domestic_exports
-        ng_int_imports = snakemake.input.ng_international_imports
-        ng_int_exports = snakemake.input.ng_international_exports
+        # pypsa-usa specific
+        pop_f = snakemake.input.pop_layout_f
+        ng_dom_imports = snakemake.input.ng_domestic_imports_f
+        ng_dom_exports = snakemake.input.ng_domestic_exports_f
+        ng_int_imports = snakemake.input.ng_international_imports_f
+        ng_int_exports = snakemake.input.ng_international_exports_f
     else:
-        in_network = "results/Western/modelruns/0/n.nc"
+        in_network = "results/California/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
         pypsa_usa_opts = {"ng_limits": True, "hp_capacity": True, "hp_cooling": True}
         # extra constraints
-        itl_f = "config/constraints/itl.csv"
+        itl_f = "results/California/constraints/itl.csv"
         safer_f = ""
-        rps_f = "config/constraints/rps.csv"
-        co2L_f = "config/constraints/co2L.csv"
-        # pypsa-usa specific 
+        rps_f = "results/California/constraints/rps.csv"
+        co2L_f = "results/California/constraints/co2L.csv"
+        # pypsa-usa specific
         pop_f = "config/pypsa-usa/pop_layout_elec_s33_c4m.csv"
         ng_dom_imports = "config/pypsa-usa/domestic_imports.csv"
         ng_dom_exports = "config/pypsa-usa/domestic_exports.csv"
@@ -831,11 +830,11 @@ if __name__ == "__main__":
         extra_fn["itl"] = pd.read_csv(itl_f)
     if safer_f:
         extra_fn["safer"] = pd.read_csv(safer_f)
-    if rps_f:
-        extra_fn["rps"] = pd.read_csv(rps_f)
+    # if rps_f:
+    #     extra_fn["rps"] = pd.read_csv(rps_f)
     if co2L_f:
         extra_fn["co2L"] = pd.read_csv(co2L_f)
-    if pypsa_usa_opts["ng_limit"]:
+    if pypsa_usa_opts["ng_limits"]:
         extra_fn["ng_limits"] = {}
         extra_fn["ng_limits"]["dom_imports"] = pd.read_csv(ng_dom_imports, index_col=0)
         extra_fn["ng_limits"]["dom_exports"] = pd.read_csv(ng_dom_exports, index_col=0)
