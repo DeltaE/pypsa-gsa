@@ -21,10 +21,22 @@ def _get_p_total(
     return df.mul(sns_weights, axis=0).mul(-1).sum().sum()
 
 
+def _get_objective_cost(n: pypsa.Network) -> float:
+    return n.objective
+
+
+def _extract_carriers(cars: str | None) -> list[str] | None:
+
+    if not cars:
+        return None
+    else:
+        return [y.strip() for y in cars.split(";")]
+
+
 def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
 
     res = results.copy().set_index("name")
-    res["carriers"] = res.carriers.map(lambda x: [y.strip() for y in x.split(";")])
+    res["carriers"] = res.carriers.map(_extract_carriers)
 
     assert len(n.investment_periods) == 1
     year = n.investment_periods[0]
@@ -44,6 +56,8 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
             value = _get_p_nom_opt(links, carriers)
         elif variable == "p_total":
             value = _get_p_total(links, links_t_p1, carriers, sns_weights)
+        elif variable == "objective_cost":
+            value = _get_objective_cost(n)
 
         data.append([name, value])
 
@@ -57,14 +71,14 @@ if __name__ == "__main__":
         model_run = snakemake.wildcards.run
         csv = snakemake.output.csv
     else:
-        network = "results/Western/modelruns/0/network.nc"
+        network = "results/California/modelruns/40/network.nc"
         results_f = "config/results.csv"
-        csv = "results/Western/modelruns/0/results.csv"
+        csv = "results/California/modelruns/40/results.csv"
         model_run = 0
 
     n = pypsa.Network(network)
 
-    results = pd.read_csv(results_f)
+    results = pd.read_csv(results_f).fillna("")
 
     df = extract_results(n, results)
 

@@ -82,6 +82,28 @@ DEFAULT_LINK_ATTRS = [
     "p2",
 ]
 
+DEFAULT_LINK_T_ATTRS = [
+    "efficiency",
+    "p_set",
+    "p_min_pu",
+    "p_max_pu",
+    "marginal_cost",
+    "marginal_cost_quadratic",
+    "stand_by_cost",
+    "ramp_limit_up",
+    "ramp_limit_down",
+    "p0",
+    "p1",
+    "status",
+    "mu_lower",
+    "mu_upper",
+    "mu_p_set",
+    "mu_ramp_limit_up",
+    "mu_ramp_limit_down",
+    "efficiency2",
+    "p2",
+]
+
 DEFAULT_GENERATOR_ATTRS = [
     "name",
     "bus",
@@ -162,3 +184,5 @@ DEFAULT_STORE_ATTRS = [
     "mu_lower",
     "mu_energy_balance",
 ]
+
+DEFAULT_LOAD_T_ATTRS = ["p_set", "q_set", "p", "q"]

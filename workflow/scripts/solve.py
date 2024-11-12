@@ -14,6 +14,8 @@ import pypsa
 
 from constants import CONVENTIONAL_CARRIERS
 
+NG_MWH_2_MMCF = 305
+
 from typing import Optional
 import yaml
 
@@ -391,6 +393,212 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
                         apply_sector_state_limit(n, year, state, sector, value)
 
 
+def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFrame]):
+
+    def _format_link_name(s: str) -> str:
+        states = s.split("-")
+        return f"{states[0]} {states[1]} gas"
+
+    def _format_domestic_data(
+        prod: pd.DataFrame,
+        link_suffix: Optional[str] = None,
+    ) -> pd.DataFrame:
+
+        df = prod.copy()
+        df["link"] = df.state.map(_format_link_name)
+        if link_suffix:
+            df["link"] = df.link + link_suffix
+
+        # convert mmcf to MWh
+        df["value"] = df["value"] * 1000 / NG_MWH_2_MMCF
+
+        return df[["link", "value"]].rename(columns={"value": "rhs"}).set_index("link")
+
+    def _format_international_data(
+        prod: pd.DataFrame,
+        link_suffix: Optional[str] = None,
+    ) -> pd.DataFrame:
+
+        df = prod.copy()
+        df = df[["value", "state"]].groupby("state", as_index=False).sum()
+        df = df[~(df.state == "USA")].copy()
+
+        df["link"] = df.state.map(_format_link_name)
+        if link_suffix:
+            df["link"] = df.link + link_suffix
+
+        # convert mmcf to MWh
+        df["value"] = df["value"] * 1000 / NG_MWH_2_MMCF
+
+        return df[["link", "value"]].rename(columns={"value": "rhs"}).set_index("link")
+
+    def add_import_limits(n, imports):
+        """
+        Sets gas import limit over each year.
+        """
+
+        weights = n.snapshot_weightings.objective
+
+        links = n.links[n.links.carrier.str.endswith("gas import")].index.to_list()
+
+        for year in n.investment_periods:
+            for link in links:
+                try:
+                    rhs = imports.at[link, "rhs"]
+                except KeyError:
+                    # logger.warning(f"Can not set gas import limit for {link}")
+                    continue
+                lhs = n.model["Link-p"].mul(weights).sel(snapshot=year, Link=link).sum()
+
+                n.model.add_constraints(lhs <= rhs, name=f"ng_limit-{year}-{link}")
+
+    def add_export_limits(n, exports):
+        """
+        Sets maximum export limit over the year.
+        """
+
+        weights = n.snapshot_weightings.objective
+
+        links = n.links[n.links.carrier.str.endswith("gas export")].index.to_list()
+
+        for year in n.investment_periods:
+            for link in links:
+                try:
+                    rhs = exports.at[link, "rhs"]
+                except KeyError:
+                    # logger.warning(f"Can not set gas import limit for {link}")
+                    continue
+                lhs = n.model["Link-p"].mul(weights).sel(snapshot=year, Link=link).sum()
+
+                n.model.add_constraints(lhs >= rhs, name=f"ng_limit-{year}-{link}")
+
+    dom_imports = ng_trade["dom_imports"].copy()
+    dom_exports = ng_trade["dom_exports"].copy()
+    int_imports = ng_trade["int_imports"].copy()
+    int_exports = ng_trade["int_exports"].copy()
+
+    # add domestic limits
+
+    imports = _format_domestic_data(dom_imports, " import")
+    exports = _format_domestic_data(dom_exports, " export")
+
+    # add_import_limits(n, imports)
+    # add_export_limits(n, exports)
+
+    # add international limits
+
+    imports = _format_international_data(int_imports, " import")
+    exports = _format_international_data(int_exports, " export")
+
+    # add_import_limits(n, imports)
+    # add_export_limits(n, exports)
+
+
+def add_cooling_heat_pump_constraints(n):
+    """
+    Adds constraints to the cooling heat pumps.
+
+    These constraints allow HPs to be used to meet both heating and cooling
+    demand within a single timeslice while respecting capacity limits.
+    Since we are aggregating (and not modelling individual units)
+    this should be fine.
+
+    Two seperate constraints are added:
+    - Constrains the cooling HP capacity to equal the heating HP capacity. Since the
+    cooling hps do not have a capital cost, this will not effect objective cost
+    - Constrains the total generation of Heating and Cooling HPs at each time slice
+    to be less than or equal to the max generation of the heating HP. Note, that both
+    the cooling and heating HPs have the same COP
+    """
+
+    def add_hp_capacity_constraint(n, hp_type):
+
+        assert hp_type in ("ashp", "gshp")
+
+        heating_hps = n.links[n.links.index.str.endswith(hp_type)].index
+        if heating_hps.empty:
+            return
+        cooling_hps = n.links[n.links.index.str.endswith(f"{hp_type}-cool")].index
+
+        assert len(heating_hps) == len(cooling_hps)
+
+        lhs = (
+            n.model["Link-p_nom"].loc[heating_hps]
+            - n.model["Link-p_nom"].loc[cooling_hps]
+        )
+        rhs = 0
+
+        n.model.add_constraints(lhs == rhs, name=f"Link-{hp_type}_cooling_capacity")
+
+    def add_hp_generation_constraint(n, hp_type):
+
+        heating_hps = n.links[n.links.index.str.endswith(hp_type)].index
+        if heating_hps.empty:
+            return
+        cooling_hps = n.links[n.links.index.str.endswith(f"{hp_type}-cooling")].index
+
+        heating_hp_p = n.model["Link-p"].loc[:, heating_hps]
+        cooling_hp_p = n.model["Link-p"].loc[:, cooling_hps]
+
+        heating_hps_cop = n.links_t["efficiency"][heating_hps]
+        cooling_hps_cop = n.links_t["efficiency"][cooling_hps]
+
+        heating_hps_gen = heating_hp_p.mul(heating_hps_cop)
+        cooling_hps_gen = cooling_hp_p.mul(cooling_hps_cop)
+
+        lhs = heating_hps_gen + cooling_hps_gen
+
+        heating_hp_p_nom = n.model["Link-p_nom"].loc[heating_hps]
+        max_gen = heating_hp_p_nom.mul(heating_hps_cop)
+
+        rhs = max_gen
+
+        n.model.add_constraints(lhs <= rhs, name=f"Link-{hp_type}_cooling_generation")
+
+    for hp_type in ("ashp", "gshp"):
+        add_hp_capacity_constraint(n, hp_type)
+        add_hp_generation_constraint(n, hp_type)
+
+
+def add_gshp_capacity_constraint(n: pypsa.Network, pop_layout: pd.DataFrame):
+    """
+    Constrains gshp capacity based on population and ashp installations.
+
+    This constraint should be added if rural/urban sectors are combined into
+    a single total area. In this case, we need to constrain how much gshp capacity
+    can be added to the system.
+
+    For example:
+    - If ratio is 0.75 urban and 0.25 rural
+    - We want to enforce that at max, only 0.33 unit of GSHP can be installed for every unit of ASHP
+    - The constraint is: [ASHP - (urban / rural) * GSHP >= 0]
+    - ie. for every unit of GSHP, we need to install 3 units of ASHP
+    """
+
+    df = pop_layout.copy()
+    
+    df["urban_rural_fraction"] = (df.urban_fraction / df.rural_fraction).round(2)
+    fraction = df.set_index("name")["urban_rural_fraction"].to_dict()
+
+    ashp = n.links[n.links.index.str.endswith("ashp")].copy()
+    gshp = n.links[n.links.index.str.endswith("gshp")].copy()
+    if gshp.empty:
+        return
+
+    assert len(ashp) == len(gshp)
+
+    gshp["urban_rural_fraction"] = gshp.bus0.map(fraction)
+
+    ashp_capacity = n.model["Link-p_nom"].loc[ashp.index]
+    gshp_capacity = n.model["Link-p_nom"].loc[gshp.index]
+    gshp_multiplier = gshp["urban_rural_fraction"]
+
+    lhs = ashp_capacity - gshp_capacity.mul(gshp_multiplier.values)
+    rhs = 0
+
+    n.model.add_constraints(lhs >= rhs, name=f"Link-gshp_capacity_ratio")
+
+
 def extra_functionality(n, sns):
     """
     Collects supplementary constraints which will be passed to
@@ -408,6 +616,12 @@ def extra_functionality(n, sns):
         add_interface_limits(n, opts["itl"], transport)
     if "co2L" in opts:
         add_sector_co2_constraints(n, opts["co2L"])
+    if "gshp" in opts:
+        add_gshp_capacity_constraint(n, opts["gshp"])
+    if "ng_limits" in opts:
+        add_ng_import_export_limits(n, opts["ng_limits"])
+    if "hp_cooling" in opts:
+        add_cooling_heat_pump_constraints(n)
 
     add_battery_constraints(n)
 
@@ -563,6 +777,7 @@ if __name__ == "__main__":
         solver_name = snakemake.params.solver
         solver_opts = snakemake.params.solver_opts
         solving_opts = snakemake.params.solving_opts
+        pypsa_usa_opts = snakemake.params.pypsa_usa_opts
         solving_log = snakemake.log.solver
         out_network = snakemake.output.network
         # extra constraints
@@ -570,17 +785,30 @@ if __name__ == "__main__":
         safer_f = snakemake.input.safer
         rps_f = snakemake.input.rps
         co2L_f = snakemake.input.co2L
+        # pypsa-usa specific
+        pop_f = snakemake.input.pop_layout_f
+        ng_dom_imports = snakemake.input.ng_domestic_imports_f
+        ng_dom_exports = snakemake.input.ng_domestic_exports_f
+        ng_int_imports = snakemake.input.ng_international_imports_f
+        ng_int_exports = snakemake.input.ng_international_exports_f
     else:
-        in_network = "results/Western/modelruns/0/n.nc"
+        in_network = "results/California/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
+        pypsa_usa_opts = {"ng_limits": True, "hp_capacity": True, "hp_cooling": True}
         # extra constraints
-        itl_f = "results/Western/constraints/itl.csv"
+        itl_f = "results/California/constraints/itl.csv"
         safer_f = ""
-        rps_f = "results/Western/constraints/rps.csv"
-        co2L_f = "results/Western/constraints/co2L.csv"
+        rps_f = "results/California/constraints/rps.csv"
+        co2L_f = "results/California/constraints/co2L.csv"
+        # pypsa-usa specific
+        pop_f = "config/pypsa-usa/pop_layout_elec_s33_c4m.csv"
+        ng_dom_imports = "config/pypsa-usa/domestic_imports.csv"
+        ng_dom_exports = "config/pypsa-usa/domestic_exports.csv"
+        ng_int_imports = "config/pypsa-usa/international_imports.csv"
+        ng_int_exports = "config/pypsa-usa/international_exports.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -602,10 +830,20 @@ if __name__ == "__main__":
         extra_fn["itl"] = pd.read_csv(itl_f)
     if safer_f:
         extra_fn["safer"] = pd.read_csv(safer_f)
-    if rps_f:
-        extra_fn["rps"] = pd.read_csv(rps_f)
+    # if rps_f:
+    #     extra_fn["rps"] = pd.read_csv(rps_f)
     if co2L_f:
         extra_fn["co2L"] = pd.read_csv(co2L_f)
+    if pypsa_usa_opts["ng_limits"]:
+        extra_fn["ng_limits"] = {}
+        extra_fn["ng_limits"]["dom_imports"] = pd.read_csv(ng_dom_imports, index_col=0)
+        extra_fn["ng_limits"]["dom_exports"] = pd.read_csv(ng_dom_exports, index_col=0)
+        extra_fn["ng_limits"]["int_imports"] = pd.read_csv(ng_int_imports, index_col=0)
+        extra_fn["ng_limits"]["int_exports"] = pd.read_csv(ng_int_exports, index_col=0)
+    if pypsa_usa_opts["hp_capacity"]:
+        extra_fn["gshp"] = pd.read_csv(pop_f)
+    if pypsa_usa_opts["hp_cooling"]:
+        extra_fn["hp_cooling"] = True
 
     n = solve_network(
         n,
