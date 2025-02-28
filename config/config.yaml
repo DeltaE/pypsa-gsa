@@ -21,6 +21,7 @@ policy:
   safer: False # need to update logic for links
   itl: True
   co2L: True
+  tct: True
 
 # use pypsa-usa outputs (True/False)
 pypsa_usa:
