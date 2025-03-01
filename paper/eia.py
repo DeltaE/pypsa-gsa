@@ -1,13 +1,13 @@
-"""Interfaces with EIA API. 
+"""Interfaces with EIA API.
 
-Code taken from PyPSA-USA repository at: 
+Code adapted from PyPSA-USA repository at:
 https://github.com/PyPSA/pypsa-usa/blob/master/workflow/scripts/eia.py
 """
 
 import logging
 from abc import ABC, abstractmethod
 from typing import ClassVar
-
+import math
 import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
@@ -40,14 +40,18 @@ AEO_SCENARIOS = {
     "low_lng": "lng_lp",  # Low LNG Price
 }
 
+
 class InputPropertyError(Exception):
     """Class for exceptions."""
 
     def __init__(self, propery, valid_options, recived_option) -> None:
-        self.message = f" {propery} must be in {valid_options}; recieved {recived_option}"
+        self.message = (
+            f" {propery} must be in {valid_options}; recieved {recived_option}"
+        )
 
     def __str__(self):
         return self.message
+
 
 class EiaData(ABC):
     """Creator class to extract EIA data."""
@@ -75,7 +79,8 @@ class EiaData(ABC):
         """Get unformatted data from API."""
         product = self.data_creator()
         return product.retrieve_data()
-    
+
+
 class DataExtractor(ABC):
     """Extracts and formats data."""
 
@@ -178,7 +183,8 @@ class DataExtractor(ABC):
         return df.astype(
             {"series-description": str, "value": float, "units": str, "state": str},
         )
-    
+
+
 class EnergyDemand(EiaData):
     """
     Energy demand at a annual national level.
@@ -286,7 +292,8 @@ class TransportationDemand(EiaData):
                 valid_options=("travel", "btu"),
                 recived_option=self.units,
             )
-            
+
+
 class _HistoricalSectorEnergyDemand(DataExtractor):
     """
     Extracts historical energy demand at a yearly national level.
@@ -626,3 +633,89 @@ class _ProjectedTransportBtuDemand(DataExtractor):
         )
         df = df[["series-description", "value", "units", "state"]].sort_index()
         return self._assign_dtypes(df)
+
+
+class FuelCosts(EiaData):
+    """Primary fuel cost data."""
+
+    valid_fuels: list[str] = [
+        "electricity",
+        "gas",
+        "coal",
+        "lpg",
+        "nuclear",
+        "heating_oil",
+        "propane",
+    ]
+
+    def __init__(
+        self, fuel: str, year: int, api: str, scenario: str | None = None
+    ) -> None:
+        self.fuel = fuel
+        self.year = year
+        self.api = api
+        self.scenario = scenario
+
+    def data_creator(self) -> pd.DataFrame:
+        """Initializes data extractor."""
+        if self.fuel in self.valid_fuels:
+            return _FutureCosts(self.fuel, self.year, self.scenario, self.api)
+        else:
+            raise InputPropertyError(
+                propery="Fuel Costs",
+                valid_options=self.valid_fuels,
+                recived_option=self.fuel,
+            )
+
+
+class _FutureCosts(DataExtractor):
+    # https://www.eia.gov/outlooks/aeo/assumptions/case_descriptions.php
+    scenario_codes = AEO_SCENARIOS
+
+    fuel_code_prefix: str = "prce_real_"
+    fuel_code_suffix: str = "_NA_NA_y13dlrpmmbtu"
+
+    fuel_codes: ClassVar[dict[str, str]] = {
+        "electricity": f"{fuel_code_prefix}ten_NA_elc{fuel_code_suffix}",
+        "gas": f"{fuel_code_prefix}elep_NA_ng{fuel_code_suffix}",
+        "coal": f"{fuel_code_prefix}elep_NA_stc{fuel_code_suffix}",
+        "lpg": f"{fuel_code_prefix}ten_NA_mgs{fuel_code_suffix}",
+        "nuclear": f"{fuel_code_prefix}elep_NA_u{fuel_code_suffix}",
+        "heating_oil": f"{fuel_code_prefix}elep_NA_dfo{fuel_code_suffix}",
+        "propane": f"{fuel_code_prefix}ten_NA_prop{fuel_code_suffix}",
+    }
+
+    def __init__(self, fuel: str, year: int, scenario: str, api_key: str) -> None:
+        self.fuel = fuel
+        self.scenario = scenario
+        if scenario not in self.scenario_codes:
+            raise InputPropertyError(
+                propery="AEO Scenario",
+                valid_options=list(self.scenario_codes),
+                recived_option=scenario,
+            )
+        super().__init__(year, api_key)
+
+    def build_url(self) -> str:
+        base_url = "aeo/2023/data/"
+        facets = f"frequency=annual&data[0]=value&facets[scenario][]={self.scenario_codes[self.scenario]}&facets[seriesId][]={self.fuel_codes[self.fuel]}&start=2024&end={self.year}&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000"
+        return f"{API_BASE}{base_url}?api_key={self.api_key}&{facets}"
+
+    def format_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        df.index = pd.to_datetime(df.period)
+        df.index = df.index.year
+        df = df.rename(
+            columns={"seriesName": "series-description", "unit": "units"},
+        )
+        df["state"] = "U.S."
+        df["series-description"] = df["series-description"].map(
+            lambda x: x.split(" : ")[-1],
+        )
+        df = df[["series-description", "value", "units", "state"]].sort_index()
+        return self._assign_dtypes(df)
+
+
+if __name__ == "__main__":
+    api = ""
+    df = FuelCosts("lpg", 2040, api, "reference").get_data()
+    print(df)
