@@ -277,11 +277,21 @@ com_water_heat_deamand,com_water_heat_deamand,load_t,com-total-water-heat,p_max,
 ind_electrical_demand,ind_electrical_demand,load_t,ind-elec,p_max,percent,percent,0,10,https://gridstrategiesllc.com/wp-content/uploads/National-Load-Growth-Report-2024.pdf,pg 26 Figure estimated
 ind_heat_demand,ind_heat_demand,load_t,ind-heat,p_max,percent,percent,0,10,https://gridstrategiesllc.com/wp-content/uploads/National-Load-Growth-Report-2024.pdf,pg 26 Figure estimated
 rps,rps,constraint,constraint,constraint,percent,percent,-22,22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030
-solar_ptc,solar_ptc,link,solar,marginal_cost,absolute,USD/mwh,0,55,,
-onwind_ptc,wind_ptc,link,onwind,marginal_cost,absolute,USD/mwh,0,55,,
-offwind_ptc,wind_ptc,link,offwind,marginal_cost,absolute,USD/mwh,0,55,,
-,,,,,,,,,,
-itc,itc,link,all,capital_cost,absolute,per_unit,0,0.3,,
+ptc_solar,ptc,link,solar,marginal_cost,absolute,USD/mwh,0,27.5,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
+ptc_onwind,ptc,link,onwind,marginal_cost,absolute,USD/mwh,0,27.5,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
+ptc_offwind,ptc,link,offwind,marginal_cost,absolute,USD/mwh,0,27.5,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
+ptc_geo,ptc,link,geothermal,marginal_cost,absolute,USD/mwh,0,27.5,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
+ptc_bio,ptc,link,biomass,marginal_cost,absolute,USD/mwh,0,27.5,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
+ptc_hydro,ptc,link,hydro,marginal_cost,absolute,USD/mwh,0,27.5,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
+itc_solar,itc,link,solar,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_onwind,itc,link,onwind,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_offwind,itc,link,offwind,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_geo,itc,link,geothermal,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_bio,itc,link,biomass,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_hydro,itc,link,hydro,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_2hrbat,itc,link,battery,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_4hrbat,itc,link,battery,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
+itc_nuclear,itc,link,nuclear,capital_cost,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 solar_tct,solar_tct,constraint,constraint,constraint,absolute,mw,,,,
 wind_tct,wind_tct,constraint,constraint,constraint,absolute,mw,,,,
 battery_tct,battery_tct,constraint,constraint,constraint,absolute,mw,,,,
@@ -295,16 +305,17 @@ com_emissions,com_emissions,constraint,constraint,constraint,absolute,tonnes,,,,
 ind_emissions,ind_emissions,constraint,constraint,constraint,absolute,tonnes,,,,
 trn_emissions,trn_emissions,constraint,constraint,constraint,absolute,tonnes,,,,
 total_emissions,total_emissions,constraint,constraint,constraint,absolute,tonnes,,,,
-res_discount_rate,res_discount_rate,link,sector,capital_cost,absolute,percent,,,,
-com_discount_rate,com_discount_rate,link,sector,capital_cost,absolute,percent,,,,
-ind_discount_rate,ind_discount_rate,link,sector,capital_cost,absolute,percent,,,,
-trn_discount_rate,trn_discount_rate,link,sector,capital_cost,absolute,percent,,,,
-eff_trn_ship_boat,eff_trn_ship_boat,link,trn-ship-boat,efficiency,percent,percent,,,,
-eff_trn_rail_psg,eff_trn_rail_psg,link,trn-rail-psg,efficiency,percent,percent,,,,
-eff_trn_rail_ship,eff_trn_rail_ship,link,trn-rail-ship,efficiency,percent,percent,,,,
-eff_trn_air_psg,eff_trn_air_psg,link,trn-air-psg,efficiency,percent,percent,,,,
-transmission_expansion,transmission_expansion,line,constraint,,,,,,,
-res_gshp_limit,res_gshp_limit,constraint,constraint,,,,,,,
-com_gshp_limit,com_gshp_limit,constraint,constraint,,,,,,,
-coal_cost,coal_cost,store,coal,marginal_cost,percent,percent,,,,
-oil_cost,oil_cost,store,oil,marginal_cost,percent,percent,,,,
+res_discount_rate,res_discount_rate,link,sector,capital_cost,absolute,percent,4.4,5.6,https://atb.nrel.gov/electricity/2024/financial_cases_&_methods,Assumed min/max of WACC Real in 2030
+com_discount_rate,com_discount_rate,link,sector,capital_cost,absolute,percent,4.4,5.6,https://atb.nrel.gov/electricity/2024/financial_cases_&_methods,Assumed min/max of WACC Real in 2030
+ind_discount_rate,ind_discount_rate,link,sector,capital_cost,absolute,percent,4.4,5.6,https://atb.nrel.gov/electricity/2024/financial_cases_&_methods,Assumed min/max of WACC Real in 2030
+trn_discount_rate,trn_discount_rate,link,sector,capital_cost,absolute,percent,4.4,5.6,https://atb.nrel.gov/electricity/2024/financial_cases_&_methods,Assumed min/max of WACC Real in 2030
+eff_trn_ship_boat,eff_trn_ship_boat,link,trn-ship-boat,efficiency,percent,percent,-3.9,4.6,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+eff_trn_rail_psg,eff_trn_rail_psg,link,trn-rail-psg,efficiency,percent,percent,-8.1,8.1,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+eff_trn_rail_ship,eff_trn_rail_ship,link,trn-rail-ship,efficiency,percent,percent,-5.5,7.6,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+eff_trn_air_psg,eff_trn_air_psg,link,trn-air-psg,efficiency,percent,percent,-4.7,2.5,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+transmission_expansion,transmission_expansion,line,constraint,constraint,percent ,percent,0,6.4,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario
+res_gshp_limit,res_gshp_limit,constraint,constraint,constraint,percent,percent,-10,10,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
+com_gshp_limit,com_gshp_limit,constraint,constraint,constraint,percent,percent,-10,10,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
+coal_cost,coal_cost,store,coal,marginal_cost,percent,percent,-10,10,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+oil_cost,oil_cost,store,lpg,marginal_cost,percent,percent,-10,10,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+lpg_cost,lpg_cost,store,lpg,marginal_cost,percent,percent,-10,10,https://www.eia.gov/outlooks/aeo/,See notebook in repository
