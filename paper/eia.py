@@ -717,5 +717,5 @@ class _FutureCosts(DataExtractor):
 
 if __name__ == "__main__":
     api = ""
-    df = FuelCosts("lpg", 2040, api, "reference").get_data()
+    df = FuelCosts("lpg", 2040, api, "reference").get_data(pivot=True)
     print(df)
