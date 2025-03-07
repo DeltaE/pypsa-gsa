@@ -1,3 +1,13 @@
+rule sanitize_parameters:
+    message: "Sanitizing parameters"
+    params:
+        csv=config["gsa"]["parameters"]
+    output:
+        csv="results/{scenario}/parameters.csv"
+    log: "logs/sanitize_{scenario}_parameters.log"
+    script:
+        "../scripts/sanitize_params.py"
+
 rule create_sample:
     message: "Creating sample for '{params.replicates}' trajectories and '{params.parameters}' parameters"
     params:
@@ -5,7 +15,7 @@ rule create_sample:
         parameters=config["gsa"]["parameters"]
     output: 
         sample_file = "results/{scenario}/sample.csv"
-    conda: "../envs/sample.yaml"
+    # conda: "../envs/sample.yaml"
     log: "logs/create_{scenario}_sample.log"
     script:
         "../scripts/create_sample.py"
