@@ -380,8 +380,8 @@ def is_valid_nice_name(params: pd.DataFrame) -> bool:
 if __name__ == "__main__":
 
     if "snakemake" in globals():
-        in_params = snakemake.input.params
-        out_params = snakemake.output.params
+        in_params = snakemake.params.parameters
+        out_params = snakemake.output.parameters
     else:
         in_params = "config/parameters.csv"
         out_params = "results/Test/parameters.csv"

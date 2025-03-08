@@ -26,10 +26,7 @@ The ``parameters.csv`` CSV file should be formatted as follows::
 
 from SALib.sample import morris
 import pandas as pd
-import numpy as np
-import csv
-import sys
-import utils
+from utils import create_salib_problem
 
 from logging import getLogger
 
@@ -37,8 +34,7 @@ logger = getLogger(__name__)
 
 
 def main(parameters: pd.DataFrame, replicates: int):
-
-    problem = utils.create_salib_problem(parameters)
+    problem = create_salib_problem(parameters)
 
     sample = morris.sample(
         problem,
@@ -48,19 +44,16 @@ def main(parameters: pd.DataFrame, replicates: int):
         seed=42,
     )
 
-    return pd.DataFrame(sample, columns=problem["names"])
+    return pd.DataFrame(sample, columns=problem["names"]).round(2)
 
 
 if __name__ == "__main__":
 
     if "snakemake" in globals():
-        param_file = snakemake.params.parameters
+        param_file = snakemake.input.parameters
         replicates = int(snakemake.params.replicates)
         sample_file = snakemake.output.sample_file
     else:
-        # param_file = sys.argv[1]
-        # replicates = int(sys.argv[2])
-        # sample_file = sys.argv[3]
         param_file = "../../config/parameters.csv"
         replicates = 10
         sample_file = "sample.csv"

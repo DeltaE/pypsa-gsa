@@ -7,11 +7,11 @@ https://github.com/PyPSA/pypsa-usa/blob/master/workflow/scripts/eia.py
 import logging
 from abc import ABC, abstractmethod
 from typing import ClassVar
-import math
 import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
+from constants import POINTS_OF_ENTRY
 
 logger = logging.getLogger(__name__)
 
@@ -291,6 +291,40 @@ class TransportationDemand(EiaData):
                 propery="TransportationDemand",
                 valid_options=("travel", "btu"),
                 recived_option=self.units,
+            )
+
+
+class Trade(EiaData):
+    """Natural gas trade data."""
+
+    def __init__(
+        self,
+        fuel: str,
+        international: bool,
+        direction: str,
+        year: int,
+        api: str,
+    ) -> None:
+        self.fuel = fuel
+        self.international = international
+        self.direction = direction  # (imports|exports)
+        self.year = year
+        self.api = api
+
+    def data_creator(self) -> pd.DataFrame:
+        """Initializes data extractor."""
+        if self.fuel == "gas":
+            if self.international:
+                # gives monthly values
+                return _InternationalGasTrade(self.direction, self.year, self.api)
+            else:
+                # gives annual values
+                return _DomesticGasTrade(self.direction, self.year, self.api)
+        else:
+            raise InputPropertyError(
+                propery="Energy Trade",
+                valid_options=["gas"],
+                recived_option=self.fuel,
             )
 
 
@@ -714,6 +748,140 @@ class _FutureCosts(DataExtractor):
         df = df[["series-description", "value", "units", "state"]].sort_index()
         return self._assign_dtypes(df)
 
+class _InternationalGasTrade(DataExtractor):
+    """
+    Gets imports/exports by point of entry.
+
+    This filters for ONLY canada and mexico imports/exports
+    """
+
+    direction_codes: ClassVar[dict[str, str]] = {
+        "imports": "IMI",
+        "exports": "EEI",
+    }
+
+    points_of_entry = POINTS_OF_ENTRY
+
+    def __init__(self, direction: str, year: int, api_key: str) -> None:
+        self.direction = direction
+        if self.direction not in list(self.direction_codes):
+            raise InputPropertyError(
+                propery="Natural Gas International Imports and Exports",
+                valid_options=list(self.direction_codes),
+                recived_option=direction,
+            )
+        super().__init__(year, api_key)
+
+    def build_url(self) -> str:
+        base_url = "natural-gas/move/ist/data/"
+        facets = f"frequency=annual&data[0]=value&facets[process][]={self.direction_codes[self.direction]}&start={self.year - 1}&end={self.year}&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000"
+        return f"{API_BASE}{base_url}?api_key={self.api_key}&{facets}"
+
+    def format_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        df["period"] = pd.to_datetime(df.period).map(lambda x: x.year)
+
+        # extract only canada and mexico trade
+        # note, this will still include states extracting
+        df = df[
+            (df.duoarea.str.endswith("-NCA")) | (df.duoarea.str.endswith("-NMX"))
+        ].copy()
+
+        df["from"] = df.duoarea.map(lambda x: x.split("-")[0][1:])  # two letter state
+        df["to"] = df["from"].map(self.points_of_entry)
+
+        # drop lng to international locations
+        df = df.dropna().copy()
+
+        df["state"] = df["from"] + "-" + df["to"]
+
+        df = (
+            df[["series-description", "value", "units", "state", "period"]]
+            .sort_values(["state", "period"])
+            .set_index("period")
+        )
+
+        return self._assign_dtypes(df)
+
+    @staticmethod
+    def extract_state(description: str) -> str:
+        """
+        Extracts state from series descripion.
+
+        Input will be in one of the following forms
+        - "Massena, NY Natural Gas Pipeline Imports From Canada"
+        - "U.S. Natural Gas Pipeline Imports From Mexico"
+        """
+        try:  # state level
+            return description.split(",")[1].split(" ")[1]
+        except IndexError:  # country level
+            return description.split(" Natural Gas Pipeline")[0]
+
+
+class _DomesticGasTrade(DataExtractor):
+    """
+    Gets imports/exports by state.
+
+    Return format of data is a two state code giving from-to values (for
+    example, "CA-OR" will represent from California to Oregon
+    """
+
+    direction_codes: ClassVar[dict[str, str]] = {
+        "imports": "MIR",
+        "exports": "MID",
+    }
+
+    def __init__(self, direction: str, year: int, api_key: str) -> None:
+        self.direction = direction
+        if self.direction not in list(self.direction_codes):
+            raise InputPropertyError(
+                propery="Natural Gas Domestic Imports and Exports",
+                valid_options=list(self.direction_codes),
+                recived_option=direction,
+            )
+        super().__init__(year, api_key)
+
+    def build_url(self) -> str:
+        base_url = "natural-gas/move/ist/data/"
+        facets = f"frequency=annual&data[0]=value&facets[process][]={self.direction_codes[self.direction]}&start={self.year - 1}&end={self.year}&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000"
+        return f"{API_BASE}{base_url}?api_key={self.api_key}&{facets}"
+
+    def format_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        df["period"] = pd.to_datetime(df.period).map(lambda x: x.year)
+
+        # drop Federal Offshore--Gulf of Mexico Natural Gas Interstate Receipts
+        df = df[
+            ~(df.duoarea.str.startswith("R3FM-") | df.duoarea.str.endswith("-R3FM"))
+        ].copy()
+
+        # drop net movement values
+        df = df[~df.duoarea.str.endswith("-Z0S")].copy()
+
+        df["from"] = df["duoarea"].map(lambda x: x.split("-")[0][1:])
+        df["to"] = df["duoarea"].map(lambda x: x.split("-")[1][1:])
+
+        df["state"] = df["from"] + "-" + df["to"]
+
+        df = (
+            df[["series-description", "value", "units", "state", "period"]]
+            .sort_values(["state", "period"])
+            .set_index("period")
+        )
+
+        return self._assign_dtypes(df)
+
+    @staticmethod
+    def extract_state(description: str) -> str:
+        """
+        Extracts state from series descripion.
+
+        Input will be in one of the following forms
+        - "Massena, NY Natural Gas Pipeline Imports From Canada"
+        - "U.S. Natural Gas Pipeline Imports From Mexico"
+        """
+        try:  # state level
+            return description.split(",")[1].split(" ")[1]
+        except IndexError:  # country level
+            return description.split(" Natural Gas Pipeline")[0]
 
 if __name__ == "__main__":
     api = ""

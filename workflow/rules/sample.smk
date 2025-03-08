@@ -1,24 +1,19 @@
-rule sanitize_parameters:
-    message: "Sanitizing parameters"
-    params:
-        csv=config["gsa"]["parameters"]
-    output:
-        csv="results/{scenario}/parameters.csv"
-    log: "logs/sanitize_{scenario}_parameters.log"
-    script:
-        "../scripts/sanitize_params.py"
-
 rule create_sample:
-    message: "Creating sample for '{params.replicates}' trajectories and '{params.parameters}' parameters"
+    message: "Creating sample with '{params.replicates}' trajectories"
     params:
         replicates=config["gsa"]["replicates"],
-        parameters=config["gsa"]["parameters"]
+    input:
+        parameters="results/{scenario}/parameters.csv"
     output: 
         sample_file = "results/{scenario}/sample.csv"
-    # conda: "../envs/sample.yaml"
     log: "logs/create_{scenario}_sample.log"
     script:
         "../scripts/create_sample.py"
+
+rule testing:
+    input:
+        "results/Testing/sample.csv",
+        "resources/natural_gas/domestic.csv"
 
 # Apply sample creates all samples, rather than one sample at a time to prevent the 
 # need of reding in the base network many times
@@ -30,7 +25,7 @@ rule apply_sample_to_network:
         root_dir = "results/{scenario}/modelruns/"
     input: 
         sample_file = "results/{scenario}/sample.csv",
-        network = config["scenario"]["network"]
+        network = "results/{scenario}/network.nc"
     output:
         n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
         meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS)

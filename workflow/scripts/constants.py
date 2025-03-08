@@ -36,17 +36,20 @@ CES_CARRIERS = [
 
 ADDITIONAL_VALID_ATTRIBUTES = {
     "links": [
-        "constraint",
+        "nat_gas_trade",  # constraint
+        "tx",  # constraint
+        "gshp",  # constraint
+        "tct",  # constraint
         "discount_rate",
         "fixed_cost",
         "occ",
         "vmt_per_year",
         "efficiency2",
     ],
-    "generators": ["constraint", "discount_rate", "fixed_cost", "occ"],
-    "stores": ["constraint"],
-    "storage_units": ["constraint", "discount_rate", "fixed_cost", "occ"],
-    "lines": ["constraint"],
+    "generators": ["tct", "rps", "discount_rate", "fixed_cost", "occ"],
+    "stores": ["co2L"],
+    "storage_units": ["tct", "discount_rate", "fixed_cost", "occ"],
+    "lines": ["tx", "itl"],
 }
 
 VALID_RANGES = ["percent", "absolute"]
@@ -64,3 +67,21 @@ VALID_UNITS = [
     "years",
 ]
 
+# hard codes where gas can enter/exit the states
+# if multiple POEs exist, the larger pipeline is used as the POE
+# https://atlas.eia.gov/datasets/eia::border-crossings-natural-gas/explore?location=48.411182%2C-90.296487%2C5.24
+POINTS_OF_ENTRY = {
+    "AZ": "MX",  # Arizona - Mexico
+    "CA": "MX",  # California - Mexico
+    "ID": "BC",  # Idaho - BC
+    "ME": "NB",  # Maine - New Brunswick
+    "MI": "ON",  # Michigan - Ontario
+    "MN": "MB",  # Minnesota - Manitoba
+    "MT": "SK",  # Montana - Saskatchewan
+    "ND": "SK",  # North Dakota - Saskatchewan
+    "NH": "QC",  # New Hampshire - Quebec
+    "NY": "ON",  # New York - Ontario
+    "TX": "MX",  # Texas - Mexico
+    "VT": "QC",  # Vermont - Mexico
+    "WA": "BC",  # Washington - BC
+}
