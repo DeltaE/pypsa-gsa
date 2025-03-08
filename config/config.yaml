@@ -1,8 +1,7 @@
 
 # name of base pypsa network
 scenario: 
-  name: "California"
-  network: resources/elec_s33_c4m_ec_lv1.0_2190SEG_E-G.nc
+  name: "Western"
 
 gsa:
   parameters: config/parameters.csv # Define the uncertain parameters
@@ -16,15 +15,13 @@ solver:
   options: gurobi-default # see solving config
 
 # policy constraints (True/False)
-policy:
+constriants:
   rps: True
-  safer: False # need to update logic for links
   itl: True
   co2L: True
   tct: True
 
-# use pypsa-usa outputs (True/False)
+# Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  ng_limits: True
-  hp_capacity: True
-  hp_cooling: True
+  network: config/pypsa-usa/elec_s33_c4m_ec_lv1.0_2190SEG_E-G.nc
+  pop_layout: "config/pypsa-usa/pop_layout_elec_s33_c4m.csv"
