@@ -2,11 +2,9 @@
 .vscode
 .snakemake
 results/*
-resources/*.nc
-resources/*.ipynb
-config/*.ipynb
+config/pypsa-usa/
 logs/*
-config/api.yaml
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
