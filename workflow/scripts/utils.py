@@ -52,3 +52,12 @@ def create_salib_problem(parameters: pd.DataFrame) -> dict[str, list[Any]]:
         )
 
     return problem
+
+def calculate_annuity(lifetime: int, dr: float | int):
+    """
+    Calculate the annuity factor for an asset. 
+    """
+    if dr > 0:
+        return dr / (1.0 - 1.0 / (1.0 + dr) ** lifetime)
+    else:
+        return 1 / lifetime

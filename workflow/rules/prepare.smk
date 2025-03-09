@@ -1,16 +1,16 @@
 rule copy_network:
     message: "Copying base network"
     input:
-        n = config["pypsa_usa"]["network"]
+        n = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
-        n = "results/{scenario}/network.nc"
+        n = "results/{scenario}/base.nc"
     shell:
         "cp {input.n} {output.n}"
 
 rule copy_pop_layout:
     message: "Copying population layout"
     input:
-        csv = config["pypsa_usa"]["pop_layout"]
+        csv = f"config/pypsa-usa/{config['pypsa_usa']['pop_layout']}"
     output:
         csv = "results/{scenario}/pop_layout.csv"
     shell:

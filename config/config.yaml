@@ -5,9 +5,9 @@ scenario:
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  network: config/pypsa-usa/elec_s33_c4m_ec_lv1.0_2190SEG_E-G.nc
+  network: "elec_s40_c4m_ec_lv1.0_12h_E-G.nc"
   era5_year: 2018
-  pop_layout: "config/pypsa-usa/pop_layout_elec_s33_c4m.csv"
+  pop_layout: "pop_layout_elec_s33_c4m.csv"
 
 gsa:
   parameters: config/parameters.csv # Define the uncertain parameters

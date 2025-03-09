@@ -1,5 +1,5 @@
 rule create_sample:
-    message: "Creating sample with '{params.replicates}' trajectories"
+    message: "Creating sample"
     params:
         replicates=config["gsa"]["replicates"],
     input:
@@ -10,25 +10,25 @@ rule create_sample:
     script:
         "../scripts/create_sample.py"
 
-rule testing:
-    input:
-        "results/Testing/sample.csv",
-        "resources/natural_gas/domestic.csv"
-
 # Apply sample creates all samples, rather than one sample at a time to prevent the 
 # need of reding in the base network many times
 
 rule apply_sample_to_network:
     message: "Applying sample"
     params:
-        parameters = config["gsa"]["parameters"],
         root_dir = "results/{scenario}/modelruns/"
     input: 
+        parameters = "results/{scenario}/parameters.csv",
         sample_file = "results/{scenario}/sample.csv",
-        network = "results/{scenario}/network.nc"
+        network = "results/{scenario}/base.nc"
     output:
         n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
         meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS)
     log: "logs/apply_{scenario}_sample.log"
     script:
         "../scripts/apply_sample.py"
+
+rule testing:
+    input:
+        "results/Testing/modelruns/1/n.nc"
+        # "results/Testing/sample.csv"

@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 
 configfile: "config/config.yaml"
+configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
 localrules: all, clean
@@ -23,6 +24,7 @@ GROUPS = PARAMETERS.group.unique()
 MODELRUNS = range((len(GROUPS) + 1) * config["gsa"]["replicates"])
 
 
+include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/constraints.smk"
 include: "rules/solve.smk"

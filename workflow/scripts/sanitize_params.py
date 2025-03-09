@@ -204,6 +204,19 @@ def correct_miles(params: pd.DataFrame) -> pd.DataFrame:
     df["unit"] = df["unit"].str.replace("miles", "vmt")
     return df
 
+def correct_vmt_units(params: pd.DataFrame) -> pd.DataFrame:
+    """Convert vmt units to kvmt."""
+
+    df = params.copy()
+    df.loc[(df.unit.str.startswith("vmt")), "min_value"] *= 1e-3
+    df.loc[(df.unit.str.startswith("vmt")), "max_value"] *= 1e-3
+
+    df.loc[(df.unit.str.endswith("/vmt")), "min_value"] *= 1e3
+    df.loc[(df.unit.str.endswith("/vmt")), "max_value"] *= 1e3
+
+    df.unit = df.unit.str.replace("vmt", "kvmt")
+
+    return df
 
 def correct_mmbtu_units(params: pd.DataFrame) -> pd.DataFrame:
     """Takes same assumptions from PyPSA-USA
@@ -255,12 +268,12 @@ def correct_kw_units(params: pd.DataFrame) -> pd.DataFrame:
         (df.unit.str.endswith("/kw"))
         & (df.attribute.isin(("occ", "capital_cost", "fixed_cost"))),
         "min_value",
-    ] *= 1 / 1e3
+    ] *= 1e3
     df.loc[
         (df.unit.str.endswith("/kw"))
         & (df.attribute.isin(("occ", "capital_cost", "fixed_cost"))),
         "max_value",
-    ] *= 1 / 1e3
+    ] *= 1e3
     df["unit"] = df.unit.str.replace("/kw", "/mw")
     return df
 
@@ -377,6 +390,23 @@ def is_valid_nice_name(params: pd.DataFrame) -> bool:
             return False
     return True
     
+def is_valid_capital_costs(params: pd.DataFrame) -> bool:
+    """Capital costs are an intermediate calculation."""
+
+    df = params.copy()
+
+    temp = df[df.attribute == "capital_cost"]
+    if not temp.empty:
+        return False
+
+    for attr in ["occ", "lifetime", "discount_rate", "vmt_per_year"]:
+        temp = df[df.attribute == attr]
+        if not all(temp.range == "absolute"):
+            return False
+
+    return True
+
+
 if __name__ == "__main__":
 
     if "snakemake" in globals():
@@ -402,6 +432,7 @@ if __name__ == "__main__":
     df = correct_percent_units(df)
     df = correct_tonnes_units(df)
     df = correct_water_heater_units(df)
+    df = correct_vmt_units(df)
 
     
     # validation of data 
@@ -413,6 +444,6 @@ if __name__ == "__main__":
     assert is_valid_range(df), "invalid range"
     assert is_valid_min_max(df), "invalid min/max values"
     assert is_valid_nice_name(df), "invalid nice_name"
-    
-    df.to_csv(out_params)
+
+    df.to_csv(out_params, index=False)
     
