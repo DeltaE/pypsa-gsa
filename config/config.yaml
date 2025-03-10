@@ -7,7 +7,7 @@ scenario:
 pypsa_usa:
   network: "elec_s40_c4m_ec_lv1.0_12h_E-G.nc"
   era5_year: 2018
-  pop_layout: "pop_layout_elec_s33_c4m.csv"
+  pop_layout: "pop_layout_elec_s40_c4m.csv"
 
 gsa:
   parameters: config/parameters.csv # Define the uncertain parameters

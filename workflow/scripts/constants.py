@@ -1,5 +1,15 @@
 """Constants"""
 
+STATES_TO_EXCLUDE = [
+    "AK",
+    "AS",
+    "GU",
+    "HI",
+    "MP",
+    "PR",
+    "TT"
+]
+
 CONVENTIONAL_CARRIERS = [
     "nuclear", 
     "oil", 
@@ -45,12 +55,25 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "occ",
         "vmt_per_year",
         "efficiency2",
+        "itc",
     ],
-    "generators": ["tct", "rps", "discount_rate", "fixed_cost", "occ"],
+    "generators": ["tct", "rps", "discount_rate", "fixed_cost", "occ", "itc"],
     "stores": ["co2L"],
-    "storage_units": ["tct", "discount_rate", "fixed_cost", "occ"],
-    "lines": ["tx", "itl"],
+    "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
+    "lines": ["tx"],
 }
+
+CACHED_ATTRS = [
+    "capital_cost",
+    "discount_rate",
+    "fixed_cost",
+    "occ",
+    "vmt_per_year",
+    "lifetime",
+    "itc",
+]
+
+CONSTRAINT_ATTRS = ["nat_gas_trade", "tx", "gshp", "tct", "co2L"]
 
 VALID_RANGES = ["percent", "absolute"]
 

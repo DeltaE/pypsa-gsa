@@ -37,3 +37,20 @@ rule sanitize_parameters:
     log: "logs/sanitize_{scenario}_parameters.log"
     script:
         "../scripts/sanitize_params.py"
+
+rule filter_constraint_files:
+    message: "Filtering constraint files"
+    input:
+        network = "results/{scenario}/base.nc",
+        ng_domestic = "resources/natural_gas/domestic.csv",
+        ng_international = "resources/natural_gas/international.csv"
+    output:
+        ng_domestic = "results/{scenario}/constraints/ng_domestic.csv",
+        ng_international = "results/{scenario}/constraints/ng_international.csv",
+    script:
+        "../scripts/filter_constraints.py"
+
+rule testing:
+    input:
+        "results/Testing/constraints/ng_domestic.csv"
+        # "results/Testing/sample.csv"

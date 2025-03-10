@@ -28,7 +28,3 @@ rule apply_sample_to_network:
     script:
         "../scripts/apply_sample.py"
 
-rule testing:
-    input:
-        "results/Testing/modelruns/1/n.nc"
-        # "results/Testing/sample.csv"

@@ -415,65 +415,6 @@ def add_RPS_constraints(n: pypsa.Network, rps: pd.DataFrame, ces: pd.DataFrame):
             )
 
 
-def add_interface_limits(n, itl: pd.DataFrame, transport: bool = True):
-    """
-    Adds interface transmission limits to constrain inter-regional transfer
-    capacities based on user-defined inter-regional transfer capacity limits.
-    """
-
-    df = itl.copy()
-
-    for _, interface in df.iterrows():
-        regions_list_r = [region.strip() for region in interface.r.split(",")]
-        regions_list_rr = [region.strip() for region in interface.rr.split(",")]
-
-        zone0_buses = n.buses[n.buses.country.isin(regions_list_r)]
-        zone1_buses = n.buses[n.buses.country.isin(regions_list_rr)]
-        if zone0_buses.empty | zone1_buses.empty:
-            continue
-
-        logger.info(f"Adding Interface Transmission Limit for {interface.interface}")
-
-        interface_lines_b0 = n.lines[
-            n.lines.bus0.isin(zone0_buses.index) & n.lines.bus1.isin(zone1_buses.index)
-        ]
-        interface_lines_b1 = n.lines[
-            n.lines.bus0.isin(zone1_buses.index) & n.lines.bus1.isin(zone0_buses.index)
-        ]
-        interface_links_b0 = n.links[
-            n.links.bus0.isin(zone0_buses.index) & n.links.bus1.isin(zone1_buses.index)
-        ]
-        interface_links_b1 = n.links[
-            n.links.bus0.isin(zone1_buses.index) & n.links.bus1.isin(zone0_buses.index)
-        ]
-
-        if not n.lines.empty:
-            line_flows = n.model["Line-s"].loc[:, interface_lines_b1.index].sum(
-                dim="Line",
-            ) - n.model["Line-s"].loc[:, interface_lines_b0.index].sum(dim="Line")
-        else:
-            line_flows = 0.0
-        lhs = line_flows
-
-        interface_links = pd.concat([interface_links_b0, interface_links_b1])
-
-        # Apply link constraints if RESOLVE constraint or if zonal model.
-        # ITLs should usually only apply to AC lines if DC PF is used.
-        if not (interface_links.empty) and (
-            "RESOLVE" in interface.interface or transport
-        ):
-            link_flows = n.model["Link-p"].loc[:, interface_links_b1.index].sum(
-                dim="Link",
-            ) - n.model["Link-p"].loc[:, interface_links_b0.index].sum(dim="Link")
-            lhs += link_flows
-
-        rhs_pos = interface.MW_f0 * -1
-        n.model.add_constraints(lhs >= rhs_pos, name=f"ITL_{interface.interface}_pos")
-
-        rhs_neg = interface.MW_r0
-        n.model.add_constraints(lhs <= rhs_neg, name=f"ITL_{interface.interface}_neg")
-
-
 def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
     """
     Adds sector co2 constraints.
@@ -683,17 +624,13 @@ def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFra
     export_max = uncertain["exports"].get("max", 1)
 
     # to avoid numerical issues, ensure there is a gap between min/max constraints
-    if import_max == "inf":
-        pass
-    elif abs(import_max - import_min) < 0.0001:
+    if abs(import_max - import_min) < 0.0001:
         import_min -= 0.001
         import_max += 0.001
         if import_min < 0:
             import_min = 0
 
-    if export_max == "inf":
-        pass
-    elif abs(export_max - export_min) < 0.0001:
+    if abs(export_max - export_min) < 0.0001:
         export_min -= 0.001
         export_max += 0.001
         if export_min < 0:
@@ -705,7 +642,7 @@ def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFra
 
     # add domestic limits
 
-    trade = ng_trade["dom_exports"].copy()
+    trade = ng_trade["domestic"].copy()
     trade = _format_data(trade, " trade")
 
     add_import_limits(n, trade, "min", import_min)
@@ -718,7 +655,7 @@ def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFra
 
     # add international limits
 
-    trade = ng_trade["int_exports"].copy()
+    trade = ng_trade["international"].copy()
     trade = _format_data(trade, " trade")
 
     add_import_limits(n, trade, "min", import_min)
@@ -841,14 +778,15 @@ def extra_functionality(n, sns):
         add_RPS_constraints(n, opts["rps"])
     if "tct" in opts:
         add_technology_capacity_target_constraints(n, opts["tct"])
-    if "itl" in opts:
-        add_interface_limits(n, opts["itl"], True)
     if "co2L" in opts:
         add_sector_co2_constraints(n, opts["co2L"])
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"])
     if "ng_limits" in opts:
-        add_ng_import_export_limits(n, opts["ng_limits"])
+        uncertain = {}
+        uncertain["imports"] = {}
+        uncertain["exports"] = {}
+        add_ng_import_export_limits(n, opts["ng_limits"], uncertain)
     if "hp_cooling" in opts:
         add_cooling_heat_pump_constraints(n)
 
@@ -1003,38 +941,24 @@ if __name__ == "__main__":
         solver_name = snakemake.params.solver
         solver_opts = snakemake.params.solver_opts
         solving_opts = snakemake.params.solving_opts
-        pypsa_usa_opts = snakemake.params.pypsa_usa_opts
         solving_log = snakemake.log.solver
         out_network = snakemake.output.network
         # extra constraints
-        itl_f = snakemake.input.itl
-        safer_f = snakemake.input.safer
-        rps_f = snakemake.input.rps
-        co2L_f = snakemake.input.co2L
-        # pypsa-usa specific
+        # co2L_f = snakemake.input.co2L
         pop_f = snakemake.input.pop_layout_f
-        ng_dom_imports = snakemake.input.ng_domestic_imports_f
-        ng_dom_exports = snakemake.input.ng_domestic_exports_f
-        ng_int_imports = snakemake.input.ng_international_imports_f
-        ng_int_exports = snakemake.input.ng_international_exports_f
+        ng_dommestic_f = snakemake.input.ng_domestic_f
+        ng_international_f = snakemake.input.ng_international_f
     else:
-        in_network = "results/California/modelruns/0/n.nc"
+        in_network = "results/Testing/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
-        pypsa_usa_opts = {"ng_limits": True, "hp_capacity": True, "hp_cooling": True}
         # extra constraints
-        itl_f = "results/California/constraints/itl.csv"
-        safer_f = ""
-        rps_f = "results/California/constraints/rps.csv"
-        co2L_f = "results/California/constraints/co2L.csv"
-        # pypsa-usa specific
-        pop_f = "config/pypsa-usa/pop_layout_elec_s33_c4m.csv"
-        ng_dom_imports = "config/pypsa-usa/domestic_imports.csv"
-        ng_dom_exports = "config/pypsa-usa/domestic_exports.csv"
-        ng_int_imports = "config/pypsa-usa/international_imports.csv"
-        ng_int_exports = "config/pypsa-usa/international_exports.csv"
+        # co2L_f = ""
+        pop_f = "results/Testing/pop_layout.csv"
+        ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
+        ng_international_f = "results/Testing/constraints/ng_international.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1052,24 +976,16 @@ if __name__ == "__main__":
     n = prepare_network(n, **solving_opts)
 
     extra_fn = {}
-    if itl_f:
-        extra_fn["itl"] = pd.read_csv(itl_f)
-    if safer_f:
-        extra_fn["safer"] = pd.read_csv(safer_f)
-    # if rps_f:
-    #     extra_fn["rps"] = pd.read_csv(rps_f)
-    if co2L_f:
-        extra_fn["co2L"] = pd.read_csv(co2L_f)
-    if pypsa_usa_opts["ng_limits"]:
-        extra_fn["ng_limits"] = {}
-        extra_fn["ng_limits"]["dom_imports"] = pd.read_csv(ng_dom_imports, index_col=0)
-        extra_fn["ng_limits"]["dom_exports"] = pd.read_csv(ng_dom_exports, index_col=0)
-        extra_fn["ng_limits"]["int_imports"] = pd.read_csv(ng_int_imports, index_col=0)
-        extra_fn["ng_limits"]["int_exports"] = pd.read_csv(ng_int_exports, index_col=0)
-    if pypsa_usa_opts["hp_capacity"]:
-        extra_fn["gshp"] = pd.read_csv(pop_f)
-    if pypsa_usa_opts["hp_cooling"]:
-        extra_fn["hp_cooling"] = True
+    extra_fn["ng_limits"] = {}
+    extra_fn["ng_limits"]["domestic"] = pd.read_csv(ng_dommestic_f, index_col=0)
+    extra_fn["ng_limits"]["international"] = pd.read_csv(
+        ng_international_f, index_col=0
+    )
+    extra_fn["gshp"] = pd.read_csv(pop_f)
+    extra_fn["hp_cooling"] = True
+    # extra_fn["co2L"] = False
+    # extra_fn["tct"] = False
+    # extra_fn["rps"] = False
 
     n = solve_network(
         n,
