@@ -1,10 +1,17 @@
 """Rules for processing results"""
 
 def get_sample_name(wildcards):
-    if config["gsa"]['scale']:
+    if config["gsa"]["scale"]:
         return f"results/{wildcards.scenario}/sample_scaled.csv"
     else: 
         return f"results/{wildcards.scenario}/sample.csv"
+
+def get_result_group(wildcards):
+    df = pd.read_csv(config["gsa"]["scale"])
+    df = df[df.unit == wildards.group]
+    results = df.name.to_list()
+
+    return [f"results/{wildcards.scenario}/SA/{x}.csv" for x in results]
 
 rule extract_results:
     message: "Extracting result"
@@ -62,3 +69,13 @@ rule calculate_SA:
         png = "results/{scenario}/SA/{result}.png"
     script: 
         "../scripts/calculate_sa.py"
+
+rule heatmap:
+    message:
+        "Generating heat map"
+    input:
+        csvs = get_result_group
+    output:
+        heatmap = "results/{scenario}/heatmaps/{group}.png"
+    script:
+        "../scripts/heatmap.py"

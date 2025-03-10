@@ -90,11 +90,11 @@ def plot_si(si: np.array, name: str) -> tuple[plt.figure, plt.axes]:
 
     # save graphical resutls
     title = name
-    fig, axs = plt.subplots(2, figsize=(10, 8))
+    fig, axs = plt.subplots(1, figsize=(10, 8))
     fig.suptitle(title, fontsize=20)
     unit = ""
-    plot_morris.horizontal_bar_plot(axs[0], si, unit=unit)
-    plot_morris.covariance_plot(axs[1], si, unit=unit)
+    plot_morris.horizontal_bar_plot(axs, si, unit=unit)
+    # plot_morris.covariance_plot(axs[1], si, unit=unit)
 
     return fig, axs
 

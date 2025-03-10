@@ -1,22 +1,22 @@
-name,component,carriers,variable
-objective_cost,,,objective_cost
-res_gas_furnace_capacity,link,res-total-space-gas-furnace; res-total-space-gas-furnace,p_nom_opt
-com_gas_furnace_capacity,link,com-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_opt
-res_lpg_furnace_capacity,link,res-total-space-lpg-furnace; res-total-space-lpg-furnace,p_nom_opt
-com_lpg_furnace_capacity,link,com-total-space-lpg-furnace;com-total-space-lpg-furnace,p_nom_opt
-res_elec_furnace_capacity,link,res-total-space-elec-furnace; res-total-space-elec-furnace,p_nom_opt
-com_elec_furnace_capacity,link,com-total-space-elec-furnace;com-total-space-elec-furnace,p_nom_opt
-res_ashp_capacity,link,res-total-ashp,p_nom_opt
-com_ashp_capacity,link,com-total-ashp,p_nom_opt
-res_gshp_capacity,link,res-total-gshp,p_nom_opt
-com_gshp_capacity,link,com-total-gshp,p_nom_opt
-res_gas_furnace_generation,link,res-total-space-gas-furnace; res-total-space-gas-furnace,p_total
-com_gas_furnace_generation,link,com-total-space-gas-furnace;com-total-space-gas-furnace,p_total
-res_lpg_furnace_generation,link,res-total-space-lpg-furnace; res-total-space-lpg-furnace,p_total
-com_lpg_furnace_generation,link,com-total-space-lpg-furnace;com-total-space-lpg-furnace,p_total
-res_elec_furnace_generation,link,res-total-space-elec-furnace; res-total-space-elec-furnace,p_total
-com_elec_furnace_generation,link,com-total-space-elec-furnace;com-total-space-elec-furnace,p_total
-res_ashp_generation,link,res-total-ashp,p_total
-com_ashp_generation,link,com-total-ashp,p_total
-res_gshp_generation,link,res-total-gshp,p_total
-com_gshp_generation,link,com-total-gshp,p_total
+name,component,carriers,variable,unit
+objective_cost,,,objective_cost,$
+res_gas_furnace_capacity,link,res-total-space-gas-furnace; res-total-space-gas-furnace,p_nom_opt,MW
+com_gas_furnace_capacity,link,com-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_opt,MW
+res_lpg_furnace_capacity,link,res-total-space-lpg-furnace; res-total-space-lpg-furnace,p_nom_opt,MW
+com_lpg_furnace_capacity,link,com-total-space-lpg-furnace;com-total-space-lpg-furnace,p_nom_opt,MW
+res_elec_furnace_capacity,link,res-total-space-elec-furnace; res-total-space-elec-furnace,p_nom_opt,MW
+com_elec_furnace_capacity,link,com-total-space-elec-furnace;com-total-space-elec-furnace,p_nom_opt,MW
+res_ashp_capacity,link,res-total-ashp,p_nom_opt,MW
+com_ashp_capacity,link,com-total-ashp,p_nom_opt,MW
+res_gshp_capacity,link,res-total-gshp,p_nom_opt,MW
+com_gshp_capacity,link,com-total-gshp,p_nom_opt,MW
+res_gas_furnace_generation,link,res-total-space-gas-furnace; res-total-space-gas-furnace,p_total,MWh
+com_gas_furnace_generation,link,com-total-space-gas-furnace;com-total-space-gas-furnace,p_total,MWh
+res_lpg_furnace_generation,link,res-total-space-lpg-furnace; res-total-space-lpg-furnace,p_total,MWh
+com_lpg_furnace_generation,link,com-total-space-lpg-furnace;com-total-space-lpg-furnace,p_total,MWh
+res_elec_furnace_generation,link,res-total-space-elec-furnace; res-total-space-elec-furnace,p_total,MWh
+com_elec_furnace_generation,link,com-total-space-elec-furnace;com-total-space-elec-furnace,p_total,MWh
+res_ashp_generation,link,res-total-ashp,p_total,MWh
+com_ashp_generation,link,com-total-ashp,p_total,MWh
+res_gshp_generation,link,res-total-gshp,p_total,MWh
+com_gshp_generation,link,com-total-gshp,p_total,MWh
