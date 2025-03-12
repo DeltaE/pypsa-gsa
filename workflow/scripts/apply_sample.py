@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 
 @dataclass
 class CapitalCostCache:
-    """Collect"""
+    """Perform intermediate capital cost calculation."""
 
     component: str
     capital_cost: float = None
@@ -27,11 +27,27 @@ class CapitalCostCache:
     itc: float = None
     vmt_per_year: float = None
 
+    def is_valid_data(self) -> bool:
+        """Checks that all data is present before applying sampel"""
+        if self.capital_cost:
+            return True
+        if not self.occ:
+            raise ValueError("occ")
+        elif not self.fixed_cost:
+            raise ValueError("fom")
+        elif not self.discount_rate:
+            raise ValueError("discount rate")
+        elif not (self.lifetime or self.vmt_per_year):
+            raise ValueError("lifetime or vmt_per_year")
+        else:
+            return True
+
     def calculate_capex(self, transport: bool = False) -> float:
         """Capex is an intermediate calcualtion.
 
         Fixed cost is given in same units as occ.
         """
+        assert self.is_valid_data()
         if self.capital_cost:
             logger.info("Returning pre-defined capital cost.")
             return round(self.capital_cost, 2)
@@ -189,8 +205,12 @@ def apply_sample(
         }
 
     for car, data in cached.items():
-        cache = CapitalCostCache(**data)
-        capex = cache.calculate_capex()
+        try:
+            cache = CapitalCostCache(**data)
+            capex = cache.calculate_capex()
+        except ValueError as ex:
+            logger.error(f"Capital cost error with {car}")
+            raise ValueError(ex)
         if car.endswith("battery_storage"):
             pass
         # logger.info(f"Applying capex to {car}")

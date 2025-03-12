@@ -335,7 +335,7 @@ def is_valid_fom_units(params: pd.DataFrame) -> bool:
     # transport units will be different as there are two uncertain parameters
     # occ in usd
     # fom in usd/vmt
-    units = units[~units.index.str.startswith("trn-veh")]
+    units = units[~units.index.str.startswith(("trn-elec-veh", "trn-lpg-veh"))]
 
     if all(units["fom"] == units["occ"]):
         return True
@@ -412,6 +412,18 @@ def is_valid_capital_costs(params: pd.DataFrame) -> bool:
 
     return True
 
+def is_no_duplicates(params: pd.DataFrame) -> bool:
+    """No duplicate parameter names"""
+
+    df = params.copy()
+
+    df = df[df.duplicated("name")]
+    if not df.empty:
+        duplicates = set(df.name.to_list())
+        print(f"Duplicate definitions of {duplicates}")
+        return False
+    else:
+        return True
 
 if __name__ == "__main__":
 
@@ -450,6 +462,7 @@ if __name__ == "__main__":
     assert is_valid_range(df), "invalid range"
     assert is_valid_min_max(df), "invalid min/max values"
     assert is_valid_nice_name(df), "invalid nice_name"
+    assert is_no_duplicates(df), "duplicate names"
 
     df.to_csv(out_params, index=False)
     
