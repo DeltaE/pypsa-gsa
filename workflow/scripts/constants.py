@@ -90,6 +90,26 @@ VALID_UNITS = [
     "years",
 ]
 
+VALID_RESULTS = {
+    "generators":["p_nom_opt"],
+    "generators_t":["p"],
+    "links":["p_nom_opt"],
+    "links_t":["p0","p1","p2"],
+    "buses_t":["marginal_price"],
+    "system":["cost"],
+    "stores":["e_nom_opt"],
+    
+}
+
+[
+    "p_nom_opt",
+    "p0",
+    "p1",
+    "objective_cost",
+    "marginal_cost",
+    "e_nom_opt"
+]
+
 # hard codes where gas can enter/exit the states
 # if multiple POEs exist, the larger pipeline is used as the POE
 # https://atlas.eia.gov/datasets/eia::border-crossings-natural-gas/explore?location=48.411182%2C-90.296487%2C5.24

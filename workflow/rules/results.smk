@@ -15,12 +15,9 @@ def get_result_group(wildcards):
 
 rule extract_results:
     message: "Extracting result"
-    params:
-        component = "links",
-        results = config["gsa"]["results"]
     input:
         network = "results/{scenario}/modelruns/{run}/network.nc",
-        results = config["gsa"]["results"]
+        results = "results/{scenario}/results.csv"
     output:
         csv = "results/{scenario}/modelruns/{run}/results.csv"
     script:
@@ -59,10 +56,10 @@ rule calculate_SA:
     message:
         "Calcualting sensitivity measures"
     params: 
-        parameters=config["gsa"]["parameters"],
         scaled = config["gsa"]["scale"]
     input: 
         sample = get_sample_name,
+        parameters = "results/{scenario}/parameters.csv",
         results = "results/{scenario}/results/{result}.csv"
     output: 
         csv = "results/{scenario}/SA/{result}.csv",

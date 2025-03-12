@@ -38,6 +38,16 @@ rule sanitize_parameters:
     script:
         "../scripts/sanitize_params.py"
 
+rule sanitize_results:
+    message: "Sanitizing results"
+    params:
+        results=config["gsa"]["results"]
+    output:
+        results="results/{scenario}/results.csv"
+    log: "logs/sanitize_{scenario}_results.log"
+    script:
+        "../scripts/sanitize_results.py"
+
 rule filter_constraint_files:
     message: "Filtering constraint files"
     input:

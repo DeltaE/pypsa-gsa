@@ -104,6 +104,8 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "lines"
             case "lines_t" | "line_t":
                 return "lines_t"
+            case "system" | "network": # results processing
+                return "system"
             case _:
                 raise NotImplementedError
 

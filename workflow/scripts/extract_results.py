@@ -4,29 +4,36 @@ import pandas as pd
 import pypsa
 
 
-def _get_p_nom_opt(links: pd.DataFrame, carriers: list[str]) -> float:
-    return links[links.carrier.isin(carriers)].p_nom_opt.sum()
+def _get_p_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
+    df = getattr(n,component)
+    return df[df.carrier.isin(carriers)].p_nom_opt.sum()
 
-
-def _get_p_total(
-    links: pd.DataFrame,
-    links_t: pd.DataFrame,
-    carriers: list[str],
-    sns_weights: pd.Series,
-) -> float:
-    slicer = links[links.carrier.isin(carriers)].index
-    df = links_t.copy()
+def _get_p_total(n: pypsa.Network, component: str, var: str, carriers: list[str]) -> float:
+    
+    static_component = component.split("_t")[0]
+    static = getattr(n,static_component)
+    slicer = static[static.carrier.isin(carriers)].index
+    
+    year = n.investment_periods[0] # already checked that len == 1
+    df = getattr(n,component)[var].loc[year]
     df = df[slicer]
-    assert all(df <= 0)
-    return df.mul(sns_weights, axis=0).mul(-1).sum().sum()
+    
+    if var in ("p1", "p2"):
+        assert all(df <= 0)
+        df = df.mul(-1)
+    
+    sns_weights = n.snapshot_weightings.loc[year].objective
+    return df.mul(sns_weights, axis=0).sum().sum()
 
+def _get_marginal_cost(n: pypsa.Network, carriers: list[str], metric: str = "mean") -> float:
+    assert metric in ("mean", "std", "min", "25%", "50%", "75%", "max")
+    buses = n.loads[n.loads.carrier.isin(carriers)].bus.to_list()
+    return n.buses_t["marginal_price"][buses].mean(axis=1).describe().loc[metric]
 
 def _get_objective_cost(n: pypsa.Network) -> float:
     return n.objective
 
-
 def _extract_carriers(cars: str | None) -> list[str] | None:
-
     if not cars:
         return None
     else:
@@ -39,25 +46,25 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
     res["carriers"] = res.carriers.map(_extract_carriers)
 
     assert len(n.investment_periods) == 1
-    year = n.investment_periods[0]
-
-    links = n.links
-    links_t_p1 = n.links_t["p1"].loc[year]
-    sns_weights = n.snapshot_weightings.loc[year].objective
 
     data = []
 
     for name, row in res.iterrows():
 
+        component = row["component"]
         variable = row["variable"]
         carriers = row["carriers"]
 
         if variable == "p_nom_opt":
-            value = _get_p_nom_opt(links, carriers)
-        elif variable == "p_total":
-            value = _get_p_total(links, links_t_p1, carriers, sns_weights)
+            value = _get_p_nom_opt(n, component, carriers)
+        elif variable in ("p", "p0", "p1", "p2"):
+            value = _get_p_total(n, component, variable, carriers)
         elif variable == "objective_cost":
             value = _get_objective_cost(n)
+        elif variable == "marginal_cost":
+            value = _get_marginal_cost(n, carriers, metric="mean")
+        else:
+            raise KeyError(f"Unrecognized argument of {value}.")
 
         data.append([name, value])
 
