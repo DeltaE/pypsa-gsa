@@ -84,9 +84,9 @@ VALID_UNITS = [
     "usd",
     "usd/mw",
     "usd/mwh",
-    "usd/vmt",
-    "vmt/year",
-    "vmt/mwh",
+    "usd/kvmt",
+    "kvmt/year",
+    "kvmt/mwh",
     "years",
 ]
 
@@ -100,15 +100,6 @@ VALID_RESULTS = {
     "stores":["e_nom_opt"],
     
 }
-
-[
-    "p_nom_opt",
-    "p0",
-    "p1",
-    "objective_cost",
-    "marginal_cost",
-    "e_nom_opt"
-]
 
 # hard codes where gas can enter/exit the states
 # if multiple POEs exist, the larger pipeline is used as the POE

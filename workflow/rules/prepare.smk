@@ -42,6 +42,8 @@ rule sanitize_results:
     message: "Sanitizing results"
     params:
         results=config["gsa"]["results"]
+    input:
+        network = "results/{scenario}/base.nc"
     output:
         results="results/{scenario}/results.csv"
     log: "logs/sanitize_{scenario}_results.log"

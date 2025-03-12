@@ -104,10 +104,14 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "lines"
             case "lines_t" | "line_t":
                 return "lines_t"
+            case "bus" | "buses":
+                return "buses"
+            case "bus_t" | "buses_t":
+                return "buses_t"
             case "system" | "network": # results processing
                 return "system"
             case _:
-                raise NotImplementedError
+                raise KeyError(c)
 
     df = params.copy()
     df["component"] = df.component.map(lambda x: _sanitize_component_name(x))

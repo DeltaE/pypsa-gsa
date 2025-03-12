@@ -10,18 +10,6 @@ sample_file : str
 
 replicates : int
     The number of model runs to generate
-
-Usage
------
-To run the script on the command line, type::
-
-    python create_sample.py path/to/parameters.csv path/to/save.txt 10
-
-The ``parameters.csv`` CSV file should be formatted as follows::
-
-    name,group,indexes,min_value,max_value,dist,interpolation_index,action
-    CapitalCost,pvcapex,"GLOBAL,GCPSOUT0N",500,1900,unif,YEAR,interpolate
-    DiscountRate,discountrate,"GLOBAL,GCIELEX0N",0.05,0.20,unif,None,fixed
 """
 
 from SALib.sample import morris
