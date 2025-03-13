@@ -38,7 +38,8 @@ rule sanitize_parameters:
     script:
         "../scripts/sanitize_params.py"
 
-rule sanitize_results:
+# needed for heatmap input function
+checkpoint sanitize_results:
     message: "Sanitizing results"
     params:
         results=config["gsa"]["results"]

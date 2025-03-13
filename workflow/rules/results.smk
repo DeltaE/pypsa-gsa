@@ -7,7 +7,8 @@ def get_sample_name(wildcards):
         return f"results/{wildcards.scenario}/sample.csv"
 
 def get_heatmap_csvs(wildcards):
-    df = pd.read_csv(f"results/{wildcards.scenario}/results.csv")
+    csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario).output[0]
+    df = pd.read_csv(csv)
     df = df[df.heatmap == wildcards.group]
     results = df.name.to_list()
 
