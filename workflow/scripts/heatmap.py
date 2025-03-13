@@ -22,19 +22,19 @@ if __name__ == "__main__":
         group = snakemake.wildcards.group
     else:
         csvs = [
-            # "results/Testing/SA/res_gas_furnace_capacity.csv",
-            # "results/Testing/SA/com_gas_furnace_capacity.csv",
-            # "results/Testing/SA/res_lpg_furnace_capacity.csv",
-            # "results/Testing/SA/com_lpg_furnace_capacity.csv",
-            # "results/Testing/SA/res_elec_furnace_capacity.csv",
-            # "results/Testing/SA/com_elec_furnace_capacity.csv",
-            # "results/Testing/SA/res_ashp_capacity.csv",
-            # "results/Testing/SA/com_ashp_capacity.csv",
-            # "results/Testing/SA/res_gshp_capacity.csv",
-            # "results/Testing/SA/com_gshp_capacity.csv",
-            "results/Testing/SA/objective_cost.csv"
+            "results/Testing/SA/com_marginal_cost_elec.csv",
+            "results/Testing/SA/com_marginal_cost_energy.csv",
+            "results/Testing/SA/res_marginal_cost_elec.csv",
+            "results/Testing/SA/res_marginal_cost_energy.csv",
+            "results/Testing/SA/ind_marginal_cost_elec.csv",
+            "results/Testing/SA/ind_marginal_cost_energy.csv",
+            "results/Testing/SA/trn_marginal_cost_elec.csv",
+            "results/Testing/SA/trn_marginal_cost_energy.csv",
+            "results/Testing/SA/marginal_cost_elec.csv",
+            "results/Testing/SA/marginal_cost_energy.csv",
+            # "results/Testing/SA/objective_cost.csv"
         ]
-        heatmap = "results/Testing/heatmaps/cost.png"
+        heatmap = "results/Testing/heatmaps/marginal_cost.png"
         group = ""
 
     dfs = []

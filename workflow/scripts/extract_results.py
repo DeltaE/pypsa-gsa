@@ -27,7 +27,7 @@ def _get_p_total(n: pypsa.Network, component: str, var: str, carriers: list[str]
 
 def _get_marginal_cost(n: pypsa.Network, carriers: list[str], metric: str = "mean") -> float:
     assert metric in ("mean", "std", "min", "25%", "50%", "75%", "max")
-    buses = n.loads[n.loads.carrier.isin(carriers)].bus.to_list()
+    buses = n.buses[n.buses.carrier.isin(carriers)].index.to_list()
     return n.buses_t["marginal_price"][buses].mean(axis=1).describe().loc[metric]
 
 def _get_objective_cost(n: pypsa.Network) -> float:
@@ -59,12 +59,12 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
             value = _get_p_nom_opt(n, component, carriers)
         elif variable in ("p", "p0", "p1", "p2"):
             value = _get_p_total(n, component, variable, carriers)
-        elif variable == "objective_cost":
+        elif variable == "cost":
             value = _get_objective_cost(n)
-        elif variable == "marginal_cost":
+        elif variable == "marginal_price":
             value = _get_marginal_cost(n, carriers, metric="mean")
         else:
-            raise KeyError(f"Unrecognized argument of {value}.")
+            raise KeyError(f"Unrecognized argument of {variable}.")
 
         data.append([name, value])
 
@@ -74,13 +74,13 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
     if "snakemake" in globals():
         network = snakemake.input.network
-        results_f = snakemake.params.results
+        results_f = snakemake.input.results
         model_run = snakemake.wildcards.run
         csv = snakemake.output.csv
     else:
-        network = "results/California/modelruns/40/network.nc"
+        network = "results/Testing/modelruns/40/network.nc"
         results_f = "config/results.csv"
-        csv = "results/California/modelruns/40/results.csv"
+        csv = "results/Testing/modelruns/40/results.csv"
         model_run = 0
 
     n = pypsa.Network(network)
