@@ -6,9 +6,9 @@ def get_sample_name(wildcards):
     else: 
         return f"results/{wildcards.scenario}/sample.csv"
 
-def get_result_group(wildcards):
-    df = pd.read_csv(config["gsa"]["scale"])
-    df = df[df.unit == wildards.group]
+def get_heatmap_csvs(wildcards):
+    df = pd.read_csv(f"results/{wildcards.scenario}/results.csv")
+    df = df[df.heatmap == wildcards.group]
     results = df.name.to_list()
 
     return [f"results/{wildcards.scenario}/SA/{x}.csv" for x in results]
@@ -71,7 +71,8 @@ rule heatmap:
     message:
         "Generating heat map"
     input:
-        csvs = get_result_group
+        results = "results/{scenario}/results.csv",
+        csvs = get_heatmap_csvs
     output:
         heatmap = "results/{scenario}/heatmaps/{group}.png"
     script:
