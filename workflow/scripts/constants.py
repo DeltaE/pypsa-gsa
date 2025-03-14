@@ -46,7 +46,8 @@ CES_CARRIERS = [
 
 ADDITIONAL_VALID_ATTRIBUTES = {
     "links": [
-        "nat_gas_trade",  # constraint
+        "nat_gas_import",  # constraint
+        "nat_gas_export",  # constraint
         "tx",  # constraint
         "gshp",  # constraint
         "tct",  # constraint
@@ -56,6 +57,8 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "vmt_per_year",
         "efficiency2",
         "itc",
+        "leakage",
+        "gwp",
     ],
     "generators": ["tct", "rps", "discount_rate", "fixed_cost", "occ", "itc"],
     "stores": ["co2L"],
@@ -71,9 +74,11 @@ CACHED_ATTRS = [
     "vmt_per_year",
     "lifetime",
     "itc",
+    "gwp",
+    "leakage",
 ]
 
-CONSTRAINT_ATTRS = ["nat_gas_trade", "tx", "gshp", "tct", "co2L"]
+CONSTRAINT_ATTRS = ["nat_gas_import", "nat_gas_export", "tx", "gshp", "tct", "co2L"]
 
 VALID_RANGES = ["percent", "absolute"]
 

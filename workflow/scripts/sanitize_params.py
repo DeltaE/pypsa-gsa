@@ -4,7 +4,12 @@ Ensures unit alignment and basic validation checks."""
 
 import pandas as pd
 import pypsa
-from constants import ADDITIONAL_VALID_ATTRIBUTES, VALID_RANGES, VALID_UNITS
+from constants import (
+    ADDITIONAL_VALID_ATTRIBUTES,
+    VALID_RANGES,
+    VALID_UNITS,
+    CONSTRAINT_ATTRS,
+)
 
 ###
 # Sanitize names
@@ -425,6 +430,21 @@ def is_no_duplicates(params: pd.DataFrame) -> bool:
     else:
         return True
 
+def is_constraints_abs(params: pd.DataFrame) -> bool:
+    """Constraints must be in absolute terms."""
+
+    df = params.copy()
+
+    df = df[(df.attribute.isin(CONSTRAINT_ATTRS)) & ~(df.range == "absolute")]
+
+    if not df.empty:
+        errors = set(df.name.to_list())
+        print(f"{errors} must have absolute ranges")
+        return False
+    else:
+        return True
+
+
 if __name__ == "__main__":
 
     if "snakemake" in globals():
@@ -463,6 +483,7 @@ if __name__ == "__main__":
     assert is_valid_min_max(df), "invalid min/max values"
     assert is_valid_nice_name(df), "invalid nice_name"
     assert is_no_duplicates(df), "duplicate names"
+    assert is_constraints_abs(df), "constraints must be absolute"
 
     df.to_csv(out_params, index=False)
     

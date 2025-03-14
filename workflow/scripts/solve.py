@@ -535,7 +535,9 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
                         apply_sector_state_limit(n, year, state, sector, value)
 
 
-def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], uncertain: dict[str, float]):
+def add_ng_import_export_limits(
+    n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], limits: dict[str, float]
+):
     def _format_link_name(s: str) -> str:
         states = s.split("-")
         return f"{states[0]} {states[1]} gas"
@@ -618,10 +620,10 @@ def add_ng_import_export_limits(n: pypsa.Network, ng_trade: dict[str, pd.DataFra
 
     # get limits
 
-    import_min = uncertain["imports"].get("min", 1)
-    import_max = uncertain["imports"].get("max", 1)
-    export_min = uncertain["exports"].get("min", 1)
-    export_max = uncertain["exports"].get("max", 1)
+    import_min = limits.get("import_min", 1)
+    import_max = limits.get("import_max", 1)
+    export_min = limits.get("export_min", 1)
+    export_max = limits.get("export_max", 1)
 
     # to avoid numerical issues, ensure there is a gap between min/max constraints
     if abs(import_max - import_min) < 0.0001:
@@ -768,8 +770,7 @@ def add_gshp_capacity_constraint(n: pypsa.Network, pop_layout: pd.DataFrame):
 
 def extra_functionality(n, sns):
     """
-    Collects supplementary constraints which will be passed to
-    `pypsa.optimization.optimize`
+    Collects supplementary constraints which will be passed to `pypsa.optimization.optimize`
     """
 
     opts = n.extra_fn
@@ -783,10 +784,7 @@ def extra_functionality(n, sns):
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"])
     if "ng_limits" in opts:
-        uncertain = {}
-        uncertain["imports"] = {}
-        uncertain["exports"] = {}
-        add_ng_import_export_limits(n, opts["ng_limits"], uncertain)
+        add_ng_import_export_limits(n, opts["ng_limits"])
     if "hp_cooling" in opts:
         add_cooling_heat_pump_constraints(n)
 
@@ -943,22 +941,20 @@ if __name__ == "__main__":
         solving_opts = snakemake.params.solving_opts
         solving_log = snakemake.log.solver
         out_network = snakemake.output.network
-        # extra constraints
-        # co2L_f = snakemake.input.co2L
         pop_f = snakemake.input.pop_layout_f
         ng_dommestic_f = snakemake.input.ng_domestic_f
         ng_international_f = snakemake.input.ng_international_f
+        constraints_meta = snakemake.input.constraints
     else:
         in_network = "results/Testing/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
-        # extra constraints
-        # co2L_f = ""
         pop_f = "results/Testing/pop_layout.csv"
         ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
         ng_international_f = "results/Testing/constraints/ng_international.csv"
+        constraints_meta = "results/Testing/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -975,12 +971,26 @@ if __name__ == "__main__":
 
     n = prepare_network(n, **solving_opts)
 
+    # holds sampled data that needs to be applied to RHS of constraints
+    constraints = pd.read_csv(constraints_meta)
+
     extra_fn = {}
-    extra_fn["ng_limits"] = {}
-    extra_fn["ng_limits"]["domestic"] = pd.read_csv(ng_dommestic_f, index_col=0)
-    extra_fn["ng_limits"]["international"] = pd.read_csv(
-        ng_international_f, index_col=0
-    )
+
+    # natural gas constrinats
+    extra_fn["ng_trade"] = {}
+    extra_fn["ng_trade"]["domestic"] = pd.read_csv(ng_dommestic_f, index_col=0)
+    extra_fn["ng_trade"]["international"] = pd.read_csv(ng_international_f, index_col=0)
+    imports = constraints[constraints.attribute == "nat_gas_import"].round(2)
+    exports = constraints[constraints.attribute == "nat_gas_export"].round(2)
+    assert len(imports) == 1
+    assert len(exports) == 1
+
+    # min max will be set to the same value with a slight offset for solving
+    extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
+    extra_fn["ng_trade"]["max_import"] = imports.value.values[0]
+    extra_fn["ng_trade"]["min_export"] = exports.value.values[0]
+    extra_fn["ng_trade"]["max_export"] = exports.value.values[0]
+
     extra_fn["gshp"] = pd.read_csv(pop_f)
     extra_fn["hp_cooling"] = True
     # extra_fn["co2L"] = False

@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 from dataclasses import dataclass
 from utils import calculate_annuity
-from constants import CACHED_ATTRS
+from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
 from logging import getLogger
 
@@ -28,7 +28,7 @@ class CapitalCostCache:
     vmt_per_year: float = None
 
     def is_valid_data(self) -> bool:
-        """Checks that all data is present before applying sampel"""
+        """Checks that all data is present before applying sample"""
         if self.capital_cost:
             return True
         if not self.occ:
@@ -77,6 +77,26 @@ class CapitalCostCache:
 
         return round(capex, 2)
 
+@dataclass
+class MethaneLeakageCache:
+    """Perform intermediate methane leakage calculation."""
+
+    component: str
+    gwp: float = None
+    leakage: float = None
+
+    def is_valid_data(self) -> bool:
+        """Checks that all data is present before applying sample"""
+        if not self.gwp:
+            raise ValueError("gwp")
+        elif not self.leakage:
+            raise ValueError("fom")
+        else:
+            return True
+
+    def calculate_leakage(self) -> float:
+        assert self.leakage < 1  # confirm per_unit
+        return round(self.gwp * self.leakage, 2)
 
 def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     """Check all defined carriers are in the network."""
@@ -164,10 +184,31 @@ def _apply_dynamic_sample(
     multiplier = value / 100  # can be positive or negative
     getattr(n, c)[attr].loc[:, names] = ref + ref.mul(multiplier)
 
+def _apply_cached_capex(n: pypsa.Network, car: str, data: dict[str, Any]):
+    try:
+        cache = CapitalCostCache(**data)
+        capex = cache.calculate_capex()
+    except ValueError as ex:
+        logger.error(f"Capital cost error with {car}")
+        raise ValueError(ex)
+    if car.endswith("battery_storage"):  # extra carrier
+        pass
+    _apply_static_sample(n, cache.component, car, "capital_cost", capex, "absolute")
+
+
+def _apply_cached_ch4_leakage(n: pypsa.Network, car: str, data: dict[str, Any]):
+    try:
+        cache = MethaneLeakageCache(**data)
+        leakage = cache.calculate_leakage()
+    except ValueError as ex:
+        logger.error(f"Methane Leakage error with {car}")
+        raise ValueError(ex)
+    _apply_static_sample(n, cache.component, car, "efficiency2", leakage, "absolute")
+
 
 def apply_sample(
     n: pypsa.Network, sample: dict[str, dict[str, Any]], run: int
-) -> dict[dict[str, str | float]]:
+) -> tuple[dict[dict[str, str | float]], pd.DataFrame]:
     """Applies a sample to a network for a single model run.
 
     As there are some intermediate calculations, some data is cached and applied at the end.
@@ -178,6 +219,10 @@ def apply_sample(
 
     meta = {}
     cached = {}  # for internediate calcualtions
+
+    # save constraint metadata in smaller file as it needs to be read in with every model
+    # this is the same data as in the bigger meta file tho.
+    meta_constraints = {}
 
     for name, data in sample.items():
         c = data["component"]
@@ -190,6 +235,14 @@ def apply_sample(
             if car not in cached:
                 cached[car] = {"component": c}
             cached[car][attr] = value
+        elif attr in CONSTRAINT_ATTRS:
+            meta_constraints[str(name)] = {
+                "component": c,
+                "carrier": car,
+                "attribute": attr,
+                "range": data["range"],
+                "value": value,
+            }
         elif c.endswith("_t"):
             assert not absolute
             _apply_dynamic_sample(n, c, car, attr, value)
@@ -205,18 +258,21 @@ def apply_sample(
         }
 
     for car, data in cached.items():
-        try:
-            cache = CapitalCostCache(**data)
-            capex = cache.calculate_capex()
-        except ValueError as ex:
-            logger.error(f"Capital cost error with {car}")
-            raise ValueError(ex)
-        if car.endswith("battery_storage"):
-            pass
-        # logger.info(f"Applying capex to {car}")
-        _apply_static_sample(n, cache.component, car, "capital_cost", capex, "absolute")
+        if car == "gas production":
+            _apply_cached_ch4_leakage(n, car, data)
+        else:
+            _apply_cached_capex(n, car, data)
 
-    return meta
+    if not meta_constraints:
+        meta_constraints = pd.DataFrame(
+            columns=["name", "component", "carrier", "attribute", "range", "value"]
+        )
+    else:
+        meta_constraints = pd.DataFrame.from_dict(
+            meta_constraints, orient="index"
+        ).reset_index(names="name")
+
+    return meta, meta_constraints
 
 
 if __name__ == "__main__":
@@ -244,15 +300,15 @@ if __name__ == "__main__":
 
         n = base_n.copy()
 
-        meta = apply_sample(n, sample_data, run)
+        meta, meta_constraints = apply_sample(n, sample_data, run)
 
-        create_directory(Path(root_dir, str(run)))
+        # create_directory(Path(root_dir, str(run)))
 
         n_save_name = Path(root_dir, str(run), "n.nc")
-
         meta_save_name = Path(root_dir, str(run), "meta.yaml")
+        meta_constraints_save_name = Path(root_dir, str(run), "constraints.csv")
 
         n.export_to_netcdf(n_save_name)
-
         with open(meta_save_name, "w") as f:
             yaml.dump(meta, f)
+        meta_constraints.to_csv(meta_constraints_save_name, index=False)

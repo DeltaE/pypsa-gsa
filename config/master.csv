@@ -245,17 +245,17 @@ p_nom_trn_lpg_lgt,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-lgt,p_nom,pe
 p_nom_trn_lpg_med,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-med,p_nom,percent,percent,-10,10,https://www.eia.gov/electricity/monthly/pdf/technotes-appendix-d.pdf,Estimated as vehicle stock uncertanity not quatified
 p_nom_trn_lpg_hvy,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-hvy,p_nom,percent,percent,-10,10,https://www.eia.gov/electricity/monthly/pdf/technotes-appendix-d.pdf,Estimated as vehicle stock uncertanity not quatified
 p_nom_trn_lpg_bus,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-bus,p_nom,percent,percent,-10,10,https://www.eia.gov/electricity/monthly/pdf/technotes-appendix-d.pdf,Estimated as vehicle stock uncertanity not quatified
-ng_imports,ng_imports,Nat Gas Imports,link,gas trade,nat_gas_trade,percent,percent,-12,8.8,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all export prices from 2019 to 2024
-ng_exports,ng_exports,Nat Gas Exports,link,gas trade,nat_gas_trade,percent,percent,-39,16,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import prices from 2019 to 2024
+ng_imports,ng_imports,Nat Gas Imports,link,gas trade,nat_gas_import,absolute,per_unit,-0.12,0.088,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all export prices from 2019 to 2024
+ng_exports,ng_exports,Nat Gas Exports,link,gas trade,nat_gas_export,absolute,per_unit,-0.39,0.16,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import prices from 2019 to 2024
 ng_pipeline_efficiency,ng_pipeline_efficiency,Nat Gas Pipeline Efficiency,link,gas pipeline,efficiency,absolute,per_unit,80,100,https://www.sciencedirect.com/science/article/pii/S0360544219317645#sec5,Estimated upper bounds as this is anecdotally a common assumption 
 ng_pipeline_p_nom,ng_pipeline_p_nom,Nat Gas Pipeline Capacity,link,gas pipeline,p_nom,percent,percent,0,10,https://github.com/PyPSA/pypsa-usa/issues/487,Estimated due to inconsistencies in datasets from EIA
-ng_processing_p_nom,ng_processing_p_nom,Nat Gas Processing Capacity,link,gas processing,p_nom,percent,percent,0,50,https://www.eia.gov/todayinenergy/detail.php?id=62984,Export capacity used as a proxy
-ng_leakage,ng_leakage,Nat Gas Leakage,link,ch4,efficiency2,absolute,per_unit,0,0.17,https://www.research.howarthlab.org/documents/Howarth_2021_Methane_and_Climate.pdf,Table 6.1. Excludes astrix data
-ng_gwp,ng_gwp,Global Warming Potential,link,ch4,efficiency2,absolute,per_unit,27,83,https://www.epa.gov/ghgemissions/understanding-global-warming-potentials#changingGWPs,"See ""Are there alternatives to the 100-year GWP for comparing GHGs?"" section"
+ng_processing_p_nom,ng_processing_p_nom,Nat Gas Processing Capacity,link,gas production,p_nom,percent,percent,0,50,https://www.eia.gov/todayinenergy/detail.php?id=62984,Export capacity used as a proxy
+ng_leakage,ng_leakage,Nat Gas Leakage,link,gas production,leakage,absolute,per_unit,0,0.17,https://www.research.howarthlab.org/documents/Howarth_2021_Methane_and_Climate.pdf,Table 6.1. Excludes astrix data
+ng_gwp,ng_gwp,Global Warming Potential,link,gas production,gwp,absolute,per_unit,27,83,https://www.epa.gov/ghgemissions/understanding-global-warming-potentials#changingGWPs,"See ""Are there alternatives to the 100-year GWP for comparing GHGs?"" section"
 ng_marginal_cost_import,ng_marginal_cost_import,Nat Gas Import Cost,link,gas pipeline,marginal_cost,percent,percent,-52,42,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all export prices from 2019 to 2024
 ng_marginal_cost_export,ng_marginal_cost_export,Nat Gas Export Cost,link,gas pipeline,marginal_cost,percent,percent,-62,47,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import prices from 2019 to 2024
 ng_linepack,ng_linepack,Nat Gas Linepack Capacity,link,gas pipeline,p_nom,percent,percent,-10,10,https://www.eia.gov/naturalgas/data.php,Estimated as no validation data sourced
-ng_storage_limits,ng_storage_limits,Nat Gas Underground Storage,store,gas storage,e_nom_max,percent,percent,-0.4,0.4,https://ir.eia.gov/ngs/ngs.html,Working gas assumed as uncertanity for max gas. Sampling variablility table
+ng_storage_limits,ng_storage_limits,Nat Gas Underground Storage,store,gas storage,e_min_pu,percent,percent,-0.4,0.4,https://ir.eia.gov/ngs/ngs.html,Working gas assumed as uncertanity for max gas. Sampling variablility table
 demand_response,demand_response,Demand Response,store,demand-response,marginal_cost_storage,percent,percent,-25,25,,
 res_electrical_demand,res_electrical_demand,Residential Electrical Demand,load_t,res-elec,p_set,percent,percent,-2.79,1.23,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 res_space_heat_demand,res_space_heat_demand,Residential Space Heat Demand,load_t,res-total-space-heat,p_set,percent,percent,-2.79,1.23,https://www.eia.gov/outlooks/aeo/,See notebook in repository
@@ -271,10 +271,10 @@ trn_veh_lgt_demand,trn_veh_lgt_demand,Light-Duty Vehicle Demand,load,trn-veh-lgt
 trn_veh_med_demand,trn_veh_med_demand,Med-Duty Vehicle Demand,load,trn-veh-med,p_set,percent,percent,-8.08,8.77,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 trn_veh_hvy_demand,trn_veh_hvy_demand,Heavy-Duty Vehicle Demand,load,trn-veh-hvy,p_set,percent,percent,-8.18,10.07,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 trn_veh_bus_demand,trn_veh_bus_demand,Bus Vehicle Demand,load,trn-veh-bus,p_set,percent,percent,-1.97,3.03,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-trn_ship_boat_demand,trn_ship_boat_demand,Domestic Shipping Demand,load,trn-ship-boat,p_set,percent,percent,-7.32,9.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-trn_rail_psg_demand,trn_rail_psg_demand,Passenger Rail Demand,load,trn-rail-psg,p_set,percent,percent,-8.29,12.94,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-trn_rail_ship_demand,trn_rail_ship_demand,Freight Rail Demand,load,trn-rail-ship,p_set,percent,percent,-11,15.55,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-trn_air_psg_demand,trn_air_psg_demand,Passenger Air Travel Demand,load,trn-air-psg,p_set,percent,percent,-7.46,8.12,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+trn_ship_boat_demand,trn_ship_boat_demand,Domestic Shipping Demand,load,trn-lpg-boat-ship,p_set,percent,percent,-7.32,9.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+trn_rail_psg_demand,trn_rail_psg_demand,Passenger Rail Demand,load,trn-lpg-rail-psg,p_set,percent,percent,-8.29,12.94,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+trn_rail_ship_demand,trn_rail_ship_demand,Freight Rail Demand,load,trn-lpg-rail-ship,p_set,percent,percent,-11,15.55,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+trn_air_psg_demand,trn_air_psg_demand,Passenger Air Travel Demand,load,trn-lpg-air-psg,p_set,percent,percent,-7.46,8.12,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,percent,percent,-22,22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030
 transmission_flow,transmission_flow,Transmission Flows,lines,AC,s_max_pu,percent,percent,-30,0,,
 ptc_solar,ptc_solar,PTC Solar,generator,solar,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
@@ -335,10 +335,10 @@ discount_rate_trn_lpg_lgt,trn_discount_rate,Transport Discount Rate,link,trn-lpg
 discount_rate_trn_lpg_med,trn_discount_rate,Transport Discount Rate,link,trn-lpg-veh-med,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-2
 discount_rate_trn_lpg_hvy,trn_discount_rate,Transport Discount Rate,link,trn-lpg-veh-hvy,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-2
 discount_rate_trn_lpg_bus,trn_discount_rate,Transport Discount Rate,link,trn-lpg-veh-bus,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-2
-eff_trn_lpg_bus,eff_trn_ship_boat,Efficiency Domestic Shipping,link,trn-ship-boat,efficiency,percent,percent,-3.9,4.6,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
-eff_trn_rail_psg,eff_trn_rail_psg,Efficiency Passenger Rail,link,trn-rail-psg,efficiency,percent,percent,-8.1,8.1,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
-eff_trn_rail_ship,eff_trn_rail_ship,Efficiency Freight Rail,link,trn-rail-ship,efficiency,percent,percent,-5.5,7.6,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
-eff_trn_air_psg,eff_trn_air_psg,Efficiency Passenger Air,link,trn-air-psg,efficiency,percent,percent,-4.7,2.5,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
+eff_trn_lpg_bus,eff_trn_ship_boat,Efficiency Domestic Shipping,link,trn-lpg-boat-ship,efficiency,percent,percent,-3.9,4.6,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
+eff_trn_rail_psg,eff_trn_rail_psg,Efficiency Passenger Rail,link,trn-lpg-rail-psg,efficiency,percent,percent,-8.1,8.1,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
+eff_trn_rail_ship,eff_trn_rail_ship,Efficiency Freight Rail,link,trn-lpg-rail-ship,efficiency,percent,percent,-5.5,7.6,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
+eff_trn_air_psg,eff_trn_air_psg,Efficiency Passenger Air,link,trn-lpg-air-psg,efficiency,percent,percent,-4.7,2.5,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
 transmission_expansion,transmission_expansion,Transmission Expansion,line,AC,tx,absolute,percent,0,6.4,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario
 res_gshp_limit,res_gshp_limit,Residenital GSHP Capacity,link,res-space-heat,gshp,percent,percent,-10,10,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
 com_gshp_limit,com_gshp_limit,Commercial GSHP Capacity,link,com-space-heat,gshp,percent,percent,-10,10,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
