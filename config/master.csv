@@ -276,7 +276,7 @@ trn_rail_psg_demand,trn_rail_psg_demand,Passenger Rail Demand,load,trn-lpg-rail-
 trn_rail_ship_demand,trn_rail_ship_demand,Freight Rail Demand,load,trn-lpg-rail-ship,p_set,percent,percent,-11,15.55,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 trn_air_psg_demand,trn_air_psg_demand,Passenger Air Travel Demand,load,trn-lpg-air-psg,p_set,percent,percent,-7.46,8.12,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,percent,percent,-22,22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030
-transmission_flow,transmission_flow,Transmission Flows,lines,AC,s_max_pu,percent,percent,-30,0,,
+transmission_flow,transmission_flow,Transmission Flows,lines,AC,s_max_pu,absolute,per_unit,0.70,0.80,https://doi.org/10.1016/j.eneco.2013.09.004,Lower bound of 70% is default in PyPSA-Eur
 ptc_solar,ptc_solar,PTC Solar,generator,solar,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_onwind,ptc_wind,PTC Wind,generator,onwind,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_offwind,ptc_wind,PTC Wind,generator,offwind_floating,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
@@ -340,8 +340,8 @@ eff_trn_rail_psg,eff_trn_rail_psg,Efficiency Passenger Rail,link,trn-lpg-rail-ps
 eff_trn_rail_ship,eff_trn_rail_ship,Efficiency Freight Rail,link,trn-lpg-rail-ship,efficiency,percent,percent,-5.5,7.6,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
 eff_trn_air_psg,eff_trn_air_psg,Efficiency Passenger Air,link,trn-lpg-air-psg,efficiency,percent,percent,-4.7,2.5,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
 transmission_expansion,transmission_expansion,Transmission Expansion,line,AC,tx,absolute,percent,0,6.4,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario
-res_gshp_limit,res_gshp_limit,Residenital GSHP Capacity,link,res-space-heat,gshp,percent,percent,-10,10,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
-com_gshp_limit,com_gshp_limit,Commercial GSHP Capacity,link,com-space-heat,gshp,percent,percent,-10,10,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
+res_gshp_limit,gshp_limit,GSHP Capacity,link,res-total-space-heat,gshp,absolute,per_unit,0.90,1.1,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
+com_gshp_limit,gshp_limit,GSHP Capacity,link,com-total-space-heat,gshp,absolute,per_unit,0.90,1.1,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
 coal_cost,coal_cost,Coal Fuel Cost,store,coal,marginal_cost,percent,percent,-6.2,8,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 oil_cost,oil_cost,Oil Fuel Cost,store,oil,marginal_cost,percent,percent,-40,66,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 lpg_cost,lpg_cost,LPG Fuel Cost,store,lpg,marginal_cost,percent,percent,-28.5,59.6,https://www.eia.gov/outlooks/aeo/,See notebook in repository

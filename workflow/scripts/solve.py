@@ -760,7 +760,7 @@ def add_gshp_capacity_constraint(n: pypsa.Network, pop_layout: pd.DataFrame):
 
     ashp_capacity = n.model["Link-p_nom"].loc[ashp.index]
     gshp_capacity = n.model["Link-p_nom"].loc[gshp.index]
-    gshp_multiplier = gshp["urban_rural_fraction"]
+    gshp_multiplier = gshp["urban_rural_fraction"].mul(gshp["sample"])
 
     lhs = ashp_capacity - gshp_capacity.mul(gshp_multiplier.values)
     rhs = 0
@@ -976,7 +976,9 @@ if __name__ == "__main__":
 
     extra_fn = {}
 
-    # natural gas constrinats
+    ###
+    # natural gas constraints
+    ###
     extra_fn["ng_trade"] = {}
     extra_fn["ng_trade"]["domestic"] = pd.read_csv(ng_dommestic_f, index_col=0)
     extra_fn["ng_trade"]["international"] = pd.read_csv(ng_international_f, index_col=0)
@@ -984,14 +986,21 @@ if __name__ == "__main__":
     exports = constraints[constraints.attribute == "nat_gas_export"].round(2)
     assert len(imports) == 1
     assert len(exports) == 1
-
     # min max will be set to the same value with a slight offset for solving
     extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
     extra_fn["ng_trade"]["max_import"] = imports.value.values[0]
     extra_fn["ng_trade"]["min_export"] = exports.value.values[0]
     extra_fn["ng_trade"]["max_export"] = exports.value.values[0]
 
-    extra_fn["gshp"] = pd.read_csv(pop_f)
+    ###
+    # GSHP capacity constrinats
+    ###
+    gshp = pd.read_csv(pop_f)
+    gshp_sample = constraints[constraints.attribute == "gshp"].round(2)
+    assert len(gshp_sample) == 1
+    gshp["sample"] = gshp_sample.value.values[0]
+    extra_fn["gshp"] = gshp
+
     extra_fn["hp_cooling"] = True
     # extra_fn["co2L"] = False
     # extra_fn["tct"] = False
