@@ -16,9 +16,11 @@ rule solve_network:
     input:
         network = "results/{scenario}/modelruns/{run}/n.nc",
         constraints = "results/{scenario}/modelruns/{run}/constraints.csv",
-        pop_layout_f = "results/{scenario}/pop_layout.csv",
+        pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
         ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
+        rps_f = "results/{scenario}/constraints/rps.csv",
+        ces_f = "results/{scenario}/constraints/ces.csv",
     output:
         network = "results/{scenario}/modelruns/{run}/network.nc",
     threads: 12

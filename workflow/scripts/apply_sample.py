@@ -105,6 +105,7 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
 
     sa_cars = df.carrier.unique()
     n_cars = n.carriers.index.to_list()
+    n_cars.append("portfolio")  # for aggregating constraints
 
     errors = []
 

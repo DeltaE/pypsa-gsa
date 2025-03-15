@@ -12,9 +12,20 @@ rule copy_pop_layout:
     input:
         csv = f"config/pypsa-usa/{config['pypsa_usa']['pop_layout']}"
     output:
-        csv = "results/{scenario}/pop_layout.csv"
+        csv = "results/{scenario}/constraints/pop_layout.csv"
     shell:
         "cp {input.csv} {output.csv}"
+
+rule process_reeds_policy:
+    message: "Copying ReEDS {wildcards.policy} file"
+    wildcard_constraints:
+        policy="ces|rps"
+    input:
+        policy = "resources/reeds/{policy}_fraction.csv"
+    output:
+        policy = "results/{scenario}/constraints/{policy}.csv",
+    script:
+        "../scripts/rps.py"
 
 rule retrieve_natural_gas_data:
     message: "Retrieving import/export natural gas data"

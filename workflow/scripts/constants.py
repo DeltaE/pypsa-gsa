@@ -60,7 +60,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "leakage",
         "gwp",
     ],
-    "generators": ["tct", "rps", "discount_rate", "fixed_cost", "occ", "itc"],
+    "generators": ["tct", "rps", "ces", "discount_rate", "fixed_cost", "occ", "itc"],
     "stores": ["co2L"],
     "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
     "lines": ["tx"],
@@ -78,7 +78,7 @@ CACHED_ATTRS = [
     "leakage",
 ]
 
-CONSTRAINT_ATTRS = ["nat_gas_import", "nat_gas_export", "tx", "gshp", "tct", "co2L"]
+CONSTRAINT_ATTRS = ["nat_gas_import", "nat_gas_export", "tx", "gshp", "tct", "co2L", "rps", "ces"]
 
 VALID_RANGES = ["percent", "absolute"]
 

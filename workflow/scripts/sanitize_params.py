@@ -444,6 +444,27 @@ def is_constraints_abs(params: pd.DataFrame) -> bool:
     else:
         return True
 
+def is_valid_gshp(params: pd.DataFrame) -> bool:
+    """GSHP capacity constraint for res/com MUST be in the same group."""
+
+    df = params.copy()
+
+    df = df[df.attribute == "gshp"]
+    if df.empty:
+        return True
+
+    unique_groups = df.group.unique().tolist()
+    unique_mins = df.min_value.unique().tolist()
+    unique_maxes = df.max_value.unique().tolist()
+
+    if len(unique_groups) > 1:
+        print("Only one GSHP group (ie. attribute == gshp) is allowed")
+        return False
+    elif (len(unique_mins) > 1) or (len(unique_maxes) > 1):
+        print("Inconsistnet ranges for gshp constraints (ie. attribute == gshp)")
+        return False
+    else:
+        return True
 
 if __name__ == "__main__":
 
@@ -484,6 +505,7 @@ if __name__ == "__main__":
     assert is_valid_nice_name(df), "invalid nice_name"
     assert is_no_duplicates(df), "duplicate names"
     assert is_constraints_abs(df), "constraints must be absolute"
+    assert is_valid_gshp(df), "too many groups for gshp constraint"
 
     df.to_csv(out_params, index=False)
     

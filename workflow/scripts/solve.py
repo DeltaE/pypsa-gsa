@@ -13,6 +13,8 @@ import pypsa
 from typing import Optional
 import yaml
 
+from constants import RPS_CARRIERS, CES_CARRIERS
+
 logger = logging.getLogger(__name__)
 NG_MWH_2_MMCF = 305
 
@@ -279,7 +281,9 @@ def add_technology_capacity_target_constraints(n: pypsa.Network, capacity_target
                 f"Max Value Adj: {rhs}",
             )
 
-def add_RPS_constraints(n: pypsa.Network, rps: pd.DataFrame, ces: pd.DataFrame):
+def add_RPS_constraints(
+    n: pypsa.Network, policy_name: str, rps: pd.DataFrame, sample: float
+):
     """
     Add Renewable Portfolio Standards constraint to the network.
 
@@ -293,81 +297,14 @@ def add_RPS_constraints(n: pypsa.Network, rps: pd.DataFrame, ces: pd.DataFrame):
     config : dict
     """
 
-    def process_reeds_data(filepath, carriers, value_col):
-        """Helper function to process RPS or CES REEDS data."""
-        reeds = pd.read_csv(filepath)
-
-        # Handle both wide and long formats
-        if "rps_all" not in reeds.columns:
-            reeds = reeds.melt(
-                id_vars="st",
-                var_name="planning_horizon",
-                value_name=value_col,
-            )
-
-        # Standardize column names
-        reeds = reeds.rename(
-            columns={"st": "region", "t": "planning_horizon", "rps_all": "pct"},
-        )
-        reeds["carrier"] = [", ".join(carriers)] * len(reeds)
-
-        # Extract and create new rows for `rps_solar` and `rps_wind`
-        additional_rows = []
-        for carrier_col, carrier_name in [
-            ("rps_solar", "solar"),
-            ("rps_wind", "onwind, offwind, offwind_floating"),
-        ]:
-            if carrier_col in reeds.columns:
-                temp = reeds[["region", "planning_horizon", carrier_col]].copy()
-                temp = temp.rename(columns={carrier_col: "pct"})
-                temp["carrier"] = carrier_name
-                additional_rows.append(temp)
-
-        # Combine original data with additional rows
-        if additional_rows:
-            additional_rows = pd.concat(additional_rows, ignore_index=True)
-            reeds = pd.concat([reeds, additional_rows], ignore_index=True)
-
-        # Ensure the final dataframe has consistent columns
-        reeds = reeds[["region", "planning_horizon", "carrier", "pct"]]
-        reeds = reeds[reeds["pct"] > 0.0]  # Remove any rows with zero or negative percentages
-
-        return reeds
-
-    # Define carriers for RPS and CES
-    rps_carriers = [
-        "onwind",
-        "offwind",
-        "offwind_floating",
-        "solar",
-        "hydro",
-        "geothermal",
-        "biomass",
-        "EGS",
-    ]
-    ces_carriers = [*rps_carriers, "nuclear", "SMR"]
-
-    # Process RPS and CES REEDS data
-    rps_reeds = process_reeds_data(
-        rps,
-        rps_carriers,
-        value_col="pct",
-    )
-    ces_reeds = process_reeds_data(
-        ces,
-        ces_carriers,
-        value_col="pct",
-    )
-
     planning_horizon = n.investment_periods[0]
 
     # Concatenate all portfolio standards
-    portfolio_standards = pd.concat([rps_reeds, ces_reeds])
+    portfolio_standards = rps.copy()
+    portfolio_standards["pct"] = portfolio_standards.pct.mul(sample).clip(upper=1)
     portfolio_standards = portfolio_standards[
         (portfolio_standards.pct > 0.0)
-        & (
-            portfolio_standards.planning_horizon == planning_horizon
-        )
+        & (portfolio_standards.planning_horizon == planning_horizon)
         & (portfolio_standards.region.isin(n.buses.reeds_state.unique()))
     ]
 
@@ -403,15 +340,15 @@ def add_RPS_constraints(n: pypsa.Network, rps: pd.DataFrame, ces: pd.DataFrame):
                 .sum()
             )
 
-            rhs = constraint_row.pct * region_demand
+            rhs = constraint_row.pct * region_demand * sample
 
             # Add constraint
             n.model.add_constraints(
                 lhs >= rhs,
-                name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_rps_limit",
+                name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
             )
             logger.info(
-                f"Added RPS {constraint_row.name} for {constraint_row.planning_horizon}.",
+                f"Added RPS {constraint_row.region} for {constraint_row.planning_horizon}.",
             )
 
 
@@ -431,7 +368,10 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
 
         stores = n.stores[
             (n.stores.index.str.startswith(state))
-            & ((n.stores.index.str.endswith("-co2")) | (n.stores.index.str.endswith("-ch4")))
+            & (
+                (n.stores.index.str.endswith("-co2"))
+                | (n.stores.index.str.endswith("-ch4"))
+            )
         ].index
 
         lhs = n.model["Store-e"].loc[snapshot, stores].sum()
@@ -450,7 +390,10 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
 
         stores = n.stores[
             (n.stores.index.str.startswith(state))
-            & ((n.stores.index.str.endswith(f"{sector}-co2")) | (n.stores.index.str.endswith(f"{sector}-ch4")))
+            & (
+                (n.stores.index.str.endswith(f"{sector}-co2"))
+                | (n.stores.index.str.endswith(f"{sector}-ch4"))
+            )
         ].index
 
         lhs = n.model["Store-e"].loc[snapshot, stores].sum()
@@ -467,7 +410,12 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
         sns = n.snapshots
         snapshot = sns[sns.get_level_values("period") == year][-1]
 
-        stores = n.stores[((n.stores.index.str.endswith("-co2")) | (n.stores.index.str.endswith("-ch4")))].index
+        stores = n.stores[
+            (
+                (n.stores.index.str.endswith("-co2"))
+                | (n.stores.index.str.endswith("-ch4"))
+            )
+        ].index
 
         lhs = n.model["Store-e"].loc[snapshot, stores].sum()
 
@@ -478,13 +426,14 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
         logger.info(
             f"Adding national co2 Limit in {year} of {rhs * 1e-6} MMT CO2",
         )
-        
+
     def apply_sector_national_limit(n, year, sector, value):
         sns = n.snapshots
         snapshot = sns[sns.get_level_values("period") == year][-1]
 
         stores = n.stores[
-            (n.stores.index.str.endswith(f"{sector}-co2")) | (n.stores.index.str.endswith(f"{sector}-ch4"))
+            (n.stores.index.str.endswith(f"{sector}-co2"))
+            | (n.stores.index.str.endswith(f"{sector}-ch4"))
         ].index
 
         lhs = n.model["Store-e"].loc[snapshot, stores].sum()
@@ -565,7 +514,9 @@ def add_ng_import_export_limits(
 
         weights = n.snapshot_weightings.objective
 
-        links = n.links[(n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas trade"))].index.to_list()
+        links = n.links[
+            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas trade"))
+        ].index.to_list()
 
         for year in n.investment_periods:
             for link in links:
@@ -596,7 +547,9 @@ def add_ng_import_export_limits(
 
         weights = n.snapshot_weightings.objective
 
-        links = n.links[(n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas"))].index.to_list()
+        links = n.links[
+            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas"))
+        ].index.to_list()
 
         for year in n.investment_periods:
             for link in links:
@@ -668,6 +621,7 @@ def add_ng_import_export_limits(
     if not export_max == "inf":
         add_export_limits(n, trade, "max", export_max)
 
+
 def add_cooling_heat_pump_constraints(n):
     """
     Adds constraints to the cooling heat pumps.
@@ -729,7 +683,9 @@ def add_cooling_heat_pump_constraints(n):
         add_hp_generation_constraint(n, hp_type)
 
 
-def add_gshp_capacity_constraint(n: pypsa.Network, pop_layout: pd.DataFrame):
+def add_gshp_capacity_constraint(
+    n: pypsa.Network, pop_layout: pd.DataFrame, sample: float
+):
     """
     Constrains gshp capacity based on population and ashp installations.
 
@@ -760,7 +716,7 @@ def add_gshp_capacity_constraint(n: pypsa.Network, pop_layout: pd.DataFrame):
 
     ashp_capacity = n.model["Link-p_nom"].loc[ashp.index]
     gshp_capacity = n.model["Link-p_nom"].loc[gshp.index]
-    gshp_multiplier = gshp["urban_rural_fraction"].mul(gshp["sample"])
+    gshp_multiplier = gshp["urban_rural_fraction"].mul(sample)
 
     lhs = ashp_capacity - gshp_capacity.mul(gshp_multiplier.values)
     rhs = 0
@@ -775,14 +731,16 @@ def extra_functionality(n, sns):
 
     opts = n.extra_fn
 
-    if "rps" in opts and n.generators.p_nom_extendable.any():
-        add_RPS_constraints(n, opts["rps"])
+    if "rps" in opts:
+        add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
+    if "ces" in opts:
+        add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
     if "tct" in opts:
         add_technology_capacity_target_constraints(n, opts["tct"])
     if "co2L" in opts:
         add_sector_co2_constraints(n, opts["co2L"])
     if "gshp" in opts:
-        add_gshp_capacity_constraint(n, opts["gshp"])
+        add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
     if "ng_limits" in opts:
         add_ng_import_export_limits(n, opts["ng_limits"])
     if "hp_cooling" in opts:
@@ -944,6 +902,8 @@ if __name__ == "__main__":
         pop_f = snakemake.input.pop_layout_f
         ng_dommestic_f = snakemake.input.ng_domestic_f
         ng_international_f = snakemake.input.ng_international_f
+        rps_f = snakemake.input.rps_f
+        ces_f = snakemake.input.ces_f
         constraints_meta = snakemake.input.constraints
     else:
         in_network = "results/Testing/modelruns/0/n.nc"
@@ -951,9 +911,11 @@ if __name__ == "__main__":
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
-        pop_f = "results/Testing/pop_layout.csv"
+        pop_f = "results/Testing/constraints/pop_layout.csv"
         ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
         ng_international_f = "results/Testing/constraints/ng_international.csv"
+        rps_f = "results/Testing/constraints/rps.csv"
+        ces_f = "results/Testing/constraints/ces.csv"
         constraints_meta = "results/Testing/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
@@ -984,22 +946,70 @@ if __name__ == "__main__":
     extra_fn["ng_trade"]["international"] = pd.read_csv(ng_international_f, index_col=0)
     imports = constraints[constraints.attribute == "nat_gas_import"].round(2)
     exports = constraints[constraints.attribute == "nat_gas_export"].round(2)
-    assert len(imports) == 1
-    assert len(exports) == 1
-    # min max will be set to the same value with a slight offset for solving
-    extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
-    extra_fn["ng_trade"]["max_import"] = imports.value.values[0]
-    extra_fn["ng_trade"]["min_export"] = exports.value.values[0]
-    extra_fn["ng_trade"]["max_export"] = exports.value.values[0]
+
+    if len(imports) == 1:
+        extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
+        extra_fn["ng_trade"]["max_import"] = imports.value.values[0]
+    elif len(imports) > 1:
+        raise ValueError("Too many samples for ng_gas_import")
+    else:
+        extra_fn["ng_trade"]["min_import"] = 1
+        extra_fn["ng_trade"]["max_import"] = 1
+
+    if len(exports) == 1:
+        extra_fn["ng_trade"]["min_export"] = exports.value.values[0]
+        extra_fn["ng_trade"]["max_export"] = exports.value.values[0]
+    elif len(exports) > 1:
+        raise ValueError("Too many samples for ng_gas_export")
+    else:
+        extra_fn["ng_trade"]["min_export"] = 1
+        extra_fn["ng_trade"]["max_export"] = 1
 
     ###
     # GSHP capacity constrinats
     ###
-    gshp = pd.read_csv(pop_f)
+    extra_fn["gshp"] = {}
+    extra_fn["gshp"]["data"] = pd.read_csv(pop_f)
     gshp_sample = constraints[constraints.attribute == "gshp"].round(2)
-    assert len(gshp_sample) == 1
-    gshp["sample"] = gshp_sample.value.values[0]
-    extra_fn["gshp"] = gshp
+    # in sanitize_params we already check that gshp is defined correctly
+    # We need to move the res and com gshp capacites together tho.
+    gshp_sample = gshp_sample.drop_duplicates(subset="attribute")
+
+    if len(gshp_sample) == 1:
+        extra_fn["gshp"]["sample"] = gshp_sample.value.values[0]
+    elif len(gshp_sample) > 1:
+        raise ValueError("Too many samples for gshp")
+    else:
+        extra_fn["gshp"]["sample"] = 1
+
+    ###
+    # RPS generation target
+    ###
+    extra_fn["rps"] = {}
+    extra_fn["rps"]["data"] = pd.read_csv(rps_f)
+    rps_sample = constraints[constraints.attribute == "rps"].round(2)
+
+    if len(rps_sample) == 1:
+        extra_fn["rps"]["sample"] = rps_sample.value.values[0]
+    elif len(rps_sample) > 1:
+        raise ValueError("Too many samples for rps")
+    else:
+        extra_fn["rps"]["sample"] = 1
+
+    ###
+    # CES generation target
+    ###
+    extra_fn["ces"] = {}
+    extra_fn["ces"]["data"] = pd.read_csv(ces_f)
+    ces_sample = constraints[constraints.attribute == "ces"].round(2)
+    assert len(ces_sample) == 1
+
+    if len(ces_sample) == 1:
+        extra_fn["ces"]["sample"] = ces_sample.value.values[0]
+    elif len(ces_sample) > 1:
+        raise ValueError("Too many samples for ces")
+    else:
+        extra_fn["ces"]["sample"] = 1
 
     extra_fn["hp_cooling"] = True
     # extra_fn["co2L"] = False

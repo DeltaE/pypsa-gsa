@@ -275,7 +275,8 @@ trn_ship_boat_demand,trn_ship_boat_demand,Domestic Shipping Demand,load,trn-lpg-
 trn_rail_psg_demand,trn_rail_psg_demand,Passenger Rail Demand,load,trn-lpg-rail-psg,p_set,percent,percent,-8.29,12.94,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 trn_rail_ship_demand,trn_rail_ship_demand,Freight Rail Demand,load,trn-lpg-rail-ship,p_set,percent,percent,-11,15.55,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 trn_air_psg_demand,trn_air_psg_demand,Passenger Air Travel Demand,load,trn-lpg-air-psg,p_set,percent,percent,-7.46,8.12,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,percent,percent,-22,22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030
+rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
+ces,ces,Clean Energy Standard,generator,portfolio,ces,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
 transmission_flow,transmission_flow,Transmission Flows,lines,AC,s_max_pu,absolute,per_unit,0.70,0.80,https://doi.org/10.1016/j.eneco.2013.09.004,Lower bound of 70% is default in PyPSA-Eur
 ptc_solar,ptc_solar,PTC Solar,generator,solar,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_onwind,ptc_wind,PTC Wind,generator,onwind,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
