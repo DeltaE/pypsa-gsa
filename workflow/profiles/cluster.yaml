@@ -1,0 +1,12 @@
+executor: slurm
+jobs: 999
+local-cores: 1
+cores: 10
+latency-wait: 60
+use-envmodules: True
+use-conda: False
+default-resources:
+  - runtime=10
+  - mem_mb_per_cpu=16000
+  - disk_mb=1000
+  - slurm_account=

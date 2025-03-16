@@ -7,6 +7,9 @@ rule create_sample:
     output: 
         sample_file = "results/{scenario}/sample.csv"
         scaled_sample_file = "results/{scenario}/sample_scaled.csv"
+    resources:
+        mem_mb=1000
+        runtime=2
     log: "logs/create_{scenario}_sample.log"
     script:
         "../scripts/create_sample.py"
@@ -26,6 +29,9 @@ rule apply_sample_to_network:
         n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
         meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS),
         meta_constriant = expand("results/{{scenario}}/modelruns/{run}/constraints.csv", run=MODELRUNS)
+    resources:
+        mem_mb=lambda wc, input: max(1.5 * input.size_mb, 1000)
+        runtime=2
     log: "logs/apply_{scenario}_sample.log"
     script:
         "../scripts/apply_sample.py"

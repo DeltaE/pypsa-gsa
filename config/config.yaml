@@ -13,7 +13,7 @@ gsa:
   parameters: config/parameters.csv # Define the uncertain parameters
   results: config/results.csv # Define what results to run SA over
   replicates: 10 # Sampling - how large should the sample be?
-  scale: True # Scale Elementary Effects (True/False)
+  scale: False # Scale Elementary Effects (True/False)
 
 # Choose a solver
 solver:
