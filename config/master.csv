@@ -295,7 +295,6 @@ itc_8hrbat,itc_battery,ITC Battery,StorageUnit,8hr_battery_storage,itc,absolute,
 itc_nuclear,itc_nuclear,ITC Nuclear,generator,nuclear,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 tct_solar,solar_tct,Solar Capacity Limit,generator,solar,tct,absolute,mw,999999,9999999,,
 tct_wind,wind_tct,Wind Capacity Limit,generator,wind,tct,absolute,mw,999999,9999999,,
-tct_battery,battery_tct,Battery Capacity Limit ,generator,4hr_battery_storage,tct,absolute,mw,999999,9999999,,
 tct_ngccs,ngccs_tct,Nat Gas CCS Capacity Limit,link,CCGT-95CCS,tct,absolute,mw,999999,9999999,,
 tct_trn_elec_lgt,tct_trn_elec_lgt,Light-Duty EV Capacity Limit,link,trn-elec-veh-lgt,tct,absolute,mw,999999,9999999,,
 tct_trn_elec_med,tct_trn_elec_med,Med-Duty EV Capacity Limit,link,trn-elec-veh-med,tct,absolute,mw,999999,9999999,,

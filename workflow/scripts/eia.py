@@ -327,6 +327,34 @@ class Trade(EiaData):
                 recived_option=self.fuel,
             )
 
+class InstalledCapacity(EiaData):
+    """Technology Capacity Installations."""
+
+    def __init__(
+        self,
+        sector: str,
+        fuel: bool,
+        scenario: str,
+        year: int,
+        api: str,
+    ) -> None:
+        self.sector = sector 
+        self.fuel = fuel
+        self.scenario = scenario
+        self.year = year
+        self.api = api
+
+    def data_creator(self) -> pd.DataFrame:
+        """Initializes data extractor."""
+        if self.sector == "power":
+            return _PowerCapacity(self.fuel, self.year, self.scenario, self.api)
+        else:
+            raise InputPropertyError(
+                propery="InstalledCapacity",
+                valid_options=["power"],
+                recived_option=self.sector,
+            )
+
 
 class _HistoricalSectorEnergyDemand(DataExtractor):
     """
@@ -882,6 +910,58 @@ class _DomesticGasTrade(DataExtractor):
             return description.split(",")[1].split(" ")[1]
         except IndexError:  # country level
             return description.split(" Natural Gas Pipeline")[0]
+
+class _PowerCapacity(DataExtractor):
+    """Extracts projected power sector capacity AEO 2023."""
+
+    # https://www.eia.gov/outlooks/aeo/assumptions/case_descriptions.php
+    scenario_codes = AEO_SCENARIOS
+
+    # See here for definitions on what is in each fuel 
+    # https://www.eia.gov/outlooks/aeo/data/browser/#/?id=9-AEO2023&cases=ref2023&sourcekey=0
+    fuel_codes: ClassVar[dict[str, str]] = {
+        "coal": "cl",
+        "combined_cycle": "cmc",
+        "combustion_turbine": "ctd",
+        "distributed": "distgen",
+        "diurnal_storage": "diurn",
+        "fuel_cells": "fcl",
+        "nuclear": "nup",
+        "oil_gas_steam": "ong",
+        "pumped_storage": "pps",
+        "renewables": "rnwbsrc",
+        "total": "tot",
+    }
+
+    def __init__(self, fuel: str, year: int, scenario: str, api: str):
+        super().__init__(year, api)
+        self.scenario = scenario
+        self.fuel = fuel
+        if scenario not in self.scenario_codes.keys():
+            raise InputPropertyError(
+                propery="Projected Energy Demand Scenario",
+                valid_options=list(self.scenario_codes),
+                recived_option=scenario,
+            )
+        if fuel not in self.fuel_codes.keys():
+            raise InputPropertyError(
+                propery="Projected Energy Demand Sector",
+                valid_options=list(self.fuel_codes),
+                recived_option=fuel,
+            )
+
+    def build_url(self) -> str:
+        base_url = "aeo/2023/data/"
+        facets = f"frequency=annual&data[0]=value&facets[scenario][]={self.scenario_codes[self.scenario]}&facets[seriesId][]=cap_NA_elep_pow_{self.fuel_codes[self.fuel]}_NA_usa_gw&start=2021&end={self.year}&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000"
+        return f"{API_BASE}{base_url}?api_key={self.api_key}&{facets}"
+
+    def format_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        df.index = pd.to_datetime(df.period)
+        df.index = df.index.year
+        df = df.rename(columns={"seriesName": "series-description", "unit": "units"})
+        df["state"] = "U.S."
+        df = df[["series-description", "value", "units", "state"]].sort_index()
+        return self._assign_dtypes(df)
 
 if __name__ == "__main__":
     api = ""
