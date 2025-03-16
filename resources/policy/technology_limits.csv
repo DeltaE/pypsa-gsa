@@ -11,5 +11,13 @@ reeds_storage_mandate,2030,NV,4hr_battery_storage,1000,
 reeds_storage_mandate,2030,NY,4hr_battery_storage,3000,
 reeds_storage_mandate,2030,OR,4hr_battery_storage,2.5,
 reeds_storage_mandate,2030,VA,4hr_battery_storage,1350,
-
-
+tct_biomass,2030,all,biomass,,1022.9
+tct_geothermal,2030,all,geothermal,,2719.7
+tct_steam,2030,all,"waste,oil",,909.5
+tct_nuclear,2030,all,nuclear,,2323.1
+tct_wind,2030,all,"onwind,offwind_floating",,16811.58
+tct_solar,2030,all,solar,,57836.79
+tct_hydro,2030,all,hydro,,12976.84
+tct_ccgt,2030,all,"CCGT,CCGT-95CCS",,52239.02
+tct_ocgt,2030,all,OCGT,,86770.18
+tct_coal,2030,all,coal,,131.04999999999998

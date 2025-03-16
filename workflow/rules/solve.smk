@@ -21,6 +21,7 @@ rule solve_network:
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
+        tct_f = "results/{scenario}/constraints/tct.csv"
     output:
         network = "results/{scenario}/modelruns/{run}/network.nc",
     threads: 12

@@ -1,16 +1,4 @@
-"""Generates an scaled sample from a list of parameters
-
-Arguments
----------
-path_to_parameters : str
-    File containing the parameters to generate a sample for
-
-sample_file : str
-    File path to save sample to
-
-replicates : int
-    The number of model runs to generate
-"""
+"""Generates a sample from a list of parameters."""
 
 from SALib.sample import morris
 import pandas as pd

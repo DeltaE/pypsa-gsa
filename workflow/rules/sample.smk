@@ -6,6 +6,7 @@ rule create_sample:
         parameters="results/{scenario}/parameters.csv"
     output: 
         sample_file = "results/{scenario}/sample.csv"
+        scaled_sample_file = "results/{scenario}/sample_scaled.csv"
     log: "logs/create_{scenario}_sample.log"
     script:
         "../scripts/create_sample.py"

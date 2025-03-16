@@ -27,6 +27,15 @@ rule process_reeds_policy:
     script:
         "../scripts/rps.py"
 
+rule copy_tct_data:
+    message: "Copying TCT data"
+    input:
+        csv="resources/policy/technology_limits.csv"
+    output:
+        csv="results/{scenario}/constraints/tct.csv"
+    shell:
+        "cp {input.csv} {output.csv}"
+
 rule retrieve_natural_gas_data:
     message: "Retrieving import/export natural gas data"
     params:
@@ -39,54 +48,20 @@ rule retrieve_natural_gas_data:
     script:
         "../scripts/retrieve_ng_data.py"
 
-rule process_tct_data:
+rule generate_tct_data:
     message: "Generating TCT data based on the AEO"
     params:
-        aeo_tct = config["pypsa_usa"]["aeo_tct"]
-    input:
-        network = "results/{scenario}/base.nc"
+        network = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
-        tct = temp("results/{scenario}/constraints/tct_aeo.csv")
-        tct_params = temp("results/{scenario}/tct_params.csv")
+        tct_aeo = "resources/generated/tct_aeo.csv",
+        tct_gsa = "resources/generated/tct_gsa.csv",
     script:
         "../scripts/tct.py"
-
-rule process_tct_constraint:
-    message: "Grouping custom and AEO TCT data"
-    input:
-        custom = "resources/policy/technology_limits.csv"
-        aeo = "results/{scenario}/constraints/tct_aeo.csv"
-    output:
-        tct = "results/{scenario}/constraints/tct.csv"
-    run:
-        import pandas as pd
-        tct_base = pd.read_csv(input.custom)
-        tct_aeo = pd.read_csv(input.aeo)
-        df = pd.concat([tct_base, tct_aeo], axis=0)
-        assert len(df.name.unique()) == 1
-        df.to_csv(output.tct, index=False)
-
-rule process_tct_gsa_params:
-    message: "Processing TCT params generated for the GSA"
-    params:
-        parameters=config["gsa"]["parameters"]
-    input:
-        tct = "results/{scenario}/tct_params.csv"
-    output:
-        params = temp("results/{scenario}/params_merged.csv")
-    run:
-        import pandas as pd
-        base = pd.read_csv(params.parameters)
-        tct = pd.read_csv(input.tct)
-        df = pd.concat([tct_base, tct_aeo], axis=0)
-        df.to_csv(output.params, index=False)
 
 rule sanitize_parameters:
     message: "Sanitizing parameters"
     params:
         parameters=config["gsa"]["parameters"]
-    input:
-        parameters="results/{scenario}/params_merged.csv"
     output:
         parameters="results/{scenario}/parameters.csv"
     log: "logs/sanitize_{scenario}_parameters.log"
@@ -117,8 +92,3 @@ rule filter_constraint_files:
         ng_international = "results/{scenario}/constraints/ng_international.csv",
     script:
         "../scripts/filter_constraints.py"
-
-rule testing:
-    input:
-        "results/Testing/constraints/ng_domestic.csv"
-        # "results/Testing/sample.csv"

@@ -8,13 +8,12 @@ pypsa_usa:
   network: "elec_s40_c4m_ec_lv1.0_12h_E-G.nc"
   era5_year: 2018
   pop_layout: "pop_layout_elec_s40_c4m.csv"
-  aeo_tct: True # auto extract TCT targets based on AEO growth rates
 
 gsa:
   parameters: config/parameters.csv # Define the uncertain parameters
   results: config/results.csv # Define what results to run SA over
   replicates: 10 # Sampling - how large should the sample be?
-  scale: False # Scale Elementary Effects (True/False)
+  scale: True # Scale Elementary Effects (True/False)
 
 # Choose a solver
 solver:

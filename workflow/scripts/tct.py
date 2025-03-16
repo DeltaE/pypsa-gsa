@@ -102,13 +102,13 @@ def get_tct_data(n: pypsa.Network) -> pd.DataFrame:
         else:
             ref_cap = round(cap * ref_growth / 100, 2)
 
-        tct = [name, planning_year, "", ",".join(cars), "", ref_cap]
+        tct = [f"tct_{name}", planning_year, "all", ",".join(cars), "", ref_cap]
         data.append(tct)
 
     return pd.DataFrame(data, columns=TCT_COLUMNS)
 
 
-def get_gsa_tct_data(n: pypsa.Netowork) -> pd.DataFrame:
+def get_gsa_tct_data(n: pypsa.Network) -> pd.DataFrame:
     """Gets formatted TCT data to pass into GSA."""
 
     data = []
@@ -154,24 +154,18 @@ def get_gsa_tct_data(n: pypsa.Netowork) -> pd.DataFrame:
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        network = snakemake.input.network
-        tct_f = snakemake.output.tct
-        params_f = snakemake.output.params
-        aeo_tct = snakemake.params.aeo_tct
+        network = snakemake.params.network
+        tct_aeo_f = snakemake.output.tct_aeo
+        tct_gsa_f = snakemake.output.tct_gsa
     else:
-        n = ""
-        tct = ""
-        params = ""
-        aeo_tct = True
+        network = ""
+        tct_aeo_f = ""
+        tct_gsa_f = ""
 
-    if aeo_tct:
-        n = pypsa.Network(n)
-        assert len(n.investment_periods[0]) == 1
-        tct = get_tct_data(n)
-        params = get_gsa_tct_data(n)
-    else:
-        tct = pd.DataFrame(columns=TCT_COLUMNS)
-        params = pd.DataFrame(columns=GSA_COLUMNS)
-        
-    tct.to_csv(tct_f, index=False)
-    params.to_csv(params_f, index=False)
+    n = pypsa.Network(network)
+    assert len(n.investment_periods) == 1
+    tct_aeo = get_tct_data(n)
+    tct_gsa = get_gsa_tct_data(n)
+
+    tct_aeo.to_csv(tct_aeo_f, index=False)
+    tct_gsa.to_csv(tct_gsa_f, index=False)

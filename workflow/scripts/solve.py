@@ -39,7 +39,7 @@ def filter_components(
     component_type: str,
     planning_horizon: str | int,
     carrier_list: list[str],
-    region_buses: pd.Index,
+    region_buses: pd.Index | str,
     extendable: bool,
 ):
     """
@@ -73,13 +73,27 @@ def filter_components(
     else:
         active_components = component.index
 
-    filtered = component.loc[
-        active_components
-        & component.carrier.isin(carrier_list)
-        & component.bus.isin(region_buses)
-        & (component.p_nom_extendable == extendable)
-    ]
+    if isinstance(region_buses, str):
+        if region_buses == "all":
+            region_buses = n.buses.index
+    assert isinstance(region_buses, pd.Index)
 
+    # Links will throw the following attribute error
+    # AttributeError: 'DataFrame' object has no attribute 'bus'. Did you mean: 'bus0'?
+    try:
+        filtered = component.loc[
+            active_components
+            & component.carrier.isin(carrier_list)
+            & component.bus.isin(region_buses)
+            & (component.p_nom_extendable == extendable)
+        ]
+    except AttributeError:
+        filtered = component.loc[
+            active_components
+            & component.carrier.isin(carrier_list)
+            & component.bus0.isin(region_buses)
+            & (component.p_nom_extendable == extendable)
+        ]
     return filtered
 
 ###
@@ -129,7 +143,9 @@ def add_land_use_constraint_perfect(n):
         n.buses.loc[bus, name] = df_carrier.p_nom_max.values
     return n
 
-def add_technology_capacity_target_constraints(n: pypsa.Network, capacity_targets: pd.DataFrame):
+def add_technology_capacity_target_constraints(
+    n: pypsa.Network, data: pd.DataFrame, sample: pd.DataFrame
+):
     """
     Add Technology Capacity Target (TCT) constraint to the network.
 
@@ -150,8 +166,15 @@ def add_technology_capacity_target_constraints(n: pypsa.Network, capacity_target
     electricity:
         technology_capacity_target: config/policy_constraints/technology_capacity_target.csv
     """
-    p_nom = n.model["Generator-p_nom"]
-    tct_data = capacity_targets.copy()
+
+    tct_data = data.copy()
+
+    # apply sample
+    tct_data = tct_data.set_index("name")
+    for name, sample_value in zip(sample.name, sample.value):
+        tct_data.loc[name, "max"] *= sample_value
+    tct_data = tct_data.reset_index()
+
     if tct_data.empty:
         return
 
@@ -195,7 +218,26 @@ def add_technology_capacity_target_constraints(n: pypsa.Network, capacity_target
             extendable=False,
         )
 
-        if region_buses.empty or (lhs_gens_ext.empty and lhs_storage_ext.empty):
+        lhs_link_ext = filter_components(
+            n=n,
+            component_type="Link",
+            planning_horizon=planning_horizon,
+            carrier_list=carrier_list,
+            region_buses=region_buses.index,
+            extendable=True,
+        )
+        lhs_link_existing = filter_components(
+            n=n,
+            component_type="Link",
+            planning_horizon=planning_horizon,
+            carrier_list=carrier_list,
+            region_buses=region_buses.index,
+            extendable=False,
+        )
+
+        if region_buses.empty or (
+            lhs_gens_ext.empty and lhs_storage_ext.empty and lhs_link_ext.empty
+        ):
             continue
 
         if not lhs_gens_ext.empty:
@@ -205,7 +247,13 @@ def add_technology_capacity_target_constraints(n: pypsa.Network, capacity_target
             ).rename_axis(
                 "Generator-ext",
             )
-            lhs_g = p_nom.loc[lhs_gens_ext.index].groupby(grouper_g).sum().rename(bus="country")
+            lhs_g = (
+                n.model["Generator-p_nom"]
+                .loc[lhs_gens_ext.index]
+                .groupby(grouper_g)
+                .sum()
+                .rename(bus="country")
+            )
         else:
             lhs_g = None
 
@@ -220,16 +268,33 @@ def add_technology_capacity_target_constraints(n: pypsa.Network, capacity_target
         else:
             lhs_s = None
 
-        if lhs_g is None and lhs_s is None:
-            continue
-        elif lhs_g is None:
-            lhs = lhs_s.sum()
-        elif lhs_s is None:
-            lhs = lhs_g.sum()
+        if not lhs_link_ext.empty:
+            grouper_l = pd.concat(
+                [lhs_link_ext.bus.map(n.buses.country), lhs_link_ext.carrier],
+                axis=1,
+            ).rename_axis(
+                "Link-ext",
+            )
+            lhs_l = (
+                n.model["Link-p_nom"].loc[lhs_link_ext.index].groupby(grouper_l).sum()
+            )
         else:
-            lhs = (lhs_g + lhs_s).sum()
+            lhs_l = None
 
-        lhs_existing = lhs_gens_existing.p_nom.sum() + lhs_storage_existing.p_nom.sum()
+        if lhs_g is None and lhs_s is None and lhs_l is None:
+            continue
+        else:
+            gen = lhs_g.sum() if lhs_g else 0
+            lnk = lhs_l.sum() if lhs_l else 0
+            sto = lhs_s.sum() if lhs_s else 0
+
+        lhs = gen + lnk + sto
+
+        lhs_existing = (
+            lhs_gens_existing.p_nom.sum()
+            + lhs_storage_existing.p_nom.sum()
+            + lhs_link_existing.p_nom.sum()
+        )
 
         if target["max"] == "existing":
             target["max"] = round(lhs_existing, 2) + 0.01
@@ -296,6 +361,9 @@ def add_RPS_constraints(
     n : pypsa.Network
     config : dict
     """
+
+    if rps.empty:
+        return
 
     planning_horizon = n.investment_periods[0]
 
@@ -736,7 +804,9 @@ def extra_functionality(n, sns):
     if "ces" in opts:
         add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
     if "tct" in opts:
-        add_technology_capacity_target_constraints(n, opts["tct"])
+        add_technology_capacity_target_constraints(
+            n, opts["tct"]["data"], opts["tct"]["sample"]
+        )
     if "co2L" in opts:
         add_sector_co2_constraints(n, opts["co2L"])
     if "gshp" in opts:
@@ -904,6 +974,7 @@ if __name__ == "__main__":
         ng_international_f = snakemake.input.ng_international_f
         rps_f = snakemake.input.rps_f
         ces_f = snakemake.input.ces_f
+        tct_f = snakemake.input.tct_f
         constraints_meta = snakemake.input.constraints
     else:
         in_network = "results/Testing/modelruns/0/n.nc"
@@ -916,6 +987,7 @@ if __name__ == "__main__":
         ng_international_f = "results/Testing/constraints/ng_international.csv"
         rps_f = "results/Testing/constraints/rps.csv"
         ces_f = "results/Testing/constraints/ces.csv"
+        tct_f = "results/Testing/constraints/tct.csv"
         constraints_meta = "results/Testing/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
@@ -1002,7 +1074,6 @@ if __name__ == "__main__":
     extra_fn["ces"] = {}
     extra_fn["ces"]["data"] = pd.read_csv(ces_f)
     ces_sample = constraints[constraints.attribute == "ces"].round(2)
-    assert len(ces_sample) == 1
 
     if len(ces_sample) == 1:
         extra_fn["ces"]["sample"] = ces_sample.value.values[0]
@@ -1011,10 +1082,24 @@ if __name__ == "__main__":
     else:
         extra_fn["ces"]["sample"] = 1
 
+    ###
+    # TCT Constraint
+    ###
+    extra_fn["tct"] = {}
+    extra_fn["tct"]["data"] = pd.read_csv(tct_f)
+    extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(2)
+
+    target_names = extra_fn["tct"]["data"].name.to_list()
+    sample_names = extra_fn["tct"]["sample"].name.to_list()
+    for sample_name in sample_names:
+        assert sample_name in target_names
+
+    ###
+    # Heat Pump cooling constraint
+    ###
     extra_fn["hp_cooling"] = True
     # extra_fn["co2L"] = False
-    # extra_fn["tct"] = False
-    # extra_fn["rps"] = False
+
 
     n = solve_network(
         n,
