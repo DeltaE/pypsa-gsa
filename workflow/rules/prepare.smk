@@ -5,7 +5,7 @@ rule copy_network:
     output:
         n = "results/{scenario}/base.nc"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     shell:
         "cp {input.n} {output.n}"
@@ -18,7 +18,7 @@ rule copy_pop_layout:
     output:
         csv = "results/{scenario}/constraints/pop_layout.csv"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     shell:
         "cp {input.csv} {output.csv}"
@@ -33,7 +33,7 @@ rule process_reeds_policy:
     output:
         policy = "results/{scenario}/constraints/{policy}.csv",
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=5
     script:
         "../scripts/rps.py"
@@ -46,7 +46,7 @@ rule copy_tct_data:
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     shell:
         "cp {input.csv} {output.csv}"
@@ -62,7 +62,7 @@ rule retrieve_natural_gas_data:
     log: "logs/retrieve_natural_gas_data.log"
     retries: 3
     resources:
-        mem_mb=2000
+        mem_mb=2000,
         runtime=5
     script:
         "../scripts/retrieve_ng_data.py"
@@ -76,7 +76,7 @@ rule generate_tct_data:
         tct_aeo = "resources/generated/tct_aeo.csv",
         tct_gsa = "resources/generated/tct_gsa.csv",
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     script:
         "../scripts/tct.py"
@@ -89,7 +89,7 @@ rule sanitize_parameters:
         parameters="results/{scenario}/parameters.csv"
     log: "logs/sanitize_{scenario}_parameters.log"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     script:
         "../scripts/sanitize_params.py"
@@ -104,7 +104,7 @@ checkpoint sanitize_results:
     output:
         results="results/{scenario}/results.csv"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     log: "logs/sanitize_{scenario}_results.log"
     script:
@@ -120,7 +120,7 @@ rule process_natural_gas:
         ng_domestic = "results/{scenario}/constraints/ng_domestic.csv",
         ng_international = "results/{scenario}/constraints/ng_international.csv",
     resources:
-        mem_mb=lambda wc, input: max(1.5 * input.size_mb, 1000)
+        mem_mb=lambda wc, input: max(1.5 * input.size_mb, 1000),
         runtime=2
     script:
         "../scripts/process_ng.py"

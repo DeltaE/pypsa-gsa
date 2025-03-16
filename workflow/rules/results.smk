@@ -22,7 +22,7 @@ rule extract_results:
     output:
         csv = "results/{scenario}/modelruns/{run}/results.csv"
     resources:
-        mem_mb=lambda wc, input: max(2 * input.size_mb, 1000)
+        mem_mb=lambda wc, input: max(2 * input.size_mb, 1000),
         runtime=5
     script:
         "../scripts/extract_results.py"
@@ -34,7 +34,7 @@ rule combine_results:
     output:
         csv = temp("results/{scenario}/results/all.csv")
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     run:
         import pandas as pd
@@ -51,7 +51,7 @@ rule parse_results:
     output:
         expand("results/{{scenario}}/results/{result}.csv", result=RESULT_FILES)
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=5
     run:
         import pandas as pd
@@ -75,7 +75,7 @@ rule calculate_SA:
         csv = "results/{scenario}/SA/{result}.csv",
         png = "results/{scenario}/SA/{result}.png"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     script: 
         "../scripts/calculate_sa.py"
@@ -89,7 +89,7 @@ rule heatmap:
     output:
         heatmap = "results/{scenario}/heatmaps/{group}.png"
     resources:
-        mem_mb=1000
+        mem_mb=1000,
         runtime=2
     script:
         "../scripts/heatmap.py"
