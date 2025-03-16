@@ -2,45 +2,38 @@ import pandas as pd
 import sys
 
 configfile: "config/config.yaml"
+configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
 localrules: all, clean
 wildcard_constraints:
-    # result_file="[^(objective)][a-zA-Z_\-]+",
     scenario="[a-zA-Z0-9_]+",
     model_run=r"\d+"
 
-# container: "docker://condaforge/mambaforge:4.10.1-0"
-
+# only use groups/names, so its okay to not use sanitized values
 PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
 RESULTS = pd.read_csv(config["gsa"]["results"])
 
 SCENARIO = config["scenario"]["name"]
 RESULT_FILES = RESULTS.name.to_list()
+HEATMAPS = RESULTS.heatmap.dropna().to_list()
 
 # Calculates number of model runs for the Method of Morris
 GROUPS = PARAMETERS.group.unique()
 MODELRUNS = range((len(GROUPS) + 1) * config["gsa"]["replicates"])
 
 
+include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/constraints.smk"
 include: "rules/solve.smk"
 include: "rules/results.smk"
 
-    
-# onstart:
-#     if "skip_checks" not in config:
-#         print('Checking user inputs...')
-#         shell("python workflow/scripts/check_inputs.py {}".format(config_path))
-
-# onsuccess:
-#     print('Workflow finished successfully!')
-
 rule all:
     input:
         expand("results/{scenario}/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
-        expand("results/{scenario}/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES)
+        expand("results/{scenario}/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES),
+        expand("results/{scenario}/heatmaps/{result}.png", scenario=SCENARIO, result=HEATMAPS)
 
 rule clean:
     shell:
@@ -49,14 +42,6 @@ rule clean:
 rule clean_plots:
     shell:
         "rm -f results/{modelrun}/*.pdf"
-
-rule plot:
-    input: "results/{modelrun}/{result}.csv"
-    output: "results/{modelrun}/{result}.pdf"
-    conda: "envs/plot.yaml"
-    message: "Generating plot using '{input}' and writing to '{output}'"
-    shell:
-        "python workflow/scripts/plot_results.py {input} {output}"
 
 rule make_dag:
     shell:

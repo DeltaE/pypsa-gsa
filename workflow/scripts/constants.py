@@ -1,5 +1,15 @@
 """Constants"""
 
+STATES_TO_EXCLUDE = [
+    "AK",
+    "AS",
+    "GU",
+    "HI",
+    "MP",
+    "PR",
+    "TT"
+]
+
 CONVENTIONAL_CARRIERS = [
     "nuclear", 
     "oil", 
@@ -34,155 +44,83 @@ CES_CARRIERS = [
     "nuclear",
 ]
 
-DEFAULT_LINK_ATTRS = [
-    "name",
-    "bus0",
-    "bus1",
-    "type",
-    "carrier",
-    "efficiency",
-    "build_year",
-    "lifetime",
-    "p_nom",
-    "p_nom_mod",
-    "p_nom_extendable",
-    "p_nom_min",
-    "p_nom_max",
-    "p_set",
-    "p_min_pu",
-    "p_max_pu",
+ADDITIONAL_VALID_ATTRIBUTES = {
+    "links": [
+        "nat_gas_import",  # constraint
+        "nat_gas_export",  # constraint
+        "tx",  # constraint
+        "gshp",  # constraint
+        "tct",  # constraint
+        "discount_rate",
+        "fixed_cost",
+        "occ",
+        "vmt_per_year",
+        "efficiency2",
+        "itc",
+        "leakage",
+        "gwp",
+    ],
+    "generators": ["tct", "rps", "ces", "discount_rate", "fixed_cost", "occ", "itc"],
+    "stores": ["co2L"],
+    "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
+    "lines": ["tx"],
+}
+
+CACHED_ATTRS = [
     "capital_cost",
-    "marginal_cost",
-    "marginal_cost_quadratic",
-    "stand_by_cost",
-    "length",
-    "terrain_factor",
-    "committable",
-    "start_up_cost",
-    "shut_down_cost",
-    "min_up_time",
-    "min_down_time",
-    "up_time_before",
-    "down_time_before",
-    "ramp_limit_up",
-    "ramp_limit_down",
-    "ramp_limit_start_up",
-    "ramp_limit_shut_down",
-    "p0",
-    "p1",
-    "p_nom_opt",
-    "status",
-    "mu_lower",
-    "mu_upper",
-    "mu_p_set",
-    "mu_ramp_limit_up",
-    "mu_ramp_limit_down",
-    "bus2",
-    "efficiency2",
-    "p2",
-]
-
-DEFAULT_LINK_T_ATTRS = [
-    "efficiency",
-    "p_set",
-    "p_min_pu",
-    "p_max_pu",
-    "marginal_cost",
-    "marginal_cost_quadratic",
-    "stand_by_cost",
-    "ramp_limit_up",
-    "ramp_limit_down",
-    "p0",
-    "p1",
-    "status",
-    "mu_lower",
-    "mu_upper",
-    "mu_p_set",
-    "mu_ramp_limit_up",
-    "mu_ramp_limit_down",
-    "efficiency2",
-    "p2",
-]
-
-DEFAULT_GENERATOR_ATTRS = [
-    "name",
-    "bus",
-    "control",
-    "type",
-    "p_nom",
-    "p_nom_mod",
-    "p_nom_extendable",
-    "p_nom_min",
-    "p_nom_max",
-    "p_min_pu",
-    "p_max_pu",
-    "p_set",
-    "q_set",
-    "sign",
-    "carrier",
-    "marginal_cost",
-    "marginal_cost_quadratic",
-    "build_year",
+    "discount_rate",
+    "fixed_cost",
+    "occ",
+    "vmt_per_year",
     "lifetime",
-    "capital_cost",
-    "efficiency",
-    "committable",
-    "start_up_cost",
-    "shut_down_cost",
-    "stand_by_cost",
-    "min_up_time",
-    "min_down_time",
-    "up_time_before",
-    "down_time_before",
-    "ramp_limit_up",
-    "ramp_limit_down",
-    "ramp_limit_start_up",
-    "ramp_limit_shut_down",
-    "weight",
-    "p",
-    "q",
-    "p_nom_opt",
-    "status",
-    "mu_upper",
-    "mu_lower",
-    "mu_p_set",
-    "mu_ramp_limit_up",
-    "mu_ramp_limit_down",
+    "itc",
+    "gwp",
+    "leakage",
 ]
 
-DEFAULT_STORE_ATTRS = [
-    "name",
-    "bus",
-    "type",
-    "carrier",
-    "e_nom",
-    "e_nom_mod",
-    "e_nom_extendable",
-    "e_nom_min",
-    "e_nom_max",
-    "e_min_pu",
-    "e_max_pu",
-    "e_initial",
-    "e_initial_per_period",
-    "e_cyclic",
-    "e_cyclic_per_period",
-    "p_set",
-    "q_set",
-    "sign",
-    "marginal_cost",
-    "marginal_cost_quadratic",
-    "marginal_cost_storage",
-    "capital_cost",
-    "standing_loss",
-    "build_year",
-    "lifetime",
-    "p",
-    "q",
-    "e",
-    "e_nom_opt",
-    "mu_upper",
-    "mu_lower",
-    "mu_energy_balance",
+CONSTRAINT_ATTRS = ["nat_gas_import", "nat_gas_export", "tx", "gshp", "tct", "co2L", "rps", "ces"]
+
+VALID_RANGES = ["percent", "absolute"]
+
+VALID_UNITS = [
+    "mw",
+    "percent",
+    "per_unit",
+    "usd",
+    "usd/mw",
+    "usd/mwh",
+    "usd/kvmt",
+    "kvmt/year",
+    "kvmt/mwh",
+    "years",
 ]
 
-DEFAULT_LOAD_T_ATTRS = ["p_set", "q_set", "p", "q"]
+VALID_RESULTS = {
+    "generators":["p_nom_opt"],
+    "generators_t":["p"],
+    "links":["p_nom_opt"],
+    "links_t":["p0","p1","p2"],
+    "buses_t":["marginal_price"],
+    "system":["cost"],
+    "stores":["e_nom_opt"],
+    
+}
+
+# hard codes where gas can enter/exit the states
+# if multiple POEs exist, the larger pipeline is used as the POE
+# https://atlas.eia.gov/datasets/eia::border-crossings-natural-gas/explore?location=48.411182%2C-90.296487%2C5.24
+POINTS_OF_ENTRY = {
+    "AZ": "MX",  # Arizona - Mexico
+    "CA": "MX",  # California - Mexico
+    "ID": "BC",  # Idaho - BC
+    "ME": "NB",  # Maine - New Brunswick
+    "MI": "ON",  # Michigan - Ontario
+    "MN": "MB",  # Minnesota - Manitoba
+    "MT": "SK",  # Montana - Saskatchewan
+    "ND": "SK",  # North Dakota - Saskatchewan
+    "NH": "QC",  # New Hampshire - Quebec
+    "NY": "ON",  # New York - Ontario
+    "TX": "MX",  # Texas - Mexico
+    "VT": "QC",  # Vermont - Mexico
+    "WA": "BC",  # Washington - BC
+}

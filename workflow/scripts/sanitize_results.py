@@ -1,0 +1,86 @@
+"""Sanitizes result file name."""
+
+import pandas as pd
+import pypsa
+import itertools
+from constants import VALID_RESULTS
+from sanitize_params import sanitize_component_name
+
+from logging import getLogger
+
+logger = getLogger(__name__)
+
+
+def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
+    """Strips any leading/trailing whitespace from naming columns."""
+    
+    df = results.copy()
+    df["name"] = df.name.str.strip()
+    df["component"] = df.component.str.strip()
+    df["carriers"] = df.carriers.str.strip()
+    df["variable"] = df.variable.str.strip()
+    df["unit"] = df.unit.str.strip()
+    return df
+
+def is_valid_variables(results: pd.DataFrame) -> bool:
+    """Confirm variables are valid.
+
+    Assumes component names are valid.
+    """
+
+    def _check_variable(c: str, var: str) -> None:
+        valid = var in VALID_RESULTS[c]
+        if not valid:
+            raise ValueError(f"Variable of {var} for component {c} is not valid")
+
+    df = results.copy()
+    df.apply(lambda row: _check_variable(row["component"], row["variable"]), axis=1)
+    return True
+
+
+def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
+    """Check all defined carriers are in the network."""
+
+    df = results.copy()
+
+    sa_cars = df.carriers.dropna().to_list()
+    sa_cars_split = []
+    for car in sa_cars:
+        sa_cars_split.append(car.split(";"))
+    sa_cars_flat = set(list(itertools.chain(*sa_cars_split)))
+
+    n_cars = n.carriers.index.to_list()
+
+    errors = []
+
+    for car in sa_cars_flat:
+        if car not in n_cars:
+            errors.append(car)
+
+    if errors:
+        logger.error(f"{errors} are not defined in network.")
+        return False
+    else:
+        return True
+
+if __name__ == "__main__":
+
+    if "snakemake" in globals():
+        network = snakemake.input.network
+        in_results = snakemake.params.results
+        out_results = snakemake.output.results
+    else:
+        network = "results/Testing/base.nc"
+        in_results = "config/results.csv"
+        out_results = "results/Testing/results.csv"
+    
+    df = pd.read_csv(in_results)
+    
+    df = sanitize_component_name(df)
+    df = strip_whitespace(df)
+    assert is_valid_variables(df)
+
+    n = pypsa.Network(network)
+    assert is_valid_carrier(n, df)
+
+    df.to_csv(out_results, index=False)

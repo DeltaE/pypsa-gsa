@@ -1,93 +1,71 @@
-"""Collapses RPS policy to a single file to ingest"""
+"""Processes RPS and CES policies."""
 
 import pandas as pd
-import pypsa
 
 from constants import CES_CARRIERS, RPS_CARRIERS
 
+def process_reeds_data(filepath, carriers, value_col):
+    """Helper function to process RPS or CES REEDS data."""
+    reeds = pd.read_csv(filepath)
 
-def get_state_memberships(n: pypsa.Network) -> dict[str, str]:
+    # Handle both wide and long formats
+    if "rps_all" not in reeds.columns:
+        reeds = reeds.melt(
+            id_vars="st",
+            var_name="planning_horizon",
+            value_name=value_col,
+        )
 
-    return (
-        n.buses.groupby("reeds_state")["reeds_zone"]
-        .apply(lambda x: ", ".join(x))
-        .to_dict()
+    # Standardize column names
+    reeds = reeds.rename(
+        columns={"st": "region", "t": "planning_horizon", "rps_all": "pct"},
     )
+    reeds["carrier"] = [", ".join(carriers)] * len(reeds)
 
+    # Extract and create new rows for `rps_solar` and `rps_wind`
+    additional_rows = []
+    for carrier_col, carrier_name in [
+        ("rps_solar", "solar"),
+        ("rps_wind", "onwind, offwind, offwind_floating"),
+    ]:
+        if carrier_col in reeds.columns:
+            temp = reeds[["region", "planning_horizon", carrier_col]].copy()
+            temp = temp.rename(columns={carrier_col: "pct"})
+            temp["carrier"] = carrier_name
+            additional_rows.append(temp)
 
-def process_rps(n: pypsa.Network, rps: pd.DataFrame) -> pd.DataFrame:
+    # Combine original data with additional rows
+    if additional_rows:
+        additional_rows = pd.concat(additional_rows, ignore_index=True)
+        reeds = pd.concat([reeds, additional_rows], ignore_index=True)
 
-    df = rps.copy()
-    state_membership = get_state_memberships(n)
+    # Ensure the final dataframe has consistent columns
+    reeds = reeds[["region", "planning_horizon", "carrier", "pct"]]
+    reeds = reeds[
+        reeds["pct"] > 0.0
+    ]  # Remove any rows with zero or negative percentages
 
-    df["region"] = df["st"].map(state_membership)
-    df = df.dropna(subset="region")
-    df["carrier"] = [", ".join(RPS_CARRIERS)] * len(df)
-    df = df.rename(
-        columns={"t": "planning_horizon", "rps_all": "pct", "st": "name"},
-    )
-    df = df.drop(columns=["rps_solar", "rps_wind"])
-
-    return df
-
-
-def process_ces(n: pypsa.Network, ces: pd.DataFrame) -> pd.DataFrame:
-
-    df = ces.copy()
-    state_membership = get_state_memberships(n)
-
-    df = df.melt(id_vars="st", var_name="planning_horizon", value_name="pct")
-    df["region"] = df["st"].map(state_membership)
-    df = df.dropna(subset="region")
-    df["carrier"] = [", ".join(CES_CARRIERS)] * len(df)
-    df = df.rename(columns={"st": "name"})
-
-    return df
-
-
-def collapse(rps: pd.DataFrame, ces: pd.DataFrame) -> pd.DataFrame:
-
-    df = pd.concat([rps, ces])
-    df = df[df.pct > 0.0]
-    df = df.set_index("name")
-
-    return df
-
-
-def filter_policy(n: pypsa.Network, policy: pd.DataFrame) -> pd.DataFrame:
-
-    # todo: move some carrier/region filtering into here
-
-    years = n.investment_periods.to_list()
-    df = policy.copy()
-    df = df[df.planning_horizon.isin(years)]
-
-    return df
+    return reeds
 
 
 if __name__ == "__main__":
 
     if "snakemake" in globals():
-        network = snakemake.input.network
-        reeds_rps = snakemake.input.rps
-        reeds_ces = snakemake.input.ces
-        csv = snakemake.output.csv
+        in_policy = snakemake.input.policy
+        out_policy = snakemake.output.policy
+        policy = snakemake.wildcards.policy
     else:
-        network = "resources/elec_s50_c35_ec_lv1.0_48SEG_E-G.nc"
-        reeds_rps = "resources/reeds/rps_fraction.csv"
-        reeds_ces = "resources/reeds/ces_fraction.csv"
-        csv = ""
+        in_policy = ""
+        out_policy = ""
+        policy = "rps"
 
-    n = pypsa.Network(network)
+    if policy == "rps":
+        cars = RPS_CARRIERS
+    elif policy == "ces":
+        cars = CES_CARRIERS
+    else:
+        raise ValueError(policy)
 
-    rps = pd.read_csv(reeds_rps)
-    rps = process_rps(n, rps)
+    df = process_reeds_data(in_policy, cars, value_col="pct")
 
-    ces = pd.read_csv(reeds_ces)
-    ces = process_ces(n, ces)
-
-    policy = collapse(rps, ces)
-
-    policy = filter_policy(n, policy)
-
-    policy.to_csv(csv, index=True)
+    df.to_csv(out_policy, index=False)

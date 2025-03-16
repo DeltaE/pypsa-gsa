@@ -1,29 +1,24 @@
 
 # name of base pypsa network
 scenario: 
-  name: "California"
-  network: resources/elec_s33_c4m_ec_lv1.0_2190SEG_E-G.nc
+  name: "Testing"
+
+# Any additional files needed from pypsa-usa for constraints
+pypsa_usa:
+  network: "elec_s40_c4m_ec_lv1.0_12h_E-G.nc"
+  era5_year: 2018
+  pop_layout: "pop_layout_elec_s40_c4m.csv"
 
 gsa:
   parameters: config/parameters.csv # Define the uncertain parameters
   results: config/results.csv # Define what results to run SA over
   replicates: 10 # Sampling - how large should the sample be?
-  scale: False # Scale Elementary Effects (True/False)
+  scale: True # Scale Elementary Effects (True/False)
 
 # Choose a solver
 solver:
   name: gurobi # (cbc|gurobi|cplex|highs)
   options: gurobi-default # see solving config
 
-# policy constraints (True/False)
-policy:
-  rps: True
-  safer: False # need to update logic for links
-  itl: True
-  co2L: True
 
-# use pypsa-usa outputs (True/False)
-pypsa_usa:
-  ng_limits: True
-  hp_capacity: True
-  hp_cooling: True
+

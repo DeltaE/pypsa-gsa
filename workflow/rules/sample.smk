@@ -1,11 +1,12 @@
 rule create_sample:
-    message: "Creating sample for '{params.replicates}' trajectories and '{params.parameters}' parameters"
+    message: "Creating sample"
     params:
         replicates=config["gsa"]["replicates"],
-        parameters=config["gsa"]["parameters"]
+    input:
+        parameters="results/{scenario}/parameters.csv"
     output: 
         sample_file = "results/{scenario}/sample.csv"
-    conda: "../envs/sample.yaml"
+        scaled_sample_file = "results/{scenario}/sample_scaled.csv"
     log: "logs/create_{scenario}_sample.log"
     script:
         "../scripts/create_sample.py"
@@ -16,14 +17,16 @@ rule create_sample:
 rule apply_sample_to_network:
     message: "Applying sample"
     params:
-        parameters = config["gsa"]["parameters"],
         root_dir = "results/{scenario}/modelruns/"
     input: 
+        parameters = "results/{scenario}/parameters.csv",
         sample_file = "results/{scenario}/sample.csv",
-        network = config["scenario"]["network"]
+        network = "results/{scenario}/base.nc"
     output:
         n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
-        meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS)
+        meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS),
+        meta_constriant = expand("results/{{scenario}}/modelruns/{run}/constraints.csv", run=MODELRUNS)
     log: "logs/apply_{scenario}_sample.log"
     script:
         "../scripts/apply_sample.py"
+

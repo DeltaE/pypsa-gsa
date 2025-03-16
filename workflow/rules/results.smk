@@ -1,19 +1,24 @@
 """Rules for processing results"""
 
 def get_sample_name(wildcards):
-    if config["gsa"]['scale']:
+    if config["gsa"]["scale"]:
         return f"results/{wildcards.scenario}/sample_scaled.csv"
     else: 
         return f"results/{wildcards.scenario}/sample.csv"
 
+def get_heatmap_csvs(wildcards):
+    csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario).output[0]
+    df = pd.read_csv(csv)
+    df = df[df.heatmap == wildcards.group]
+    results = df.name.to_list()
+
+    return [f"results/{wildcards.scenario}/SA/{x}.csv" for x in results]
+
 rule extract_results:
     message: "Extracting result"
-    params:
-        component = "links",
-        results = config["gsa"]["results"]
     input:
         network = "results/{scenario}/modelruns/{run}/network.nc",
-        results = config["gsa"]["results"]
+        results = "results/{scenario}/results.csv"
     output:
         csv = "results/{scenario}/modelruns/{run}/results.csv"
     script:
@@ -52,13 +57,24 @@ rule calculate_SA:
     message:
         "Calcualting sensitivity measures"
     params: 
-        parameters=config["gsa"]["parameters"],
         scaled = config["gsa"]["scale"]
     input: 
         sample = get_sample_name,
+        parameters = "results/{scenario}/parameters.csv",
         results = "results/{scenario}/results/{result}.csv"
     output: 
         csv = "results/{scenario}/SA/{result}.csv",
         png = "results/{scenario}/SA/{result}.png"
     script: 
         "../scripts/calculate_sa.py"
+
+rule heatmap:
+    message:
+        "Generating heat map"
+    input:
+        results = "results/{scenario}/results.csv",
+        csvs = get_heatmap_csvs
+    output:
+        heatmap = "results/{scenario}/heatmaps/{group}.png"
+    script:
+        "../scripts/heatmap.py"
