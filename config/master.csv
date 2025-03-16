@@ -293,13 +293,14 @@ itc_hydro,itc_hydro,ITC Hydro,generator,hydro,itc,absolute,percent,0,30,https://
 itc_4hrbat,itc_battery,ITC Battery,StorageUnit,4hr_battery_storage,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 itc_8hrbat,itc_battery,ITC Battery,StorageUnit,8hr_battery_storage,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 itc_nuclear,itc_nuclear,ITC Nuclear,generator,nuclear,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
-tct_solar,solar_tct,Solar Capacity Limit,generator,solar,tct,absolute,mw,999999,9999999,,
-tct_wind,wind_tct,Wind Capacity Limit,generator,wind,tct,absolute,mw,999999,9999999,,
-tct_ngccs,ngccs_tct,Nat Gas CCS Capacity Limit,link,CCGT-95CCS,tct,absolute,mw,999999,9999999,,
-tct_trn_elec_lgt,tct_trn_elec_lgt,Light-Duty EV Capacity Limit,link,trn-elec-veh-lgt,tct,absolute,mw,999999,9999999,,
-tct_trn_elec_med,tct_trn_elec_med,Med-Duty EV Capacity Limit,link,trn-elec-veh-med,tct,absolute,mw,999999,9999999,,
-tct_trn_elec_hvy,tct_trn_elec_hvy,Heavy-Duty EV Capacity Limit,link,trn-elec-veh-hvy,tct,absolute,mw,999999,9999999,,
-tct_trn_elec_bus,tct_trn_elec_bus,Bus EV Capacity Limit,link,trn-elec-veh-bus,tct,absolute,mw,999999,9999999,,
+tct_biomass,tct_biomass,Biomass Max Capacity,generator,biomass,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+tct_geothermal,tct_geothermal,Geothermal Max Capacity,generator,geothermal,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+tct_nuclear,tct_nuclear,Nuclear Max Capacity,generator,nuclear,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+tct_wind,tct_wind,Wind Max Capacity,generator,"onwind,offwind_floating",tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+tct_solar,tct_solar,Solar Max Capacity,generator,solar,tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+tct_hydro,tct_hydro,Hydro Max Capacity,generator,hydro,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+tct_ccgt,tct_ccgt,Ccgt Max Capacity,generator,"CCGT,CCGT-95CCS",tct,absolute,per_unit,1.05,1.18,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+tct_ocgt,tct_ocgt,Ocgt Max Capacity,generator,OCGT,tct,absolute,per_unit,1.65,1.89,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 res_emissions,res_emissions,Residential Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
 com_emissions,com_emissions,Commercial Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
 ind_emissions,ind_emissions,Industrial Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
