@@ -4,6 +4,7 @@
 results/*
 config/pypsa-usa/
 logs/*
+benchmarks/*
 
 
 # Byte-compiled / optimized / DLL files
