@@ -1,4 +1,4 @@
-executor: slurm
+executor: local
 jobs: 999
 local-cores: 1
 cores: 10
