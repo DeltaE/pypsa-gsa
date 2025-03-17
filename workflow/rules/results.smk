@@ -21,9 +21,13 @@ rule extract_results:
         results = "results/{scenario}/results.csv"
     output:
         csv = "results/{scenario}/modelruns/{run}/results.csv"
+    log: 
+        "logs/extract_results/{scenario}_{run}.log"
     resources:
-        mem_mb=lambda wc, input: max(2 * input.size_mb, 1000),
-        runtime=5
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
+        runtime=1
+    benchmark:
+        "benchmarks/extract_results/{scenario}_{run}.txt"
     script:
         "../scripts/extract_results.py"
 
@@ -33,9 +37,13 @@ rule combine_results:
         results = expand("results/{{scenario}}/modelruns/{run}/results.csv", run=MODELRUNS)
     output:
         csv = temp("results/{scenario}/results/all.csv")
+    log: 
+        "logs/combine_results/{scenario}.log"
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
+        runtime=1
+    benchmark:
+        "benchmarks/combine_results/{scenario}.txt"
     run:
         import pandas as pd
         data = [pd.read_csv(str(x)) for x in input.results]
@@ -50,9 +58,13 @@ rule parse_results:
         results = "results/{scenario}/results/all.csv"
     output:
         expand("results/{{scenario}}/results/{result}.csv", result=RESULT_FILES)
+    log: 
+        "logs/parse_results/{scenario}.log"
     resources:
-        mem_mb=1000,
-        runtime=5
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
+        runtime=1
+    benchmark:
+        "benchmarks/parse_results/{scenario}.txt"
     run:
         import pandas as pd
         from pathlib import Path 
@@ -74,9 +86,13 @@ rule calculate_SA:
     output: 
         csv = "results/{scenario}/SA/{result}.csv",
         png = "results/{scenario}/SA/{result}.png"
+    log: 
+        "logs/calculate_sa/{scenario}_{result}.log"
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
+        runtime=1
+    benchmark:
+        "benchmarks/calculate_sa/{scenario}_{result}.txt"
     script: 
         "../scripts/calculate_sa.py"
 
@@ -88,8 +104,12 @@ rule heatmap:
         csvs = get_heatmap_csvs
     output:
         heatmap = "results/{scenario}/heatmaps/{group}.png"
+    log: 
+        "logs/create_heatmap/{scenario}_{group}.log"
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
+        runtime=1
+    benchmark:
+        "benchmarks/create_heatmap/{scenario}_{group}.txt"
     script:
         "../scripts/heatmap.py"

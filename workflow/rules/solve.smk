@@ -26,10 +26,12 @@ rule solve_network:
         network = "results/{scenario}/modelruns/{run}/network.nc",
     threads: 12
     resources:
-        mem_mb=32000,
-        runtime=15
+        mem_mb=2000,
+        runtime=2
+    benchmark:
+        "benchmarks/solve/{scenario}_{run}.txt"
     log: 
-        python = "logs/solve_{scenario}_{run}_python.log",
-        solver = "logs/solve_{scenario}_{run}_solver.log",
+        python = "logs/solve/{scenario}_{run}_python.log",
+        solver = "logs/solve/{scenario}_{run}_solver.log",
     script:
         "../scripts/solve.py"

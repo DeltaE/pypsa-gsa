@@ -5,8 +5,10 @@ rule copy_network:
     output:
         n = "results/{scenario}/base.nc"
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
+        runtime=1
+    benchmark:
+        "benchmarks/copy_network/{scenario}.txt"
     shell:
         "cp {input.n} {output.n}"
 
@@ -18,8 +20,10 @@ rule copy_pop_layout:
     output:
         csv = "results/{scenario}/constraints/pop_layout.csv"
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
+        runtime=1
+    benchmark:
+        "benchmarks/copy_pop_layout/{scenario}.txt"
     shell:
         "cp {input.csv} {output.csv}"
 
@@ -32,9 +36,11 @@ rule process_reeds_policy:
         policy = "resources/reeds/{policy}_fraction.csv"
     output:
         policy = "results/{scenario}/constraints/{policy}.csv",
+    benchmark:
+        "benchmarks/process_reeds/{scenario}_{policy}.txt"
     resources:
-        mem_mb=1000,
-        runtime=5
+        mem_mb=100,
+        runtime=1
     script:
         "../scripts/rps.py"
         
@@ -46,8 +52,8 @@ rule copy_tct_data:
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
+        runtime=1
     shell:
         "cp {input.csv} {output.csv}"
 
@@ -59,11 +65,14 @@ rule retrieve_natural_gas_data:
     output:
         domestic = "resources/natural_gas/domestic.csv",
         international = "resources/natural_gas/international.csv"
-    log: "logs/retrieve_natural_gas_data.log"
+    log: 
+        "logs/retrieve_ng/benchmark.log"
+    benchmark:
+        "benchmarks/retrieve_ng/benchmark.txt"
     retries: 3
     resources:
-        mem_mb=2000,
-        runtime=5
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
+        runtime=2
     script:
         "../scripts/retrieve_ng_data.py"
 
@@ -76,8 +85,8 @@ rule generate_tct_data:
         tct_aeo = "resources/generated/tct_aeo.csv",
         tct_gsa = "resources/generated/tct_gsa.csv",
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=100,
+        runtime=1
     script:
         "../scripts/tct.py"
 
@@ -87,10 +96,13 @@ rule sanitize_parameters:
         parameters=config["gsa"]["parameters"]
     output:
         parameters="results/{scenario}/parameters.csv"
-    log: "logs/sanitize_{scenario}_parameters.log"
+    log: 
+        "logs/sanitize_parameters/{scenario}.log"
+    benchmark:
+        "benchmarks/sanitize_parameters/{scenario}.txt"
     resources:
-        mem_mb=1000,
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
+        runtime=1
     script:
         "../scripts/sanitize_params.py"
 
@@ -104,9 +116,12 @@ checkpoint sanitize_results:
     output:
         results="results/{scenario}/results.csv"
     resources:
-        mem_mb=1000,
-        runtime=2
-    log: "logs/sanitize_{scenario}_results.log"
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/sanitize_results/{scenario}.txt"
+    log: 
+        "logs/sanitize_results/{scenario}.log"
     script:
         "../scripts/sanitize_results.py"
 
@@ -120,7 +135,11 @@ rule process_natural_gas:
         ng_domestic = "results/{scenario}/constraints/ng_domestic.csv",
         ng_international = "results/{scenario}/constraints/ng_international.csv",
     resources:
-        mem_mb=lambda wc, input: max(1.5 * input.size_mb, 1000),
-        runtime=2
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/process_ng/{scenario}.txt"
+    log: 
+        "logs/process_ng/{scenario}.log"
     script:
         "../scripts/process_ng.py"
