@@ -184,6 +184,24 @@ class DataExtractor(ABC):
             {"series-description": str, "value": float, "units": str, "state": str},
         )
 
+class Emissions(EiaData):
+    """State level emissions data."""
+
+    def __init__(
+        self,
+        sector: str,
+        year: int,
+        api: str,
+        fuel: str | None = None,
+    ) -> None:
+        self.sector = sector  # (power|residential|commercial|industry|transport|total)
+        self.year = year  # 1970 - 2021
+        self.api = api
+        self.fuel = "all" if not fuel else fuel  # (coal|oil|gas|all)
+
+    def data_creator(self):
+        """Initializes data extractor."""
+        return _StateEmissions(self.sector, self.fuel, self.year, self.api)
 
 class EnergyDemand(EiaData):
     """
@@ -961,6 +979,72 @@ class _PowerCapacity(DataExtractor):
         df = df.rename(columns={"seriesName": "series-description", "unit": "units"})
         df["state"] = "U.S."
         df = df[["series-description", "value", "units", "state"]].sort_index()
+        return self._assign_dtypes(df)
+
+class _StateEmissions(DataExtractor):
+    """State Level CO2 Emissions."""
+
+    sector_codes: ClassVar[dict[str, str]] = {
+        "commercial": "CC",
+        "power": "EC",
+        "industrial": "IC",
+        "residential": "RC",
+        "transport": "TC",
+        "total": "TT",
+    }
+
+    fuel_codes: ClassVar[dict[str, str]] = {
+        "coal": "CO",
+        "gas": "NG",
+        "oil": "PE",
+        "all": "TO",  # coal + gas + oil = all emissions
+    }
+
+    def __init__(self, sector: str, fuel: str, year: int, api_key: str) -> None:
+        self.sector = sector
+        self.fuel = fuel
+        if self.sector not in list(self.sector_codes):
+            raise InputPropertyError(
+                propery="State Level Emissions",
+                valid_options=list(self.sector_codes),
+                recived_option=sector,
+            )
+        if self.fuel not in list(self.fuel_codes):
+            raise InputPropertyError(
+                propery="State Level Emissions",
+                valid_options=list(self.fuel_codes),
+                recived_option=fuel,
+            )
+        super().__init__(year, api_key)
+        if self.year > 2021:
+            logger.warning(f"Emissions data only available until {2021}")
+            self.year = 2021
+
+    def build_url(self) -> str:
+        base_url = "co2-emissions/co2-emissions-aggregates/data/"
+        facets = f"frequency=annual&data[0]=value&facets[sectorId][]={self.sector_codes[self.sector]}&facets[fuelId][]={self.fuel_codes[self.fuel]}&start={self.year}&end={self.year}&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000"
+        return f"{API_BASE}{base_url}?api_key={self.api_key}&{facets}"
+
+    def format_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df[~(df["state-name"] == "NA")].copy()
+        df = df.rename(
+            columns={
+                "value-units": "units",
+                "state-name": "state",
+                "sector-name": "series-description",
+            },
+        )
+        df["series-description"] = df["series-description"].str.cat(
+            df["fuel-name"],
+            sep=" - ",
+        )
+
+        df = (
+            df[["series-description", "value", "units", "state", "period"]]
+            .sort_values(["state", "period"])
+            .set_index("period")
+        )
+
         return self._assign_dtypes(df)
 
 if __name__ == "__main__":
