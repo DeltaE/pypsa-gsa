@@ -637,6 +637,39 @@ def add_ng_import_export_limits(
     if not export_max == "inf":
         add_export_limits(n, trade, "max", export_max)
 
+def add_transmission_limit(n, factor):
+    """Set volume transmission limits expansion."""
+
+    if factor <= 1.0:
+        return
+
+    # remove the old Global Constraint
+    n.remove("GlobalConstraint", "lv_limit")
+
+    logger.info(f"Setting volume transmission limit of {factor * 100}%")
+
+    ac_links_existing = n.links.carrier == "AC" if not n.links.empty else pd.Series()
+    ac_links_extend = n.links[
+        (n.links.carrier == "AC") & (n.links.index.str.endswith("exp"))
+    ].index
+
+    col = "length"
+    ref = n.links.loc[ac_links_existing, "p_nom"] @ n.links.loc[ac_links_existing, col]
+
+    n.links.loc[ac_links_extend, "p_nom_extendable"] = True
+
+    con_type = "volume_expansion"
+    rhs = float(factor) * ref
+
+    n.add(
+        "GlobalConstraint",
+        "lv_limit",
+        type=f"transmission_{con_type}_limit",
+        sense="<=",
+        constant=rhs,
+        carrier_attribute="AC, DC",
+    )
+
 
 def add_cooling_heat_pump_constraints(n):
     """
@@ -761,8 +794,12 @@ def extra_functionality(n, sns):
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
     if "ng_limits" in opts:
         add_ng_import_export_limits(n, opts["ng_limits"])
+    if "lv" in opts:
+        add_transmission_limit(n, opts["lv"]["sample"])
     if "hp_cooling" in opts:
         add_cooling_heat_pump_constraints(n)
+    # if "demand_response" in opts:
+
 
 ###
 # Prepare Network
@@ -925,7 +962,7 @@ if __name__ == "__main__":
         tct_f = snakemake.input.tct_f
         constraints_meta = snakemake.input.constraints
     else:
-        in_network = "results/Testing/modelruns/0/n.nc"
+        in_network = "results/Testing/modelruns/10/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
@@ -936,7 +973,7 @@ if __name__ == "__main__":
         rps_f = "results/Testing/constraints/rps.csv"
         ces_f = "results/Testing/constraints/ces.csv"
         tct_f = "results/Testing/constraints/tct.csv"
-        constraints_meta = "results/Testing/modelruns/0/constraints.csv"
+        constraints_meta = "results/Testing/modelruns/10/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1052,9 +1089,25 @@ if __name__ == "__main__":
     if len(co2_sample) == 1:
         extra_fn["co2L"]["sample"] = co2_sample.value.values[0]
     elif len(co2_sample) > 1:
-        raise ValueError("Too many samples for ces")
+        raise ValueError("Too many samples for co2L")
     else:
-        extra_fn["co2L"]["sample"] = 1
+        logger.warning("No CO2 Limits provided")
+        extra_fn.pop("co2L")
+
+    ###
+    # Transmission Expansion Constraint
+    ###
+    extra_fn["lv"] = {}
+
+    lv_sample = constraints[constraints.attribute == "lv"].round(2)
+
+    if len(lv_sample) == 1:
+        # '1 +' because expansion given as per unit
+        extra_fn["lv"]["sample"] = 1 + lv_sample.value.values[0]
+    elif len(lv_sample) > 1:
+        raise ValueError("Too many samples for lv")
+    else:
+        extra_fn.pop("lv")
 
     ###
     # Heat Pump cooling constraint
