@@ -13,14 +13,13 @@ import pypsa
 from typing import Optional
 import yaml
 
-from constants import RPS_CARRIERS, CES_CARRIERS
-
 logger = logging.getLogger(__name__)
 NG_MWH_2_MMCF = 305
 
 ###
 # Helpers
 ###
+
 
 def get_region_buses(n, region_list):
     return n.buses[
@@ -33,6 +32,7 @@ def get_region_buses(n, region_list):
             | (1 if "all" in region_list else 0)
         )
     ]
+
 
 def filter_components(
     n: pypsa.Network,
@@ -78,22 +78,17 @@ def filter_components(
             region_buses = n.buses.index
     assert isinstance(region_buses, pd.Index)
 
-    # Links will throw the following attribute error
+    # Links will throw the following attribute error, as we must specify bus0
     # AttributeError: 'DataFrame' object has no attribute 'bus'. Did you mean: 'bus0'?
-    try:
-        filtered = component.loc[
-            active_components
-            & component.carrier.isin(carrier_list)
-            & component.bus.isin(region_buses)
-            & (component.p_nom_extendable == extendable)
-        ]
-    except AttributeError:
-        filtered = component.loc[
-            active_components
-            & component.carrier.isin(carrier_list)
-            & component.bus0.isin(region_buses)
-            & (component.p_nom_extendable == extendable)
-        ]
+    bus_name = "bus0" if component_type.lower() == "link" else "bus"
+
+    filtered = component.loc[
+        active_components
+        & component.carrier.isin(carrier_list)
+        & component[bus_name].isin(region_buses)
+        & (component.p_nom_extendable == extendable)
+    ]
+
     return filtered
 
 ###
