@@ -301,11 +301,6 @@ tct_solar,tct_solar,Solar Max Capacity,generator,solar,tct,absolute,per_unit,2.8
 tct_hydro,tct_hydro,Hydro Max Capacity,generator,hydro,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 tct_ccgt,tct_ccgt,Ccgt Max Capacity,generator,"CCGT,CCGT-95CCS",tct,absolute,per_unit,1.05,1.18,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 tct_ocgt,tct_ocgt,Ocgt Max Capacity,generator,OCGT,tct,absolute,per_unit,1.65,1.89,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-res_emissions,res_emissions,Residential Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-com_emissions,com_emissions,Commercial Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-ind_emissions,ind_emissions,Industrial Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-trn_emissions,trn_emissions,Transport Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-total_emissions,total_emissions,System Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
 discount_rate_res_gas_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-gas-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_lpg_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-oil-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_elec_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-elec-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
@@ -347,3 +342,4 @@ coal_cost,coal_cost,Coal Fuel Cost,store,coal,marginal_cost,percent,percent,-6.2
 oil_cost,oil_cost,Oil Fuel Cost,store,oil,marginal_cost,percent,percent,-40,66,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 lpg_cost,lpg_cost,LPG Fuel Cost,store,lpg,marginal_cost,percent,percent,-28.5,59.6,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 nuclear_cost,nuclear_cost,Uranium Fuel Cost,generator,nuclear,marginal_cost,percent,percent,-0.3,0.3,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+emission_limit,emission_limit,System Emission Limit,store,co2,co2L,absolute,mmt,250,300,https://www.eia.gov/environment/emissions/state/,40-50% reduction from 2005 levels

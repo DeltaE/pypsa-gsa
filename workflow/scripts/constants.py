@@ -93,6 +93,7 @@ VALID_UNITS = [
     "kvmt/year",
     "kvmt/mwh",
     "years",
+    "mmt"
 ]
 
 VALID_RESULTS = {
@@ -103,7 +104,6 @@ VALID_RESULTS = {
     "buses_t":["marginal_price"],
     "system":["cost"],
     "stores":["e_nom_opt"],
-    
 }
 
 # hard codes where gas can enter/exit the states

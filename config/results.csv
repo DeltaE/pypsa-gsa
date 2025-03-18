@@ -11,3 +11,4 @@ trn_marginal_cost_elec,buses_t,trn-elec-veh,marginal_price,transport_marginal_pr
 trn_marginal_cost_energy,buses_t,trn-elec-veh;trn-lpg-veh,marginal_price,transport_marginal_price,$/MWh
 marginal_cost_elec,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,system_marginal_price,$/MWh
 marginal_cost_energy,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,system_marginal_price,$/MWh
+carbon_cost,buses_t,"co2;ch4",marginal_price,carbon_cost,$/T

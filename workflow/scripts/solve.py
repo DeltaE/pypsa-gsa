@@ -415,7 +415,7 @@ def add_RPS_constraints(
             )
 
 
-def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
+def add_sector_co2_constraints(n: pypsa.Network, sample: float):
     """
     Adds sector co2 constraints.
 
@@ -425,91 +425,49 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
         config : dict
     """
 
-    def apply_total_state_limit(n, year, state, value):
-        sns = n.snapshots
-        snapshot = sns[sns.get_level_values("period") == year][-1]
+    def apply_national_limit(
+        n: pypsa.Network, year: int, value: float, sector: str | None = None
+    ):
+        """For every snapshot, sum of co2 and ch4 must be less than limit."""
+        if sector:
+            stores = n.stores[
+                (
+                    (n.stores.index.str.endswith(f"{sector}-co2"))
+                    | (n.stores.index.str.endswith(f"{sector}-ch4"))
+                )
+            ].index
+            name = f"co2_limit-{year}-{sector}"
+            log_statement = f"Adding national {sector} co2 Limit in {year} of"
+        else:
+            stores = n.stores[
+                (
+                    (n.stores.index.str.endswith("-co2"))
+                    | (n.stores.index.str.endswith("-ch4"))
+                )
+            ].index
+            name = f"co2_limit-{year}"
+            log_statement = f"Adding national co2 Limit in {year} of"
 
-        stores = n.stores[
-            (n.stores.index.str.startswith(state))
-            & (
-                (n.stores.index.str.endswith("-co2"))
-                | (n.stores.index.str.endswith("-ch4"))
-            )
-        ].index
-
-        lhs = n.model["Store-e"].loc[snapshot, stores].sum()
-
+        lhs = n.model["Store-e"].loc[:, stores].sum(dim="Store")
         rhs = value  # value in T CO2
 
-        n.model.add_constraints(lhs <= rhs, name=f"co2_limit-{year}-{state}")
+        n.model.add_constraints(lhs <= rhs, name=name)
 
-        logger.info(
-            f"Adding {state} co2 Limit in {year} of {rhs * 1e-6} MMT CO2",
-        )
+        logger.info(f"{log_statement} {rhs * 1e-6} MMT CO2")
 
-    def apply_sector_state_limit(n, year, state, sector, value):
-        sns = n.snapshots
-        snapshot = sns[sns.get_level_values("period") == year][-1]
+    # limit is applied at a global level
 
-        stores = n.stores[
-            (n.stores.index.str.startswith(state))
-            & (
-                (n.stores.index.str.endswith(f"{sector}-co2"))
-                | (n.stores.index.str.endswith(f"{sector}-ch4"))
-            )
-        ].index
+    mmt_limit = sample
+    year = n.investment_periods[0]
 
-        lhs = n.model["Store-e"].loc[snapshot, stores].sum()
+    df = pd.DataFrame(
+        [[year, "all", "all", mmt_limit]],
+        columns=["year", "state", "sector", "co2_limit_mmt"],
+    )
 
-        rhs = value  # value in T CO2
-
-        n.model.add_constraints(lhs <= rhs, name=f"co2_limit-{year}-{state}-{sector}")
-
-        logger.info(
-            f"Adding {state} co2 Limit for {sector} in {year} of {rhs * 1e-6} MMT CO2",
-        )
-
-    def apply_total_national_limit(n, year, value):
-        sns = n.snapshots
-        snapshot = sns[sns.get_level_values("period") == year][-1]
-
-        stores = n.stores[
-            (
-                (n.stores.index.str.endswith("-co2"))
-                | (n.stores.index.str.endswith("-ch4"))
-            )
-        ].index
-
-        lhs = n.model["Store-e"].loc[snapshot, stores].sum()
-
-        rhs = value  # value in T CO2
-
-        n.model.add_constraints(lhs <= rhs, name=f"co2_limit-{year}")
-
-        logger.info(
-            f"Adding national co2 Limit in {year} of {rhs * 1e-6} MMT CO2",
-        )
-
-    def apply_sector_national_limit(n, year, sector, value):
-        sns = n.snapshots
-        snapshot = sns[sns.get_level_values("period") == year][-1]
-
-        stores = n.stores[
-            (n.stores.index.str.endswith(f"{sector}-co2"))
-            | (n.stores.index.str.endswith(f"{sector}-ch4"))
-        ].index
-
-        lhs = n.model["Store-e"].loc[snapshot, stores].sum()
-
-        rhs = value  # value in T CO2
-
-        n.model.add_constraints(lhs <= rhs, name=f"co2_limit-{year}-{sector}")
-
-        logger.info(
-            f"Adding national co2 Limit for {sector} sector in {year} of {rhs * 1e-6} MMT CO2",
-        )
-
-    df = co2L.copy()
+    if df.empty:
+        logger.warning("No co2 policies applied")
+        return
 
     sectors = df.sector.unique()
 
@@ -534,18 +492,13 @@ def add_sector_co2_constraints(n: pypsa.Network, co2L: pd.DataFrame):
                 # results calcualted in T CO2, policy given in MMT CO2
                 value = df_limit.loc[0, "co2_limit_mmt"] * 1e6
 
-                if state.upper() == "USA":
+                if state.lower() == "all":
                     if sector == "all":
-                        apply_total_national_limit(n, year, value)
+                        apply_national_limit(n, year, value)
                     else:
-                        apply_sector_national_limit(n, year, sector, value)
-
+                        apply_national_limit(n, year, value, sector)
                 else:
-                    if sector == "all":
-                        apply_total_state_limit(n, year, state, value)
-                    else:
-                        apply_sector_state_limit(n, year, state, sector, value)
-
+                    raise ValueError(state.lower())
 
 def add_ng_import_export_limits(
     n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], limits: dict[str, float]
@@ -803,7 +756,7 @@ def extra_functionality(n, sns):
             n, opts["tct"]["data"], opts["tct"]["sample"]
         )
     if "co2L" in opts:
-        add_sector_co2_constraints(n, opts["co2L"])
+        add_sector_co2_constraints(n, opts["co2L"]["sample"])
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
     if "ng_limits" in opts:
@@ -1090,10 +1043,23 @@ if __name__ == "__main__":
         assert sample_name in target_names
 
     ###
+    # Carbon Limit Constraint
+    ###
+    extra_fn["co2L"] = {}
+
+    co2_sample = constraints[constraints.attribute == "co2L"].round(2)
+
+    if len(co2_sample) == 1:
+        extra_fn["co2L"]["sample"] = co2_sample.value.values[0]
+    elif len(co2_sample) > 1:
+        raise ValueError("Too many samples for ces")
+    else:
+        extra_fn["co2L"]["sample"] = 1
+
+    ###
     # Heat Pump cooling constraint
     ###
     extra_fn["hp_cooling"] = True
-    # extra_fn["co2L"] = False
 
 
     n = solve_network(

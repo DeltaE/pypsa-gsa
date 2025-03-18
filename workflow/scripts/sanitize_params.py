@@ -469,7 +469,7 @@ def is_valid_gshp(params: pd.DataFrame) -> bool:
 if __name__ == "__main__":
 
     if "snakemake" in globals():
-        in_params = snakemake.params.parameters
+        in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
     else:
         in_params = "config/parameters.csv"

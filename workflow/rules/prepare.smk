@@ -92,7 +92,7 @@ rule generate_tct_data:
 
 rule sanitize_parameters:
     message: "Sanitizing parameters"
-    params:
+    input:
         parameters=config["gsa"]["parameters"]
     output:
         parameters="results/{scenario}/parameters.csv"
