@@ -12,6 +12,7 @@ import pypsa
 
 from typing import Optional
 import yaml
+from utils import _get_existing_lv
 
 logger = logging.getLogger(__name__)
 NG_MWH_2_MMCF = 305
@@ -637,6 +638,7 @@ def add_ng_import_export_limits(
     if not export_max == "inf":
         add_export_limits(n, trade, "max", export_max)
 
+
 def add_transmission_limit(n, factor):
     """Set volume transmission limits expansion."""
 
@@ -648,18 +650,15 @@ def add_transmission_limit(n, factor):
 
     logger.info(f"Setting volume transmission limit of {factor * 100}%")
 
-    ac_links_existing = n.links.carrier == "AC" if not n.links.empty else pd.Series()
     ac_links_extend = n.links[
         (n.links.carrier == "AC") & (n.links.index.str.endswith("exp"))
     ].index
-
-    col = "length"
-    ref = n.links.loc[ac_links_existing, "p_nom"] @ n.links.loc[ac_links_existing, col]
-
     n.links.loc[ac_links_extend, "p_nom_extendable"] = True
 
-    con_type = "volume_expansion"
+    ref = _get_existing_lv(n)
     rhs = float(factor) * ref
+
+    con_type = "volume_expansion"
 
     n.add(
         "GlobalConstraint",

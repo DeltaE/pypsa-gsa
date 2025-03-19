@@ -93,6 +93,8 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "links"
             case "generator" | "generators":
                 return "generators"
+            case "generator_t" | "generators_t":
+                return "generators_t"
             case "store" | "stores":
                 return "stores"
             case "storageunit" | "storageunits":

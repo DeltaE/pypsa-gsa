@@ -30,6 +30,7 @@ rule apply_sample_to_network:
         network = "results/{scenario}/base.nc"
     output:
         n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
+        scaled_sample = "results/{scenario}/scaled_sample.csv",
         meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS),
         meta_constriant = expand("results/{{scenario}}/modelruns/{run}/constraints.csv", run=MODELRUNS)
     resources:

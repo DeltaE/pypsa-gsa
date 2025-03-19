@@ -1,12 +1,13 @@
 """Applies sampled value to the base network"""
 
 import pandas as pd
+import numpy as np
 import pypsa
 from typing import Any
 from pathlib import Path
 import yaml
 from dataclasses import dataclass
-from utils import calculate_annuity
+from utils import calculate_annuity, _get_existing_lv
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
 from logging import getLogger
@@ -160,20 +161,47 @@ def get_sample_data(
 
 def _apply_static_sample(
     n: pypsa.Network, c: str, car: str, attr: str, value: int | float, absolute: bool
-):
+) -> dict[str, float]:
+    """Applies a time independent value to the network.
+
+    Returns value applied and difference from ref value.
+    """
     df = getattr(n, c)
     slicer = df[df.carrier == car].index
     if absolute:
+        # get metadata
+        sampled = value
+        ref = getattr(n, c).loc[slicer, attr].mean()
+        diff = sampled / ref * 100
+        # apply value
         getattr(n, c).loc[slicer, attr] = value
     else:
+        # get metadata
         ref = getattr(n, c).loc[slicer, attr]
+        if attr == "p_nom":  # only include existing capacity
+            ref = ref[ref > 0]
+        ref = ref.mean()
         multiplier = value / 100  # can be positive or negative
-        getattr(n, c).loc[slicer, attr] = ref + ref.mul(multiplier)
+        sampled = ref + ref * multiplier
+        diff = sampled / ref * 100
+        # apply value
+        ref_slice = getattr(n, c).loc[slicer, attr]
+        getattr(n, c).loc[slicer, attr] = ref_slice + ref_slice.mul(multiplier)
 
+    return {
+        "ref": round(ref, 2),  # original value applied to network
+        "scaled": round(sampled, 2),  # new value applied to network
+        "difference": round(diff, 2),  # percent diff between original and new
+    }
 
 def _apply_dynamic_sample(
     n: pypsa.Network, c: str, car: str, attr: str, value: int | float
-):
+) -> tuple[float, float]:
+    """Applies a time dependent value to the network.
+
+    Returns mean value applied and difference from mean ref value.
+    """
+    # apply value
     df_t = getattr(n, c)[attr]
     df_static = getattr(n, c.split("_t")[0])
 
@@ -185,6 +213,18 @@ def _apply_dynamic_sample(
     multiplier = value / 100  # can be positive or negative
     getattr(n, c)[attr].loc[:, names] = ref + ref.mul(multiplier)
 
+    # get metadata
+    scaled = (ref + ref.mul(multiplier)).mean().mean()
+    ref = ref.mean().mean()
+    diff = scaled / ref
+
+    return {
+        "ref": round(ref, 2),  # original mean value applied to network
+        "scaled": round(scaled, 2),  # new mean value applied to network
+        "difference": round(diff, 2),  # percent diff between original and new
+    }
+
+
 def _apply_cached_capex(n: pypsa.Network, car: str, data: dict[str, Any]):
     try:
         cache = CapitalCostCache(**data)
@@ -194,28 +234,45 @@ def _apply_cached_capex(n: pypsa.Network, car: str, data: dict[str, Any]):
         raise ValueError(ex)
     if car.endswith("battery_storage"):  # extra carrier
         pass
-    _apply_static_sample(n, cache.component, car, "capital_cost", capex, "absolute")
+    sampled = _apply_static_sample(
+        n, cache.component, car, "capital_cost", capex, "absolute"
+    )
+    return sampled
 
 
-def _apply_cached_ch4_leakage(n: pypsa.Network, car: str, data: dict[str, Any]):
+def _apply_cached_ch4_leakage(
+    n: pypsa.Network, car: str, data: dict[str, Any]
+) -> dict[str, float]:
     try:
         cache = MethaneLeakageCache(**data)
         leakage = cache.calculate_leakage()
     except ValueError as ex:
         logger.error(f"Methane Leakage error with {car}")
         raise ValueError(ex)
-    _apply_static_sample(n, cache.component, car, "efficiency2", leakage, "absolute")
+    sampled = _apply_static_sample(
+        n, cache.component, car, "efficiency2", leakage, "absolute"
+    )
+    return sampled
 
 
 def apply_sample(
     n: pypsa.Network, sample: dict[str, dict[str, Any]], run: int
-) -> tuple[dict[dict[str, str | float]], pd.DataFrame]:
+) -> tuple[list[float], dict[dict[str, str | float]], pd.DataFrame]:
     """Applies a sample to a network for a single model run.
 
     As there are some intermediate calculations, some data is cached and applied at the end.
 
     This will modify the network! Pass a copy of a network if you dont want to modify the
     reference network.
+
+    Returns:
+        list[float]:
+            scaled sample for this model run
+            ** RHS of constraint data not scaled **
+        dict[dict[str, str | float]]:
+            metadata associated with model run
+        pd.DataFrame:
+            constraint samples to pass into
     """
 
     meta = {}
@@ -225,6 +282,15 @@ def apply_sample(
     # this is the same data as in the bigger meta file tho.
     meta_constraints = {}
 
+    # return values to scale the EE
+    #############################
+    ## ORDER MUST BE PRESERVED ##
+    #############################
+    scaled_sample = []
+    #############################
+    ## ORDER MUST BE PRESERVED ##
+    #############################
+
     for name, data in sample.items():
         c = data["component"]
         car = data["carrier"]
@@ -232,10 +298,18 @@ def apply_sample(
         absolute = True if data["range"] == "absolute" else False
         value = round(data["value"][run], 2)
 
+        # if the applied value is an intermediate calculation
         if attr in CACHED_ATTRS and absolute:
             if car not in cached:
                 cached[car] = {"component": c}
             cached[car][attr] = value
+            sampled = {
+                "ref": np.nan,
+                "scaled": value,  # already absolute
+                "difference": np.nan,
+            }
+        # if the value is applied to the RHS of the constraint
+        # sample values will be modified in solve
         elif attr in CONSTRAINT_ATTRS:
             meta_constraints[str(name)] = {
                 "component": c,
@@ -244,25 +318,65 @@ def apply_sample(
                 "range": data["range"],
                 "value": value,
             }
+            sampled = {
+                "ref": np.nan,
+                "scaled": value,  # will be changed in solve.py
+                "difference": np.nan,
+            }
+        # if the value is applied to a time-dependent value
         elif c.endswith("_t"):
             assert not absolute
-            _apply_dynamic_sample(n, c, car, attr, value)
+            sampled = _apply_dynamic_sample(n, c, car, attr, value)
+        # if the value is applied to a time-independent value
         else:
-            _apply_static_sample(n, c, car, attr, value, absolute)
+            sampled = _apply_static_sample(n, c, car, attr, value, absolute)
+
+        #####################
+        # PRESERVING ORDER ##
+        #####################
+        scaled_sample.append(sampled["scaled"])
+        #####################
+        # PRESERVING ORDER ##
+        #####################
 
         meta[str(name)] = {
             "component": c,
             "carrier": car,
             "attribute": attr,
             "range": data["range"],
-            "value": value,
+            # value passed in from the unscaled sample
+            "sample": value,
+            # original network value
+            "original": "" if sampled["ref"] == np.nan else float(sampled["ref"]),
+            # difference between applied value and original network value
+            "diff": ""
+            if sampled["difference"] == np.nan
+            else float(sampled["difference"]),
+            # scaled sample value
+            "scaled_sample": ""
+            if sampled["scaled"] == np.nan
+            else float(sampled["scaled"]),
         }
 
+    # as these values are intermediate, they are not part of the actual sample
     for car, data in cached.items():
         if car == "gas production":
-            _apply_cached_ch4_leakage(n, car, data)
+            sampled = _apply_cached_ch4_leakage(n, car, data)
+            attr = "efficiency2"
         else:
-            _apply_cached_capex(n, car, data)
+            sampled = _apply_cached_capex(n, car, data)
+            attr = "capital_cost"
+
+        meta[str(name)] = {
+            "component": data["component"],
+            "carrier": car,
+            "attribute": attr,
+            "range": "absolute",  # requirement for cached data
+            "sample": float(sampled["scaled"]),  # since absolute, scaled = sample
+            "original": float(sampled["ref"]),
+            "diff": float(sampled["difference"]),
+            "scaled_sample": float(sampled["scaled"]),
+        }
 
     if not meta_constraints:
         meta_constraints = pd.DataFrame(
@@ -273,7 +387,7 @@ def apply_sample(
             meta_constraints, orient="index"
         ).reset_index(names="name")
 
-    return meta, meta_constraints
+    return scaled_sample, meta, meta_constraints
 
 
 if __name__ == "__main__":
@@ -282,11 +396,13 @@ if __name__ == "__main__":
         sample_file = snakemake.input.sample_file
         base_network_file = snakemake.input.network
         root_dir = Path(snakemake.params.root_dir)
+        scaled_sample_file = snakemake.output.scaled_sample
     else:
         param_file = "results/Testing/parameters.csv"
         sample_file = "results/Testing/sample.csv"
         base_network_file = "results/Testing/base.nc"
         root_dir = Path("results/Testing/modelruns/")
+        scaled_sample_file = "results/Testing/scaled_sample.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
@@ -297,13 +413,15 @@ if __name__ == "__main__":
 
     sample_data = get_sample_data(params, sample)
 
+    scaled_sample = []
+
     for run in range(len(sample)):
 
         n = base_n.copy()
 
-        meta, meta_constraints = apply_sample(n, sample_data, run)
+        scaled, meta, meta_constraints = apply_sample(n, sample_data, run)
 
-        # create_directory(Path(root_dir, str(run)))
+        scaled_sample.append(scaled)
 
         n_save_name = Path(root_dir, str(run), "n.nc")
         meta_save_name = Path(root_dir, str(run), "meta.yaml")
@@ -313,3 +431,6 @@ if __name__ == "__main__":
         with open(meta_save_name, "w") as f:
             yaml.dump(meta, f)
         meta_constraints.to_csv(meta_constraints_save_name, index=False)
+
+    ss = pd.DataFrame(scaled_sample, columns=sample.columns)
+    ss.to_csv(scaled_sample_file, index=False)

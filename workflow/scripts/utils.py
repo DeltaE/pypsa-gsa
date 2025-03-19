@@ -2,6 +2,7 @@
 
 from typing import Any
 import pandas as pd
+import pypsa
 
 
 def create_salib_problem(parameters: pd.DataFrame) -> dict[str, list[Any]]:
@@ -44,3 +45,10 @@ def calculate_annuity(lifetime: int, dr: float | int):
         return dr / (1.0 - 1.0 / (1.0 + dr) ** lifetime)
     else:
         return 1 / lifetime
+    
+def _get_existing_lv(n: pypsa.Network) -> float:
+    """Gets exisitng line volume.
+    
+    Used in solve and to scale the sample"""
+    ac_links_existing = n.links.carrier == "AC" if not n.links.empty else pd.Series()
+    return n.links.loc[ac_links_existing, "p_nom"] @ n.links.loc[ac_links_existing, "length"]
