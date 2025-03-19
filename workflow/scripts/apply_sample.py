@@ -225,7 +225,9 @@ def _apply_dynamic_sample(
     }
 
 
-def _apply_cached_capex(n: pypsa.Network, car: str, data: dict[str, Any]):
+def _apply_cached_capex(
+    n: pypsa.Network, car: str, data: dict[str, Any]
+) -> dict[str, float]:
     try:
         cache = CapitalCostCache(**data)
         capex = cache.calculate_capex()
@@ -255,6 +257,46 @@ def _apply_cached_ch4_leakage(
     return sampled
 
 
+def _cache_attr(
+    cache: dict[str, float], c: str, car: str, attr: str, value: float
+) -> tuple[dict[str, float], dict[str, float]]:
+    """Caches attribute.
+
+    Returns updated cache and sample metadata
+    """
+    if car not in cache:
+        cache[car] = {"component": c}
+    cache[car][attr] = value
+    sampled = {
+        "ref": np.nan,
+        "scaled": value,  # already absolute
+        "difference": np.nan,
+    }
+    return cache, sampled
+
+
+def _get_constraint_sample(
+    n: pypsa.Network, c: str, car: str, attr: str, value: float
+) -> tuple[dict[str, float], dict[str, float]]:
+    """Gets sample data to apply to the RHS of the constraint.
+
+    Returns meta data specific to constraints. This is a subset of all metadata.
+    """
+    meta = {
+        "component": c,
+        "carrier": car,
+        "attribute": attr,
+        "value": value,
+    }
+    sampled = {
+        "ref": np.nan,
+        "scaled": value,
+        "difference": np.nan,
+    }
+
+    return meta, sampled
+
+
 def apply_sample(
     n: pypsa.Network, sample: dict[str, dict[str, Any]], run: int
 ) -> tuple[list[float], dict[dict[str, str | float]], pd.DataFrame]:
@@ -276,7 +318,7 @@ def apply_sample(
     """
 
     meta = {}
-    cached = {}  # for internediate calcualtions
+    cached = {}  # for internediate calculations
 
     # save constraint metadata in smaller file as it needs to be read in with every model
     # this is the same data as in the bigger meta file tho.
@@ -300,29 +342,12 @@ def apply_sample(
 
         # if the applied value is an intermediate calculation
         if attr in CACHED_ATTRS and absolute:
-            if car not in cached:
-                cached[car] = {"component": c}
-            cached[car][attr] = value
-            sampled = {
-                "ref": np.nan,
-                "scaled": value,  # already absolute
-                "difference": np.nan,
-            }
+            cached, sampled = _cache_attr(cached, c, car, attr, value)
         # if the value is applied to the RHS of the constraint
-        # sample values will be modified in solve
+        # note that the constraints arnt actually applied here
         elif attr in CONSTRAINT_ATTRS:
-            meta_constraints[str(name)] = {
-                "component": c,
-                "carrier": car,
-                "attribute": attr,
-                "range": data["range"],
-                "value": value,
-            }
-            sampled = {
-                "ref": np.nan,
-                "scaled": value,  # will be changed in solve.py
-                "difference": np.nan,
-            }
+            mc, sampled = _get_constraint_sample(n, c, car, attr, value)
+            meta_constraints[str(name)] = mc
         # if the value is applied to a time-dependent value
         elif c.endswith("_t"):
             assert not absolute
@@ -339,6 +364,10 @@ def apply_sample(
         # PRESERVING ORDER ##
         #####################
 
+        original = sampled["ref"]
+        ss = sampled["scaled"]
+        diff = sampled["difference"]
+
         meta[str(name)] = {
             "component": c,
             "carrier": car,
@@ -347,15 +376,11 @@ def apply_sample(
             # value passed in from the unscaled sample
             "sample": value,
             # original network value
-            "original": "" if sampled["ref"] == np.nan else float(sampled["ref"]),
+            "original": "" if original == np.nan else float(original),
             # difference between applied value and original network value
-            "diff": ""
-            if sampled["difference"] == np.nan
-            else float(sampled["difference"]),
+            "diff": "" if diff == np.nan else float(diff),
             # scaled sample value
-            "scaled_sample": ""
-            if sampled["scaled"] == np.nan
-            else float(sampled["scaled"]),
+            "scaled_sample": "" if ss == np.nan else float(ss),
         }
 
     # as these values are intermediate, they are not part of the actual sample
@@ -380,7 +405,7 @@ def apply_sample(
 
     if not meta_constraints:
         meta_constraints = pd.DataFrame(
-            columns=["name", "component", "carrier", "attribute", "range", "value"]
+            columns=["name", "component", "carrier", "attribute", "value"]
         )
     else:
         meta_constraints = pd.DataFrame.from_dict(
