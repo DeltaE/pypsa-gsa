@@ -461,15 +461,33 @@ def is_valid_gshp(params: pd.DataFrame) -> bool:
         print("Only one GSHP group (ie. attribute == gshp) is allowed")
         return False
     elif (len(unique_mins) > 1) or (len(unique_maxes) > 1):
-        print("Inconsistnet ranges for gshp constraints (ie. attribute == gshp)")
+        print("Inconsistent ranges for gshp constraints (ie. attribute == gshp)")
         return False
     else:
         return True
 
+
+def is_valid_demand_response(params: pd.DataFrame) -> bool:
+    df = params.copy()
+
+    df = df[df.carrier == "demand-response"]
+    if df.empty:
+        return True
+
+    if len(df) != 1:
+        print("Can only define one uncertainity for demand response")
+        return False
+    elif df.loc[:, "range"].values[0] != "percent":
+        print("Must define demand response as a percentage")
+        return False
+    else:
+        return True
+
+
 if __name__ == "__main__":
 
     if "snakemake" in globals():
-        in_params = snakemake.params.parameters
+        in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
     else:
         in_params = "config/parameters.csv"
@@ -506,6 +524,7 @@ if __name__ == "__main__":
     assert is_no_duplicates(df), "duplicate names"
     assert is_constraints_abs(df), "constraints must be absolute"
     assert is_valid_gshp(df), "too many groups for gshp constraint"
+    assert is_valid_demand_response(df), "demand_response must be percent"
 
     df.to_csv(out_params, index=False)
     

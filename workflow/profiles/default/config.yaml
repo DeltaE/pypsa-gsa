@@ -9,4 +9,3 @@ default-resources:
   - runtime=10
   - mem_mb_per_cpu=16000
   - disk_mb=1000
-  - slurm_account=

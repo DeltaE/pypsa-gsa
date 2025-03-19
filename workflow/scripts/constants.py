@@ -1,13 +1,18 @@
 """Constants"""
 
-STATES_TO_EXCLUDE = [
-    "AK",
-    "AS",
-    "GU",
-    "HI",
-    "MP",
-    "PR",
-    "TT"
+GSA_COLUMNS = [
+    "name",
+    "group",
+    "nice_name",
+    "component",
+    "carrier",
+    "attribute",
+    "range",
+    "unit",
+    "min_value",
+    "max_value",
+    "source",
+    "notes",
 ]
 
 CONVENTIONAL_CARRIERS = [
@@ -48,7 +53,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
     "links": [
         "nat_gas_import",  # constraint
         "nat_gas_export",  # constraint
-        "tx",  # constraint
+        "lv",  # constraint
         "gshp",  # constraint
         "tct",  # constraint
         "discount_rate",
@@ -63,7 +68,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
     "generators": ["tct", "rps", "ces", "discount_rate", "fixed_cost", "occ", "itc"],
     "stores": ["co2L"],
     "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
-    "lines": ["tx"],
+    "lines": [],
 }
 
 CACHED_ATTRS = [
@@ -78,7 +83,16 @@ CACHED_ATTRS = [
     "leakage",
 ]
 
-CONSTRAINT_ATTRS = ["nat_gas_import", "nat_gas_export", "tx", "gshp", "tct", "co2L", "rps", "ces"]
+CONSTRAINT_ATTRS = [
+    "nat_gas_import",
+    "nat_gas_export",
+    "lv",
+    "gshp",
+    "tct",
+    "co2L",
+    "rps",
+    "ces",
+]
 
 VALID_RANGES = ["percent", "absolute"]
 
@@ -93,6 +107,7 @@ VALID_UNITS = [
     "kvmt/year",
     "kvmt/mwh",
     "years",
+    "mmt"
 ]
 
 VALID_RESULTS = {
@@ -103,7 +118,6 @@ VALID_RESULTS = {
     "buses_t":["marginal_price"],
     "system":["cost"],
     "stores":["e_nom_opt"],
-    
 }
 
 # hard codes where gas can enter/exit the states
@@ -123,4 +137,83 @@ POINTS_OF_ENTRY = {
     "TX": "MX",  # Texas - Mexico
     "VT": "QC",  # Vermont - Mexico
     "WA": "BC",  # Washington - BC
+}
+
+STATES_TO_EXCLUDE = ["AK", "AS", "GU", "HI", "MP", "PR", "TT"]
+
+STATE_2_CODE = {
+    # United States
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "American Samoa": "AS",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "District of Columbia": "DC",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Guam": "GU",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Northern Mariana Islands": "MP",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Puerto Rico": "PR",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Trust Territories": "TT",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Virgin Islands": "VI",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY",
+    # Canada
+    "Alberta": "AB",
+    "British Columbia": "BC",
+    "Manitoba": "MB",
+    "New Brunswick": "NB",
+    "Newfoundland and Labrador": "NL",
+    "Northwest Territories": "NT",
+    "Nova Scotia": "NS",
+    "Nunavut": "NU",
+    "Ontario": "ON",
+    "Prince Edward Island": "PE",
+    "Quebec": "QC",
+    "Saskatchewan": "SK",
+    "Yukon": "YT",
+    # Mexico
+    "Mexico": "MX",
 }

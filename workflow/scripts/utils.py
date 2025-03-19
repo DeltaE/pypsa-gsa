@@ -5,24 +5,7 @@ import pandas as pd
 
 
 def create_salib_problem(parameters: pd.DataFrame) -> dict[str, list[Any]]:
-    """Creates SALib problem from scenario configuration.
-
-    Arguments
-    ---------
-    parameters: pd.DataFrame
-        Dataframe describing the prameters
-
-    Returns
-    -------
-    problem: dict
-        SALib formatted problem dictionary
-
-    Raises
-    ------
-    ValueError
-        If only one variable is givin, OR
-        If only one group is given
-    """
+    """Creates SALib problem from scenario configuration."""
 
     df = parameters.copy()
 

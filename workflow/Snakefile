@@ -22,10 +22,9 @@ HEATMAPS = RESULTS.heatmap.dropna().to_list()
 GROUPS = PARAMETERS.group.unique()
 MODELRUNS = range((len(GROUPS) + 1) * config["gsa"]["replicates"])
 
-
+include: "rules/generate.smk"
 include: "rules/prepare.smk"
 include: "rules/sample.smk"
-include: "rules/constraints.smk"
 include: "rules/solve.smk"
 include: "rules/results.smk"
 

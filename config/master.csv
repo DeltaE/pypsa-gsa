@@ -256,7 +256,6 @@ ng_marginal_cost_import,ng_marginal_cost_import,Nat Gas Import Cost,link,gas pip
 ng_marginal_cost_export,ng_marginal_cost_export,Nat Gas Export Cost,link,gas pipeline,marginal_cost,percent,percent,-62,47,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import prices from 2019 to 2024
 ng_linepack,ng_linepack,Nat Gas Linepack Capacity,link,gas pipeline,p_nom,percent,percent,-10,10,https://www.eia.gov/naturalgas/data.php,Estimated as no validation data sourced
 ng_storage_limits,ng_storage_limits,Nat Gas Underground Storage,store,gas storage,e_min_pu,percent,percent,-0.4,0.4,https://ir.eia.gov/ngs/ngs.html,Working gas assumed as uncertanity for max gas. Sampling variablility table
-demand_response,demand_response,Demand Response,store,demand-response,marginal_cost_storage,percent,percent,-25,25,,
 res_electrical_demand,res_electrical_demand,Residential Electrical Demand,load_t,res-elec,p_set,percent,percent,-2.79,1.23,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 res_space_heat_demand,res_space_heat_demand,Residential Space Heat Demand,load_t,res-total-space-heat,p_set,percent,percent,-2.79,1.23,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 res_water_heat_deamand,res_water_heat_deamand,Residential Water Heat Demand,load_t,res-total-water-heat,p_set,percent,percent,-2.79,1.23,https://www.eia.gov/outlooks/aeo/,See notebook in repository
@@ -277,7 +276,6 @@ trn_rail_ship_demand,trn_rail_ship_demand,Freight Rail Demand,load,trn-lpg-rail-
 trn_air_psg_demand,trn_air_psg_demand,Passenger Air Travel Demand,load,trn-lpg-air-psg,p_set,percent,percent,-7.46,8.12,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
 ces,ces,Clean Energy Standard,generator,portfolio,ces,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
-transmission_flow,transmission_flow,Transmission Flows,lines,AC,s_max_pu,absolute,per_unit,0.70,0.80,https://doi.org/10.1016/j.eneco.2013.09.004,Lower bound of 70% is default in PyPSA-Eur
 ptc_solar,ptc_solar,PTC Solar,generator,solar,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_onwind,ptc_wind,PTC Wind,generator,onwind,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_offwind,ptc_wind,PTC Wind,generator,offwind_floating,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
@@ -301,11 +299,6 @@ tct_solar,tct_solar,Solar Max Capacity,generator,solar,tct,absolute,per_unit,2.8
 tct_hydro,tct_hydro,Hydro Max Capacity,generator,hydro,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 tct_ccgt,tct_ccgt,Ccgt Max Capacity,generator,"CCGT,CCGT-95CCS",tct,absolute,per_unit,1.05,1.18,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 tct_ocgt,tct_ocgt,Ocgt Max Capacity,generator,OCGT,tct,absolute,per_unit,1.65,1.89,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-res_emissions,res_emissions,Residential Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-com_emissions,com_emissions,Commercial Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-ind_emissions,ind_emissions,Industrial Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-trn_emissions,trn_emissions,Transport Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
-total_emissions,total_emissions,System Emission Limit,store,co2,co2L,percent,percent,0,20,,Assumed as current progress is ~30% reductions
 discount_rate_res_gas_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-gas-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_lpg_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-oil-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_elec_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-elec-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
@@ -340,10 +333,13 @@ eff_trn_lpg_bus,eff_trn_ship_boat,Efficiency Domestic Shipping,link,trn-lpg-boat
 eff_trn_rail_psg,eff_trn_rail_psg,Efficiency Passenger Rail,link,trn-lpg-rail-psg,efficiency,percent,percent,-8.1,8.1,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
 eff_trn_rail_ship,eff_trn_rail_ship,Efficiency Freight Rail,link,trn-lpg-rail-ship,efficiency,percent,percent,-5.5,7.6,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
 eff_trn_air_psg,eff_trn_air_psg,Efficiency Passenger Air,link,trn-lpg-air-psg,efficiency,percent,percent,-4.7,2.5,https://www.eia.gov/outlooks/aeo/,Difference from reference on low/high economic scenarios
-transmission_expansion,transmission_expansion,Transmission Expansion,line,AC,tx,absolute,percent,0,6.4,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario
 res_gshp_limit,gshp_limit,GSHP Capacity,link,res-total-space-heat,gshp,absolute,per_unit,0.90,1.1,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
 com_gshp_limit,gshp_limit,GSHP Capacity,link,com-total-space-heat,gshp,absolute,per_unit,0.90,1.1,https://www.census.gov/programs-surveys/acs/guidance/statistical-testing-tool.html,Assumed as we only know 90% confidence interval
 coal_cost,coal_cost,Coal Fuel Cost,store,coal,marginal_cost,percent,percent,-6.2,8,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 oil_cost,oil_cost,Oil Fuel Cost,store,oil,marginal_cost,percent,percent,-40,66,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 lpg_cost,lpg_cost,LPG Fuel Cost,store,lpg,marginal_cost,percent,percent,-28.5,59.6,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 nuclear_cost,nuclear_cost,Uranium Fuel Cost,generator,nuclear,marginal_cost,percent,percent,-0.3,0.3,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+demand_response,demand_response,Demand Response,store,demand-response,marginal_cost_storage,percent,percent,-25,25,,
+transmission_expansion,transmission_expansion,Transmission Expansion,link,AC,lv,absolute,per_unit,0,0.064,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario (6.4%)
+transmission_itl,transmission_itl,Transmission Flows,link,AC,p_nom,percent,percent,-1,1,https://arxiv.org/abs/2308.03612,Assumed as no uncertainity given
+emission_limit,emission_limit,Emission Limit,store,co2,co2L,absolute,mmt,194.42,233.31,https://www.eia.gov/outlooks/aeo/,40 to 50 % reduction from 2005 levels

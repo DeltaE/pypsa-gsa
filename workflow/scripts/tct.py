@@ -2,6 +2,7 @@
 
 import pandas as pd
 import pypsa
+from constants import GSA_COLUMNS
 
 # user must populate this from the AEO notebook
 # all values in percent
@@ -64,21 +65,6 @@ CARRIERS = {
 }
 
 TCT_COLUMNS = ["name", "planning_horizon", "region", "carrier", "min", "max"]
-
-GSA_COLUMNS = [
-    "name",
-    "group",
-    "nice_name",
-    "component",
-    "carrier",
-    "attribute",
-    "range",
-    "unit",
-    "min_value",
-    "max_value",
-    "source",
-    "notes",
-]
 
 
 def _get_current_capactity(n: pypsa.Network, cars: list[str]) -> float:

@@ -76,23 +76,9 @@ rule retrieve_natural_gas_data:
     script:
         "../scripts/retrieve_ng_data.py"
 
-# this rule is not part of the actual workflow! 
-rule generate_tct_data:
-    message: "Generating TCT data based on the AEO"
-    params:
-        network = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
-    output:
-        tct_aeo = "resources/generated/tct_aeo.csv",
-        tct_gsa = "resources/generated/tct_gsa.csv",
-    resources:
-        mem_mb=100,
-        runtime=1
-    script:
-        "../scripts/tct.py"
-
 rule sanitize_parameters:
     message: "Sanitizing parameters"
-    params:
+    input:
         parameters=config["gsa"]["parameters"]
     output:
         parameters="results/{scenario}/parameters.csv"

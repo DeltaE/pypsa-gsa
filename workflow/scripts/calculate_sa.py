@@ -1,35 +1,4 @@
-"""Analyzes objective value results from model
-
-Arguments
----------
-path_to_parameters : str
-    File containing the parameters for generated sample
-model_inputs : str
-    File path to sample model inputs
-model_outputs : str
-    File path to model outputs
-location_to_save : str
-    File path to save results
-result_type : str
-    True for Objective result type
-    False for user defined result type 
-
-Usage
------
-To run the script on the command line, type::
-
-    python analyze_results.py path/to/parameters.csv path/to/inputs.txt 
-        path/to/model/results.csv path/to/save/SA/results.csv
-
-The `parameters.csv` CSV file should be formatted as follows::
-
-    name,group,indexes,min_value,max_value,dist,interpolation_index,action
-    CapitalCost,pvcapex,"GLOBAL,GCPSOUT0N",500,1900,unif,YEAR,interpolate
-    DiscountRate,discountrate,"GLOBAL,GCIELEX0N",0.05,0.20,unif,None,fixed
-
-The `inputs.txt` should be the output from SALib.sample.morris.sample
-
-"""
+"""Analyzes objective value results from model"""
 
 from math import ceil
 from SALib.analyze import morris as analyze_morris
