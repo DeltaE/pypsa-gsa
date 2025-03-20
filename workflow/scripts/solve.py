@@ -12,7 +12,7 @@ import pypsa
 
 from typing import Optional
 import yaml
-from utils import _get_existing_lv
+from utils import get_existing_lv, get_region_buses, get_rps_demand_actual, get_rps_eligible, get_rps_generation, concat_rps_standards
 
 logger = logging.getLogger(__name__)
 NG_MWH_2_MMCF = 305
@@ -20,19 +20,6 @@ NG_MWH_2_MMCF = 305
 ###
 # Helpers
 ###
-
-
-def get_region_buses(n, region_list):
-    return n.buses[
-        (
-            n.buses.country.isin(region_list)
-            | n.buses.reeds_zone.isin(region_list)
-            | n.buses.reeds_state.isin(region_list)
-            | n.buses.interconnect.str.lower().isin(region_list)
-            | n.buses.nerc_reg.isin(region_list)
-            | (1 if "all" in region_list else 0)
-        )
-    ]
 
 
 def filter_components(
@@ -347,64 +334,27 @@ def add_RPS_constraints(
 ):
     """
     Add Renewable Portfolio Standards constraint to the network.
-
-    Add percent levels of generator production (MWh) per carrier or groups of
-    carriers for individual countries. Each constraint can be designated for a
-    specified planning horizon in multi-period models.
-
-    Parameters
-    ----------
-    n : pypsa.Network
-    config : dict
     """
 
     if rps.empty:
         return
+    
+    portfolio_standards = concat_rps_standards(n, rps)
 
-    planning_horizon = n.investment_periods[0]
-
-    # Concatenate all portfolio standards
-    portfolio_standards = rps.copy()
-    portfolio_standards["pct"] = portfolio_standards.pct.mul(sample).clip(upper=1)
-    portfolio_standards = portfolio_standards[
-        (portfolio_standards.pct > 0.0)
-        & (portfolio_standards.planning_horizon == planning_horizon)
-        & (portfolio_standards.region.isin(n.buses.reeds_state.unique()))
-    ]
-
-    # Iterate through constraints and add RPS constraints to the model
+    # Iterate through constraints
     for _, constraint_row in portfolio_standards.iterrows():
-        region_list = [region.strip() for region in constraint_row.region.split(",")]
-        region_buses = get_region_buses(n, region_list)
-
+        
+        region_buses, region_gens = get_rps_eligible(n, constraint_row.region, constraint_row.carrier)
+        
         if region_buses.empty:
             continue
 
-        carriers = [carrier.strip() for carrier in constraint_row.carrier.split(",")]
-
-        # Filter region generators
-        region_gens = n.generators[n.generators.bus.isin(region_buses.index)]
-        region_gens_eligible = region_gens[region_gens.carrier.isin(carriers)]
-
-        if not region_gens_eligible.empty:
-            # Eligible generation
-            p_eligible = n.model["Generator-p"].sel(
-                period=constraint_row.planning_horizon,
-                Generator=region_gens_eligible.index,
-            )
-            lhs = p_eligible.sum()
-
-            # Region demand
-            region_demand = (
-                n.loads_t.p_set.loc[
-                    constraint_row.planning_horizon,
-                    n.loads.bus.isin(region_buses.index),
-                ]
-                .sum()
-                .sum()
-            )
-
-            rhs = constraint_row.pct * region_demand * sample
+        if not region_gens.empty:
+            region_demand = get_rps_demand_actual(n, constraint_row.planning_horizon, region_buses)
+            region_gen = get_rps_generation(n, constraint_row.planning_horizon, region_gens)
+            
+            lhs = region_gen - constraint_row.pct * region_demand * sample
+            rhs = 0
 
             # Add constraint
             n.model.add_constraints(
@@ -650,12 +600,13 @@ def add_transmission_limit(n, factor):
 
     logger.info(f"Setting volume transmission limit of {factor * 100}%")
 
+    # ensures AC links are set to extendable.
     ac_links_extend = n.links[
         (n.links.carrier == "AC") & (n.links.index.str.endswith("exp"))
     ].index
     n.links.loc[ac_links_extend, "p_nom_extendable"] = True
 
-    ref = _get_existing_lv(n)
+    ref = get_existing_lv(n)
     rhs = float(factor) * ref
 
     con_type = "volume_expansion"

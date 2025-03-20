@@ -7,7 +7,8 @@ from typing import Any
 from pathlib import Path
 import yaml
 from dataclasses import dataclass
-from utils import calculate_annuity, _get_existing_lv
+from utils import calculate_annuity
+from utils import get_existing_lv, get_rps_demand_gsa, concat_rps_standards, get_rps_eligible
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
 from logging import getLogger
@@ -275,30 +276,70 @@ def _cache_attr(
     return cache, sampled
 
 
+def _get_rps_value(n: pypsa.Network, rps: pd.DataFrame) -> float:
+    """Gets mean RPS requirement in MWh. Used only for SEE sample extraction."""
+
+    if rps.empty:
+        return
+    
+    demand = []
+    
+    portfolio_standards = concat_rps_standards(n, rps)
+
+    # Iterate through constraints
+    for _, constraint_row in portfolio_standards.iterrows():
+        
+        region_buses, region_gens = get_rps_eligible(n, constraint_row.region, constraint_row.carrier)
+        
+        if region_buses.empty:
+            continue
+
+        if not region_gens.empty:
+            region_demand = get_rps_demand_gsa(n, constraint_row.planning_horizon, region_buses)
+            demand.append(constraint_row.pct * region_demand)
+            
+    return sum(demand) / len(demand)
+
 def _get_constraint_sample(
-    n: pypsa.Network, c: str, car: str, attr: str, value: float
+    n: pypsa.Network, c: str, car: str, attr: str, value: float, **kwargs
 ) -> tuple[dict[str, float], dict[str, float]]:
     """Gets sample data to apply to the RHS of the constraint.
 
     Returns meta data specific to constraints. This is a subset of all metadata.
     """
+    if attr == "lv":
+        ref = get_existing_lv(n)
+        scaled = ref * (1 + value)
+    elif attr == "rps":
+        rps = kwargs.get("rps", pd.DataFrame())
+        if rps.empty:
+            raise ValueError("No ref RPS provided.")
+        ref = _get_rps_value(n, rps)
+        scaled = ref * value
+    elif attr == "ces":
+        ces = kwargs.get("ces", pd.DataFrame())
+        if rps.empty:
+            raise ValueError("No ref CES provided.")
+        ref = _get_rps_value(n, ces)
+        scaled = ref * value
+
     meta = {
         "component": c,
         "carrier": car,
         "attribute": attr,
-        "value": value,
+        "value": value, # actual solve network still ingests unscaled value
     }
     sampled = {
-        "ref": np.nan,
-        "scaled": value,
-        "difference": np.nan,
+        "ref": ref,
+        "scaled": scaled,
+        "difference": round(scaled / ref * 100, 2),
     }
 
     return meta, sampled
 
 
 def apply_sample(
-    n: pypsa.Network, sample: dict[str, dict[str, Any]], run: int
+    n: pypsa.Network, sample: dict[str, dict[str, Any]], run: int, **kwargs
 ) -> tuple[list[float], dict[dict[str, str | float]], pd.DataFrame]:
     """Applies a sample to a network for a single model run.
 
@@ -346,7 +387,7 @@ def apply_sample(
         # if the value is applied to the RHS of the constraint
         # note that the constraints arnt actually applied here
         elif attr in CONSTRAINT_ATTRS:
-            mc, sampled = _get_constraint_sample(n, c, car, attr, value)
+            mc, sampled = _get_constraint_sample(n, c, car, attr, value, kwargs)
             meta_constraints[str(name)] = mc
         # if the value is applied to a time-dependent value
         elif c.endswith("_t"):
