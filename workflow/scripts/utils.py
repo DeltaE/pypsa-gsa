@@ -3,6 +3,7 @@
 from typing import Any
 import pandas as pd
 import pypsa
+from constants import NG_MWH_2_MMCF
 
 ##################
 ## GSA Specific ##
@@ -164,3 +165,46 @@ def get_rps_demand_actual(n: pypsa.Network, planning_horizon: int, region_buses:
     region_demand = n.model["Link-p"].sel(period=planning_horizon, Link=pwr_links.index)
     
     return region_demand.sum()
+
+###
+# Natural Gas Trade
+###
+
+def format_raw_ng_trade_data(prod: pd.DataFrame, link_suffix: str | None = None) -> pd.DataFrame:
+    """Formats the raw EIA natural gas trade data into something usable"""
+
+    def _format_link_name(s: str) -> str:
+        states = s.split("-")
+        return f"{states[0]} {states[1]} gas"
+
+    def _format_data(
+        prod: pd.DataFrame,
+        link_suffix: str | None = None,
+    ) -> pd.DataFrame:
+        df = prod.copy()
+        df["link"] = df.state.map(_format_link_name)
+        if link_suffix:
+            df["link"] = df.link + link_suffix
+
+        # convert mmcf to MWh
+        df["value"] = df["value"] * NG_MWH_2_MMCF
+
+        return df[["link", "value"]].rename(columns={"value": "rhs"}).set_index("link")
+    
+    return _format_data(prod, link_suffix)
+
+def get_ng_trade_links(n: pypsa.Network, direction: str) -> list[str]: 
+    """Gets natural gas trade links within the network."""
+    
+    assert direction in ("imports", "exports")
+    
+    if direction == "imports":
+        return n.links[
+            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas trade"))
+        ].index.to_list()
+    elif direction == "exports":
+        return n.links[
+            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas"))
+        ].index.to_list()
+    else: 
+        raise ValueError(f"Undefined control flow for direction {direction}")

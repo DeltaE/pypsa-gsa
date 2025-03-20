@@ -12,10 +12,9 @@ import pypsa
 
 from typing import Optional
 import yaml
-from utils import get_existing_lv, get_region_buses, get_rps_demand_actual, get_rps_eligible, get_rps_generation, concat_rps_standards
+from utils import get_existing_lv, get_region_buses, get_rps_demand_actual, get_rps_eligible, get_rps_generation, concat_rps_standards, format_raw_ng_trade_data, get_ng_trade_links
 
 logger = logging.getLogger(__name__)
-NG_MWH_2_MMCF = 305
 
 ###
 # Helpers
@@ -454,23 +453,6 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
 def add_ng_import_export_limits(
     n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], limits: dict[str, float]
 ):
-    def _format_link_name(s: str) -> str:
-        states = s.split("-")
-        return f"{states[0]} {states[1]} gas"
-
-    def _format_data(
-        prod: pd.DataFrame,
-        link_suffix: str | None = None,
-    ) -> pd.DataFrame:
-        df = prod.copy()
-        df["link"] = df.state.map(_format_link_name)
-        if link_suffix:
-            df["link"] = df.link + link_suffix
-
-        # convert mmcf to MWh
-        df["value"] = df["value"] * NG_MWH_2_MMCF
-
-        return df[["link", "value"]].rename(columns={"value": "rhs"}).set_index("link")
 
     def add_import_limits(n, data, constraint, multiplier=None):
         """Sets gas import limit over each year."""
@@ -481,10 +463,8 @@ def add_ng_import_export_limits(
 
         weights = n.snapshot_weightings.objective
 
-        links = n.links[
-            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas trade"))
-        ].index.to_list()
-
+        links = get_ng_trade_links(n, "imports")
+        
         for year in n.investment_periods:
             for link in links:
                 try:
@@ -513,10 +493,8 @@ def add_ng_import_export_limits(
             multiplier = 1
 
         weights = n.snapshot_weightings.objective
-
-        links = n.links[
-            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas"))
-        ].index.to_list()
+        
+        links = get_ng_trade_links(n, "exports")
 
         for year in n.investment_periods:
             for link in links:
@@ -565,7 +543,7 @@ def add_ng_import_export_limits(
     # add domestic limits
 
     trade = ng_trade["domestic"].copy()
-    trade = _format_data(trade, " trade")
+    trade = format_raw_ng_trade_data(trade, " trade")
 
     add_import_limits(n, trade, "min", import_min)
     add_export_limits(n, trade, "min", export_min)
@@ -578,7 +556,7 @@ def add_ng_import_export_limits(
     # add international limits
 
     trade = ng_trade["international"].copy()
-    trade = _format_data(trade, " trade")
+    trade = format_raw_ng_trade_data(trade, " trade")
 
     add_import_limits(n, trade, "min", import_min)
     add_export_limits(n, trade, "min", export_min)

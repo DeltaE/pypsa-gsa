@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 from dataclasses import dataclass
 from utils import calculate_annuity
-from utils import get_existing_lv, get_rps_demand_gsa, concat_rps_standards, get_rps_eligible
+from utils import get_existing_lv, get_rps_demand_gsa, concat_rps_standards, get_rps_eligible, get_ng_trade_links, format_raw_ng_trade_data
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
 from logging import getLogger
@@ -300,8 +300,14 @@ def _get_rps_value(n: pypsa.Network, rps: pd.DataFrame) -> float:
             
     return sum(demand) / len(demand)
 
+def _get_ng_trade(n: pypsa.Network, trade: pd.DataFrame, direction: str) -> float:
+    """Gets RHS import/export limit."""
+    data = format_raw_ng_trade_data(trade, " trade")
+    links = get_ng_trade_links(n, direction)
+    return data.loc[links,"rhs"].sum()
+
 def _get_constraint_sample(
-    n: pypsa.Network, c: str, car: str, attr: str, value: float, **kwargs
+    n: pypsa.Network, c: str, car: str, attr: str, sample: float, **kwargs
 ) -> tuple[dict[str, float], dict[str, float]]:
     """Gets sample data to apply to the RHS of the constraint.
 
@@ -309,25 +315,62 @@ def _get_constraint_sample(
     """
     if attr == "lv":
         ref = get_existing_lv(n)
-        scaled = ref * (1 + value)
+        scaled = ref * (1 + sample)
     elif attr == "rps":
         rps = kwargs.get("rps", pd.DataFrame())
         if rps.empty:
             raise ValueError("No ref RPS provided.")
         ref = _get_rps_value(n, rps)
-        scaled = ref * value
+        scaled = ref * sample
     elif attr == "ces":
         ces = kwargs.get("ces", pd.DataFrame())
         if rps.empty:
             raise ValueError("No ref CES provided.")
         ref = _get_rps_value(n, ces)
-        scaled = ref * value
+        scaled = ref * sample
+    elif attr == "tct": # already absolute
+        ref = sample
+        scaled = sample
+    elif attr == "co2L": # already absolute
+        ref = sample
+        scaled = sample
+    elif attr == "nat_gas_import":
+        # domestic trade
+        ng_domestic = kwargs.get("ng_domestic", pd.DataFrame())
+        if ng_domestic.empty:
+            raise ValueError("No domestic NG trade data provided.")
+        dom = _get_ng_trade(n, ng_domestic, "imports")
+        # international trade
+        ng_international = kwargs.get("ng_international", pd.DataFrame())
+        if ng_international.empty:
+            raise ValueError("No international NG trade data provided.")
+        itl = _get_ng_trade(n, ng_domestic, "imports")
+        ref = dom + itl
+        scaled = ref * sample
+    elif attr == "nat_gas_export":
+        # domestic trade
+        ng_domestic = kwargs.get("ng_domestic", pd.DataFrame())
+        if ng_domestic.empty:
+            raise ValueError("No domestic NG trade data provided.")
+        dom = _get_ng_trade(n, ng_domestic, "imports")
+        # international trade
+        ng_international = kwargs.get("ng_international", pd.DataFrame())
+        if ng_international.empty:
+            raise ValueError("No international NG trade data provided.")
+        itl = _get_ng_trade(n, ng_domestic, "exports")
+        ref = dom + itl
+        scaled = ref * sample
+    elif attr == "gshp":
+        
+    else:
+        raise ValueError(f"Bad control flow for get_constraint_sample: {attr}")
+
 
     meta = {
         "component": c,
         "carrier": car,
         "attribute": attr,
-        "value": value, # actual solve network still ingests unscaled value
+        "value": sample, # actual solve network still ingests unscaled value
     }
     sampled = {
         "ref": ref,

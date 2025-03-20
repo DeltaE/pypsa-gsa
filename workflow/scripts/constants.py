@@ -1,5 +1,8 @@
 """Constants"""
 
+# energy conversion of MWh to MMCF
+NG_MWH_2_MMCF = 305
+
 GSA_COLUMNS = [
     "name",
     "group",
