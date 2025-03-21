@@ -192,7 +192,7 @@ def _apply_static_sample(
         ref = ref.mean()
         multiplier = value / 100  # can be positive or negative
         sampled = ref + ref * multiplier
-        diff = sampled / ref * 100
+        diff = abs(sampled - ref) / ref * 100
         # apply value
         ref_slice = getattr(n, c).loc[slicer, attr]
         getattr(n, c).loc[slicer, attr] = ref_slice + ref_slice.mul(multiplier)
@@ -225,7 +225,7 @@ def _apply_dynamic_sample(
     # get metadata
     scaled = (ref + ref.mul(multiplier)).mean().mean()
     ref = ref.mean().mean()
-    diff = scaled / ref
+    diff = abs(scaled - ref) / ref
 
     return {
         "ref": round(ref, 2),  # original mean value applied to network
@@ -402,7 +402,7 @@ def _get_constraint_sample(
     sampled = {
         "ref": ref,
         "scaled": scaled,
-        "difference": round(scaled / ref * 100, 2),
+        "difference": round(abs(scaled - ref) / ref * 100, 2),
     }
 
     return meta, sampled
@@ -524,6 +524,30 @@ def apply_sample(
 
     return scaled_sample, meta, meta_constraints
 
+def apply_load_shedding(n: pypsa.Network) -> None:
+    """Intersect between macroeconomic and surveybased willingness to pay
+
+    - (Fig 2) http://journal.frontiersin.org/article/10.3389/fenrg.2015.00055/full
+    - (pg 21) https://ssrn.com/abstract=3951809
+    - (Table ES1) https://www.osti.gov/servlets/purl/1172643
+    """
+
+    # TODO: retrieve color and nice name from config
+    n.add("Carrier", "load", color="#dd2e23", nice_name="Load shedding")
+
+    buses_i = n.buses.query("carrier == 'AC'").index
+
+    n.madd(
+        "Generator",
+        buses_i,
+        " load",
+        bus=buses_i,
+        carrier="load",
+        marginal_cost=106000,  # Table ES1 - average of 1hr Cost per Unserved kWh over all customers
+        p_nom=0,  # kW
+        capital_cost=0,
+        p_nom_extendable=True,
+    )
 
 if __name__ == "__main__":
     if "snakemake" in globals():
@@ -552,6 +576,8 @@ if __name__ == "__main__":
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
     base_n = pypsa.Network(base_network_file)
+
+    apply_load_shedding(base_n)
 
     # check carrier here as it requires reading in network
     assert is_valid_carrier(base_n, params)
@@ -588,5 +614,5 @@ if __name__ == "__main__":
             yaml.dump(meta, f)
         meta_constraints.to_csv(meta_constraints_save_name, index=False)
 
-    ss = pd.DataFrame(scaled_sample, columns=sample.columns)
+    ss = pd.DataFrame(scaled_sample, columns=sample.columns).round(3)
     ss.to_csv(scaled_sample_file, index=False)

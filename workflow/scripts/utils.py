@@ -123,6 +123,7 @@ def get_rps_eligible(n: pypsa.Network, rps_region: str, rps_carrier: str) -> tup
         return pd.DataFrame(), pd.DataFrame()
 
     carriers = [carrier.strip() for carrier in rps_carrier.split(",")]
+    carriers.append("load")
 
     # Filter region generators
     region_gens = n.generators[n.generators.bus.isin(region_buses.index)]

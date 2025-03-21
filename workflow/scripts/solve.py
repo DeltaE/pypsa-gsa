@@ -717,24 +717,24 @@ def extra_functionality(n, sns):
 
     opts = n.extra_fn
 
-    if "rps" in opts:
-        add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
+    # if "rps" in opts:
+    #     add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
     # if "ces" in opts:
     #     add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
-    # if "tct" in opts:
-    #     add_technology_capacity_target_constraints(
-    #         n, opts["tct"]["data"], opts["tct"]["sample"]
-    #     )
-    # if "co2L" in opts:
-    #     add_sector_co2_constraints(n, opts["co2L"]["sample"])
-    # if "gshp" in opts:
-    #     add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
-    # if "ng_limits" in opts:
-    #     add_ng_import_export_limits(n, opts["ng_limits"])
-    # if "lv" in opts:
-    #     add_transmission_limit(n, opts["lv"]["sample"])
-    # if "hp_cooling" in opts:
-    #     add_cooling_heat_pump_constraints(n)
+    if "tct" in opts:
+        add_technology_capacity_target_constraints(
+            n, opts["tct"]["data"], opts["tct"]["sample"]
+        )
+    if "co2L" in opts:
+        add_sector_co2_constraints(n, opts["co2L"]["sample"])
+    if "gshp" in opts:
+        add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
+    if "ng_limits" in opts:
+        add_ng_import_export_limits(n, opts["ng_limits"])
+    if "lv" in opts:
+        add_transmission_limit(n, opts["lv"]["sample"])
+    if "hp_cooling" in opts:
+        add_cooling_heat_pump_constraints(n)
 
 
 ###
@@ -745,7 +745,6 @@ def extra_functionality(n, sns):
 def prepare_network(
     n,
     clip_p_max_pu: Optional[bool | float] = None,
-    load_shedding: Optional[bool | float] = None,
     noisy_costs: Optional[bool] = None,
     foresight: Optional[str] = None,
     **kwargs,
@@ -757,12 +756,6 @@ def prepare_network(
         else:
             _clip_p_max(n)
 
-    if load_shedding:
-        if isinstance(load_shedding, float):
-            _apply_load_shedding(n, load_shedding)
-        else:
-            _apply_load_shedding(n)
-
     if noisy_costs:
         _apply_noisy_costs(n)
 
@@ -773,7 +766,6 @@ def prepare_network(
 
 
 def _clip_p_max(n: pypsa.Network, value: Optional[float] = None) -> None:
-
     if not value:
         value = 1.0e-2
 
@@ -783,32 +775,6 @@ def _clip_p_max(n: pypsa.Network, value: Optional[float] = None) -> None:
         n.storage_units_t.inflow,
     ):
         df.where(df > value, other=0.0, inplace=True)
-
-
-def _apply_load_shedding(n: pypsa.Network, value: Optional[float] = None) -> None:
-    """Intersect between macroeconomic and surveybased willingness to pay
-
-    http://journal.frontiersin.org/article/10.3389/fenrg.2015.00055/full
-    """
-
-    # TODO: retrieve color and nice name from config
-    n.add("Carrier", "load", color="#dd2e23", nice_name="Load shedding")
-
-    buses_i = n.buses.query("carrier == 'AC'").index
-
-    if not value:
-        value = 100
-
-    n.madd(
-        "Generator",
-        buses_i,
-        " load",
-        bus=buses_i,
-        carrier="load",
-        sign=1e-3,  # Adjust sign to measure p and p_nom in kW instead of MW
-        marginal_cost=value,  # Eur/kWh
-        p_nom=1e9,  # kW
-    )
 
 
 def _apply_noisy_costs(n: pypsa.Network) -> None:

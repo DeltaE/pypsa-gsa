@@ -34,7 +34,8 @@ rule apply_sample_to_network:
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
     output:
-        n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
+        # n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
+        n = expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS),
         scaled_sample = "results/{scenario}/scaled_sample.csv",
         meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS),
         meta_constriant = expand("results/{{scenario}}/modelruns/{run}/constraints.csv", run=MODELRUNS)
