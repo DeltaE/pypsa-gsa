@@ -12,7 +12,17 @@ import pypsa
 
 from typing import Optional
 import yaml
-from utils import get_existing_lv, get_region_buses, get_rps_demand_actual, get_rps_eligible, get_rps_generation, concat_rps_standards, format_raw_ng_trade_data, get_ng_trade_links
+from utils import (
+    get_existing_lv,
+    get_region_buses,
+    get_rps_demand_actual,
+    get_rps_eligible,
+    get_rps_generation,
+    concat_rps_standards,
+    format_raw_ng_trade_data,
+    get_ng_trade_links,
+    get_urban_rural_fraction,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -351,7 +361,7 @@ def add_RPS_constraints(
         if not region_gens.empty:
             region_demand = get_rps_demand_actual(n, constraint_row.planning_horizon, region_buses)
             region_gen = get_rps_generation(n, constraint_row.planning_horizon, region_gens)
-            
+
             lhs = region_gen - constraint_row.pct * region_demand * sample
             rhs = 0
 
@@ -678,9 +688,6 @@ def add_gshp_capacity_constraint(
     """
 
     df = pop_layout.copy()
-    
-    df["urban_rural_fraction"] = (df.urban_fraction / df.rural_fraction).round(2)
-    fraction = df.set_index("name")["urban_rural_fraction"].to_dict()
 
     ashp = n.links[n.links.index.str.endswith("ashp")].copy()
     gshp = n.links[n.links.index.str.endswith("gshp")].copy()
@@ -688,6 +695,8 @@ def add_gshp_capacity_constraint(
         return
 
     assert len(ashp) == len(gshp)
+
+    fraction = get_urban_rural_fraction(df)
 
     gshp["urban_rural_fraction"] = gshp.bus0.map(fraction)
 
@@ -710,23 +719,22 @@ def extra_functionality(n, sns):
 
     if "rps" in opts:
         add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
-    if "ces" in opts:
-        add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
-    if "tct" in opts:
-        add_technology_capacity_target_constraints(
-            n, opts["tct"]["data"], opts["tct"]["sample"]
-        )
-    if "co2L" in opts:
-        add_sector_co2_constraints(n, opts["co2L"]["sample"])
-    if "gshp" in opts:
-        add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
-    if "ng_limits" in opts:
-        add_ng_import_export_limits(n, opts["ng_limits"])
-    if "lv" in opts:
-        add_transmission_limit(n, opts["lv"]["sample"])
-    if "hp_cooling" in opts:
-        add_cooling_heat_pump_constraints(n)
-    # if "demand_response" in opts:
+    # if "ces" in opts:
+    #     add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
+    # if "tct" in opts:
+    #     add_technology_capacity_target_constraints(
+    #         n, opts["tct"]["data"], opts["tct"]["sample"]
+    #     )
+    # if "co2L" in opts:
+    #     add_sector_co2_constraints(n, opts["co2L"]["sample"])
+    # if "gshp" in opts:
+    #     add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
+    # if "ng_limits" in opts:
+    #     add_ng_import_export_limits(n, opts["ng_limits"])
+    # if "lv" in opts:
+    #     add_transmission_limit(n, opts["lv"]["sample"])
+    # if "hp_cooling" in opts:
+    #     add_cooling_heat_pump_constraints(n)
 
 
 ###
@@ -890,7 +898,7 @@ if __name__ == "__main__":
         tct_f = snakemake.input.tct_f
         constraints_meta = snakemake.input.constraints
     else:
-        in_network = "results/Testing/modelruns/10/n.nc"
+        in_network = "results/Testing/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
@@ -901,7 +909,7 @@ if __name__ == "__main__":
         rps_f = "results/Testing/constraints/rps.csv"
         ces_f = "results/Testing/constraints/ces.csv"
         tct_f = "results/Testing/constraints/tct.csv"
-        constraints_meta = "results/Testing/modelruns/10/constraints.csv"
+        constraints_meta = "results/Testing/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)

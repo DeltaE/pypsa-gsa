@@ -69,7 +69,7 @@ in the unscaled values).
 """
 
 
-def get_region_buses(n: pypsa.Netowork, region_list: list[str]) -> pd.DataFrame:
+def get_region_buses(n: pypsa.Network, region_list: list[str]) -> pd.DataFrame:
     """Filters buses based on regional input."""
     return n.buses[
         (
@@ -144,14 +144,14 @@ def get_rps_demand_gsa(n: pypsa.Network, planning_horizon: int, region_buses: pd
     WARNING! This is an aproximation for GSA purposes only. The real constraint has a RHS
     of zero and sums actual outgoing flows. 
     """
-    return (
-        n.loads_t.p_set.loc[
-            planning_horizon,
-            n.loads.bus.isin(region_buses.index),
-        ]
-        .sum()
-        .sum()
-    )
+    load_buses = n.loads
+    load_buses["country"] = load_buses.bus.map(n.buses.country)
+    load_buses = load_buses[
+        (load_buses.country.isin(region_buses.index))
+        & (load_buses.carrier.str.contains("-elec"))
+    ]
+
+    return n.loads_t.p_set.loc[planning_horizon, load_buses.index].sum().sum()
 
 def get_rps_demand_actual(n: pypsa.Network, planning_horizon: int, region_buses: pd.DataFrame):
     """LHS of constrint. Returns linopy sum.
@@ -208,3 +208,15 @@ def get_ng_trade_links(n: pypsa.Network, direction: str) -> list[str]:
         ].index.to_list()
     else: 
         raise ValueError(f"Undefined control flow for direction {direction}")
+
+
+###
+# Urban Rural fraction for GSHP
+###
+
+
+def get_urban_rural_fraction(pop: pd.DataFrame) -> pd.DataFrame:
+    """Gets urban rural fraction for the GSHP capacity constraint."""
+
+    pop["urban_rural_fraction"] = (pop.urban_fraction / pop.rural_fraction).round(2)
+    return pop.set_index("name")["urban_rural_fraction"].to_dict()

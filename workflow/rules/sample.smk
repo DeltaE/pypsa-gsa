@@ -27,7 +27,12 @@ rule apply_sample_to_network:
     input: 
         parameters = "results/{scenario}/parameters.csv",
         sample_file = "results/{scenario}/sample.csv",
-        network = "results/{scenario}/base.nc"
+        network = "results/{scenario}/base.nc",
+        pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
+        ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
+        ng_international_f = "results/{scenario}/constraints/ng_international.csv",
+        rps_f = "results/{scenario}/constraints/rps.csv",
+        ces_f = "results/{scenario}/constraints/ces.csv",
     output:
         n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
         scaled_sample = "results/{scenario}/scaled_sample.csv",

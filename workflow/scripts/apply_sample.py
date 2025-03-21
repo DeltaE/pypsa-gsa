@@ -8,7 +8,15 @@ from pathlib import Path
 import yaml
 from dataclasses import dataclass
 from utils import calculate_annuity
-from utils import get_existing_lv, get_rps_demand_gsa, concat_rps_standards, get_rps_eligible, get_ng_trade_links, format_raw_ng_trade_data
+from utils import (
+    get_existing_lv,
+    get_rps_demand_gsa,
+    concat_rps_standards,
+    get_rps_eligible,
+    get_ng_trade_links,
+    format_raw_ng_trade_data,
+    get_urban_rural_fraction,
+)
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
 from logging import getLogger
@@ -296,6 +304,7 @@ def _get_rps_value(n: pypsa.Network, rps: pd.DataFrame) -> float:
 
         if not region_gens.empty:
             region_demand = get_rps_demand_gsa(n, constraint_row.planning_horizon, region_buses)
+            region_demand *= 1.1 # approximate for transportation elec demenad
             demand.append(constraint_row.pct * region_demand)
             
     return sum(demand) / len(demand)
@@ -304,7 +313,18 @@ def _get_ng_trade(n: pypsa.Network, trade: pd.DataFrame, direction: str) -> floa
     """Gets RHS import/export limit."""
     data = format_raw_ng_trade_data(trade, " trade")
     links = get_ng_trade_links(n, direction)
-    return data.loc[links,"rhs"].sum()
+    links_in_scope = [x for x in links if x in data.index]
+    return data.loc[links_in_scope, "rhs"].sum()
+
+
+def _get_gshp_multiplier(n: pypsa.Network, pop: pd.DataFrame) -> float:
+    """Gets fractional multipler to apply to GSHP capacity."""
+
+    gshp = n.links[n.links.index.str.endswith("gshp")].copy()
+    fraction = get_urban_rural_fraction(pop)
+    gshp["urban_rural_fraction"] = gshp.bus0.map(fraction)
+    return gshp.urban_rural_fraction.mean() / 100
+
 
 def _get_constraint_sample(
     n: pypsa.Network, c: str, car: str, attr: str, sample: float, **kwargs
@@ -315,6 +335,7 @@ def _get_constraint_sample(
     """
     if attr == "lv":
         ref = get_existing_lv(n)
+        assert sample <= 1
         scaled = ref * (1 + sample)
     elif attr == "rps":
         rps = kwargs.get("rps", pd.DataFrame())
@@ -324,7 +345,7 @@ def _get_constraint_sample(
         scaled = ref * sample
     elif attr == "ces":
         ces = kwargs.get("ces", pd.DataFrame())
-        if rps.empty:
+        if ces.empty:
             raise ValueError("No ref CES provided.")
         ref = _get_rps_value(n, ces)
         scaled = ref * sample
@@ -345,6 +366,7 @@ def _get_constraint_sample(
         if ng_international.empty:
             raise ValueError("No international NG trade data provided.")
         itl = _get_ng_trade(n, ng_domestic, "imports")
+        # return total imports
         ref = dom + itl
         scaled = ref * sample
     elif attr == "nat_gas_export":
@@ -358,10 +380,15 @@ def _get_constraint_sample(
         if ng_international.empty:
             raise ValueError("No international NG trade data provided.")
         itl = _get_ng_trade(n, ng_domestic, "exports")
+        # return total exports
         ref = dom + itl
         scaled = ref * sample
     elif attr == "gshp":
-        
+        pop = kwargs.get("population", pd.DataFrame())
+        if pop.empty:
+            raise ValueError("No population data provided.")
+        ref = _get_gshp_multiplier(n, pop)
+        scaled = ref * sample
     else:
         raise ValueError(f"Bad control flow for get_constraint_sample: {attr}")
 
@@ -394,11 +421,10 @@ def apply_sample(
     Returns:
         list[float]:
             scaled sample for this model run
-            ** RHS of constraint data not scaled **
         dict[dict[str, str | float]]:
             metadata associated with model run
         pd.DataFrame:
-            constraint samples to pass into
+            constraint samples to pass into (unscaled)
     """
 
     meta = {}
@@ -430,7 +456,7 @@ def apply_sample(
         # if the value is applied to the RHS of the constraint
         # note that the constraints arnt actually applied here
         elif attr in CONSTRAINT_ATTRS:
-            mc, sampled = _get_constraint_sample(n, c, car, attr, value, kwargs)
+            mc, sampled = _get_constraint_sample(n, c, car, attr, value, **kwargs)
             meta_constraints[str(name)] = mc
         # if the value is applied to a time-dependent value
         elif c.endswith("_t"):
@@ -506,12 +532,22 @@ if __name__ == "__main__":
         base_network_file = snakemake.input.network
         root_dir = Path(snakemake.params.root_dir)
         scaled_sample_file = snakemake.output.scaled_sample
+        pop_f = snakemake.input.pop_layout_f
+        ng_dommestic_f = snakemake.input.ng_domestic_f
+        ng_international_f = snakemake.input.ng_international_f
+        rps_f = snakemake.input.rps_f
+        ces_f = snakemake.input.ces_f
     else:
         param_file = "results/Testing/parameters.csv"
         sample_file = "results/Testing/sample.csv"
         base_network_file = "results/Testing/base.nc"
         root_dir = Path("results/Testing/modelruns/")
         scaled_sample_file = "results/Testing/scaled_sample.csv"
+        pop_f = "results/Testing/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
+        ng_international_f = "results/Testing/constraints/ng_international.csv"
+        rps_f = "results/Testing/constraints/rps.csv"
+        ces_f = "results/Testing/constraints/ces.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
@@ -524,11 +560,22 @@ if __name__ == "__main__":
 
     scaled_sample = []
 
+    # for scaling constraint data, we need external data sources
+    constraint_data = {
+        "rps": pd.read_csv(rps_f),
+        "ces": pd.read_csv(ces_f),
+        "ng_domestic": pd.read_csv(ng_dommestic_f, index_col=0),
+        "ng_international": pd.read_csv(ng_international_f, index_col=0),
+        "population": pd.read_csv(pop_f),
+    }
+
     for run in range(len(sample)):
 
         n = base_n.copy()
 
-        scaled, meta, meta_constraints = apply_sample(n, sample_data, run)
+        scaled, meta, meta_constraints = apply_sample(
+            n, sample_data, run, **constraint_data
+        )
 
         scaled_sample.append(scaled)
 
