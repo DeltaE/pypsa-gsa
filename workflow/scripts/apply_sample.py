@@ -119,9 +119,14 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
 
     errors = []
 
-    for car in sa_cars:
-        if car not in n_cars:
-            errors.append(car)
+    for cars in sa_cars:
+        if ";" in cars:  # for aagregating constraints
+            cars = cars.split(";")
+        else:
+            cars = [cars]
+        for car in cars:
+            if car not in n_cars:
+                errors.append(car)
 
     if errors:
         logger.error(f"{errors} are not defined in network.")
@@ -167,6 +172,30 @@ def get_sample_data(
         data[name]["value"] = sample[name].to_dict()  # run: value
     return data
 
+def _is_valid_ref_value(value: Any, car: str, attr: str) -> bool:
+    """Checks if the ref value extracted is valid."""
+    # edge case used to discout
+    if (attr == "capital_cost") and car in ("oil", "waste"):
+        return True
+    elif (attr == "efficiency2") and (car == "gas production"):
+        return True
+    # main condition to satisty
+    if value == np.nan or value == 0:
+        print(f"Invalid reference value of {value} for {attr} {car}")
+        return False
+    else:
+        return True
+
+
+def calc_difference(ref: float, sampled: float, car: str, attr: str) -> float:
+    """Calucates percent difference between original and sampled values."""
+
+    # assert _is_valid_ref_value(ref, car, attr)
+
+    if (ref == 0) or (ref == np.nan):
+        return np.nan
+    else:
+        return abs(sampled - ref) / ref * 100
 
 def _apply_static_sample(
     n: pypsa.Network, c: str, car: str, attr: str, value: int | float, absolute: bool
@@ -181,7 +210,7 @@ def _apply_static_sample(
         # get metadata
         sampled = value
         ref = getattr(n, c).loc[slicer, attr].mean()
-        diff = sampled / ref * 100
+        diff = calc_difference(ref, sampled, car, attr)
         # apply value
         getattr(n, c).loc[slicer, attr] = value
     else:
@@ -189,10 +218,16 @@ def _apply_static_sample(
         ref = getattr(n, c).loc[slicer, attr]
         if attr == "p_nom":  # only include existing capacity
             ref = ref[ref > 0]
-        ref = ref.mean()
+            if ref.empty:
+                logger.warning(f"No exsiting p_nom for {car}")
+                ref = 1 # temporary correction to avoid divide by zero 
+            else:
+                ref = ref.mean()
+        else:
+            ref = ref.mean()
         multiplier = value / 100  # can be positive or negative
         sampled = ref + ref * multiplier
-        diff = abs(sampled - ref) / ref * 100
+        diff = calc_difference(ref, sampled, car, attr)
         # apply value
         ref_slice = getattr(n, c).loc[slicer, attr]
         getattr(n, c).loc[slicer, attr] = ref_slice + ref_slice.mul(multiplier)
@@ -225,7 +260,9 @@ def _apply_dynamic_sample(
     # get metadata
     scaled = (ref + ref.mul(multiplier)).mean().mean()
     ref = ref.mean().mean()
-    diff = abs(scaled - ref) / ref
+    diff = calc_difference(ref, scaled, car, attr)
+
+    assert scaled is not np.nan, f"Scaled {car} {attr} is np.nan"
 
     return {
         "ref": round(ref, 2),  # original mean value applied to network
@@ -368,7 +405,7 @@ def _get_constraint_sample(
         itl = _get_ng_trade(n, ng_domestic, "imports")
         # return total imports
         ref = dom + itl
-        scaled = ref * sample
+        scaled = ref + (ref * sample)
     elif attr == "nat_gas_export":
         # domestic trade
         ng_domestic = kwargs.get("ng_domestic", pd.DataFrame())
@@ -460,7 +497,10 @@ def apply_sample(
             meta_constraints[str(name)] = mc
         # if the value is applied to a time-dependent value
         elif c.endswith("_t"):
-            assert not absolute
+            if absolute:
+                raise ValueError(f"{attr} for {car} can not be absolute")
+            if car == "res-elec" and attr == "p_set":
+                pass
             sampled = _apply_dynamic_sample(n, c, car, attr, value)
         # if the value is applied to a time-independent value
         else:
@@ -555,6 +595,8 @@ if __name__ == "__main__":
         sample_file = snakemake.input.sample_file
         base_network_file = snakemake.input.network
         root_dir = Path(snakemake.params.root_dir)
+        meta_yaml = snakemake.params.meta_yaml
+        meta_csv = snakemake.params.meta_csv
         scaled_sample_file = snakemake.output.scaled_sample
         pop_f = snakemake.input.pop_layout_f
         ng_dommestic_f = snakemake.input.ng_domestic_f
@@ -566,6 +608,8 @@ if __name__ == "__main__":
         sample_file = "results/Testing/sample.csv"
         base_network_file = "results/Testing/base.nc"
         root_dir = Path("results/Testing/modelruns/")
+        meta_yaml = True
+        meta_csv = True
         scaled_sample_file = "results/Testing/scaled_sample.csv"
         pop_f = "results/Testing/constraints/pop_layout.csv"
         ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
@@ -606,13 +650,21 @@ if __name__ == "__main__":
         scaled_sample.append(scaled)
 
         n_save_name = Path(root_dir, str(run), "n.nc")
-        meta_save_name = Path(root_dir, str(run), "meta.yaml")
         meta_constraints_save_name = Path(root_dir, str(run), "constraints.csv")
 
         n.export_to_netcdf(n_save_name)
-        with open(meta_save_name, "w") as f:
-            yaml.dump(meta, f)
+
         meta_constraints.to_csv(meta_constraints_save_name, index=False)
+
+        if meta_yaml:
+            meta_save_name = Path(root_dir, str(run), "meta.yaml")
+            with open(meta_save_name, "w") as f:
+                yaml.dump(meta, f)
+
+        if meta_csv:
+            meta_save_name = Path(root_dir, str(run), "meta.csv")
+            meta_df = pd.DataFrame.from_dict(meta).T
+            meta_df.to_csv(meta_save_name, index=True)
 
     ss = pd.DataFrame(scaled_sample, columns=sample.columns).round(3)
     ss.to_csv(scaled_sample_file, index=False)

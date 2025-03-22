@@ -3,6 +3,9 @@
 # energy conversion of MWh to MMCF
 NG_MWH_2_MMCF = 305
 
+# 3.412 MMBTU = 1 MWH
+MMBTU_2_MWH = 3.412
+
 GSA_COLUMNS = [
     "name",
     "group",

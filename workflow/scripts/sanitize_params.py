@@ -9,6 +9,7 @@ from constants import (
     VALID_RANGES,
     VALID_UNITS,
     CONSTRAINT_ATTRS,
+    MMBTU_2_MWH,
 )
 
 ###
@@ -97,10 +98,12 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "generators_t"
             case "store" | "stores":
                 return "stores"
+            case "store_t" | "stores_t":
+                return "stores_t"
             case "storageunit" | "storageunits":
                 return "storage_units"
-            case "store" | "stores":
-                return "stores"
+            case "storageunit_t" | "storageunits_t":
+                return "storageunits_t"
             case "links_t" | "link_t":
                 return "links_t"
             case "loads" | "load":
@@ -161,12 +164,9 @@ def correct_water_heater_units(params: pd.DataFrame) -> pd.DataFrame:
 
 
 def correct_kBtu_units(params: pd.DataFrame) -> pd.DataFrame:
-    """Takes same assumptions from PyPSA-USA
+    """Converts kBTU to MWh"""
 
-    MMBTU_MWHthemal = 3.4129  # MMBTU to MWh_thermal
-    """
-
-    mmbtu_2_mwh = 3.4129
+    mmbtu_2_mwh = MMBTU_2_MWH  # 3.412 MMBTU = 1 MWh
 
     df = params.copy()
     df.loc[
@@ -232,37 +232,28 @@ def correct_vmt_units(params: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def correct_mmbtu_units(params: pd.DataFrame) -> pd.DataFrame:
-    """Takes same assumptions from PyPSA-USA
+    """Converts MMBTU to MWh"""
 
-    MMBTU_MWHthemal = 3.4129  # MMBTU to MWh_thermal
-    """
+    mmbtu_2_mwh = MMBTU_2_MWH  # 3.412 MMBTU = 1 MWh
 
-    mmbtu_2_mwh = 3.4129
+    # need double for the min/max switch described below
+    df_orig = params.copy()
+    df_corr = params.copy()
+    slicer = df[
+        (df.unit.str.contains("mmbtu/mwh"))
+        & (df.attribute.isin(("efficiency", "efficiency2")))
+    ]
 
-    df = params.copy()
-    df.loc[
-        (
-            (df.unit.str.contains("mmbtu/mwh"))
-            & (df.attribute.isin(("efficiency", "efficiency2")))
-        ),
-        "min_value",
-    ] *= mmbtu_2_mwh
-    df.loc[
-        (
-            (df.unit.str.contains("mmbtu/mwh"))
-            & (df.attribute.isin(("efficiency", "efficiency2")))
-        ),
-        "max_value",
-    ] *= mmbtu_2_mwh
-    df.loc[
-        (
-            (df.unit.str.contains("mmbtu/mwh"))
-            & (df.attribute.isin(("efficiency", "efficiency2")))
-        ),
-        "unit",
-    ] = "per_unit"
-
-    return df
+    # heat rates will switch min/max poistions
+    # all values are "3.412 / value"
+    df_corr.loc[slicer.index, "min_value"] = (
+        mmbtu_2_mwh / df_orig.loc[slicer.index, "max_value"]
+    )
+    df_corr.loc[slicer.index, "max_value"] = (
+        mmbtu_2_mwh / df_orig.loc[slicer.index, "min_value"]
+    )
+    df_corr.loc[slicer.index, "unit"] = "per_unit"
+    return df_corr
 
 
 def correct_tonnes_units(params: pd.DataFrame) -> pd.DataFrame:
@@ -485,6 +476,20 @@ def is_valid_demand_response(params: pd.DataFrame) -> bool:
     else:
         return True
 
+def is_attr_t_pct(params: pd.DataFrame) -> bool:
+    """Time dependent values must be realitive"""
+
+    df = params.copy()
+
+    df = df[(df.attribute.str.endswith("_t")) & ~(df.range == "percent")]
+
+    if not df.empty:
+        errors = set(df.name.to_list())
+        print(f"{errors} must have percent ranges")
+        return False
+    else:
+        return True
+
 
 if __name__ == "__main__":
 
@@ -525,6 +530,7 @@ if __name__ == "__main__":
     assert is_valid_nice_name(df), "invalid nice_name"
     assert is_no_duplicates(df), "duplicate names"
     assert is_constraints_abs(df), "constraints must be absolute"
+    assert is_attr_t_pct(df), "time dependent values must be realitive"
     assert is_valid_gshp(df), "too many groups for gshp constraint"
     assert is_valid_demand_response(df), "demand_response must be percent"
 

@@ -23,7 +23,9 @@ rule create_sample:
 rule apply_sample_to_network:
     message: "Applying sample"
     params:
-        root_dir = "results/{scenario}/modelruns/"
+        root_dir = "results/{scenario}/modelruns/",
+        meta_yaml = config["metadata"]["yaml"],
+        meta_csv = config["metadata"]["csv"]
     input: 
         parameters = "results/{scenario}/parameters.csv",
         sample_file = "results/{scenario}/sample.csv",
@@ -34,10 +36,9 @@ rule apply_sample_to_network:
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
     output:
-        # n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
-        n = expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS),
+        n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
         scaled_sample = "results/{scenario}/scaled_sample.csv",
-        meta = expand("results/{{scenario}}/modelruns/{run}/meta.yaml", run=MODELRUNS),
+        # meta = expand("results/{{scenario}}/modelruns/{run}/meta.{format}", run=MODELRUNS, format=META_FORMAT),
         meta_constriant = expand("results/{{scenario}}/modelruns/{run}/constraints.csv", run=MODELRUNS)
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
