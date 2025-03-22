@@ -58,8 +58,8 @@ if __name__ == "__main__":
     
     # input values are given a percent reduction from 2005 levels
     # so swap the min/max identifier
-    min_value = round(total_2005_emissions * (1 - float(max_value_pct) / 100), 2)
-    max_value = round(total_2005_emissions * (1 - float(min_value_pct) / 100), 2)
+    min_value = round(total_2005_emissions * (1 - float(max_value_pct) / 100), 5)
+    max_value = round(total_2005_emissions * (1 - float(min_value_pct) / 100), 5)
     
     note = f"{min_value_pct} to {max_value_pct} % reduction from 2005 levels"
     

@@ -79,18 +79,20 @@ if __name__ == "__main__":
         png = snakemake.output.png
     else:
         result_name = "com_ashp_capacity"
-        parameters_f = "config/parameters.csv"
-        sample_f = "results/Western/sample.csv"
-        results_f = "results/Western/results/com_ashp_capacity.csv"
-        scaled = False
-        csv = "csv.csv"
-        png = "png.png"
+        parameters_f = "results/Testing/parameters.csv"
+        sample_f = "results/Testing/sample_scaled.csv"
+        results_f = "results/Testing/results/carbon_cost.csv"
+        scaled = True
+        csv = "results/Testing/SA/carbon_cost.csv"
+        png = "results/Testing/SA/carbon_cost.png"
 
     params = pd.read_csv(parameters_f)
     X = pd.read_csv(sample_f).to_numpy()
     Y = pd.read_csv(results_f)["value"].to_numpy()
 
     assert X.shape[0] == Y.shape[0]
+
+    logger.info(f"Using scaled sample: {scaled}")
 
     si = sa_results(params, X, Y, scaled)
     si.to_df().to_csv(csv)

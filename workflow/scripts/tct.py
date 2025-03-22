@@ -70,7 +70,7 @@ TCT_COLUMNS = ["name", "planning_horizon", "region", "carrier", "min", "max"]
 def _get_current_capactity(n: pypsa.Network, cars: list[str]) -> float:
     gens = n.generators[n.generators.carrier.isin(cars)].p_nom.sum()
     links = n.links[n.links.carrier.isin(cars)].p_nom.sum()
-    return round(gens + links, 2)
+    return round(gens + links, 5)
 
 
 def get_tct_data(n: pypsa.Network) -> pd.DataFrame:
@@ -86,7 +86,7 @@ def get_tct_data(n: pypsa.Network) -> pd.DataFrame:
         if ref_growth < 100:
             ref_cap = cap + 0.1
         else:
-            ref_cap = round(cap * ref_growth / 100, 2)
+            ref_cap = round(cap * ref_growth / 100, 5)
 
         tct = [f"tct_{name}", planning_year, "all", ",".join(cars), "", ref_cap]
         data.append(tct)
@@ -109,8 +109,8 @@ def get_gsa_tct_data(n: pypsa.Network) -> pd.DataFrame:
             min_value = cap * GROWTHS[name]["ref_growth"] / 100
             max_value = cap * GROWTHS[name]["max_growth"] / 100
 
-        min_value = round(min_value / cap, 2)
-        max_value = round(max_value / cap, 2)
+        min_value = round(min_value / cap, 5)
+        max_value = round(max_value / cap, 5)
 
         if abs(min_value - max_value) < 0.0001:
             print(f"No limits created for {name}")

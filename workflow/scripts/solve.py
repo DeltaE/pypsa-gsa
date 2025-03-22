@@ -289,17 +289,17 @@ def add_technology_capacity_target_constraints(
         )
 
         if target["max"] == "existing":
-            target["max"] = round(lhs_existing, 2) + 0.01
+            target["max"] = round(lhs_existing, 5) + 0.01
         else:
             target["max"] = float(target["max"])
 
         if target["min"] == "existing":
-            target["min"] = round(lhs_existing, 2) - 0.01
+            target["min"] = round(lhs_existing, 5) - 0.01
         else:
             target["min"] = float(target["min"])
 
         if not np.isnan(target["min"]):
-            rhs = target["min"] - round(lhs_existing, 2)
+            rhs = target["min"] - round(lhs_existing, 5)
 
             n.model.add_constraints(
                 lhs >= rhs,
@@ -321,7 +321,7 @@ def add_technology_capacity_target_constraints(
                 target["max"] >= lhs_existing
             ), f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
 
-            rhs = target["max"] - round(lhs_existing, 2)
+            rhs = target["max"] - round(lhs_existing, 5)
 
             n.model.add_constraints(
                 lhs <= rhs,
@@ -903,8 +903,8 @@ if __name__ == "__main__":
     extra_fn["ng_trade"] = {}
     extra_fn["ng_trade"]["domestic"] = pd.read_csv(ng_dommestic_f, index_col=0)
     extra_fn["ng_trade"]["international"] = pd.read_csv(ng_international_f, index_col=0)
-    imports = constraints[constraints.attribute == "nat_gas_import"].round(2)
-    exports = constraints[constraints.attribute == "nat_gas_export"].round(2)
+    imports = constraints[constraints.attribute == "nat_gas_import"].round(5)
+    exports = constraints[constraints.attribute == "nat_gas_export"].round(5)
 
     if len(imports) == 1:
         extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
@@ -929,7 +929,7 @@ if __name__ == "__main__":
     ###
     extra_fn["gshp"] = {}
     extra_fn["gshp"]["data"] = pd.read_csv(pop_f)
-    gshp_sample = constraints[constraints.attribute == "gshp"].round(2)
+    gshp_sample = constraints[constraints.attribute == "gshp"].round(5)
     # in sanitize_params we already check that gshp is defined correctly
     # We need to move the res and com gshp capacites together tho.
     gshp_sample = gshp_sample.drop_duplicates(subset="attribute")
@@ -946,7 +946,7 @@ if __name__ == "__main__":
     ###
     extra_fn["rps"] = {}
     extra_fn["rps"]["data"] = pd.read_csv(rps_f)
-    rps_sample = constraints[constraints.attribute == "rps"].round(2)
+    rps_sample = constraints[constraints.attribute == "rps"].round(5)
 
     if len(rps_sample) == 1:
         extra_fn["rps"]["sample"] = rps_sample.value.values[0]
@@ -960,7 +960,7 @@ if __name__ == "__main__":
     ###
     extra_fn["ces"] = {}
     extra_fn["ces"]["data"] = pd.read_csv(ces_f)
-    ces_sample = constraints[constraints.attribute == "ces"].round(2)
+    ces_sample = constraints[constraints.attribute == "ces"].round(5)
 
     if len(ces_sample) == 1:
         extra_fn["ces"]["sample"] = ces_sample.value.values[0]
@@ -974,7 +974,7 @@ if __name__ == "__main__":
     ###
     extra_fn["tct"] = {}
     extra_fn["tct"]["data"] = pd.read_csv(tct_f)
-    extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(2)
+    extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(5)
 
     target_names = extra_fn["tct"]["data"].name.to_list()
     sample_names = extra_fn["tct"]["sample"].name.to_list()
@@ -986,7 +986,7 @@ if __name__ == "__main__":
     ###
     extra_fn["co2L"] = {}
 
-    co2_sample = constraints[constraints.attribute == "co2L"].round(2)
+    co2_sample = constraints[constraints.attribute == "co2L"].round(5)
 
     if len(co2_sample) == 1:
         extra_fn["co2L"]["sample"] = co2_sample.value.values[0]
@@ -1001,7 +1001,7 @@ if __name__ == "__main__":
     ###
     extra_fn["lv"] = {}
 
-    lv_sample = constraints[constraints.attribute == "lv"].round(2)
+    lv_sample = constraints[constraints.attribute == "lv"].round(5)
 
     if len(lv_sample) == 1:
         # '1 +' because expansion given as per unit

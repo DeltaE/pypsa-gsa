@@ -60,7 +60,7 @@ class CapitalCostCache:
         assert self.is_valid_data()
         if self.capital_cost:
             logger.info("Returning pre-defined capital cost.")
-            return round(self.capital_cost, 2)
+            return round(self.capital_cost, 5)
         elif transport:
             return self._calc_transport_capex()
         else:
@@ -73,9 +73,9 @@ class CapitalCostCache:
 
         if self.itc:
             assert self.itc < 1  # ensures is per_unit
-            return round(capex * (1 - self.itc), 2)
+            return round(capex * (1 - self.itc), 5)
         else:
-            return round(capex, 2)
+            return round(capex, 5)
 
     def _calc_transport_capex(self) -> float:
         """OCC comes as 'usd' and needs to be converted to usd/kvmt."""
@@ -85,7 +85,7 @@ class CapitalCostCache:
         assert self.vmt_per_year
         capex = ((self.occ / self.vmt_per_year) + self.fixed_cost) * annuity
 
-        return round(capex, 2)
+        return round(capex, 5)
 
 @dataclass
 class MethaneLeakageCache:
@@ -106,7 +106,7 @@ class MethaneLeakageCache:
 
     def calculate_leakage(self) -> float:
         assert self.leakage < 1  # confirm per_unit
-        return round(self.gwp * self.leakage, 2)
+        return round(self.gwp * self.leakage, 5)
 
 def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     """Check all defined carriers are in the network."""
@@ -233,9 +233,9 @@ def _apply_static_sample(
         getattr(n, c).loc[slicer, attr] = ref_slice + ref_slice.mul(multiplier)
 
     return {
-        "ref": round(ref, 2),  # original value applied to network
-        "scaled": round(sampled, 2),  # new value applied to network
-        "difference": round(diff, 2),  # percent diff between original and new
+        "ref": round(ref, 5),  # original value applied to network
+        "scaled": round(sampled, 5),  # new value applied to network
+        "difference": round(diff, 5),  # percent diff between original and new
     }
 
 def _apply_dynamic_sample(
@@ -265,9 +265,9 @@ def _apply_dynamic_sample(
     assert scaled is not np.nan, f"Scaled {car} {attr} is np.nan"
 
     return {
-        "ref": round(ref, 2),  # original mean value applied to network
-        "scaled": round(scaled, 2),  # new mean value applied to network
-        "difference": round(diff, 2),  # percent diff between original and new
+        "ref": round(ref, 5),  # original mean value applied to network
+        "scaled": round(scaled, 5),  # new mean value applied to network
+        "difference": round(diff, 5),  # percent diff between original and new
     }
 
 
@@ -439,7 +439,7 @@ def _get_constraint_sample(
     sampled = {
         "ref": ref,
         "scaled": scaled,
-        "difference": round(abs(scaled - ref) / ref * 100, 2),
+        "difference": round(abs(scaled - ref) / ref * 100, 5),
     }
 
     return meta, sampled
@@ -485,7 +485,7 @@ def apply_sample(
         car = data["carrier"]
         attr = data["attribute"]
         absolute = True if data["range"] == "absolute" else False
-        value = round(data["value"][run], 2)
+        value = round(data["value"][run], 5)
 
         # if the applied value is an intermediate calculation
         if attr in CACHED_ATTRS and absolute:
@@ -666,5 +666,5 @@ if __name__ == "__main__":
             meta_df = pd.DataFrame.from_dict(meta).T
             meta_df.to_csv(meta_save_name, index=True)
 
-    ss = pd.DataFrame(scaled_sample, columns=sample.columns).round(3)
+    ss = pd.DataFrame(scaled_sample, columns=sample.columns).round(5)
     ss.to_csv(scaled_sample_file, index=False)

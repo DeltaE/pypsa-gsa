@@ -50,6 +50,7 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
     sa_cars_flat = set(list(itertools.chain(*sa_cars_split)))
 
     n_cars = n.carriers.index.to_list()
+    n_cars.append("load")  # load shedding added during sample
 
     errors = []
 

@@ -20,7 +20,7 @@ def main(parameters: pd.DataFrame, replicates: int):
         seed=42,
     )
 
-    return pd.DataFrame(sample, columns=problem["names"]).round(2)
+    return pd.DataFrame(sample, columns=problem["names"]).round(5)
 
 
 if __name__ == "__main__":

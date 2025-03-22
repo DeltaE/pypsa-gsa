@@ -1,6 +1,6 @@
 """Rules for processing results"""
 
-def get_sample_name(wildcards):
+def get_sample_file(wildcards):
     if config["gsa"]["scale"]:
         return f"results/{wildcards.scenario}/sample_scaled.csv"
     else: 
@@ -80,7 +80,7 @@ rule calculate_SA:
     params: 
         scaled = config["gsa"]["scale"]
     input: 
-        sample = get_sample_name,
+        sample = get_sample_file,
         parameters = "results/{scenario}/parameters.csv",
         results = "results/{scenario}/results/{result}.csv"
     output: 

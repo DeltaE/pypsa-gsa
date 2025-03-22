@@ -219,5 +219,5 @@ def get_ng_trade_links(n: pypsa.Network, direction: str) -> list[str]:
 def get_urban_rural_fraction(pop: pd.DataFrame) -> pd.DataFrame:
     """Gets urban rural fraction for the GSHP capacity constraint."""
 
-    pop["urban_rural_fraction"] = (pop.urban_fraction / pop.rural_fraction).round(2)
+    pop["urban_rural_fraction"] = (pop.urban_fraction / pop.rural_fraction).round(5)
     return pop.set_index("name")["urban_rural_fraction"].to_dict()
