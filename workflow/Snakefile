@@ -15,7 +15,7 @@ PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
 RESULTS = pd.read_csv(config["gsa"]["results"])
 
 SCENARIO = config["scenario"]["name"]
-RESULT_FILES = RESULTS.name.to_list()
+RESULT_FILES = list(set(RESULTS.name.to_list()))
 HEATMAPS = RESULTS.heatmap.dropna().to_list()
 
 # Calculates number of model runs for the Method of Morris

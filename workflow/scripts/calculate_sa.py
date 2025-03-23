@@ -81,10 +81,10 @@ if __name__ == "__main__":
         result_name = "com_ashp_capacity"
         parameters_f = "results/Testing/parameters.csv"
         sample_f = "results/Testing/sample_scaled.csv"
-        results_f = "results/Testing/results/carbon_cost.csv"
+        results_f = "results/Testing/results/marginal_cost_carbon.csv"
         scaled = True
-        csv = "results/Testing/SA/carbon_cost.csv"
-        png = "results/Testing/SA/carbon_cost.png"
+        csv = "results/Testing/SA/marginal_cost_carbon.csv"
+        png = "results/Testing/SA/marginal_cost_carbon.png"
 
     params = pd.read_csv(parameters_f)
     X = pd.read_csv(sample_f).to_numpy()

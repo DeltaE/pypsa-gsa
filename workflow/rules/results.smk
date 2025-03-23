@@ -36,7 +36,7 @@ rule combine_results:
     input:
         results = expand("results/{{scenario}}/modelruns/{run}/results.csv", run=MODELRUNS)
     output:
-        csv = temp("results/{scenario}/results/all.csv")
+        csv = "results/{scenario}/results/all.csv"
     log: 
         "logs/combine_results/{scenario}.log"
     resources:
@@ -100,6 +100,7 @@ rule heatmap:
     message:
         "Generating heat map"
     input:
+        params = "results/{scenario}/parameters.csv",
         results = "results/{scenario}/results.csv",
         csvs = get_heatmap_csvs
     output:

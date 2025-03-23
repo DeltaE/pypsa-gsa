@@ -64,6 +64,20 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
     else:
         return True
 
+def is_unique_names(results: pd.DataFrame) -> bool:
+    """Checks that all result names are unique."""
+
+    df = results.copy()
+
+    df = df[df.duplicated("name")]
+    if not df.empty:
+        duplicates = set(df.name.to_list())
+        print(f"Duplicate definitions of {duplicates}")
+        return False
+    else:
+        return True
+
+
 if __name__ == "__main__":
 
     if "snakemake" in globals():
@@ -80,6 +94,7 @@ if __name__ == "__main__":
     df = sanitize_component_name(df)
     df = strip_whitespace(df)
     assert is_valid_variables(df)
+    assert is_unique_names(df)
 
     n = pypsa.Network(network)
     assert is_valid_carrier(n, df)
