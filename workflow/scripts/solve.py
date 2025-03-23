@@ -4,34 +4,30 @@ Modified solve network file from PyPSA-USA
 https://github.com/PyPSA/pypsa-usa/blob/master/workflow/scripts/solve_network.py
 """
 
-import logging
-
 import numpy as np
 import pandas as pd
 import pypsa
 
 from typing import Optional
 import yaml
+from utils import (
+    get_existing_lv,
+    get_region_buses,
+    get_rps_demand_actual,
+    get_rps_eligible,
+    get_rps_generation,
+    concat_rps_standards,
+    format_raw_ng_trade_data,
+    get_ng_trade_links,
+    get_urban_rural_fraction,
+)
 
+import logging
 logger = logging.getLogger(__name__)
-NG_MWH_2_MMCF = 305
 
 ###
 # Helpers
 ###
-
-
-def get_region_buses(n, region_list):
-    return n.buses[
-        (
-            n.buses.country.isin(region_list)
-            | n.buses.reeds_zone.isin(region_list)
-            | n.buses.reeds_state.isin(region_list)
-            | n.buses.interconnect.str.lower().isin(region_list)
-            | n.buses.nerc_reg.isin(region_list)
-            | (1 if "all" in region_list else 0)
-        )
-    ]
 
 
 def filter_components(
@@ -292,17 +288,17 @@ def add_technology_capacity_target_constraints(
         )
 
         if target["max"] == "existing":
-            target["max"] = round(lhs_existing, 2) + 0.01
+            target["max"] = round(lhs_existing, 5) + 0.01
         else:
             target["max"] = float(target["max"])
 
         if target["min"] == "existing":
-            target["min"] = round(lhs_existing, 2) - 0.01
+            target["min"] = round(lhs_existing, 5) - 0.01
         else:
             target["min"] = float(target["min"])
 
         if not np.isnan(target["min"]):
-            rhs = target["min"] - round(lhs_existing, 2)
+            rhs = target["min"] - round(lhs_existing, 5)
 
             n.model.add_constraints(
                 lhs >= rhs,
@@ -324,7 +320,7 @@ def add_technology_capacity_target_constraints(
                 target["max"] >= lhs_existing
             ), f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
 
-            rhs = target["max"] - round(lhs_existing, 2)
+            rhs = target["max"] - round(lhs_existing, 5)
 
             n.model.add_constraints(
                 lhs <= rhs,
@@ -346,64 +342,27 @@ def add_RPS_constraints(
 ):
     """
     Add Renewable Portfolio Standards constraint to the network.
-
-    Add percent levels of generator production (MWh) per carrier or groups of
-    carriers for individual countries. Each constraint can be designated for a
-    specified planning horizon in multi-period models.
-
-    Parameters
-    ----------
-    n : pypsa.Network
-    config : dict
     """
 
     if rps.empty:
         return
+    
+    portfolio_standards = concat_rps_standards(n, rps)
 
-    planning_horizon = n.investment_periods[0]
-
-    # Concatenate all portfolio standards
-    portfolio_standards = rps.copy()
-    portfolio_standards["pct"] = portfolio_standards.pct.mul(sample).clip(upper=1)
-    portfolio_standards = portfolio_standards[
-        (portfolio_standards.pct > 0.0)
-        & (portfolio_standards.planning_horizon == planning_horizon)
-        & (portfolio_standards.region.isin(n.buses.reeds_state.unique()))
-    ]
-
-    # Iterate through constraints and add RPS constraints to the model
+    # Iterate through constraints
     for _, constraint_row in portfolio_standards.iterrows():
-        region_list = [region.strip() for region in constraint_row.region.split(",")]
-        region_buses = get_region_buses(n, region_list)
-
+        
+        region_buses, region_gens = get_rps_eligible(n, constraint_row.region, constraint_row.carrier)
+        
         if region_buses.empty:
             continue
 
-        carriers = [carrier.strip() for carrier in constraint_row.carrier.split(",")]
+        if not region_gens.empty:
+            region_demand = get_rps_demand_actual(n, constraint_row.planning_horizon, region_buses)
+            region_gen = get_rps_generation(n, constraint_row.planning_horizon, region_gens)
 
-        # Filter region generators
-        region_gens = n.generators[n.generators.bus.isin(region_buses.index)]
-        region_gens_eligible = region_gens[region_gens.carrier.isin(carriers)]
-
-        if not region_gens_eligible.empty:
-            # Eligible generation
-            p_eligible = n.model["Generator-p"].sel(
-                period=constraint_row.planning_horizon,
-                Generator=region_gens_eligible.index,
-            )
-            lhs = p_eligible.sum()
-
-            # Region demand
-            region_demand = (
-                n.loads_t.p_set.loc[
-                    constraint_row.planning_horizon,
-                    n.loads.bus.isin(region_buses.index),
-                ]
-                .sum()
-                .sum()
-            )
-
-            rhs = constraint_row.pct * region_demand * sample
+            lhs = region_gen - constraint_row.pct * region_demand * sample
+            rhs = 0
 
             # Add constraint
             n.model.add_constraints(
@@ -503,23 +462,6 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
 def add_ng_import_export_limits(
     n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], limits: dict[str, float]
 ):
-    def _format_link_name(s: str) -> str:
-        states = s.split("-")
-        return f"{states[0]} {states[1]} gas"
-
-    def _format_data(
-        prod: pd.DataFrame,
-        link_suffix: str | None = None,
-    ) -> pd.DataFrame:
-        df = prod.copy()
-        df["link"] = df.state.map(_format_link_name)
-        if link_suffix:
-            df["link"] = df.link + link_suffix
-
-        # convert mmcf to MWh
-        df["value"] = df["value"] * NG_MWH_2_MMCF
-
-        return df[["link", "value"]].rename(columns={"value": "rhs"}).set_index("link")
 
     def add_import_limits(n, data, constraint, multiplier=None):
         """Sets gas import limit over each year."""
@@ -530,10 +472,8 @@ def add_ng_import_export_limits(
 
         weights = n.snapshot_weightings.objective
 
-        links = n.links[
-            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas trade"))
-        ].index.to_list()
-
+        links = get_ng_trade_links(n, "imports")
+        
         for year in n.investment_periods:
             for link in links:
                 try:
@@ -562,10 +502,8 @@ def add_ng_import_export_limits(
             multiplier = 1
 
         weights = n.snapshot_weightings.objective
-
-        links = n.links[
-            (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas"))
-        ].index.to_list()
+        
+        links = get_ng_trade_links(n, "exports")
 
         for year in n.investment_periods:
             for link in links:
@@ -614,7 +552,7 @@ def add_ng_import_export_limits(
     # add domestic limits
 
     trade = ng_trade["domestic"].copy()
-    trade = _format_data(trade, " trade")
+    trade = format_raw_ng_trade_data(trade, " trade")
 
     add_import_limits(n, trade, "min", import_min)
     add_export_limits(n, trade, "min", export_min)
@@ -627,7 +565,7 @@ def add_ng_import_export_limits(
     # add international limits
 
     trade = ng_trade["international"].copy()
-    trade = _format_data(trade, " trade")
+    trade = format_raw_ng_trade_data(trade, " trade")
 
     add_import_limits(n, trade, "min", import_min)
     add_export_limits(n, trade, "min", export_min)
@@ -636,6 +574,7 @@ def add_ng_import_export_limits(
         add_import_limits(n, trade, "max", import_max)
     if not export_max == "inf":
         add_export_limits(n, trade, "max", export_max)
+
 
 def add_transmission_limit(n, factor):
     """Set volume transmission limits expansion."""
@@ -648,18 +587,16 @@ def add_transmission_limit(n, factor):
 
     logger.info(f"Setting volume transmission limit of {factor * 100}%")
 
-    ac_links_existing = n.links.carrier == "AC" if not n.links.empty else pd.Series()
+    # ensures AC links are set to extendable.
     ac_links_extend = n.links[
         (n.links.carrier == "AC") & (n.links.index.str.endswith("exp"))
     ].index
-
-    col = "length"
-    ref = n.links.loc[ac_links_existing, "p_nom"] @ n.links.loc[ac_links_existing, col]
-
     n.links.loc[ac_links_extend, "p_nom_extendable"] = True
 
-    con_type = "volume_expansion"
+    ref = get_existing_lv(n)
     rhs = float(factor) * ref
+
+    con_type = "volume_expansion"
 
     n.add(
         "GlobalConstraint",
@@ -750,9 +687,6 @@ def add_gshp_capacity_constraint(
     """
 
     df = pop_layout.copy()
-    
-    df["urban_rural_fraction"] = (df.urban_fraction / df.rural_fraction).round(2)
-    fraction = df.set_index("name")["urban_rural_fraction"].to_dict()
 
     ashp = n.links[n.links.index.str.endswith("ashp")].copy()
     gshp = n.links[n.links.index.str.endswith("gshp")].copy()
@@ -760,6 +694,8 @@ def add_gshp_capacity_constraint(
         return
 
     assert len(ashp) == len(gshp)
+
+    fraction = get_urban_rural_fraction(df)
 
     gshp["urban_rural_fraction"] = gshp.bus0.map(fraction)
 
@@ -780,10 +716,10 @@ def extra_functionality(n, sns):
 
     opts = n.extra_fn
 
-    if "rps" in opts:
-        add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
-    if "ces" in opts:
-        add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
+    # if "rps" in opts:
+    #     add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
+    # if "ces" in opts:
+    #     add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
     if "tct" in opts:
         add_technology_capacity_target_constraints(
             n, opts["tct"]["data"], opts["tct"]["sample"]
@@ -798,7 +734,6 @@ def extra_functionality(n, sns):
         add_transmission_limit(n, opts["lv"]["sample"])
     if "hp_cooling" in opts:
         add_cooling_heat_pump_constraints(n)
-    # if "demand_response" in opts:
 
 
 ###
@@ -809,7 +744,6 @@ def extra_functionality(n, sns):
 def prepare_network(
     n,
     clip_p_max_pu: Optional[bool | float] = None,
-    load_shedding: Optional[bool | float] = None,
     noisy_costs: Optional[bool] = None,
     foresight: Optional[str] = None,
     **kwargs,
@@ -821,12 +755,6 @@ def prepare_network(
         else:
             _clip_p_max(n)
 
-    if load_shedding:
-        if isinstance(load_shedding, float):
-            _apply_load_shedding(n, load_shedding)
-        else:
-            _apply_load_shedding(n)
-
     if noisy_costs:
         _apply_noisy_costs(n)
 
@@ -837,7 +765,6 @@ def prepare_network(
 
 
 def _clip_p_max(n: pypsa.Network, value: Optional[float] = None) -> None:
-
     if not value:
         value = 1.0e-2
 
@@ -847,32 +774,6 @@ def _clip_p_max(n: pypsa.Network, value: Optional[float] = None) -> None:
         n.storage_units_t.inflow,
     ):
         df.where(df > value, other=0.0, inplace=True)
-
-
-def _apply_load_shedding(n: pypsa.Network, value: Optional[float] = None) -> None:
-    """Intersect between macroeconomic and surveybased willingness to pay
-
-    http://journal.frontiersin.org/article/10.3389/fenrg.2015.00055/full
-    """
-
-    # TODO: retrieve color and nice name from config
-    n.add("Carrier", "load", color="#dd2e23", nice_name="Load shedding")
-
-    buses_i = n.buses.query("carrier == 'AC'").index
-
-    if not value:
-        value = 100
-
-    n.madd(
-        "Generator",
-        buses_i,
-        " load",
-        bus=buses_i,
-        carrier="load",
-        sign=1e-3,  # Adjust sign to measure p and p_nom in kW instead of MW
-        marginal_cost=value,  # Eur/kWh
-        p_nom=1e9,  # kW
-    )
 
 
 def _apply_noisy_costs(n: pypsa.Network) -> None:
@@ -962,7 +863,7 @@ if __name__ == "__main__":
         tct_f = snakemake.input.tct_f
         constraints_meta = snakemake.input.constraints
     else:
-        in_network = "results/Testing/modelruns/10/n.nc"
+        in_network = "results/Testing/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
@@ -973,7 +874,7 @@ if __name__ == "__main__":
         rps_f = "results/Testing/constraints/rps.csv"
         ces_f = "results/Testing/constraints/ces.csv"
         tct_f = "results/Testing/constraints/tct.csv"
-        constraints_meta = "results/Testing/modelruns/10/constraints.csv"
+        constraints_meta = "results/Testing/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1001,8 +902,8 @@ if __name__ == "__main__":
     extra_fn["ng_trade"] = {}
     extra_fn["ng_trade"]["domestic"] = pd.read_csv(ng_dommestic_f, index_col=0)
     extra_fn["ng_trade"]["international"] = pd.read_csv(ng_international_f, index_col=0)
-    imports = constraints[constraints.attribute == "nat_gas_import"].round(2)
-    exports = constraints[constraints.attribute == "nat_gas_export"].round(2)
+    imports = constraints[constraints.attribute == "nat_gas_import"].round(5)
+    exports = constraints[constraints.attribute == "nat_gas_export"].round(5)
 
     if len(imports) == 1:
         extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
@@ -1027,7 +928,7 @@ if __name__ == "__main__":
     ###
     extra_fn["gshp"] = {}
     extra_fn["gshp"]["data"] = pd.read_csv(pop_f)
-    gshp_sample = constraints[constraints.attribute == "gshp"].round(2)
+    gshp_sample = constraints[constraints.attribute == "gshp"].round(5)
     # in sanitize_params we already check that gshp is defined correctly
     # We need to move the res and com gshp capacites together tho.
     gshp_sample = gshp_sample.drop_duplicates(subset="attribute")
@@ -1044,7 +945,7 @@ if __name__ == "__main__":
     ###
     extra_fn["rps"] = {}
     extra_fn["rps"]["data"] = pd.read_csv(rps_f)
-    rps_sample = constraints[constraints.attribute == "rps"].round(2)
+    rps_sample = constraints[constraints.attribute == "rps"].round(5)
 
     if len(rps_sample) == 1:
         extra_fn["rps"]["sample"] = rps_sample.value.values[0]
@@ -1058,7 +959,7 @@ if __name__ == "__main__":
     ###
     extra_fn["ces"] = {}
     extra_fn["ces"]["data"] = pd.read_csv(ces_f)
-    ces_sample = constraints[constraints.attribute == "ces"].round(2)
+    ces_sample = constraints[constraints.attribute == "ces"].round(5)
 
     if len(ces_sample) == 1:
         extra_fn["ces"]["sample"] = ces_sample.value.values[0]
@@ -1072,7 +973,7 @@ if __name__ == "__main__":
     ###
     extra_fn["tct"] = {}
     extra_fn["tct"]["data"] = pd.read_csv(tct_f)
-    extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(2)
+    extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(5)
 
     target_names = extra_fn["tct"]["data"].name.to_list()
     sample_names = extra_fn["tct"]["sample"].name.to_list()
@@ -1084,7 +985,7 @@ if __name__ == "__main__":
     ###
     extra_fn["co2L"] = {}
 
-    co2_sample = constraints[constraints.attribute == "co2L"].round(2)
+    co2_sample = constraints[constraints.attribute == "co2L"].round(5)
 
     if len(co2_sample) == 1:
         extra_fn["co2L"]["sample"] = co2_sample.value.values[0]
@@ -1099,7 +1000,7 @@ if __name__ == "__main__":
     ###
     extra_fn["lv"] = {}
 
-    lv_sample = constraints[constraints.attribute == "lv"].round(2)
+    lv_sample = constraints[constraints.attribute == "lv"].round(5)
 
     if len(lv_sample) == 1:
         # '1 +' because expansion given as per unit

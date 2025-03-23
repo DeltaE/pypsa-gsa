@@ -6,9 +6,8 @@ import itertools
 from constants import VALID_RESULTS
 from sanitize_params import sanitize_component_name
 
-from logging import getLogger
-
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 
 def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
@@ -20,6 +19,7 @@ def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     df["carriers"] = df.carriers.str.strip()
     df["variable"] = df.variable.str.strip()
     df["unit"] = df.unit.str.strip()
+    df["plots"] = df.plots.str.strip()
     return df
 
 def is_valid_variables(results: pd.DataFrame) -> bool:
@@ -50,6 +50,7 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
     sa_cars_flat = set(list(itertools.chain(*sa_cars_split)))
 
     n_cars = n.carriers.index.to_list()
+    n_cars.append("load")  # load shedding added during sample
 
     errors = []
 
@@ -62,6 +63,20 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
         return False
     else:
         return True
+
+def is_unique_names(results: pd.DataFrame) -> bool:
+    """Checks that all result names are unique."""
+
+    df = results.copy()
+
+    df = df[df.duplicated("name")]
+    if not df.empty:
+        duplicates = set(df.name.to_list())
+        print(f"Duplicate definitions of {duplicates}")
+        return False
+    else:
+        return True
+
 
 if __name__ == "__main__":
 
@@ -79,6 +94,7 @@ if __name__ == "__main__":
     df = sanitize_component_name(df)
     df = strip_whitespace(df)
     assert is_valid_variables(df)
+    assert is_unique_names(df)
 
     n = pypsa.Network(network)
     assert is_valid_carrier(n, df)

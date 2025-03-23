@@ -1,14 +1,21 @@
-name,component,carriers,variable,heatmap,unit
-objective_cost,system,,cost,cost,$
-ind_marginal_cost_elec,buses_t,ind-elec,marginal_price,ind_marginal_price,$/MWh
-ind_marginal_cost_heat,buses_t,ind-heat,marginal_price,ind_marginal_price,$/MWh
-ind_marginal_cost_energy,buses_t,ind-elec;ind-heat,marginal_price,ind_marginal_price,$/MWh
-res_marginal_cost_elec,buses_t,res-total-elec,marginal_price,service_marginal_price,$/MWh
-res_marginal_cost_energy,buses_t,res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool,marginal_price,service_marginal_price,$/MWh
-com_marginal_cost_elec,buses_t,com-total-elec,marginal_price,service_marginal_price,$/MWh
-com_marginal_cost_energy,buses_t,com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool,marginal_price,service_marginal_price,$/MWh
-trn_marginal_cost_elec,buses_t,trn-elec-veh,marginal_price,transport_marginal_price,$/MWh
-trn_marginal_cost_energy,buses_t,trn-elec-veh;trn-lpg-veh,marginal_price,transport_marginal_price,$/MWh
-marginal_cost_elec,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,system_marginal_price,$/MWh
-marginal_cost_energy,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,system_marginal_price,$/MWh
-carbon_cost,buses_t,"co2;ch4",marginal_price,carbon_cost,$/T
+name,nice_name,component,carriers,variable,plots,unit
+objective_cost,Objective Cost,system,,cost,cost,$
+marginal_cost_elec_ind,Industrial Electricity Cost,buses_t,ind-elec,marginal_price,ind_marginal_price;res_marginal_price;electric_marginal_price,$/MWh
+marginal_cost_heat_ind,Industrial Heating Cost,buses_t,ind-heat,marginal_price,ind_marginal_price,$/MWh
+marginal_cost_energy_ind,Industrial Energy Cost,buses_t,ind-elec;ind-heat,marginal_price,ind_marginal_price;energy_marginal_price,$/MWh
+marginal_cost_elec_res,Residential Electricity Cost,buses_t,res-total-elec,marginal_price,res_marginal_price;electric_marginal_price,$/MWh
+marginal_cost_space_heat_res,Residential Space Heat Cost,buses_t,res-total-space-heat,marginal_price,res_marginal_price,$/MWh
+marginal_cost_water_heat_res,Residential Water Heat Cost,buses_t,res-total-water-heat,marginal_price,res_marginal_price,$/MWh
+marginal_cost_space_cool_res,Residential Space Cool Cost,buses_t,res-total-cool,marginal_price,res_marginal_price,$/MWh
+marginal_cost_energy_res,Residential Energy Cost,buses_t,res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool,marginal_price,res_marginal_price;energy_marginal_price,$/MWh
+marginal_cost_elec_com,Commercial Electricity Cost,buses_t,com-total-elec,marginal_price,com_marginal_price;electric_marginal_price,$/MWh
+marginal_cost_space_heat_com,Commercial Space Heat Cost,buses_t,com-total-space-heat,marginal_price,com_marginal_price,$/MWh
+marginal_cost_water_heat_com,Commercial Water Heat Cost,buses_t,com-total-water-heat,marginal_price,com_marginal_price,$/MWh
+marginal_cost_space_cool_com,Commercial Space Cool Cost,buses_t,com-total-cool,marginal_price,com_marginal_price,$/MWh
+marginal_cost_energy_com,Commercial Energy Cost,buses_t,com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool,marginal_price,com_marginal_price;energy_marginal_price,$/MWh
+marginal_cost_elec_trn,Transport Electricity Cost,buses_t,trn-elec-veh,marginal_price,trn_marginal_price;electric_marginal_price,$/MWh
+marginal_cost_energy_trn,Transport Energy Cost,buses_t,trn-elec-veh;trn-lpg-veh,marginal_price,trn_marginal_price;energy_marginal_price,$/MWh
+marginal_cost_elec,System Electricity Cost,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,system_marginal_price;electric_marginal_price;summary,$/MWh
+marginal_cost_energy,System Energy Cost,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,system_marginal_price;energy_marginal_price;summary,$/MWh
+marginal_cost_carbon,Cost of Carbon,buses_t,co2;ch4,marginal_price,carbon_cost;summary,$/T
+load_shedding,Load Shedding Capacpity,generator,load,p_nom_opt,load_shed,MW

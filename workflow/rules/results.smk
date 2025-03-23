@@ -1,15 +1,15 @@
 """Rules for processing results"""
 
-def get_sample_name(wildcards):
+def get_sample_file(wildcards):
     if config["gsa"]["scale"]:
         return f"results/{wildcards.scenario}/sample_scaled.csv"
     else: 
         return f"results/{wildcards.scenario}/sample.csv"
 
-def get_heatmap_csvs(wildcards):
+def get_plotting_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario).output[0]
     df = pd.read_csv(csv)
-    df = df[df.heatmap == wildcards.group]
+    df = df[df.plots.str.contains(wildcards.group)]
     results = df.name.to_list()
 
     return [f"results/{wildcards.scenario}/SA/{x}.csv" for x in results]
@@ -80,7 +80,7 @@ rule calculate_SA:
     params: 
         scaled = config["gsa"]["scale"]
     input: 
-        sample = get_sample_name,
+        sample = get_sample_file,
         parameters = "results/{scenario}/parameters.csv",
         results = "results/{scenario}/results/{result}.csv"
     output: 
@@ -100,8 +100,9 @@ rule heatmap:
     message:
         "Generating heat map"
     input:
+        params = "results/{scenario}/parameters.csv",
         results = "results/{scenario}/results.csv",
-        csvs = get_heatmap_csvs
+        csvs = get_plotting_csvs
     output:
         heatmap = "results/{scenario}/heatmaps/{group}.png"
     log: 
@@ -113,3 +114,22 @@ rule heatmap:
         "benchmarks/create_heatmap/{scenario}_{group}.txt"
     script:
         "../scripts/heatmap.py"
+
+rule barplot:
+    message:
+        "Generating barplot"
+    input:
+        params = "results/{scenario}/parameters.csv",
+        results = "results/{scenario}/results.csv",
+        csvs = get_plotting_csvs
+    output:
+        barplot = "results/{scenario}/barplots/{group}.png"
+    log: 
+        "logs/create_barplot/{scenario}_{group}.log"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
+        runtime=1
+    benchmark:
+        "benchmarks/create_barplot/{scenario}_{group}.txt"
+    script:
+        "../scripts/barplot.py"

@@ -3,6 +3,8 @@
 import pandas as pd
 import pypsa
 
+import logging
+logger = logging.getLogger(__name__)
 
 def _get_p_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
     df = getattr(n,component)

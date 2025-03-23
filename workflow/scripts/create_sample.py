@@ -4,9 +4,8 @@ from SALib.sample import morris
 import pandas as pd
 from utils import create_salib_problem
 
-from logging import getLogger
-
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 
 def main(parameters: pd.DataFrame, replicates: int):
@@ -20,7 +19,7 @@ def main(parameters: pd.DataFrame, replicates: int):
         seed=42,
     )
 
-    return pd.DataFrame(sample, columns=problem["names"]).round(2)
+    return pd.DataFrame(sample, columns=problem["names"]).round(5)
 
 
 if __name__ == "__main__":
