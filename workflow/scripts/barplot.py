@@ -11,6 +11,7 @@ FONTSIZE = 22
 def plot_barchart(df: pd.DataFrame) -> tuple[plt.figure, plt.axes]:
     """Plots normalized data."""
     
+    df = normalize(df)
     df = format(df)
     
     fig, ax = plt.subplots(1, figsize=(12,12))
@@ -45,7 +46,7 @@ def normalize(results: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
     if "snakemake" in globals():
         csvs = snakemake.input.csvs
-        barchart = snakemake.output.barchart
+        barplot = snakemake.output.barplot
         group = snakemake.wildcards.group
         parameters_f = snakemake.input.params
         results_f = snakemake.input.results
@@ -56,7 +57,7 @@ if __name__ == "__main__":
             "results/Testing/SA/marginal_cost_elec.csv",
             "results/Testing/SA/marginal_cost_carbon.csv"
         ]
-        barchart = "results/Testing/barcharts/summary.png"
+        barplot = "results/Testing/barplots/summary.png"
         group = ""
         parameters_f = "results/Testing/parameters.csv"
         results_f = "results/Testing/results.csv"
@@ -80,4 +81,4 @@ if __name__ == "__main__":
 
     fig, ax = plot_barchart(df)
     
-    fig.savefig(barchart)
+    fig.savefig(barplot)

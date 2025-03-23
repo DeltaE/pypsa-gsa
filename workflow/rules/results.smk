@@ -9,7 +9,7 @@ def get_sample_file(wildcards):
 def get_plotting_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario).output[0]
     df = pd.read_csv(csv)
-    df = df[df.heatmap.str.contains(wildcards.group)]
+    df = df[df.plots.str.contains(wildcards.group)]
     results = df.name.to_list()
 
     return [f"results/{wildcards.scenario}/SA/{x}.csv" for x in results]
@@ -36,7 +36,7 @@ rule combine_results:
     input:
         results = expand("results/{{scenario}}/modelruns/{run}/results.csv", run=MODELRUNS)
     output:
-        csv = "results/{scenario}/results/all.csv"
+        csv = temp("results/{scenario}/results/all.csv")
     log: 
         "logs/combine_results/{scenario}.log"
     resources:

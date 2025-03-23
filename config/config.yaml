@@ -6,19 +6,30 @@ scenario:
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
   network: "elec_s40_c4m_ec_lv1.0_12h_E-G.nc"
-  era5_year: 2018
   pop_layout: "pop_layout_elec_s40_c4m.csv"
+  era5_year: 2018
 
 gsa:
   parameters: config/parameters.csv # Define the uncertain parameters
   results: config/results.csv # Define what results to run SA over
   replicates: 10 # Sampling - how large should the sample be?
-  scale: False # Scale Elementary Effects (True/False)
+  scale: True # Scale Elementary Effects (True/False)
 
 # Choose a solver
 solver:
   name: gurobi # (cbc|gurobi|cplex|highs)
   options: gurobi-default # see solving config
+
+# write out GSA associated metadata with each run
+metadata:
+  csv: True
+  yaml: True
+
+# config options for data that is generated
+generated:
+  co2L_min: 40 # as percentage of 2005 level emissions 
+  co2L_max: 50 # as percentage of 2005 level emissions
+
 
 
 
