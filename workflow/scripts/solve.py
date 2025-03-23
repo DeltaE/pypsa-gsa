@@ -4,8 +4,6 @@ Modified solve network file from PyPSA-USA
 https://github.com/PyPSA/pypsa-usa/blob/master/workflow/scripts/solve_network.py
 """
 
-import logging
-
 import numpy as np
 import pandas as pd
 import pypsa
@@ -24,6 +22,7 @@ from utils import (
     get_urban_rural_fraction,
 )
 
+import logging
 logger = logging.getLogger(__name__)
 
 ###

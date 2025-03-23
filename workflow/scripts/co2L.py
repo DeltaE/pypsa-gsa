@@ -5,6 +5,9 @@ import pandas as pd
 import pypsa
 from constants import STATE_2_CODE, GSA_COLUMNS
 
+import logging
+logger = logging.getLogger(__name__)
+
 def retrieve_emissions(year: int, api: str) -> pd.DataFrame:
     """Gets all state level emissions."""
     df = Emissions("total", year, api).get_data(pivot=False)

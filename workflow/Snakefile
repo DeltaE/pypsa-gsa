@@ -1,4 +1,5 @@
 import pandas as pd
+from itertools import chain
 import sys
 
 configfile: "config/config.yaml"
@@ -16,7 +17,9 @@ RESULTS = pd.read_csv(config["gsa"]["results"])
 
 SCENARIO = config["scenario"]["name"]
 RESULT_FILES = list(set(RESULTS.name.to_list()))
-HEATMAPS = RESULTS.heatmap.dropna().to_list()
+
+plots_temp = RESULTS.plots.dropna().str.split(";").to_list()
+PLOTS = list(set(chain(*plots_temp)))
 
 # Calculates number of model runs for the Method of Morris
 GROUPS = PARAMETERS.group.unique()
@@ -32,7 +35,8 @@ rule all:
     input:
         expand("results/{scenario}/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
         expand("results/{scenario}/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES),
-        expand("results/{scenario}/heatmaps/{result}.png", scenario=SCENARIO, result=HEATMAPS)
+        expand("results/{scenario}/heatmaps/{result}.png", scenario=SCENARIO, result=PLOTS),
+        expand("results/{scenario}/barplots/{result}.png", scenario=SCENARIO, result=PLOTS)
 
 rule clean:
     shell:

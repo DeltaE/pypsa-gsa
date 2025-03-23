@@ -4,6 +4,9 @@ import pandas as pd
 
 from constants import CES_CARRIERS, RPS_CARRIERS
 
+import logging
+logger = logging.getLogger(__name__)
+
 def process_reeds_data(filepath, carriers, value_col):
     """Helper function to process RPS or CES REEDS data."""
     reeds = pd.read_csv(filepath)

@@ -12,6 +12,9 @@ from constants import (
     MMBTU_2_MWH,
 )
 
+import logging
+logger = logging.getLogger(__name__)
+
 ###
 # Sanitize names
 ###

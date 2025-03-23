@@ -4,6 +4,9 @@ import pandas as pd
 import pypsa
 from constants import GSA_COLUMNS
 
+import logging
+logger = logging.getLogger(__name__)
+
 # user must populate this from the AEO notebook
 # all values in percent
 # ref_growth is the 2023 -> 2035 ref case growth

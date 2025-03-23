@@ -5,6 +5,9 @@ import pandas as pd
 import pypsa
 from constants import NG_MWH_2_MMCF
 
+import logging
+logger = logging.getLogger(__name__)
+
 ##################
 ## GSA Specific ##
 ##################

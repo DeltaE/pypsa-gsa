@@ -4,9 +4,8 @@ from SALib.sample import morris
 import pandas as pd
 from utils import create_salib_problem
 
-from logging import getLogger
-
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 
 def main(parameters: pd.DataFrame, replicates: int):

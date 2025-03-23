@@ -7,12 +7,9 @@ import numpy as np
 import pandas as pd
 import utils
 import matplotlib.pyplot as plt
-import matplotlib.lines as mlines
-from pathlib import Path
 
-from logging import getLogger
-
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 
 # def plot_histogram(problem: pd.DataFrame, X: np.array, fig: plt.figure):

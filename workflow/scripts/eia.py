@@ -4,7 +4,6 @@ Code adapted from PyPSA-USA repository at:
 https://github.com/PyPSA/pypsa-usa/blob/master/workflow/scripts/eia.py
 """
 
-import logging
 from abc import ABC, abstractmethod
 from typing import ClassVar
 import pandas as pd
@@ -13,6 +12,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from constants import POINTS_OF_ENTRY
 
+import logging
 logger = logging.getLogger(__name__)
 
 API_BASE = "https://api.eia.gov/v2/"

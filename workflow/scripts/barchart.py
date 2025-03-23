@@ -8,27 +8,44 @@ logger = logging.getLogger(__name__)
 
 FONTSIZE = 22
 
-
-def plot_heatmap(df: pd.DataFrame) -> tuple[plt.figure, plt.axes]:
-    fig, ax = plt.subplots(1, figsize=(12,12))
-    sns.heatmap(df, cmap="crest", ax=ax, cbar_kws={"label": "Scaled EE"})
+def plot_barchart(df: pd.DataFrame) -> tuple[plt.figure, plt.axes]:
+    """Plots normalized data."""
     
-    labels = ax.get_xticklabels()
-    ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=FONTSIZE)
-    ax.tick_params(axis="y", labelsize=FONTSIZE, rotation=0)
-
-    cbar = ax.collections[0].colorbar
-    cbar.ax.tick_params(labelsize=FONTSIZE)
-    ax.figure.axes[-1].yaxis.label.set_size(FONTSIZE)
+    df = format(df)
+    
+    fig, ax = plt.subplots(1, figsize=(12,12))
+    
+    sns.barplot(data=df, ax=ax, x="Value", y="Group", hue="Result", orient="h", errorbar=None)
+    
+    ax.tick_params(labelsize=FONTSIZE)
+    ax.set_ylabel("")
+    ax.set_xlabel("μ/μ*", fontsize=FONTSIZE)
+    ax.legend(fontsize=FONTSIZE)
 
     fig.tight_layout()
     
     return fig, ax
 
+def format(results: pd.DataFrame) -> pd.DataFrame:
+    """Formats data for plotting"""
+    df = results.copy()
+    return df.reset_index(names="Group").melt(id_vars=["Group"], var_name="Result", value_name="Value").sort_values(by=["Result","Value"])
+
+def normalize(results: pd.DataFrame) -> pd.DataFrame:
+    """Normalizes all data to be between 0 and 1."""
+    
+    df = results.copy()
+    
+    for column in df.columns:
+        max_value = df[column].max()
+        df[column] = df[column].div(max_value)
+        
+    return df
+
 if __name__ == "__main__":
     if "snakemake" in globals():
         csvs = snakemake.input.csvs
-        heatmap = snakemake.output.heatmap
+        barchart = snakemake.output.barchart
         group = snakemake.wildcards.group
         parameters_f = snakemake.input.params
         results_f = snakemake.input.results
@@ -39,7 +56,7 @@ if __name__ == "__main__":
             "results/Testing/SA/marginal_cost_elec.csv",
             "results/Testing/SA/marginal_cost_carbon.csv"
         ]
-        heatmap = "results/Testing/heatmaps/summary.png"
+        barchart = "results/Testing/barcharts/summary.png"
         group = ""
         parameters_f = "results/Testing/parameters.csv"
         results_f = "results/Testing/results.csv"
@@ -61,6 +78,6 @@ if __name__ == "__main__":
 
     df.index = df.index.map(p_nice_name)
 
-    fig, ax = plot_heatmap(df)
+    fig, ax = plot_barchart(df)
     
-    fig.savefig(heatmap)
+    fig.savefig(barchart)

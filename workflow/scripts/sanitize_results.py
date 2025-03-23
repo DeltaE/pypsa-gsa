@@ -6,9 +6,8 @@ import itertools
 from constants import VALID_RESULTS
 from sanitize_params import sanitize_component_name
 
-from logging import getLogger
-
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 
 def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
@@ -20,6 +19,7 @@ def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     df["carriers"] = df.carriers.str.strip()
     df["variable"] = df.variable.str.strip()
     df["unit"] = df.unit.str.strip()
+    df["plots"] = df.plots.str.strip()
     return df
 
 def is_valid_variables(results: pd.DataFrame) -> bool:

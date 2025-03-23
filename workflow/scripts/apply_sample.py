@@ -19,9 +19,8 @@ from utils import (
 )
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
-from logging import getLogger
-
-logger = getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
 
 
 @dataclass

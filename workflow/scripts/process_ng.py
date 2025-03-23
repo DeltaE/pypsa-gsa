@@ -2,9 +2,10 @@
 
 import pandas as pd
 import pypsa
-
 from constants import STATES_TO_EXCLUDE
 
+import logging
+logger = logging.getLogger(__name__)
 
 def get_state_memberships(n: pypsa.Network) -> dict[str, str]:
 
