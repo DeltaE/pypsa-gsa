@@ -186,19 +186,19 @@ fom_solar,fom_solar,FOM Solar,generator,solar,fixed_cost,absolute,USD/kw,12.76,2
 wacc_solar,wacc_solar,Discount Rate Solar,generator,solar,discount_rate,absolute,percent,3.93,4.68,https://atb.nrel.gov/,Utility PV. Min/Max from 2022 to  2035.
 lifetime_solar,lifetime_solar,Lifetime Solar,generator,solar,lifetime,absolute,years,20,30,https://atb.nrel.gov/electricity/2024/definitions,Technical lifetimes from ATB and REeDS
 eff_solar,eff_solar,Efficiency Solar,generator,solar,efficiency,absolute,percent,86,96,https://www.nrel.gov/docs/fy22osti/83586.pdf,Table 15
-capfac_solar,capfac_solar,Capacity Factor Solar,generator_t,solar,p_max_pu,percent,percent,-5,5,https://www.esig.energy/wp-content/uploads/2023/10/ESIG-Weather-Datasets-full-report-2023b.pdf,Assumed +/- 5% as no uq done for ERA5
+capfac_solar,capfac_solar,Capacity Factor Solar,generator_t,solar,p_max_pu,percent,percent,-5,5,https://doi.org/10.1016/j.energy.2016.08.060,Used RMS error from Table 1
 capex_onwind,capex_wind,CAPEX Wind,generator,onwind,occ,absolute,USD/kw,1087,1607,https://atb.nrel.gov/,Landbased Wind - Class 4. Min/Max from 2022 to 2035.
 fom_onwind,fom_wind,FOM Wind,generator,onwind,fixed_cost,absolute,USD/kw,23.8,32.4,https://atb.nrel.gov/,Landbased Wind - Class 4. Min/Max from 2022 to 2035.
 wacc_onwind,wacc_wind,Discount Rate Wind,generator,onwind,discount_rate,absolute,percent,4.66,5.27,https://atb.nrel.gov/,Landbased wind. Min/Max from 2022 to 2035
 lifetime_onwind,lifetime_wind,Lifetime Wind,generator,onwind,lifetime,absolute,years,20,30,https://atb.nrel.gov/electricity/2024/definitions,Technical lifetimes from ATB and REeDS
 eff_onwind,eff_wind,Efficiecny Wind,generator,onwind,efficiency,absolute,percent,95,99,https://doi.org/10.1109/EPE.2013.6634385,Estimated from Figure 9
-capfac_onwind,capfac_wind,Capacity Factor Wind,generator_t,onwind,p_max_pu,percent,percent,-5,5,https://www.esig.energy/wp-content/uploads/2023/10/ESIG-Weather-Datasets-full-report-2023b.pdf,Assumed +/- 5% as no uq done for ERA5
+capfac_onwind,capfac_wind,Capacity Factor Wind,generator_t,onwind,p_max_pu,percent,percent,-4,4,https://doi.org/10.1016/j.energy.2016.08.068,Used RMS error
 capex_offwind_floating,capex_wind,CAPEX Wind,generator,offwind_floating,occ,absolute,USD/kw,2238,5891,https://atb.nrel.gov/,Offshore wind - Class 5. Min/Max from 2022 to 2035.
 fom_offwind_floating,fom_wind,FOM Wind,generator,offwind_floating,fixed_cost,absolute,USD/kw,68.9,91.6,https://atb.nrel.gov/,Offshore wind - Class 5. Min/Max from 2022 to 2035.
 wacc_offwind_floating,wacc_wind,Discount Rate Wind,generator,offwind_floating,discount_rate,absolute,percent,4.91,5.15,https://atb.nrel.gov/,Offshore wind. Min/Max from 2022 to 2035
 lifetime_offwind_floating,lifetime_wind,Lifetime Wind,generator,offwind_floating,lifetime,absolute,years,20,30,https://atb.nrel.gov/electricity/2024/definitions,Technical lifetimes from ATB and REeDS
 eff_offwind_floating,eff_wind,Efficiecny Wind,generator,offwind_floating,efficiency,absolute,per_unit,0.97,1,https://doi.org/10.1109/EPE.2013.6634385,Estimated from Table 4. 50Hz total losses
-capfac_offwind_floating,capfac_wind,Capacity Factor Wind,generator_t,offwind_floating,p_max_pu,percent,percent,-5,5,https://www.esig.energy/wp-content/uploads/2023/10/ESIG-Weather-Datasets-full-report-2023b.pdf,Assumed +/- 5% as no uq done for ERA5
+capfac_offwind_floating,capfac_wind,Capacity Factor Wind,generator_t,offwind_floating,p_max_pu,percent,percent,-4,4,https://doi.org/10.1016/j.energy.2016.08.068,Used RMS error
 capex_4hr_battery,capex_battery,CAPEX Battery,StorageUnit,4hr_battery_storage,occ,absolute,USD/kw,892,2012,https://atb.nrel.gov/,Utility-Scale Battery Storage - 4Hr Battery Storage. Min/Max from 2022 to 2035
 fom_4hr_battery,fom_battery,FOM Battery,StorageUnit,4hr_battery_storage,fixed_cost,absolute,USD/kw,22.3,50.38,https://atb.nrel.gov/,Utility-Scale Battery Storage - 4Hr Battery Storage. Min/Max from 2022 to 2035
 wacc_4hr_battery,wacc_battery,Discount Rate Battery,StorageUnit,4hr_battery_storage,discount_rate,absolute,percent,5.71,6.24,https://www.nrel.gov/docs/fy22osti/83586.pdf,Table 14
@@ -336,3 +336,7 @@ demand_response,demand_response,Demand Response,store,demand-response,marginal_c
 transmission_expansion,transmission_expansion,Transmission Expansion,link,AC,lv,absolute,per_unit,0,0.064,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario (6.4%)
 transmission_itl,transmission_itl,Transmission Flows,link,AC,p_nom,percent,percent,-1,1,https://arxiv.org/abs/2308.03612,Assumed as no uncertainity given
 emission_limit,emission_limit,Emission Limit,store,co2,co2L,absolute,mmt,194.42,233.31,https://www.eia.gov/outlooks/aeo/,40 to 50 % reduction from 2005 levels
+ev_policy_lgt_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-lgt,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+ev_policy_med_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-med,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+ev_policy_hvy_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-hvy,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+ev_policy_bus,ev_policy,EV Generation Limit,link,trn-elec-veh-bus,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
