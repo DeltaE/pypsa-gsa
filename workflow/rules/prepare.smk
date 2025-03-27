@@ -7,6 +7,8 @@ rule copy_network:
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
+    group:
+        "prepare_data"
     benchmark:
         "benchmarks/copy_network/{scenario}.txt"
     shell:
@@ -22,6 +24,8 @@ rule copy_pop_layout:
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
+    group:
+        "prepare_data"
     benchmark:
         "benchmarks/copy_pop_layout/{scenario}.txt"
     shell:
@@ -36,11 +40,13 @@ rule process_reeds_policy:
         policy = "resources/reeds/{policy}_fraction.csv"
     output:
         policy = "results/{scenario}/constraints/{policy}.csv",
-    benchmark:
-        "benchmarks/process_reeds/{scenario}_{policy}.txt"
     resources:
         mem_mb=100,
         runtime=1
+    group:
+        "prepare_data"
+    benchmark:
+        "benchmarks/process_reeds/{scenario}_{policy}.txt"
     script:
         "../scripts/rps.py"
         
@@ -54,6 +60,8 @@ rule copy_tct_data:
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
+    group:
+        "prepare_data"
     shell:
         "cp {input.csv} {output.csv}"
 
@@ -66,6 +74,8 @@ rule copy_ev_policy_data:
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
+    group:
+        "prepare_data"
     shell:
         "cp {input.csv} {output.csv}"
 
@@ -85,6 +95,8 @@ rule retrieve_natural_gas_data:
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=2
+    group:
+        "prepare_data"
     script:
         "../scripts/retrieve_ng_data.py"
 
@@ -101,6 +113,8 @@ rule sanitize_parameters:
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
         runtime=1
+    group:
+        "prepare_data"
     script:
         "../scripts/sanitize_params.py"
 
@@ -120,6 +134,8 @@ checkpoint sanitize_results:
         "benchmarks/sanitize_results/{scenario}.txt"
     log: 
         "logs/sanitize_results/{scenario}.log"
+    group:
+        "prepare_data"
     script:
         "../scripts/sanitize_results.py"
 
@@ -139,5 +155,7 @@ rule process_natural_gas:
         "benchmarks/process_ng/{scenario}.txt"
     log: 
         "logs/process_ng/{scenario}.log"
+    group:
+        "prepare_data"
     script:
         "../scripts/process_ng.py"

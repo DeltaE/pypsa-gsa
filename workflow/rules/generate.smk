@@ -10,6 +10,8 @@ rule generate_tct_data:
     resources:
         mem_mb=100,
         runtime=3
+    group:
+        "generate_data"
     script:
         "../scripts/tct.py"
 
@@ -28,5 +30,7 @@ rule generate_co2L_data:
     resources:
         mem_mb=200,
         runtime=3
+    group:
+        "generate_data"
     script:
         "../scripts/co2L.py"

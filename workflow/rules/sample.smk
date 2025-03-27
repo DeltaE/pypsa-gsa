@@ -14,6 +14,8 @@ rule create_sample:
         "logs/create_sample/{scenario}.log"
     benchmark:
         "benchmarks/create_sample/{scenario}.txt"
+    group:
+        "create_sample"
     script:
         "../scripts/create_sample.py"
 
@@ -45,6 +47,8 @@ rule apply_sample_to_network:
         runtime=1
     benchmark:
         "benchmarks/apply_sample/{scenario}.txt"
+    group:
+        "apply_sample"
     log: 
         "logs/apply_sample/{scenario}.log"
     script:
