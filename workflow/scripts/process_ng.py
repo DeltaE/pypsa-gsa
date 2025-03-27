@@ -54,8 +54,8 @@ if __name__ == "__main__":
         network = "results/Testing/base.nc"
         in_ng_domestic = "resources/natural_gas/domestic.csv"
         in_ng_international = "resources/natural_gas/international.csv"
-        out_ng_domestic = "results/Testing/constraints/ng_domestic.csv"
-        out_ng_international = "results/Testing/constraints/ng_international.csv"
+        out_ng_domestic = "results/Testing/gsa/constraints/ng_domestic.csv"
+        out_ng_international = "results/Testing/gsa/constraints/ng_international.csv"
 
     n = pypsa.Network(network)
 

@@ -2,9 +2,9 @@
 
 def get_sample_file(wildcards):
     if config["gsa"]["scale"]:
-        return f"results/{wildcards.scenario}/sample_scaled.csv"
+        return f"results/{wildcards.scenario}/gsa/sample_scaled.csv"
     else: 
-        return f"results/{wildcards.scenario}/sample.csv"
+        return f"results/{wildcards.scenario}/gsa/sample.csv"
 
 def get_plotting_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario).output[0]
@@ -17,10 +17,10 @@ def get_plotting_csvs(wildcards):
 rule extract_results:
     message: "Extracting result"
     input:
-        network = "results/{scenario}/modelruns/{run}/network.nc",
-        results = "results/{scenario}/results.csv"
+        network = "results/{scenario}/gsa/modelruns/{run}/network.nc",
+        results = "results/{scenario}/gsa/results.csv"
     output:
-        csv = "results/{scenario}/modelruns/{run}/results.csv"
+        csv = "results/{scenario}/gsa/modelruns/{run}/results.csv"
     log: 
         "logs/extract_results/{scenario}_{run}.log"
     resources:
@@ -36,9 +36,9 @@ rule extract_results:
 rule combine_results:
     message: "Collapsing all results into single summary file"
     input:
-        results = expand("results/{{scenario}}/modelruns/{run}/results.csv", run=MODELRUNS)
+        results = expand("results/{{scenario}}/gsa/modelruns/{run}/results.csv", run=MODELRUNS)
     output:
-        csv = temp("results/{scenario}/results/all.csv")
+        csv = temp("results/{scenario}/gsa/results/all.csv")
     log: 
         "logs/combine_results/{scenario}.log"
     resources:
@@ -57,11 +57,11 @@ rule combine_results:
 rule parse_results:
     message: "Parsing results by results file"
     params:
-        base_dir = "results/{scenario}/results/"
+        base_dir = "results/{scenario}/gsa/results/"
     input:
-        results = "results/{scenario}/results/all.csv"
+        results = "results/{scenario}/gsa/results/all.csv"
     output:
-        expand("results/{{scenario}}/results/{result}.csv", result=RESULT_FILES)
+        expand("results/{{scenario}}/gsa/results/{result}.csv", result=RESULT_FILES)
     log: 
         "logs/parse_results/{scenario}.log"
     resources:
@@ -87,11 +87,11 @@ rule calculate_SA:
         scaled = config["gsa"]["scale"]
     input: 
         sample = get_sample_file,
-        parameters = "results/{scenario}/parameters.csv",
-        results = "results/{scenario}/results/{result}.csv"
+        parameters = "results/{scenario}/gsa/parameters.csv",
+        results = "results/{scenario}/gsa/results/{result}.csv"
     output: 
-        csv = "results/{scenario}/SA/{result}.csv",
-        png = "results/{scenario}/SA/{result}.png"
+        csv = "results/{scenario}/gsa/SA/{result}.csv",
+        png = "results/{scenario}/gsa/SA/{result}.png"
     log: 
         "logs/calculate_sa/{scenario}_{result}.log"
     resources:
@@ -108,11 +108,11 @@ rule heatmap:
     message:
         "Generating heat map"
     input:
-        params = "results/{scenario}/parameters.csv",
-        results = "results/{scenario}/results.csv",
+        params = "results/{scenario}/gsa/parameters.csv",
+        results = "results/{scenario}/gsa/results.csv",
         csvs = get_plotting_csvs
     output:
-        heatmap = "results/{scenario}/heatmaps/{plot}.png"
+        heatmap = "results/{scenario}/gsa/heatmaps/{plot}.png"
     log: 
         "logs/create_heatmap/{scenario}_{plot}.log"
     resources:
@@ -129,11 +129,11 @@ rule barplot:
     message:
         "Generating barplot"
     input:
-        params = "results/{scenario}/parameters.csv",
-        results = "results/{scenario}/results.csv",
+        params = "results/{scenario}/gsa/parameters.csv",
+        results = "results/{scenario}/gsa/results.csv",
         csvs = get_plotting_csvs
     output:
-        barplot = "results/{scenario}/barplots/{plot}.png"
+        barplot = "results/{scenario}/gsa/barplots/{plot}.png"
     log: 
         "logs/create_barplot/{scenario}_{plot}.log"
     resources:

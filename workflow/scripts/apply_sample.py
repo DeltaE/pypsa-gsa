@@ -638,19 +638,19 @@ if __name__ == "__main__":
         ces_f = snakemake.input.ces_f
         ev_policy_f = snakemake.input.ev_policy_f
     else:
-        param_file = "results/EvPolicy/parameters.csv"
-        sample_file = "results/EvPolicy/sample.csv"
+        param_file = "results/EvPolicy/gsa/parameters.csv"
+        sample_file = "results/EvPolicy/gsa/sample.csv"
         base_network_file = "results/EvPolicy/base.nc"
-        root_dir = Path("results/EvPolicy/modelruns/")
+        root_dir = Path("results/EvPolicy/gsa/modelruns/")
         meta_yaml = True
         meta_csv = True
-        scaled_sample_file = "results/EvPolicy/scaled_sample.csv"
-        pop_f = "results/EvPolicy/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/EvPolicy/constraints/ng_domestic.csv"
-        ng_international_f = "results/EvPolicy/constraints/ng_international.csv"
-        rps_f = "results/EvPolicy/constraints/rps.csv"
-        ces_f = "results/EvPolicy/constraints/ces.csv"
-        ev_policy_f = "results/EvPolicy/constraints/ev_policy.csv"
+        scaled_sample_file = "results/EvPolicy/gsa/scaled_sample.csv"
+        pop_f = "results/EvPolicy/gsa/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/EvPolicy/gsa/constraints/ng_domestic.csv"
+        ng_international_f = "results/EvPolicy/gsa/constraints/ng_international.csv"
+        rps_f = "results/EvPolicy/gsa/constraints/rps.csv"
+        ces_f = "results/EvPolicy/gsa/constraints/ces.csv"
+        ev_policy_f = "results/EvPolicy/gsa/constraints/ev_policy.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)

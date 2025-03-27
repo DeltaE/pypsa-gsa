@@ -20,7 +20,7 @@ rule copy_pop_layout:
     input:
         csv = f"config/pypsa-usa/{config['pypsa_usa']['pop_layout']}"
     output:
-        csv = "results/{scenario}/constraints/pop_layout.csv"
+        csv = "results/{scenario}/gsa/constraints/pop_layout.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -39,7 +39,7 @@ rule process_reeds_policy:
     input:
         policy = "resources/reeds/{policy}_fraction.csv"
     output:
-        policy = "results/{scenario}/constraints/{policy}.csv",
+        policy = "results/{scenario}/gsa/constraints/{policy}.csv",
     resources:
         mem_mb=100,
         runtime=1
@@ -56,7 +56,7 @@ rule copy_tct_data:
     input:
         csv="resources/policy/technology_limits.csv"
     output:
-        csv="results/{scenario}/constraints/tct.csv"
+        csv="results/{scenario}/gsa/constraints/tct.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -70,7 +70,7 @@ rule copy_ev_policy_data:
     input:
         csv="resources/policy/ev_policy.csv"
     output:
-        csv="results/{scenario}/constraints/ev_policy.csv"
+        csv="results/{scenario}/gsa/constraints/ev_policy.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -105,7 +105,7 @@ rule sanitize_parameters:
     input:
         parameters=config["gsa"]["parameters"]
     output:
-        parameters="results/{scenario}/parameters.csv"
+        parameters="results/{scenario}/gsa/parameters.csv"
     log: 
         "logs/sanitize_parameters/{scenario}.log"
     benchmark:
@@ -126,7 +126,7 @@ checkpoint sanitize_results:
     input:
         network = "results/{scenario}/base.nc"
     output:
-        results="results/{scenario}/results.csv"
+        results="results/{scenario}/gsa/results.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
         runtime=1
@@ -146,8 +146,8 @@ rule process_natural_gas:
         ng_domestic = "resources/natural_gas/domestic.csv",
         ng_international = "resources/natural_gas/international.csv"
     output:
-        ng_domestic = "results/{scenario}/constraints/ng_domestic.csv",
-        ng_international = "results/{scenario}/constraints/ng_international.csv",
+        ng_domestic = "results/{scenario}/gsa/constraints/ng_domestic.csv",
+        ng_international = "results/{scenario}/gsa/constraints/ng_international.csv",
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
         runtime=1

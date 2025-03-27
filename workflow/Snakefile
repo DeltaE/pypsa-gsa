@@ -33,10 +33,10 @@ include: "rules/results.smk"
 
 rule all:
     input:
-        expand("results/{scenario}/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
-        expand("results/{scenario}/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES),
-        expand("results/{scenario}/heatmaps/{result}.png", scenario=SCENARIO, result=PLOTS),
-        expand("results/{scenario}/barplots/{result}.png", scenario=SCENARIO, result=PLOTS)
+        expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
+        expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES),
+        expand("results/{scenario}/gsa/heatmaps/{result}.png", scenario=SCENARIO, result=PLOTS),
+        expand("results/{scenario}/gsa/barplots/{result}.png", scenario=SCENARIO, result=PLOTS)
 
 rule clean:
     shell:

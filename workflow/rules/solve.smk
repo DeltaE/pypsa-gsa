@@ -14,17 +14,17 @@ rule solve_network:
         solving_opts = config["solving"]["options"],
         pypsa_usa_opts = config["pypsa_usa"]
     input:
-        network = "results/{scenario}/modelruns/{run}/n.nc",
-        constraints = "results/{scenario}/modelruns/{run}/constraints.csv",
-        pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
-        ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
-        ng_international_f = "results/{scenario}/constraints/ng_international.csv",
-        rps_f = "results/{scenario}/constraints/rps.csv",
-        ces_f = "results/{scenario}/constraints/ces.csv",
-        tct_f = "results/{scenario}/constraints/tct.csv",
-        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
+        network = "results/{scenario}/gsa/modelruns/{run}/n.nc",
+        constraints = "results/{scenario}/gsa/modelruns/{run}/constraints.csv",
+        pop_layout_f = "results/{scenario}/gsa/constraints/pop_layout.csv",
+        ng_domestic_f = "results/{scenario}/gsa/constraints/ng_domestic.csv",
+        ng_international_f = "results/{scenario}/gsa/constraints/ng_international.csv",
+        rps_f = "results/{scenario}/gsa/constraints/rps.csv",
+        ces_f = "results/{scenario}/gsa/constraints/ces.csv",
+        tct_f = "results/{scenario}/gsa/constraints/tct.csv",
+        ev_policy_f = "results/{scenario}/gsa/constraints/ev_policy.csv"
     output:
-        network = "results/{scenario}/modelruns/{run}/network.nc",
+        network = "results/{scenario}/gsa/modelruns/{run}/network.nc",
     threads: 12
     resources:
         mem_mb=2000,

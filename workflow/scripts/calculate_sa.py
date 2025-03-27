@@ -76,12 +76,12 @@ if __name__ == "__main__":
         png = snakemake.output.png
     else:
         result_name = "com_ashp_capacity"
-        parameters_f = "results/Testing/parameters.csv"
-        sample_f = "results/Testing/sample_scaled.csv"
-        results_f = "results/Testing/results/marginal_cost_carbon.csv"
+        parameters_f = "results/gsa/Testing/parameters.csv"
+        sample_f = "results/gsa/Testing/sample_scaled.csv"
+        results_f = "results/gsa/Testing/results/marginal_cost_carbon.csv"
         scaled = True
-        csv = "results/Testing/SA/marginal_cost_carbon.csv"
-        png = "results/Testing/SA/marginal_cost_carbon.png"
+        csv = "results/gsa/Testing/SA/marginal_cost_carbon.csv"
+        png = "results/gsa/Testing/SA/marginal_cost_carbon.png"
 
     params = pd.read_csv(parameters_f)
     X = pd.read_csv(sample_f).to_numpy()

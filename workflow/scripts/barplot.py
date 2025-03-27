@@ -52,10 +52,10 @@ if __name__ == "__main__":
         results_f = snakemake.input.results
     else:
         csvs = [
-            "results/Testing/SA/objective_cost.csv",
-            "results/Testing/SA/marginal_cost_energy.csv",
-            "results/Testing/SA/marginal_cost_elec.csv",
-            "results/Testing/SA/marginal_cost_carbon.csv"
+            "results/Testing/gsa/SA/objective_cost.csv",
+            "results/Testing/gsa/SA/marginal_cost_energy.csv",
+            "results/Testing/gsa/SA/marginal_cost_elec.csv",
+            "results/Testing/gsa/SA/marginal_cost_carbon.csv"
         ]
         barplot = "results/Testing/barplots/summary.png"
         group = ""

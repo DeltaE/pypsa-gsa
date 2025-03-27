@@ -5,8 +5,8 @@ scenario:
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  network: "elec_s40_c4m_ec_lv1.0_12h_E-G.nc"
-  pop_layout: "pop_layout_elec_s40_c4m.csv"
+  network: "elec_s11_c4m_ec_lv1.0_4h_E-G.nc"
+  pop_layout: "pop_layout_elec_s11_c4m.csv"
   era5_year: 2018
 
 gsa:
@@ -14,6 +14,18 @@ gsa:
   results: config/results.csv # Define what results to run SA over
   replicates: 10 # Sampling - how large should the sample be?
   scale: True # Scale Elementary Effects (True/False)
+
+uncertainity:
+  # general scaling guidlines
+  # N = number of samples. d = number of parametes
+  # sobol -> N=2^m (m is a power of 2) -> N ~ 10d
+  # lhs -> N >= 10d 
+  sample: morris # (lhs|sobol|morris|)
+  replicates: 5
+  # index names from parameters csv
+  parameters:
+  - ev_policy_lgt_duty
+  - ev_policy_bus
 
 # Choose a solver
 solver:
