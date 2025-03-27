@@ -34,5 +34,7 @@ rule solve_network:
     log: 
         python = "logs/solve/{scenario}_{run}_python.log",
         solver = "logs/solve/{scenario}_{run}_solver.log",
+    group:
+        "solve_{scenario}_{run}"
     script:
         "../scripts/solve.py"

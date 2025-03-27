@@ -9,7 +9,7 @@ def get_sample_file(wildcards):
 def get_plotting_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario).output[0]
     df = pd.read_csv(csv)
-    df = df[df.plots.str.contains(wildcards.group)]
+    df = df[df.plots.str.contains(wildcards.plot)]
     results = df.name.to_list()
 
     return [f"results/{wildcards.scenario}/SA/{x}.csv" for x in results]
@@ -28,6 +28,8 @@ rule extract_results:
         runtime=1
     benchmark:
         "benchmarks/extract_results/{scenario}_{run}.txt"
+    group:
+        "solve_{scenario}_{run}"
     script:
         "../scripts/extract_results.py"
 
@@ -44,6 +46,8 @@ rule combine_results:
         runtime=1
     benchmark:
         "benchmarks/combine_results/{scenario}.txt"
+    group:
+        "results"
     run:
         import pandas as pd
         data = [pd.read_csv(str(x)) for x in input.results]
@@ -65,6 +69,8 @@ rule parse_results:
         runtime=1
     benchmark:
         "benchmarks/parse_results/{scenario}.txt"
+    group:
+        "results"
     run:
         import pandas as pd
         from pathlib import Path 
@@ -93,6 +99,8 @@ rule calculate_SA:
         runtime=1
     benchmark:
         "benchmarks/calculate_sa/{scenario}_{result}.txt"
+    group:
+        "results"
     script: 
         "../scripts/calculate_sa.py"
 
@@ -104,14 +112,16 @@ rule heatmap:
         results = "results/{scenario}/results.csv",
         csvs = get_plotting_csvs
     output:
-        heatmap = "results/{scenario}/heatmaps/{group}.png"
+        heatmap = "results/{scenario}/heatmaps/{plot}.png"
     log: 
-        "logs/create_heatmap/{scenario}_{group}.log"
+        "logs/create_heatmap/{scenario}_{plot}.log"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
         runtime=1
     benchmark:
-        "benchmarks/create_heatmap/{scenario}_{group}.txt"
+        "benchmarks/create_heatmap/{scenario}_{plot}.txt"
+    group:
+        "results"
     script:
         "../scripts/heatmap.py"
 
@@ -123,13 +133,15 @@ rule barplot:
         results = "results/{scenario}/results.csv",
         csvs = get_plotting_csvs
     output:
-        barplot = "results/{scenario}/barplots/{group}.png"
+        barplot = "results/{scenario}/barplots/{plot}.png"
     log: 
-        "logs/create_barplot/{scenario}_{group}.log"
+        "logs/create_barplot/{scenario}_{plot}.log"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
         runtime=1
     benchmark:
-        "benchmarks/create_barplot/{scenario}_{group}.txt"
+        "benchmarks/create_barplot/{scenario}_{plot}.txt"
+    group:
+        "results"
     script:
         "../scripts/barplot.py"
