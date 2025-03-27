@@ -302,7 +302,7 @@ def add_technology_capacity_target_constraints(
 
             n.model.add_constraints(
                 lhs >= rhs,
-                name=f"GlobalConstraint-{target.name}_{target.planning_horizon}_min",
+                name=f"GlobalConstraint-{target['name']}_{target['planning_horizon']}_min",
             )
 
             logger.info(
@@ -324,7 +324,7 @@ def add_technology_capacity_target_constraints(
 
             n.model.add_constraints(
                 lhs <= rhs,
-                name=f"GlobalConstraint-{target.name}_{target.planning_horizon}_max",
+                name=f"GlobalConstraint-{target['name']}_{target['planning_horizon']}_max",
             )
 
             logger.info(
@@ -708,6 +708,38 @@ def add_gshp_capacity_constraint(
 
     n.model.add_constraints(lhs >= rhs, name="Link-gshp_capacity_ratio")
 
+def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
+    mode_mapper = {
+        "light_duty": "lgt",
+        "med_duty": "med",
+        "heavy_duty": "hvy",
+        "bus": "bus",
+    }
+    carrier_mapper = {
+        "light_duty": "trn-elec-veh-lgt",
+        "med_duty": "trn-elec-veh-med",
+        "heavy_duty": "trn-elec-veh-hvy",
+        "bus": "trn-elec-veh-bus",
+    }
+
+    for mode in policy.columns:
+        sample_mode = sample[sample.carrier == carrier_mapper[mode]]
+        assert len(sample_mode) == 1
+
+        evs = n.links[n.links.carrier == f"trn-elec-veh-{mode_mapper[mode]}"].index
+        dem_names = n.loads[n.loads.carrier == f"trn-veh-{mode_mapper[mode]}"].index
+        dem = n.loads_t["p_set"][dem_names]
+
+        for investment_period in n.investment_periods:
+            ratio = policy.at[investment_period, mode] / 100  # input is percentage
+            eff = n.links.loc[evs].efficiency.mean()
+            lhs = n.model["Link-p"].loc[investment_period].sel(Link=evs).sum()
+            rhs_ref = dem.loc[investment_period].sum().sum() * ratio / eff
+            rhs = rhs_ref + rhs_ref * sample_mode.value.values[0]
+
+            n.model.add_constraints(
+                lhs <= rhs, name=f"Link-ev_gen_{mode}_{investment_period}"
+            )
 
 def extra_functionality(n, sns):
     """
@@ -723,6 +755,10 @@ def extra_functionality(n, sns):
     if "tct" in opts:
         add_technology_capacity_target_constraints(
             n, opts["tct"]["data"], opts["tct"]["sample"]
+        )
+    if "ev_gen" in opts:
+        add_ev_generation_constraint(
+            n, opts["ev_gen"]["data"], opts["ev_gen"]["sample"]
         )
     if "co2L" in opts:
         add_sector_co2_constraints(n, opts["co2L"]["sample"])
@@ -861,20 +897,22 @@ if __name__ == "__main__":
         rps_f = snakemake.input.rps_f
         ces_f = snakemake.input.ces_f
         tct_f = snakemake.input.tct_f
+        ev_policy_f = snakemake.input.ev_policy_f
         constraints_meta = snakemake.input.constraints
     else:
-        in_network = "results/Testing/modelruns/0/n.nc"
+        in_network = "results/EvPolicy/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
-        pop_f = "results/Testing/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
-        ng_international_f = "results/Testing/constraints/ng_international.csv"
-        rps_f = "results/Testing/constraints/rps.csv"
-        ces_f = "results/Testing/constraints/ces.csv"
-        tct_f = "results/Testing/constraints/tct.csv"
-        constraints_meta = "results/Testing/modelruns/0/constraints.csv"
+        pop_f = "results/EvPolicy/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/EvPolicy/constraints/ng_domestic.csv"
+        ng_international_f = "results/EvPolicy/constraints/ng_international.csv"
+        rps_f = "results/EvPolicy/constraints/rps.csv"
+        ces_f = "results/EvPolicy/constraints/ces.csv"
+        tct_f = "results/EvPolicy/constraints/tct.csv"
+        ev_policy_f = "results/EvPolicy/constraints/ev_policy.csv"
+        constraints_meta = "results/EvPolicy/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -979,6 +1017,15 @@ if __name__ == "__main__":
     sample_names = extra_fn["tct"]["sample"].name.to_list()
     for sample_name in sample_names:
         assert sample_name in target_names
+
+    ###
+    # EV Generation Limits
+    ###
+    extra_fn["ev_gen"] = {}
+    extra_fn["ev_gen"]["data"] = pd.read_csv(ev_policy_f, index_col=0)
+    extra_fn["ev_gen"]["sample"] = constraints[
+        constraints.attribute == "ev_policy"
+    ].round(5)
 
     ###
     # Carbon Limit Constraint

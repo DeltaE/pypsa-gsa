@@ -57,6 +57,18 @@ rule copy_tct_data:
     shell:
         "cp {input.csv} {output.csv}"
 
+rule copy_ev_policy_data:
+    message: "Copying EV Policy data"
+    input:
+        csv="resources/policy/ev_policy.csv"
+    output:
+        csv="results/{scenario}/constraints/ev_policy.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
+        runtime=1
+    shell:
+        "cp {input.csv} {output.csv}"
+
 rule retrieve_natural_gas_data:
     message: "Retrieving import/export natural gas data"
     params:

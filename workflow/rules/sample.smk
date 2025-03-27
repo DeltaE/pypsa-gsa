@@ -35,10 +35,10 @@ rule apply_sample_to_network:
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
     output:
         n = temp(expand("results/{{scenario}}/modelruns/{run}/n.nc", run=MODELRUNS)),
         scaled_sample = "results/{scenario}/sample_scaled.csv",
-        # meta = expand("results/{{scenario}}/modelruns/{run}/meta.{format}", run=MODELRUNS, format=META_FORMAT),
         meta_constriant = expand("results/{{scenario}}/modelruns/{run}/constraints.csv", run=MODELRUNS)
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),

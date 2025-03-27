@@ -62,6 +62,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "lv",  # constraint
         "gshp",  # constraint
         "tct",  # constraint
+        "ev_policy",  # constraint
         "discount_rate",
         "fixed_cost",
         "occ",
@@ -97,6 +98,7 @@ CONSTRAINT_ATTRS = [
     "gshp",
     "tct",
     "co2L",
+    "ev_policy",
     # "rps",
     # "ces",
 ]

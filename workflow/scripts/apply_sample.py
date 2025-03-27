@@ -361,6 +361,28 @@ def _get_gshp_multiplier(n: pypsa.Network, pop: pd.DataFrame) -> float:
     gshp["urban_rural_fraction"] = gshp.bus0.map(fraction)
     return gshp.urban_rural_fraction.mean() / 100
 
+def _get_ev_generation_limit(
+    n: pypsa.Network, mode: str, policy: pd.DataFrame
+) -> float:
+    """Limit on yearly generation from EVs"""
+    mode_mapper = {
+        "light_duty": "lgt",
+        "med_duty": "med",
+        "heavy_duty": "hvy",
+        "bus": "bus",
+    }
+
+    assert len(n.investment_periods) == 1
+    investment_period = n.investment_periods[0]
+
+    dem_names = n.loads[n.loads.carrier == f"trn-veh-{mode_mapper[mode]}"].index
+    dem = n.loads_t["p_set"][dem_names]
+
+    evs = n.links[n.links.carrier == f"trn-elec-veh-{mode_mapper[mode]}"].index
+    ratio = policy.at[investment_period, mode] / 100  # input is percentage
+    eff = n.links.loc[evs].efficiency.mean()
+
+    return dem.loc[investment_period].sum().sum() * ratio / eff
 
 def _get_constraint_sample(
     n: pypsa.Network, c: str, car: str, attr: str, sample: float, **kwargs
@@ -419,6 +441,18 @@ def _get_constraint_sample(
         # return total exports
         ref = dom + itl
         scaled = ref * sample
+    elif attr == "ev_policy":
+        ev_policy = kwargs.get("ev_policy", pd.DataFrame())
+        if ev_policy.empty:
+            raise ValueError("No EV policy data provided.")
+        car_2_mode = {
+            "trn-elec-veh-lgt": "light_duty",
+            "trn-elec-veh-med": "med_duty",
+            "trn-elec-veh-hvy": "heavy_duty",
+            "trn-elec-veh-bus": "bus",
+        }
+        ref = _get_ev_generation_limit(n, car_2_mode[car], ev_policy)
+        scaled = ref + (ref * sample)
     elif attr == "gshp":
         pop = kwargs.get("population", pd.DataFrame())
         if pop.empty:
@@ -602,19 +636,21 @@ if __name__ == "__main__":
         ng_international_f = snakemake.input.ng_international_f
         rps_f = snakemake.input.rps_f
         ces_f = snakemake.input.ces_f
+        ev_policy_f = snakemake.input.ev_policy_f
     else:
-        param_file = "results/Testing/parameters.csv"
-        sample_file = "results/Testing/sample.csv"
-        base_network_file = "results/Testing/base.nc"
-        root_dir = Path("results/Testing/modelruns/")
+        param_file = "results/EvPolicy/parameters.csv"
+        sample_file = "results/EvPolicy/sample.csv"
+        base_network_file = "results/EvPolicy/base.nc"
+        root_dir = Path("results/EvPolicy/modelruns/")
         meta_yaml = True
         meta_csv = True
-        scaled_sample_file = "results/Testing/scaled_sample.csv"
-        pop_f = "results/Testing/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
-        ng_international_f = "results/Testing/constraints/ng_international.csv"
-        rps_f = "results/Testing/constraints/rps.csv"
-        ces_f = "results/Testing/constraints/ces.csv"
+        scaled_sample_file = "results/EvPolicy/scaled_sample.csv"
+        pop_f = "results/EvPolicy/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/EvPolicy/constraints/ng_domestic.csv"
+        ng_international_f = "results/EvPolicy/constraints/ng_international.csv"
+        rps_f = "results/EvPolicy/constraints/rps.csv"
+        ces_f = "results/EvPolicy/constraints/ces.csv"
+        ev_policy_f = "results/EvPolicy/constraints/ev_policy.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
@@ -636,6 +672,7 @@ if __name__ == "__main__":
         "ng_domestic": pd.read_csv(ng_dommestic_f, index_col=0),
         "ng_international": pd.read_csv(ng_international_f, index_col=0),
         "population": pd.read_csv(pop_f),
+        "ev_policy": pd.read_csv(ev_policy_f, index_col=0),
     }
 
     for run in range(len(sample)):
