@@ -171,6 +171,24 @@ def get_sample_data(
         data[name]["value"] = sample[name].to_dict()  # run: value
     return data
 
+def get_set_value_data(
+    set_values: pd.DataFrame, num_runs: int
+) -> dict[str, dict[str, Any]]:
+    """Gets data structure for applying data from set_values"""
+
+    data = {}
+    sv = set_values.set_index("name")
+    for name in sv.index:
+        data[name] = {}
+        data[name]["component"] = sv.at[name, "component"]
+        data[name]["carrier"] = sv.at[name, "carrier"]
+        data[name]["attribute"] = sv.at[name, "attribute"]
+        data[name]["range"] = sv.at[name, "range"]  # absolute | percent
+        assert False
+        data[name]["value"] = sample[name].to_dict()  # run: value
+    return data
+
+
 def _is_valid_ref_value(value: Any, car: str, attr: str) -> bool:
     """Checks if the ref value extracted is valid."""
     # edge case used to discout
@@ -189,7 +207,7 @@ def _is_valid_ref_value(value: Any, car: str, attr: str) -> bool:
 def calc_difference(ref: float, sampled: float, car: str, attr: str) -> float:
     """Calucates percent difference between original and sampled values."""
 
-    # assert _is_valid_ref_value(ref, car, attr)
+    assert _is_valid_ref_value(ref, car, attr)
 
     if (ref == 0) or (ref == np.nan):
         return np.nan
@@ -626,6 +644,7 @@ if __name__ == "__main__":
     if "snakemake" in globals():
         param_file = snakemake.input.parameters
         sample_file = snakemake.input.sample_file
+        set_values_file = snakemake.input.set_values_file
         base_network_file = snakemake.input.network
         root_dir = Path(snakemake.params.root_dir)
         meta_yaml = snakemake.params.meta_yaml
@@ -638,19 +657,20 @@ if __name__ == "__main__":
         ces_f = snakemake.input.ces_f
         ev_policy_f = snakemake.input.ev_policy_f
     else:
-        param_file = "results/EvPolicy/gsa/parameters.csv"
-        sample_file = "results/EvPolicy/gsa/sample.csv"
-        base_network_file = "results/EvPolicy/base.nc"
-        root_dir = Path("results/EvPolicy/gsa/modelruns/")
+        param_file = "results/Testing/ua/parameters.csv"
+        sample_file = "results/Testing/ua/sample.csv"
+        set_values_file = "results/Testing/ua/set_values.csv"
+        base_network_file = "results/Testing/base.nc"
+        root_dir = Path("results/Testing/ua/modelruns/")
         meta_yaml = True
         meta_csv = True
-        scaled_sample_file = "results/EvPolicy/gsa/scaled_sample.csv"
-        pop_f = "results/EvPolicy/gsa/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/EvPolicy/gsa/constraints/ng_domestic.csv"
-        ng_international_f = "results/EvPolicy/gsa/constraints/ng_international.csv"
-        rps_f = "results/EvPolicy/gsa/constraints/rps.csv"
-        ces_f = "results/EvPolicy/gsa/constraints/ces.csv"
-        ev_policy_f = "results/EvPolicy/gsa/constraints/ev_policy.csv"
+        scaled_sample_file = "results/Testing/ua/scaled_sample.csv"
+        pop_f = "results/Testing/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
+        ng_international_f = "results/Testing/constraints/ng_international.csv"
+        rps_f = "results/Testing/constraints/rps.csv"
+        ces_f = "results/Testing/constraints/ces.csv"
+        ev_policy_f = "results/Testing/constraints/ev_policy.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
@@ -662,6 +682,13 @@ if __name__ == "__main__":
     assert is_valid_carrier(base_n, params)
 
     sample_data = get_sample_data(params, sample)
+
+    if set_values_file:
+        set_values = pd.read_csv(set_values_file)
+        num_runs = len(sample)
+        set_values_data = get_set_value_data(set_values, num_runs)
+        assert all([x not in set_values_data for x in sample_data])
+        sample_data = sample_data | set_values_data
 
     scaled_sample = []
 
@@ -675,8 +702,9 @@ if __name__ == "__main__":
         "ev_policy": pd.read_csv(ev_policy_f, index_col=0),
     }
 
-    for run in range(len(sample)):
+    # MUST BE 'sample' and NOT 'sample_data' as set_values is added to the 'sample_data'
 
+    for run in range(len(sample)):
         n = base_n.copy()
 
         scaled, meta, meta_constraints = apply_sample(

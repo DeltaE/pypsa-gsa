@@ -12,9 +12,9 @@ def get_plotting_csvs(wildcards):
     df = df[df.plots.str.contains(wildcards.plot)]
     results = df.name.to_list()
 
-    return [f"results/{wildcards.scenario}/SA/{x}.csv" for x in results]
+    return [f"results/{wildcards.scenario}/gsa/SA/{x}.csv" for x in results]
 
-rule extract_results:
+rule extract_gsa_results:
     message: "Extracting result"
     input:
         network = "results/{scenario}/gsa/modelruns/{run}/network.nc",
@@ -22,12 +22,12 @@ rule extract_results:
     output:
         csv = "results/{scenario}/gsa/modelruns/{run}/results.csv"
     log: 
-        "logs/extract_results/{scenario}_{run}.log"
+        "logs/extract_gsa_results/{scenario}_{run}.log"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
         runtime=1
     benchmark:
-        "benchmarks/extract_results/{scenario}_{run}.txt"
+        "benchmarks/extract_gsa_results/{scenario}_{run}.txt"
     group:
         "solve_{scenario}_{run}"
     script:
@@ -36,7 +36,7 @@ rule extract_results:
 rule combine_results:
     message: "Collapsing all results into single summary file"
     input:
-        results = expand("results/{{scenario}}/gsa/modelruns/{run}/results.csv", run=MODELRUNS)
+        results = expand("results/{{scenario}}/gsa/modelruns/{run}/results.csv", run=GSA_MODELRUNS)
     output:
         csv = temp("results/{scenario}/gsa/results/all.csv")
     log: 
@@ -61,7 +61,7 @@ rule parse_results:
     input:
         results = "results/{scenario}/gsa/results/all.csv"
     output:
-        expand("results/{{scenario}}/gsa/results/{result}.csv", result=RESULT_FILES)
+        expand("results/{{scenario}}/gsa/results/{name}.csv", name=GSA_RESULT_FILES)
     log: 
         "logs/parse_results/{scenario}.log"
     resources:

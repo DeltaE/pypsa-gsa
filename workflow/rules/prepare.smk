@@ -20,7 +20,7 @@ rule copy_pop_layout:
     input:
         csv = f"config/pypsa-usa/{config['pypsa_usa']['pop_layout']}"
     output:
-        csv = "results/{scenario}/gsa/constraints/pop_layout.csv"
+        csv = "results/{scenario}/constraints/pop_layout.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -39,7 +39,7 @@ rule process_reeds_policy:
     input:
         policy = "resources/reeds/{policy}_fraction.csv"
     output:
-        policy = "results/{scenario}/gsa/constraints/{policy}.csv",
+        policy = "results/{scenario}/constraints/{policy}.csv",
     resources:
         mem_mb=100,
         runtime=1
@@ -56,7 +56,7 @@ rule copy_tct_data:
     input:
         csv="resources/policy/technology_limits.csv"
     output:
-        csv="results/{scenario}/gsa/constraints/tct.csv"
+        csv="results/{scenario}/constraints/tct.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -70,7 +70,7 @@ rule copy_ev_policy_data:
     input:
         csv="resources/policy/ev_policy.csv"
     output:
-        csv="results/{scenario}/gsa/constraints/ev_policy.csv"
+        csv="results/{scenario}/constraints/ev_policy.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -146,8 +146,8 @@ rule process_natural_gas:
         ng_domestic = "resources/natural_gas/domestic.csv",
         ng_international = "resources/natural_gas/international.csv"
     output:
-        ng_domestic = "results/{scenario}/gsa/constraints/ng_domestic.csv",
-        ng_international = "results/{scenario}/gsa/constraints/ng_international.csv",
+        ng_domestic = "results/{scenario}/constraints/ng_domestic.csv",
+        ng_international = "results/{scenario}/constraints/ng_international.csv",
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
         runtime=1
@@ -159,3 +159,50 @@ rule process_natural_gas:
         "prepare_data"
     script:
         "../scripts/process_ng.py"
+
+# for the uncertainity characterization
+rule prepare_set_values:
+    message: "Setting static paramters for the uncertainity."
+    params:
+        to_remove=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/set_values.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_set_values/{scenario}.txt"
+    log: 
+        "logs/prepare_set_values/{scenario}.log"
+    group:
+        "params_uncertainity"
+    script:
+        "../scripts/set_ua_values.py"
+
+rule prepare_ua_params:
+    message: "Getting parameters for the uncertainity sample."
+    params:
+        to_sample=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/parameters.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_ua_params/{scenario}.txt"
+    log: 
+        "logs/prepare_ua_params/{scenario}.log"
+    group:
+        "params_uncertainity"
+    run:
+        import pandas as pd
+        df = pd.read_csv(input.parameters)
+        df = df[df.index.contains([params.to_sample])]
+        assert len(df) == len(to_sample)
+        df.to_csv(output.csv, index=False)

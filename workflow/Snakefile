@@ -11,40 +11,71 @@ wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
     model_run=r"\d+"
 
-# only use groups/names, so its okay to not use sanitized values
-PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
-RESULTS = pd.read_csv(config["gsa"]["results"])
-
 SCENARIO = config["scenario"]["name"]
-RESULT_FILES = list(set(RESULTS.name.to_list()))
 
-plots_temp = RESULTS.plots.dropna().str.split(";").to_list()
-PLOTS = list(set(chain(*plots_temp)))
+# only use groups/names, so its okay to not use sanitized values
+# Calculates GSA specific parameters
+GSA_PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
+GSA_RESULTS = pd.read_csv(config["gsa"]["results"])
+GSA_GROUPS = GSA_PARAMETERS.group.unique()
+GSA_MODELRUNS = range((len(GSA_GROUPS) + 1) * config["gsa"]["replicates"])
+GSA_RESULT_FILES = list(set(GSA_RESULTS.name.to_list()))
+plots_temp = GSA_RESULTS.plots.dropna().str.split(";").to_list()
+GSA_PLOTS = list(set(chain(*plots_temp)))
 
-# Calculates number of model runs for the Method of Morris
-GROUPS = PARAMETERS.group.unique()
-MODELRUNS = range((len(GROUPS) + 1) * config["gsa"]["replicates"])
+# Calculates UA specific parameters
+UA_PARAMS = config["uncertainity"]["parameters"]
+UA_SAMPLING = config["uncertainity"]["sample"]
+UA_REPLICATES = config["uncertainity"]["replicates"]
+
+if UA_SAMPLING.lower() == 'lhs':
+    UA_MODELRUNS = range(UA_REPLICATES)
+elif UA_SAMPLING.lower() == 'sobol':
+    UA_MODELRUNS = range((2**UA_REPLICATES) * (len(UA_PARAMS) + 2))
+else:
+    raise ValueError(f"{UA_SAMPLING} is not a valid selection")
 
 include: "rules/generate.smk"
 include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/solve.smk"
-include: "rules/results.smk"
+include: "rules/gsa_results.smk"
+include: "rules/ua_results.smk"
+
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua
 
 rule all:
+    shell:
+        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua']"
+
+rule gsa:
     input:
-        expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
-        expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES),
-        expand("results/{scenario}/gsa/heatmaps/{result}.png", scenario=SCENARIO, result=PLOTS),
-        expand("results/{scenario}/gsa/barplots/{result}.png", scenario=SCENARIO, result=PLOTS)
+        expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=GSA_MODELRUNS),
+        expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=GSA_RESULT_FILES),
+        expand("results/{scenario}/gsa/heatmaps/{result}.png", scenario=SCENARIO, result=GSA_PLOTS),
+        expand("results/{scenario}/gsa/barplots/{result}.png", scenario=SCENARIO, result=GSA_PLOTS)
 
-rule clean:
-    shell:
-        "rm -rf results/* && rm -rf results/* && rm -rf modelruns/* && rm -rf temp/* "
+rule ua:
+    input:
+        expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
 
-rule clean_plots:
+rule clean_all:
+    params:
+        scenario=config["scenario"]["name"]
     shell:
-        "rm -f results/{modelrun}/*.pdf"
+        "rm -rf results/{params.scenario}/*"
+
+rule clean_gsa:
+    params:
+        scenario=config["scenario"]["name"]
+    shell:
+        "rm -rf results/{params.scenario}/gsa/*"
+
+rule clean_ua:
+    params:
+        scenario=config["scenario"]["name"]
+    shell:
+        "rm -rf results/{params.scenario}/ua/*"
 
 rule make_dag:
     shell:

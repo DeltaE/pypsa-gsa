@@ -29,7 +29,7 @@ if __name__ == "__main__":
     if "snakemake" in globals():
         csvs = snakemake.input.csvs
         heatmap = snakemake.output.heatmap
-        group = snakemake.wildcards.group
+        group = snakemake.wildcards.plot
         parameters_f = snakemake.input.params
         results_f = snakemake.input.results
     else:

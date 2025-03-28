@@ -50,6 +50,6 @@ if __name__ == "__main__":
 
     parameters = pd.read_csv(param_file)
 
-    df = main(parameters, replicates)
+    df = main(parameters, method, replicates)
 
     df.to_csv(sample_file, index=False)
