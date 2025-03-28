@@ -5,6 +5,7 @@ cores: 10
 latency-wait: 60
 use-envmodules: True
 use-conda: False
+# quiet: all
 default-resources:
   - runtime=10
   - mem_mb_per_cpu=16000

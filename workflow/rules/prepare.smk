@@ -105,7 +105,7 @@ rule sanitize_parameters:
     input:
         parameters=config["gsa"]["parameters"]
     output:
-        parameters="results/{scenario}/parameters.csv"
+        parameters="results/{scenario}/gsa/parameters.csv"
     log: 
         "logs/sanitize_parameters/{scenario}.log"
     benchmark:
@@ -126,7 +126,7 @@ checkpoint sanitize_results:
     input:
         network = "results/{scenario}/base.nc"
     output:
-        results="results/{scenario}/results.csv"
+        results="results/{scenario}/gsa/results.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
         runtime=1
@@ -159,3 +159,50 @@ rule process_natural_gas:
         "prepare_data"
     script:
         "../scripts/process_ng.py"
+
+# for the uncertainity characterization
+rule prepare_set_values:
+    message: "Setting static paramters for the uncertainity."
+    params:
+        to_remove=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/set_values.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_set_values/{scenario}.txt"
+    log: 
+        "logs/prepare_set_values/{scenario}.log"
+    group:
+        "params_uncertainity"
+    script:
+        "../scripts/set_ua_values.py"
+
+rule prepare_ua_params:
+    message: "Getting parameters for the uncertainity sample."
+    params:
+        to_sample=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/parameters.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_ua_params/{scenario}.txt"
+    log: 
+        "logs/prepare_ua_params/{scenario}.log"
+    group:
+        "params_uncertainity"
+    run:
+        import pandas as pd
+        df = pd.read_csv(input.parameters)
+        df = df[df.name.isin(params.to_sample)]
+        assert len(df) == len(params.to_sample)
+        df.to_csv(output.parameters, index=False)

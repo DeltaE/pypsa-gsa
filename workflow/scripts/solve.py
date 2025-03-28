@@ -900,7 +900,7 @@ if __name__ == "__main__":
         ev_policy_f = snakemake.input.ev_policy_f
         constraints_meta = snakemake.input.constraints
     else:
-        in_network = "results/EvPolicy/modelruns/0/n.nc"
+        in_network = "results/EvPolicy/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
@@ -912,7 +912,7 @@ if __name__ == "__main__":
         ces_f = "results/EvPolicy/constraints/ces.csv"
         tct_f = "results/EvPolicy/constraints/tct.csv"
         ev_policy_f = "results/EvPolicy/constraints/ev_policy.csv"
-        constraints_meta = "results/EvPolicy/modelruns/0/constraints.csv"
+        constraints_meta = "results/EvPolicy/gsa/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)

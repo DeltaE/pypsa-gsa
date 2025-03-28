@@ -80,9 +80,9 @@ if __name__ == "__main__":
         model_run = snakemake.wildcards.run
         csv = snakemake.output.csv
     else:
-        network = "results/Testing/modelruns/40/network.nc"
+        network = "results/Testing/gsa/modelruns/40/network.nc"
         results_f = "config/results.csv"
-        csv = "results/Testing/modelruns/40/results.csv"
+        csv = "results/Testing/gsa/modelruns/40/results.csv"
         model_run = 0
 
     n = pypsa.Network(network)

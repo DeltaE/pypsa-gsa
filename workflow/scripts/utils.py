@@ -12,37 +12,62 @@ logger = logging.getLogger(__name__)
 ## GSA Specific ##
 ##################
 
-def create_salib_problem(parameters: pd.DataFrame) -> dict[str, list[Any]]:
+def create_salib_problem(parameters: pd.DataFrame, method: str) -> dict[str, list[Any]]:
     """Creates SALib problem from scenario configuration."""
 
-    df = parameters.copy()
+    def _create_morris_problem(parameters: pd.DataFrame) -> dict[str, list[Any]]:
+        """Creates SALib problem based on Morris"""
+        df = parameters.copy()
+        problem = {}
+        problem["num_vars"] = len(df)
+        if problem["num_vars"] <= 1:
+            raise ValueError(
+                f"Must define at least two variables in problem. User defined "
+                f"{problem['num_vars']} variable(s)."
+            )
 
-    problem = {}
-    problem["num_vars"] = len(df)
-    if problem["num_vars"] <= 1:
-        raise ValueError(
-            f"Must define at least two variables in problem. User defined "
-            f"{problem['num_vars']} variable(s)."
-        )
+        df["bounds"] = df.apply(lambda row: [row.min_value, row.max_value], axis=1)
 
-    df["bounds"] = df.apply(lambda row: [row.min_value, row.max_value], axis=1)
+        names = df.name.to_list()
+        bounds = df.bounds.to_list()
+        groups = df.group.to_list()
 
-    names = df.name.to_list()
-    bounds = df.bounds.to_list()
-    groups = df.group.to_list()
+        problem["names"] = names
+        problem["bounds"] = bounds
+        problem["groups"] = groups
 
-    problem["names"] = names
-    problem["bounds"] = bounds
-    problem["groups"] = groups
+        num_groups = len(set(groups))
+        if num_groups <= 1:
+            raise ValueError(
+                f"Must define at least two groups in problem. User defined "
+                f"{num_groups} group(s)."
+            )
 
-    num_groups = len(set(groups))
-    if num_groups <= 1:
-        raise ValueError(
-            f"Must define at least two groups in problem. User defined "
-            f"{num_groups} group(s)."
-        )
+        return problem
 
-    return problem
+    def _create_sobol_lhs_problem(parameters: pd.DataFrame) -> dict[str, list[Any]]:
+        """Creates SALib problem based on sobol or LHS."""
+
+        df = parameters.copy()
+        problem = {}
+
+        df["bounds"] = df.apply(lambda row: [row.min_value, row.max_value], axis=1)
+
+        names = df.name.to_list()
+        bounds = df.bounds.to_list()
+
+        problem["names"] = names
+        problem["bounds"] = bounds
+        problem["num_vars"] = len(df)
+
+        return problem
+
+    if method == "morris":
+        return _create_morris_problem(parameters)
+    elif method in ("sobol", "lhs"):
+        return _create_sobol_lhs_problem(parameters)
+    else:
+        raise ValueError(f"{method} is not a valid sampling method")
 
 #####################
 ## General Helpers ##

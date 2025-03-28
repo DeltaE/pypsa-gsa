@@ -87,7 +87,7 @@ if __name__ == "__main__":
     else:
         network = "results/Testing/base.nc"
         in_results = "config/results.csv"
-        out_results = "results/Testing/results.csv"
+        out_results = "results/Testing/gsa/results.csv"
     
     df = pd.read_csv(in_results)
     
