@@ -1,7 +1,7 @@
 
 # name of base pypsa network
 scenario: 
-  name: "Testing"
+  name: "Testing2"
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
@@ -10,22 +10,22 @@ pypsa_usa:
   era5_year: 2018
 
 gsa:
-  parameters: config/parameters.csv # Define the uncertain parameters
-  results: config/results_gsa.csv # Define what results to run SA over
-  replicates: 10 # Sampling - how large should the sample be?
-  scale: True # Scale Elementary Effects (True/False)
+  parameters: config/parameters.csv 
+  results: config/results_gsa.csv # results to run SA over
+  replicates: 10 
+  scale: True # Scale Elementary Effects 
 
 uncertainity:
   # general scaling guidlines
-  # N = number of samples. d = number of parametes
+  # N = number of samples. d = number of parametes. r = replicates
   # sobol -> N=2^m (m is a power of 2) -> N ~ 10d
-  # lhs -> N = d
-  sample: sobol # (lhs|sobol|morris|)
-  replicates: 5
+  # lhs -> N = r -> N ~ > 10d
+  sample: lhs # (lhs|sobol)
+  replicates: 10
   parameters: # index names from parameters csv
   - ev_policy_lgt_duty
   - ev_policy_bus
-  results: config/results_uncertainity.csv
+  results: config/results_uncertainity.csv # results to extract from ua
 
 # Choose a solver
 solver:

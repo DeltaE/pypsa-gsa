@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def main(parameters: pd.DataFrame, method: str, replicates: int):
     """Creates sample using SALib."""
 
-    problem = create_salib_problem(parameters)
+    problem = create_salib_problem(parameters, method)
 
     if method == "morris":
         sample = morris.sample(
@@ -43,10 +43,10 @@ if __name__ == "__main__":
         replicates = int(snakemake.params.replicates)
         sample_file = snakemake.output.sample_file
     else:
-        param_file = "../../config/parameters.csv"
+        param_file = "results/Testing2/ua/parameters.csv"
         replicates = 10
         sample_file = "sample.csv"
-        method = "morris"
+        method = "sobol"
 
     parameters = pd.read_csv(param_file)
 

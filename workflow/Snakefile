@@ -6,7 +6,8 @@ configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, clean
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua
+
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
     model_run=r"\d+"
@@ -41,8 +42,6 @@ include: "rules/sample.smk"
 include: "rules/solve.smk"
 include: "rules/gsa_results.smk"
 include: "rules/ua_results.smk"
-
-localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua
 
 rule all:
     shell:

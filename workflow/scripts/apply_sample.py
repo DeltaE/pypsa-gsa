@@ -184,8 +184,9 @@ def get_set_value_data(
         data[name]["carrier"] = sv.at[name, "carrier"]
         data[name]["attribute"] = sv.at[name, "attribute"]
         data[name]["range"] = sv.at[name, "range"]  # absolute | percent
-        assert False
-        data[name]["value"] = sample[name].to_dict()  # run: value
+        data[name]["value"] = {
+            x: sv.at[name, "value"] for x in range(num_runs)
+        }  # run: value
     return data
 
 
@@ -657,20 +658,20 @@ if __name__ == "__main__":
         ces_f = snakemake.input.ces_f
         ev_policy_f = snakemake.input.ev_policy_f
     else:
-        param_file = "results/Testing/ua/parameters.csv"
-        sample_file = "results/Testing/ua/sample.csv"
-        set_values_file = "results/Testing/ua/set_values.csv"
-        base_network_file = "results/Testing/base.nc"
-        root_dir = Path("results/Testing/ua/modelruns/")
+        param_file = "results/Testing2/ua/parameters.csv"
+        sample_file = "results/Testing2/ua/sample.csv"
+        set_values_file = "results/Testing2/ua/set_values.csv"
+        base_network_file = "results/Testing2/base.nc"
+        root_dir = Path("results/Testing2/ua/modelruns/")
         meta_yaml = True
         meta_csv = True
-        scaled_sample_file = "results/Testing/ua/scaled_sample.csv"
-        pop_f = "results/Testing/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/Testing/constraints/ng_domestic.csv"
-        ng_international_f = "results/Testing/constraints/ng_international.csv"
-        rps_f = "results/Testing/constraints/rps.csv"
-        ces_f = "results/Testing/constraints/ces.csv"
-        ev_policy_f = "results/Testing/constraints/ev_policy.csv"
+        scaled_sample_file = "results/Testing2/ua/scaled_sample.csv"
+        pop_f = "results/Testing2/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/Testing2/constraints/ng_domestic.csv"
+        ng_international_f = "results/Testing2/constraints/ng_international.csv"
+        rps_f = "results/Testing2/constraints/rps.csv"
+        ces_f = "results/Testing2/constraints/ces.csv"
+        ev_policy_f = "results/Testing2/constraints/ev_policy.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
@@ -683,12 +684,16 @@ if __name__ == "__main__":
 
     sample_data = get_sample_data(params, sample)
 
+    # add in pre-defined valies to the sample.
     if set_values_file:
         set_values = pd.read_csv(set_values_file)
         num_runs = len(sample)
         set_values_data = get_set_value_data(set_values, num_runs)
         assert all([x not in set_values_data for x in sample_data])
         sample_data = sample_data | set_values_data
+        scaled_scample_columns = sample.columns.to_list() + set_values.name.to_list()
+    else:
+        scaled_scample_columns = sample.columns
 
     scaled_sample = []
 
@@ -730,5 +735,5 @@ if __name__ == "__main__":
             meta_df = pd.DataFrame.from_dict(meta).T
             meta_df.to_csv(meta_save_name, index=True)
 
-    ss = pd.DataFrame(scaled_sample, columns=sample.columns).round(5)
+    ss = pd.DataFrame(scaled_sample, columns=scaled_scample_columns).round(5)
     ss.to_csv(scaled_sample_file, index=False)

@@ -203,6 +203,6 @@ rule prepare_ua_params:
     run:
         import pandas as pd
         df = pd.read_csv(input.parameters)
-        df = df[df.index.contains([params.to_sample])]
-        assert len(df) == len(to_sample)
-        df.to_csv(output.csv, index=False)
+        df = df[df.name.isin(params.to_sample)]
+        assert len(df) == len(params.to_sample)
+        df.to_csv(output.parameters, index=False)

@@ -18,8 +18,9 @@ def remove_uncertain_params(params: pd.DataFrame, to_remove: list[str]) -> pd.Da
     """Removes parameters that will be interated over in the uncertainity analysis."""
     
     df = params.copy()
-    
-    assert all([x in df.name for x in to_remove])
+
+    valid_names = df.name.to_list()
+    assert all([x in valid_names for x in to_remove])
     
     return df[~df.name.isin(to_remove)]
 
@@ -30,9 +31,9 @@ if __name__ == "__main__":
         out_params = snakemake.output.parameters
         to_remove = snakemake.params.to_remove
     else:
-        in_params = "results/Testing/gsa/parameters.csv"
-        out_params = "results/Testing/ua/static.csv"
-        to_remove = []
+        in_params = "results/Testing2/gsa/parameters.csv"
+        out_params = "results/Testing2/ua/static.csv"
+        to_remove = ["ev_policy_lgt_duty", "ev_policy_bus"]
         
     df = pd.read_csv(in_params)
     df = set_average(df)

@@ -31,7 +31,6 @@ rule create_sample:
         replicates=get_replicates,
         method=get_sampling_method
     input:
-        # result is 'gsa' or 'uncertainity'
         parameters="results/{scenario}/{result}/parameters.csv"
     output: 
         sample_file = "results/{scenario}/{result}/sample.csv",
@@ -59,7 +58,7 @@ rule apply_gsa_sample_to_network:
     wildcard_constraints:
         result="gsa"
     params:
-        root_dir = "results/{scenario}/gsa/modelruns/",
+        root_dir = "results/{scenario}/{result}/modelruns/",
         meta_yaml = config["metadata"]["yaml"],
         meta_csv = config["metadata"]["csv"],
     input: 
@@ -94,7 +93,7 @@ rule apply_ua_sample_to_network:
     wildcard_constraints:
         result="ua"
     params:
-        root_dir = "results/{scenario}/gsa/modelruns/",
+        root_dir = "results/{scenario}/{result}/modelruns/",
         meta_yaml = config["metadata"]["yaml"],
         meta_csv = config["metadata"]["csv"],
     input: 

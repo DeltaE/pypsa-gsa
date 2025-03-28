@@ -47,7 +47,7 @@ def sa_results(
         If the input sample is scaled
     """
 
-    problem = utils.create_salib_problem(parameters)
+    problem = utils.create_salib_problem(parameters, "morris")
     si = analyze_morris.analyze(problem, X, Y, print_to_console=False, scaled=scaled)
     return si
 
