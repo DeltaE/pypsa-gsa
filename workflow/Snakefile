@@ -30,7 +30,7 @@ UA_SAMPLING = config["uncertainity"]["sample"]
 UA_REPLICATES = config["uncertainity"]["replicates"]
 UA_RESULTS = pd.read_csv(config["uncertainity"]["results"])
 UA_RESULT_FILES = list(set(UA_RESULTS.name.to_list()))
-UA_PLOTS = pd.read_csv(config["uncertainity"]["plots"]).name.to_list()
+UA_PLOTS = pd.read_csv(config["uncertainity"]["plots"])["plot"].to_list()
 
 if UA_SAMPLING.lower() == 'lhs':
     UA_MODELRUNS = range(UA_REPLICATES)

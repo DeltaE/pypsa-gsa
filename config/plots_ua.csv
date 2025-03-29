@@ -1,10 +1,10 @@
-name,nice_name,type,xaxis,xlabel,yaxis,ylabel
-hp_energy_cost,,scatter,hp_capacity_new,"Heat Pump New Capacpity",marginal_cost_energy,"Marginal Cost Energy"
-hp_electricity_cost,,scatter,hp_capacity_new,"Heat Pump New Capacpity",marginal_cost_elec,"Marginal Cost Electricity"
-hp_carbon_cost,,scatter,hp_capacity_new,"Heat Pump New Capacpity",marginal_cost_carbon,"Marginal Cost Carbon"
-ev_lgt_cap_energy_cost,,scatter,ev_lgt_capacity,"Light Duty EV Capacpity",marginal_cost_energy,"Marginal Cost Energy"
-ev_lgt_cap_electricity_cost,,scatter,ev_lgt_capacity,"Light Duty EV Capacpity",marginal_cost_elec,"Marginal Cost Electricity"
-ev_lgt_cap_carbon_cost,,scatter,ev_lgt_capacity,"Light Duty EV Capacpity",marginal_cost_carbon,"Marginal Cost Carbon"
-vre_cap_energy_cost,,scatter,vre_capacity_new,"VRE New Capacpity",marginal_cost_energy,"Marginal Cost Energy"
-vre_cap_electricity_cost,,scatter,vre_capacity_new,"VRE New Capacpity",marginal_cost_elec,"Marginal Cost Electricity"
-vre_cap_carbon_cost,,scatter,vre_capacity_new,"VRE New Capacpity",marginal_cost_carbon,"Marginal Cost Carbon"
+name,nice_name,type,xaxis,xlabel,yaxis,ylabel,plot
+hp_energy_cost,,scatter,hp_capacity_new,Heat Pump New Capacpity,marginal_cost_energy,Marginal Cost Energy,heat_pump
+hp_electricity_cost,,scatter,hp_capacity_new,Heat Pump New Capacpity,marginal_cost_elec,Marginal Cost Electricity,heat_pump
+hp_carbon_cost,,scatter,hp_capacity_new,Heat Pump New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,heat_pump
+ev_lgt_cap_energy_cost,,scatter,ev_lgt_capacity,Light Duty EV Capacpity,marginal_cost_energy,Marginal Cost Energy,ev_lgt
+ev_lgt_cap_electricity_cost,,scatter,ev_lgt_capacity,Light Duty EV Capacpity,marginal_cost_elec,Marginal Cost Electricity,ev_lgt
+ev_lgt_cap_carbon_cost,,scatter,ev_lgt_capacity,Light Duty EV Capacpity,marginal_cost_carbon,Marginal Cost Carbon,ev_lgt
+vre_cap_energy_cost,,scatter,vre_capacity_new,VRE New Capacpity,marginal_cost_energy,Marginal Cost Energy,vre_cap
+vre_cap_electricity_cost,,scatter,vre_capacity_new,VRE New Capacpity,marginal_cost_elec,Marginal Cost Electricity,vre_cap
+vre_cap_carbon_cost,,scatter,vre_capacity_new,VRE New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,vre_cap

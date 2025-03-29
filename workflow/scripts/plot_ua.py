@@ -3,60 +3,72 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pathlib import Path
+from typing import Any
 
-
-def plot_scatter(x_data: pd.Series, y_data: pd.Series, title: str | None = None) -> tuple[plt.figure, plt.axes]:
+def plot_scatter(data: list[dict[str, Any]]) -> tuple[plt.figure, plt.axes]:
     """Plots scatter plot of all model runs."""
 
-    xlabel = x_data.columns.values[0]
-    ylabel = y_data.columns.values[0]
-    
-    title = title if title else ""
+    num_plots = len(data)
 
-    df = pd.concat([x_data, y_data], axis=1)
-    
-    fig, ax = plt.subplots(figsize=(12,8))
-    
-    sns.scatterplot(df, x=xlabel, y=ylabel, ax=ax)
-    
+    fig, axs = plt.subplots(figsize=(12, (3 * num_plots)), nrows=num_plots, ncols=1)
+
+    for i, ax_data in enumerate(data):
+        xdata = ax_data["xaxis"]
+        ydata = ax_data["yaxis"]
+
+        df = pd.concat([xdata, ydata], axis=1)
+        xlabel = xdata.columns.values[0]
+        ylabel = ydata.columns.values[0]
+
+        if num_plots > 1:
+            sns.scatterplot(df, x=xlabel, y=ylabel, ax=axs[i])
+        else:
+            sns.scatterplot(df, x=xlabel, y=ylabel, ax=axs)
+
     fig.tight_layout()
-    
-    return fig, ax
+
+    return fig, axs
 
 if __name__ == "__main__":
     
     if "snakemake" in globals():
-        xaxis_f = snakemake.input.csvs[0]
-        yaxis_f = snakemake.input.csvs[1]
+        root_dir = snakemake.params.root_dir
         results_f = snakemake.input.results
         out_f = snakemake.output.plot
         name = snakemake.wildcards.plot
     else:
-        xaxis_f = "results/updates/ua/results/hp_capacity_new.csv"
-        yaxis_f = "results/updates/ua/results/marginal_cost_energy.csv"
+        root_dir = "results/updates/ua/results/"
         results_f = "results/updates/ua/plots.csv"
-        out_f = "results/updates/ua/plots/hp_energy_cost.png"
-        name = "hp_energy_cost"
-        
-    xaxis = pd.read_csv(xaxis_f, index_col="run")
-    yaxis = pd.read_csv(yaxis_f, index_col="run")
+        out_f = "results/updates/ua/plots/heat_pump.png"
+        name = "heat_pump"
+
     results = pd.read_csv(results_f, index_col=0)
-    
-    assert xaxis.shape[1] == 1
-    assert yaxis.shape[1] == 1
-    
-    title = results.at[name, "nice_name"]
-    xlabel = results.at[name, "xlabel"]
-    ylabel = results.at[name, "ylabel"]
-    
-    if not xlabel:
-        xlabel = results.at[name, "xaxis"] # non-verbose name
-    if not ylabel:
-        ylabel = results.at[name, "yaxis"] # non-verbose name
-    
-    xaxis = xaxis.squeeze().to_frame(name=xlabel)
-    yaxis = yaxis.squeeze().to_frame(name=ylabel)
-    
-    fig, ax = plot_scatter(xaxis, yaxis, title)
+    results_filtered = results[results["plot"] == name]
+
+    assert not results_filtered.empty
+
+    data = []
+
+    for name, row in results_filtered.iterrows():
+        row_data = {}
+        xaxis_f = Path(root_dir, f"{row['xaxis']}.csv")
+        yaxis_f = Path(root_dir, f"{row['yaxis']}.csv")
+        row_data["title"] = row["nice_name"]
+        row_data["xlabel"] = row["xlabel"] if row["xlabel"] else row["xaxis"]
+        row_data["ylabel"] = row["ylabel"] if row["ylabel"] else row["yaxis"]
+        row_data["xaxis"] = (
+            pd.read_csv(xaxis_f, index_col="run")
+            .squeeze()
+            .to_frame(name=row_data["xlabel"])
+        )
+        row_data["yaxis"] = (
+            pd.read_csv(yaxis_f, index_col="run")
+            .squeeze()
+            .to_frame(name=row_data["ylabel"])
+        )
+        data.append(row_data)
+
+    fig, ax = plot_scatter(data)
     
     fig.savefig(out_f)

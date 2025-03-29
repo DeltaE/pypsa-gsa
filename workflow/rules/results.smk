@@ -21,8 +21,10 @@ def get_gsa_plotting_csvs(wildcards):
 def get_ua_plotting_csvs(wildcards):
     csv = checkpoints.sanitize_ua_plot_params.get(scenario=wildcards.scenario).output[0]
     df = pd.read_csv(csv, index_col=0)
-    results = [df.at[wildcards.plot, "xaxis"], df.at[wildcards.plot, "yaxis"]]
-    return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in results]
+    df = df[df["plot"] == wildcards.plot]
+    assert not df.empty
+    csvs = df.xaxis.to_list() + df.yaxis.to_list()
+    return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in csvs]
 
 def get_combined_results_inputs(wildcards):
     """Need input function as we need to get model run numbers."""
@@ -212,6 +214,8 @@ rule parse_ua_results:
 rule plot_ua:
     message:
         "Generating UA plots"
+    params:
+        root_dir = "results/{scenario}/ua/results/"
     input:
         csvs = get_ua_plotting_csvs,
         results = "results/{scenario}/ua/plots.csv"
