@@ -120,9 +120,9 @@ rule sanitize_parameters:
 
 def get_raw_result_path(wildards):
     if wildards.mode == "gsa":
-        modelruns = config["gsa"]["results"]
+        return config["gsa"]["results"]
     elif wildards.mode == "ua":
-         modelruns = config["uncertainity"]["results"]
+         return config["uncertainity"]["results"]
     else:
         raise ValueError(f"Invalid input {wildards.mode} for raw result path.")
 
@@ -232,5 +232,5 @@ checkpoint sanitize_ua_plot_params:
         "logs/prepare_ua_params/{scenario}.log"
     group:
         "params_uncertainity"
-    run:
-        "../scripts/sanitize_result_plots.py"
+    script:
+        "../scripts/sanitize_ua_plot_params.py"

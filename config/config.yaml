@@ -1,7 +1,7 @@
 
 # name of base pypsa network
 scenario: 
-  name: "Testing2"
+  name: "updates"
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
@@ -21,11 +21,12 @@ uncertainity:
   # sobol -> N=2^m (m is a power of 2) -> N ~ 10d
   # lhs -> N = r -> N ~ > 10d
   sample: lhs # (lhs|sobol)
-  replicates: 10
-  parameters: # index names from parameters csv
-  - ev_policy_lgt_duty
-  - ev_policy_bus
-  results: config/results_uncertainity.csv # results to extract from ua
+  replicates: 20
+  parameters: # index names from parameters csv to include in sample
+  - eff_trn_elec_lgt
+  - ng_leakage
+  results: config/results_ua.csv # results to extract from ua
+  plots: config/plots_ua.csv
 
 # Choose a solver
 solver:

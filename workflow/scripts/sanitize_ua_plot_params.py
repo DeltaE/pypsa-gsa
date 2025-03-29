@@ -2,8 +2,6 @@
 
 import pandas as pd
 from constants import VALID_UA_PLOTS
-from typing import Any
-import yaml
 
 import logging
 logger = logging.getLogger(__name__)
@@ -73,21 +71,20 @@ def is_valid_axis(plots: pd.DataFrame, results: pd.DataFrame) -> bool:
     df2 = df[~df.yaxis.isin(valid_results)]
     if not df2.empty:
         invalid = set(df2.xaxis.to_list())
-        print(f"Invalide results of {invalid} in xaxis UA plots")
+        print(f"Invalide results of {invalid} in yaxis UA plots")
         return False
         
     return True
     
 if __name__ == "__main__":
-
     if "snakemake" in globals():
         in_plots_f = snakemake.input.plots
         out_plots_f = snakemake.output.plots
         results_f = snakemake.input.results
     else:
-        in_plots_f = ""
-        out_plots_f = ""
-        results_f = ""
+        in_plots_f = "config/plots_ua.csv"
+        out_plots_f = "results/updates/ua/plots.csv"
+        results_f = "results/updates/ua/results.csv"
     
     results = pd.read_csv(results_f)
     plots = pd.read_csv(in_plots_f)
@@ -95,6 +92,6 @@ if __name__ == "__main__":
     assert has_required_inputs(plots)
     assert is_unique_names(plots)
     assert is_valid_plot_types(plots)
-    assert is_valid_axis(plots)
-    
+    assert is_valid_axis(plots, results)
+
     plots.to_csv(out_plots_f, index=False)

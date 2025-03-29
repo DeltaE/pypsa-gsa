@@ -16,13 +16,13 @@ def get_gsa_plotting_csvs(wildcards):
     df = df[df.plots.str.contains(wildcards.plot)]
     results = df.name.to_list()
 
-    return ["results/{wildcards.scenario}/{result=wildcards.mode}/SA/{x}.csv" for x in results]
+    return [f"results/{wildcards.scenario}/gsa/SA/{x}.csv" for x in results]
 
 def get_ua_plotting_csvs(wildcards):
-    csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="ua").output[0]
+    csv = checkpoints.sanitize_ua_plot_params.get(scenario=wildcards.scenario).output[0]
     df = pd.read_csv(csv, index_col=0)
-    results = [df.at[snakemake.plot, xaxis], df.at[snakemake.plot, yaxis]]
-    return ["results/{wildcards.scenario}/ua/results/{x}.csv" for x in results]
+    results = [df.at[wildcards.plot, "xaxis"], df.at[wildcards.plot, "yaxis"]]
+    return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in results]
 
 def get_combined_results_inputs(wildcards):
     """Need input function as we need to get model run numbers."""
@@ -213,8 +213,8 @@ rule plot_ua:
     message:
         "Generating UA plots"
     input:
-        results = "results/{scenario}/ua/plots.csv",
-        csvs = get_ua_plotting_csvs
+        csvs = get_ua_plotting_csvs,
+        results = "results/{scenario}/ua/plots.csv"
     output:
         plot = "results/{scenario}/ua/plots/{plot}.png"
     log: 

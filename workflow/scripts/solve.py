@@ -724,7 +724,12 @@ def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
 
     for mode in policy.columns:
         sample_mode = sample[sample.carrier == carrier_mapper[mode]]
-        assert len(sample_mode) == 1
+
+        if len(sample_mode) < 1:  # where no ev policy is uncertain
+            sample_value = 1
+        else:
+            assert len(sample_mode) == 1
+            sample_value = sample_mode.value.values[0]
 
         evs = n.links[n.links.carrier == f"trn-elec-veh-{mode_mapper[mode]}"].index
         dem_names = n.loads[n.loads.carrier == f"trn-veh-{mode_mapper[mode]}"].index
@@ -735,7 +740,7 @@ def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
             eff = n.links.loc[evs].efficiency.mean()
             lhs = n.model["Link-p"].loc[investment_period].sel(Link=evs).sum()
             rhs_ref = dem.loc[investment_period].sum().sum() * ratio / eff
-            rhs = rhs_ref + rhs_ref * sample_mode.value.values[0]
+            rhs = rhs_ref + rhs_ref * sample_value
 
             n.model.add_constraints(
                 lhs <= rhs, name=f"Link-ev_gen_{mode}_{investment_period}"

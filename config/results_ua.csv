@@ -10,11 +10,11 @@ wind_capacity,Wind Capacity,generator,onwind;offwind_floating,p_nom_opt,MW
 wind_capacity_new,Wind Capacity New,generator,onwind;offwind_floating,p_nom_new,MW
 gas_capacity,Gas Capacity,link,OCGT;CCGT;CCGT-95CCS,p_nom_opt,MW
 gas_capacity_new,Gas Capacity New,link,OCGT;CCGT;CCGT-95CCS,p_nom_new,MW
-vre_capacity,VRE Capacity,link,solar;onwind;offwind_floating,p_nom_opt,MW
-vre_capacity_new,VRE Capacity New,link,solar;onwind;offwind_floating,p_nom_new,MW
+vre_capacity,VRE Capacity,generator,solar;onwind;offwind_floating,p_nom_opt,MW
+vre_capacity_new,VRE Capacity New,generator,solar;onwind;offwind_floating,p_nom_new,MW
 hp_capacity,Heat Pump Capacity,link,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_opt,MW
 hp_capacity_new,Heat Pump Capacity New,link,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_new,MW
 gas_furnace_capacity,Heat Pump Capacity,link,res-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_opt,MW
 gas_furnace_capacity_new,Heat Pump Capacity New,link,res-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_new,MW
-ev_lgt_capacity,Light Duty EV Capacity,link,trn-elec-veh-elec,p_nom_opt,kVMT
-ev_lgt_use,Light Duty EV Use,link,trn-elec-veh-elec,p1,kVMT
+ev_lgt_capacity,Light Duty EV Capacity,link,trn-elec-veh-lgt,p_nom_opt,kVMT
+ev_lgt_use,Light Duty EV Use,links_t,trn-elec-veh-lgt,p1,kVMT
