@@ -129,6 +129,8 @@ VALID_RESULTS = {
     "stores":["e_nom_opt"],
 }
 
+VALID_UA_PLOTS = ["scatter", "bar"]
+
 # hard codes where gas can enter/exit the states
 # if multiple POEs exist, the larger pipeline is used as the POE
 # https://atlas.eia.gov/datasets/eia::border-crossings-natural-gas/explore?location=48.411182%2C-90.296487%2C5.24

@@ -19,7 +19,8 @@ def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     df["carriers"] = df.carriers.str.strip()
     df["variable"] = df.variable.str.strip()
     df["unit"] = df.unit.str.strip()
-    df["plots"] = df.plots.str.strip()
+    if "plots" in df.columns:
+        df["plots"] = df.plots.str.strip()
     return df
 
 def is_valid_variables(results: pd.DataFrame) -> bool:

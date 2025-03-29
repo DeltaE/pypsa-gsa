@@ -28,6 +28,9 @@ GSA_PLOTS = list(set(chain(*plots_temp)))
 UA_PARAMS = config["uncertainity"]["parameters"]
 UA_SAMPLING = config["uncertainity"]["sample"]
 UA_REPLICATES = config["uncertainity"]["replicates"]
+UA_RESULTS = pd.read_csv(config["uncertainity"]["results"])
+UA_RESULT_FILES = list(set(UA_RESULTS.name.to_list()))
+UA_PLOTS = pd.read_csv(config["uncertainity"]["plots"]).name.to_list()
 
 if UA_SAMPLING.lower() == 'lhs':
     UA_MODELRUNS = range(UA_REPLICATES)
@@ -40,8 +43,7 @@ include: "rules/generate.smk"
 include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/solve.smk"
-include: "rules/gsa_results.smk"
-include: "rules/ua_results.smk"
+include: "rules/results.smk"
 
 rule all:
     shell:
@@ -51,12 +53,13 @@ rule gsa:
     input:
         expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=GSA_MODELRUNS),
         expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=GSA_RESULT_FILES),
-        expand("results/{scenario}/gsa/heatmaps/{result}.png", scenario=SCENARIO, result=GSA_PLOTS),
-        expand("results/{scenario}/gsa/barplots/{result}.png", scenario=SCENARIO, result=GSA_PLOTS)
+        expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS),
+        expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS)
 
 rule ua:
     input:
         expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
+        expand("results/{scenario}/ua/plots/{plot}.png", scenario=SCENARIO, plot=UA_PLOTS),
 
 rule clean_all:
     params:

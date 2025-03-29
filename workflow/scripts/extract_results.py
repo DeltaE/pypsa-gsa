@@ -10,6 +10,12 @@ def _get_p_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> flo
     df = getattr(n,component)
     return df[df.carrier.isin(carriers)].p_nom_opt.sum()
 
+def _get_p_nom_new(n: pypsa.Network, component: str, carriers: list[str]) -> float:
+    df = getattr(n,component)
+    original = df[df.carrier.isin(carriers)].p_nom.sum()
+    optimial = df[df.carrier.isin(carriers)].p_nom_opt.sum()
+    return optimial - original
+
 def _get_p_total(n: pypsa.Network, component: str, var: str, carriers: list[str]) -> float:
     
     static_component = component.split("_t")[0]
@@ -59,6 +65,8 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
 
         if variable == "p_nom_opt":
             value = _get_p_nom_opt(n, component, carriers)
+        elif variable == "p_nom_new":
+            value = _get_p_nom_new(n, component, carriers)
         elif variable in ("p", "p0", "p1", "p2"):
             value = _get_p_total(n, component, variable, carriers)
         elif variable == "cost":

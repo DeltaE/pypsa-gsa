@@ -1,0 +1,2 @@
+name,nice_name,type,xaxis,xlabel,yaxis,ylabel
+hp_energy_cost,"HeatPump vs. Energy Cost",scatter,hp_capacity_new,"Heat Pump Capacpity",marginal_cost_energy,"Marginal Cost Energy"

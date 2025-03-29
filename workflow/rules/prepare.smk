@@ -118,22 +118,31 @@ rule sanitize_parameters:
     script:
         "../scripts/sanitize_params.py"
 
-# checkpoint needed for heatmap input function
+def get_raw_result_path(wildards):
+    if wildards.result == "gsa":
+        modelruns = config["gsa"]["results"]
+    elif wildards.result == "ua":
+         modelruns = config["uncertainity"]["results"]
+    else:
+        raise ValueError(f"Invalid input {wildards.result} for raw result path.")
+
 checkpoint sanitize_results:
     message: "Sanitizing results"
+    wildcard_constraints:
+        result="gsa|ua"
     params:
-        results=config["gsa"]["results"]
+        results=get_raw_result_path
     input:
         network = "results/{scenario}/base.nc"
     output:
-        results="results/{scenario}/gsa/results.csv"
+        results="results/{scenario}/{result}/results.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
         runtime=1
     benchmark:
-        "benchmarks/sanitize_results/{scenario}.txt"
+        "benchmarks/sanitize_results/{scenario}_{result}.txt"
     log: 
-        "logs/sanitize_results/{scenario}.log"
+        "logs/sanitize_results/{scenario}_{result}.log"
     group:
         "prepare_data"
     script:
@@ -206,3 +215,22 @@ rule prepare_ua_params:
         df = df[df.name.isin(params.to_sample)]
         assert len(df) == len(params.to_sample)
         df.to_csv(output.parameters, index=False)
+
+checkpoint sanitize_ua_plot_params:
+    message: "Sanitizing uncertainity analysis plotting parameters."
+    input:
+        plots=config["uncertainity"]["plots"],
+        results="results/{scenario}/ua/results.csv"
+    output:
+        plots="results/{scenario}/ua/plots.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_ua_params/{scenario}.txt"
+    log: 
+        "logs/prepare_ua_params/{scenario}.log"
+    group:
+        "params_uncertainity"
+    run:
+        "../scripts/sanitize_result_plots.py"
