@@ -119,30 +119,30 @@ rule sanitize_parameters:
         "../scripts/sanitize_params.py"
 
 def get_raw_result_path(wildards):
-    if wildards.result == "gsa":
+    if wildards.mode == "gsa":
         modelruns = config["gsa"]["results"]
-    elif wildards.result == "ua":
+    elif wildards.mode == "ua":
          modelruns = config["uncertainity"]["results"]
     else:
-        raise ValueError(f"Invalid input {wildards.result} for raw result path.")
+        raise ValueError(f"Invalid input {wildards.mode} for raw result path.")
 
 checkpoint sanitize_results:
     message: "Sanitizing results"
     wildcard_constraints:
-        result="gsa|ua"
+        mode="gsa|ua"
     params:
         results=get_raw_result_path
     input:
         network = "results/{scenario}/base.nc"
     output:
-        results="results/{scenario}/{result}/results.csv"
+        results="results/{scenario}/{mode}/results.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
         runtime=1
     benchmark:
-        "benchmarks/sanitize_results/{scenario}_{result}.txt"
+        "benchmarks/sanitize_results/{scenario}_{mode}.txt"
     log: 
-        "logs/sanitize_results/{scenario}_{result}.log"
+        "logs/sanitize_results/{scenario}_{mode}.log"
     group:
         "prepare_data"
     script:

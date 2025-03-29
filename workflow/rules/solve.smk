@@ -16,8 +16,8 @@ rule solve_network:
         solving_opts = config["solving"]["options"],
         pypsa_usa_opts = config["pypsa_usa"]
     input:
-        network = "results/{scenario}/{result}/modelruns/{run}/n.nc",
-        constraints = "results/{scenario}/{result}/modelruns/{run}/constraints.csv",
+        network = "results/{scenario}/{mode}/modelruns/{run}/n.nc",
+        constraints = "results/{scenario}/{mode}/modelruns/{run}/constraints.csv",
         pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
         ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
@@ -26,16 +26,16 @@ rule solve_network:
         tct_f = "results/{scenario}/constraints/tct.csv",
         ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
     output:
-        network = "results/{scenario}/{result}/modelruns/{run}/network.nc",
+        network = "results/{scenario}/{mode}/modelruns/{run}/network.nc",
     threads: 12
     resources:
         mem_mb=2000,
         runtime=2
     benchmark:
-        "benchmarks/solve/{scenario}_{result}_{run}.txt"
+        "benchmarks/solve/{scenario}_{mode}_{run}.txt"
     log: 
-        python = "logs/solve/{scenario}_{result}_{run}_python.log",
-        solver = "logs/solve/{scenario}_{result}_{run}_solver.log",
+        python = "logs/solve/{scenario}_{mode}_{run}_python.log",
+        solver = "logs/solve/{scenario}_{mode}_{run}_solver.log",
     group:
         "solve_{scenario}_{run}"
     script:
