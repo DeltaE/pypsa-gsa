@@ -30,7 +30,8 @@ UA_SAMPLING = config["uncertainity"]["sample"]
 UA_REPLICATES = config["uncertainity"]["replicates"]
 UA_RESULTS = pd.read_csv(config["uncertainity"]["results"])
 UA_RESULT_FILES = list(set(UA_RESULTS.name.to_list()))
-UA_PLOTS = pd.read_csv(config["uncertainity"]["plots"])["plot"].to_list()
+UA_SCATTERPLOTS = pd.read_csv(config["uncertainity"]["plots"])["plot"].to_list()
+UA_BARPLOTS = UA_RESULTS.barplot.dropna().to_list()
 
 if UA_SAMPLING.lower() == 'lhs':
     UA_MODELRUNS = range(UA_REPLICATES)
@@ -59,7 +60,8 @@ rule gsa:
 rule ua:
     input:
         expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
-        expand("results/{scenario}/ua/plots/{plot}.png", scenario=SCENARIO, plot=UA_PLOTS),
+        expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=UA_SCATTERPLOTS),
+        expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=UA_BARPLOTS),
 
 rule clean_all:
     params:

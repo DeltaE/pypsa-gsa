@@ -18,12 +18,20 @@ def get_gsa_plotting_csvs(wildcards):
 
     return [f"results/{wildcards.scenario}/gsa/SA/{x}.csv" for x in results]
 
-def get_ua_plotting_csvs(wildcards):
+def get_ua_scatterplot_csvs(wildcards):
     csv = checkpoints.sanitize_ua_plot_params.get(scenario=wildcards.scenario).output[0]
     df = pd.read_csv(csv, index_col=0)
     df = df[df["plot"] == wildcards.plot]
     assert not df.empty
     csvs = df.xaxis.to_list() + df.yaxis.to_list()
+    return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in csvs]
+
+def get_ua_barplot_csvs(wildcards):
+    csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="ua").output[0]
+    df = pd.read_csv(csv)
+    df = df[df.barplot == wildcards.plot]
+    assert not df.empty
+    csvs = df.name.to_list()
     return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in csvs]
 
 def get_combined_results_inputs(wildcards):
@@ -211,16 +219,16 @@ rule parse_ua_results:
             p = Path(params.base_dir, f"{name}.csv")
             parsed.to_csv(str(p), index=False)
 
-rule plot_ua:
+rule plot_ua_scatter:
     message:
-        "Generating UA plots"
+        "Generating UA scatter plots plots"
     params:
         root_dir = "results/{scenario}/ua/results/"
     input:
-        csvs = get_ua_plotting_csvs,
+        csvs = get_ua_scatterplot_csvs,
         results = "results/{scenario}/ua/plots.csv"
     output:
-        plot = "results/{scenario}/ua/plots/{plot}.png"
+        plot = "results/{scenario}/ua/scatterplots/{plot}.png"
     log: 
         "logs/plot_ua/{scenario}_{plot}.log"
     resources:
@@ -231,4 +239,26 @@ rule plot_ua:
     group:
         "results"
     script:
-        "../scripts/plot_ua.py"
+        "../scripts/plot_ua_scatter.py"
+
+rule plot_ua_barplots:
+    message:
+        "Generating UA barplots"
+    params:
+        root_dir = "results/{scenario}/ua/results/"
+    input:
+        csvs = get_ua_barplot_csvs,
+        results = "results/{scenario}/ua/results.csv"
+    output:
+        plot = "results/{scenario}/ua/barplots/{plot}.png"
+    log: 
+        "logs/plot_ua/{scenario}_{plot}.log"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
+        runtime=1
+    benchmark:
+        "benchmarks/plot_ua/{scenario}_{plot}.txt"
+    group:
+        "results"
+    script:
+        "../scripts/plot_ua_barplot.py"

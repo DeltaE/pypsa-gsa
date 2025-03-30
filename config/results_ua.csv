@@ -1,20 +1,72 @@
-name,nice_name,component,carriers,variable,unit
-objective_cost,Objective Cost,system,,cost,$
-marginal_cost_elec,System Electricity Cost,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,$/MWh
-marginal_cost_energy,System Energy Cost,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh
-marginal_cost_carbon,Cost of Carbon,buses_t,co2;ch4,marginal_price,$/T
-load_shedding,Load Shedding Capacity,generator,load,p_nom_opt,MW
-solar_capacity,Solar Capacity,generator,solar,p_nom_opt,MW
-solar_capacity_new,Solar Capacity New,generator,solar,p_nom_new,MW
-wind_capacity,Wind Capacity,generator,onwind;offwind_floating,p_nom_opt,MW
-wind_capacity_new,Wind Capacity New,generator,onwind;offwind_floating,p_nom_new,MW
-gas_capacity,Gas Capacity,link,OCGT;CCGT;CCGT-95CCS,p_nom_opt,MW
-gas_capacity_new,Gas Capacity New,link,OCGT;CCGT;CCGT-95CCS,p_nom_new,MW
-vre_capacity,VRE Capacity,generator,solar;onwind;offwind_floating,p_nom_opt,MW
-vre_capacity_new,VRE Capacity New,generator,solar;onwind;offwind_floating,p_nom_new,MW
-hp_capacity,Heat Pump Capacity,link,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_opt,MW
-hp_capacity_new,Heat Pump Capacity New,link,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_new,MW
-gas_furnace_capacity,Heat Pump Capacity,link,res-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_opt,MW
-gas_furnace_capacity_new,Heat Pump Capacity New,link,res-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_new,MW
-ev_lgt_capacity,Light Duty EV Capacity,link,trn-elec-veh-lgt,p_nom_opt,kVMT
-ev_lgt_use,Light Duty EV Use,links_t,trn-elec-veh-lgt,p1,kVMT
+name,nice_name,component,carriers,variable,unit,barplot
+objective_cost,Objective Cost,system,,cost,$,
+marginal_cost_elec,System Electricity Cost,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,$/MWh,
+marginal_cost_energy,System Energy Cost,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh,
+marginal_cost_carbon,Cost of Carbon,buses_t,co2;ch4,marginal_price,$/T,
+load_shedding,Load Shedding,generator,load,p_nom_opt,MW,
+solar_capacity,Solar,generator,solar,p_nom_opt,MW,pwr_opt
+solar_capacity_new,Solar,generator,solar,p_nom_new,MW,pwr_new
+wind_capacity,Wind,generator,onwind;offwind_floating,p_nom_opt,MW,pwr_opt
+wind_capacity_new,Wind,generator,onwind;offwind_floating,p_nom_new,MW,pwr_new
+gas_capacity,Gas,link,OCGT;CCGT;CCGT-95CCS,p_nom_opt,MW,pwr_opt
+gas_capacity_new,Gas,link,OCGT;CCGT;CCGT-95CCS,p_nom_new,MW,pwr_new
+hydro_capacity,Hydro,generator,hydro,p_nom_opt,MW,pwr_opt
+hydro_capacity_new,Hydro,generator,hydro,p_nom_new,MW,pwr_new
+coal_capacity,Coal,link,coal,p_nom_opt,MW,pwr_opt
+coal_capacity_new,Coal,link,coal,p_nom_new,MW,pwr_new
+nuclear_capacity,Nuclear,generator,nuclear,p_nom_opt,MW,pwr_opt
+nuclear_capacity_new,Nuclear,generator,nuclear,p_nom_new,MW,pwr_new
+other_capacity,Other,generator,biomass;waste,p_nom_opt,MW,pwr_opt
+other_capacity_new,Other,generator,biomass;waste,p_nom_new,MW,pwr_new
+geothermal_capacity,Geothermal,generator,geothermal,p_nom_opt,MW,pwr_opt
+geothermal_capacity_new,Geothermal,generator,geothermal,p_nom_new,MW,pwr_new
+vre_capacity,VRE,generator,solar;onwind;offwind_floating,p_nom_opt,MW,
+vre_capacity_new,VRE,generator,solar;onwind;offwind_floating,p_nom_new,MW,
+solar_gen,Solar,generators_t,solar,p,MW,pwr_gen
+wind_gen,Wind,generators_t,onwind;offwind_floating,p,MW,pwr_gen
+gas_gen,Gas,link_t,OCGT;CCGT;CCGT-95CCS,p1,MW,pwr_gen
+hydro_gen,Hydro,generators_t,hydro,p,MW,pwr_gen
+coal_gen,Coal,link_t,coal,p1,MW,pwr_gen
+nuclear_gen,Nuclear,generators_t,nuclear,p,MW,pwr_gen
+other_gen,Other,generators_t,biomass;waste,p,MW,pwr_gen
+geothermal_gen,Geothermal,generators_t,geothermal,p,MW,pwr_gen
+vre_gen,VRE,generators_t,solar;onwind;offwind_floating,p,MW,
+hp_capacity,Heat Pump,link,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_opt,MW,service_opt
+hp_capacity_new,Heat Pump,link,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_new,MW,service_new
+gas_furnace_capacity,Gas Furnace,link,res-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_opt,MW,service_opt
+gas_furnace_capacity_new,Gas Furnace,link,res-total-space-gas-furnace;com-total-space-gas-furnace,p_nom_new,MW,service_new
+elec_furnace_capacity,Electric Furnace,link,res-total-space-elec-furnace;com-total-space-elec-furnace,p_nom_opt,MW,service_opt
+elec_furnace_capacity_new,Electric Furnace,link,res-total-space-elec-furnace;com-total-space-elec-furnace,p_nom_new,MW,service_new
+oil_furnace_capacity,Oil Furnace,link,res-total-space-oil-furnace;com-total-space-oil-furnace,p_nom_opt,MW,service_opt
+oil_furnace_capacity_new,Oil Furnace,link,res-total-space-oil-furnace;com-total-space-oil-furnace,p_nom_new,MW,service_new
+air_con_capacity,Air Conditioner,link,res-total-air-con;com-total-air-con,p_nom_opt,MW,service_opt
+air_con_capacity_new,Air Conditioner,link,res-total-air-con;com-total-air-con,p_nom_new,MW,service_new
+hp_gen,Heat Pump,link_t,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p1,MW,srvice_gen
+gas_furnace_gen,Gas Furnace,link_t,res-total-space-gas-furnace;com-total-space-gas-furnace,p1,MW,srvice_gen
+elec_furnace_gen,Electric Furnace,link_t,res-total-space-elec-furnace;com-total-space-elec-furnace,p1,MW,srvice_gen
+oil_furnace_gen,Oil Furnace,link_t,res-total-space-oil-furnace;com-total-space-oil-furnace,p1,MW,srvice_gen
+air_con_gen,Air Conditioner,link_t,res-total-air-con;com-total-air-con,p1,MW,srvice_gen
+ev_lgt_capacity,Light Duty EV,link,trn-elec-veh-lgt,p_nom_opt,kVMT,trn_opt
+ev_lgt_capacity_new,Light Duty EV,link,trn-elec-veh-lgt,p_nom_new,kVMT,trn_new
+lpg_lgt_capacity,Light Duty LPG,link,trn-lpg-veh-lgt,p_nom_opt,kVMT,trn_opt
+lpg_lgt_capacity_new,Light Duty LPG,link,trn-lpg-veh-lgt,p_nom_new,kVMT,trn_new
+ev_med_capacity,Med Duty EV,link,trn-elec-veh-med,p_nom_opt,kVMT,trn_opt
+ev_med_capacity_new,Med Duty EV,link,trn-elec-veh-med,p_nom_new,kVMT,trn_new
+lpg_med_capacity,Med Duty LPG,link,trn-lpg-veh-med,p_nom_opt,kVMT,trn_opt
+lpg_med_capacity_new,Med Duty LPG,link,trn-lpg-veh-med,p_nom_new,kVMT,trn_new
+ev_hvy_capacity,Heavy Duty EV,link,trn-elec-veh-hvy,p_nom_opt,kVMT,trn_opt
+ev_hvy_capacity_new,Heavy Duty EV,link,trn-elec-veh-hvy,p_nom_new,kVMT,trn_new
+lpg_hvy_capacity,Heavy Duty LPG,link,trn-lpg-veh-hvy,p_nom_opt,kVMT,trn_opt
+lpg_hvy_capacity_new,Heavy Duty LPG,link,trn-lpg-veh-hvy,p_nom_new,kVMT,trn_new
+ev_bus_capacity,Bus EV,link,trn-elec-veh-bus,p_nom_opt,kVMT,trn_opt
+ev_bus_capacity_new,Bus EV,link,trn-elec-veh-bus,p_nom_new,kVMT,trn_new
+lpg_bus_capacity,Bus LPG,link,trn-lpg-veh-bus,p_nom_opt,kVMT,trn_opt
+lpg_bus_capacity_new,Bus LPG,link,trn-lpg-veh-bus,p_nom_new,kVMT,trn_new
+ev_lgt_generation,Light Duty EV,links_t,trn-elec-veh-lgt,p1,kVMT,trn_gen
+lpg_lgt_generation,Light Duty LPG,links_t,trn-lpg-veh-lgt,p1,kVMT,trn_gen
+ev_med_generation,Med Duty EV,links_t,trn-elec-veh-med,p1,kVMT,trn_gen
+lpg_med_generation,Med Duty LPG,links_t,trn-lpg-veh-med,p1,kVMT,trn_gen
+ev_hvy_generation,Heavy Duty EV,links_t,trn-elec-veh-hvy,p1,kVMT,trn_gen
+lpg_hvy_generation,Heavy Duty LPG,links_t,trn-lpg-veh-hvy,p1,kVMT,trn_gen
+ev_bus_generation,Bus EV,links_t,trn-elec-veh-bus,p1,kVMT,trn_gen
+lpg_bus_generation,Bus LPG,links_t,trn-lpg-veh-bus,p1,kVMT,trn_gen

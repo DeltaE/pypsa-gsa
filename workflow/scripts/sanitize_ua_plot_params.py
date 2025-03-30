@@ -65,13 +65,13 @@ def is_valid_axis(plots: pd.DataFrame, results: pd.DataFrame) -> bool:
     df1 = df[~df.xaxis.isin(valid_results)]
     if not df1.empty:
         invalid = set(df1.xaxis.to_list())
-        print(f"Invalide results of {invalid} in xaxis UA plots")
+        print(f"Invalid results of {invalid} in xaxis UA plots")
         return False
     
     df2 = df[~df.yaxis.isin(valid_results)]
     if not df2.empty:
         invalid = set(df2.xaxis.to_list())
-        print(f"Invalide results of {invalid} in yaxis UA plots")
+        print(f"Invalid results of {invalid} in yaxis UA plots")
         return False
         
     return True
