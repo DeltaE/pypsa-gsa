@@ -19,7 +19,7 @@ def is_valid_plot_types(plots: pd.DataFrame) -> bool:
 
     if not df.empty:
         bad_types = set(df.type.to_list())
-        print(f"Incorrect plot types of {bad_types}")
+        logger.error(f"Incorrect plot types of {bad_types}")
         return False
     else:
         return True
@@ -32,7 +32,7 @@ def is_unique_names(plots: pd.DataFrame) -> bool:
     df = df[df.duplicated("name")]
     if not df.empty:
         duplicates = set(df.name.to_list())
-        print(f"Duplicate definitions of {duplicates}")
+        logger.error(f"Duplicate definitions of {duplicates}")
         return False
     else:
         return True
@@ -43,16 +43,16 @@ def has_required_inputs(plots: pd.DataFrame) -> bool:
     df = plots.copy()
     
     if not all(df.name.notna()):
-        print("Provide name for all UA plots")
+        logger.error("Provide name for all UA plots")
         return False
     if not all(df.type.notna()):
-        print("Provide types for UA plots")
+        logger.error("Provide types for UA plots")
         return False
     if not all(df.xaxis.notna()):
-        print("Provide xaxis inputs for all UA plots")
+        logger.error("Provide xaxis inputs for all UA plots")
         return False
     if not all(df.yaxis.notna()):
-        print("Provide yaxis inputs for all UA plots")
+        logger.error("Provide yaxis inputs for all UA plots")
         return False
     return True
 
@@ -65,13 +65,13 @@ def is_valid_axis(plots: pd.DataFrame, results: pd.DataFrame) -> bool:
     df1 = df[~df.xaxis.isin(valid_results)]
     if not df1.empty:
         invalid = set(df1.xaxis.to_list())
-        print(f"Invalid results of {invalid} in xaxis UA plots")
+        logger.error(f"Invalid results of {invalid} in xaxis UA plots")
         return False
     
     df2 = df[~df.yaxis.isin(valid_results)]
     if not df2.empty:
         invalid = set(df2.xaxis.to_list())
-        print(f"Invalid results of {invalid} in yaxis UA plots")
+        logger.error(f"Invalid results of {invalid} in yaxis UA plots")
         return False
         
     return True

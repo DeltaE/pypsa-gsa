@@ -116,7 +116,7 @@ def get_gsa_tct_data(n: pypsa.Network) -> pd.DataFrame:
         max_value = round(max_value / cap, 5)
 
         if abs(min_value - max_value) < 0.0001:
-            print(f"No limits created for {name}")
+            logger.info(f"No limits created for {name}")
             continue
 
         gsa = [

@@ -73,7 +73,7 @@ def is_unique_names(results: pd.DataFrame) -> bool:
     df = df[df.duplicated("name")]
     if not df.empty:
         duplicates = set(df.name.to_list())
-        print(f"Duplicate definitions of {duplicates}")
+        logger.error(f"Duplicate definitions of {duplicates}")
         return False
     else:
         return True

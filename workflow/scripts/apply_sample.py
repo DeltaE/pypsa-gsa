@@ -198,8 +198,9 @@ def _is_valid_ref_value(value: Any, car: str, attr: str) -> bool:
     elif (attr == "efficiency2") and (car == "gas production"):
         return True
     # main condition to satisty
-    if value == np.nan or value == 0:
-        print(f"Invalid reference value of {value} for {attr} {car}")
+    # if value == np.nan or value == 0:
+    if value == np.nan:
+        logger.info(f"Invalid reference value of {value} for {attr} {car}")
         return False
     else:
         return True
@@ -658,20 +659,20 @@ if __name__ == "__main__":
         ces_f = snakemake.input.ces_f
         ev_policy_f = snakemake.input.ev_policy_f
     else:
-        param_file = "results/Testing2/ua/parameters.csv"
-        sample_file = "results/Testing2/ua/sample.csv"
-        set_values_file = "results/Testing2/ua/set_values.csv"
-        base_network_file = "results/Testing2/base.nc"
-        root_dir = Path("results/Testing2/ua/modelruns/")
+        param_file = "results/caiso/gsa/parameters.csv"
+        sample_file = "results/caiso/gsa/sample.csv"
+        set_values_file = ""
+        base_network_file = "results/caiso/base.nc"
+        root_dir = Path("results/caiso/gsa/modelruns/")
         meta_yaml = True
         meta_csv = True
-        scaled_sample_file = "results/Testing2/ua/scaled_sample.csv"
-        pop_f = "results/Testing2/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/Testing2/constraints/ng_domestic.csv"
-        ng_international_f = "results/Testing2/constraints/ng_international.csv"
-        rps_f = "results/Testing2/constraints/rps.csv"
-        ces_f = "results/Testing2/constraints/ces.csv"
-        ev_policy_f = "results/Testing2/constraints/ev_policy.csv"
+        scaled_sample_file = "results/caiso/gsa/scaled_sample.csv"
+        pop_f = "results/caiso/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso/constraints/ng_international.csv"
+        rps_f = "results/caiso/constraints/rps.csv"
+        ces_f = "results/caiso/constraints/ces.csv"
+        ev_policy_f = "results/caiso/constraints/ev_policy.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
