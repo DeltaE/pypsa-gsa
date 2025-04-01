@@ -9,7 +9,7 @@ def get_solver_options(wildards) -> dict[str,str|float]:
 rule solve_network:
     message: "Solving network"
     wildcard_constraints:
-        result="gsa|ua"
+        mode="gsa|ua"
     params:
         solver = config["solver"]["name"],
         solver_opts = get_solver_options,
@@ -37,6 +37,6 @@ rule solve_network:
         python = "logs/solve/{scenario}_{mode}_{run}_python.log",
         solver = "logs/solve/{scenario}_{mode}_{run}_solver.log",
     group:
-        "solve_{scenario}_{run}"
+        "solve_{scenario}_{mode}_{run}"
     script:
         "../scripts/solve.py"

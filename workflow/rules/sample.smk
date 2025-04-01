@@ -42,7 +42,7 @@ rule create_sample:
     benchmark:
         "benchmarks/create_sample/{scenario}_{mode}.txt"
     group:
-        "create_sample"
+        "create_and_apply_sample"
     script:
         "../scripts/create_sample.py"
 
@@ -82,7 +82,7 @@ rule apply_gsa_sample_to_network:
     benchmark:
         "benchmarks/apply_sample/{scenario}_{mode}.txt"
     group:
-        "apply_sample"
+        "create_and_apply_sample"
     log: 
         "logs/apply_sample/{scenario}_{mode}.log"
     script:
@@ -117,7 +117,7 @@ rule apply_ua_sample_to_network:
     benchmark:
         "benchmarks/apply_sample/{scenario}_{mode}.txt"
     group:
-        "apply_sample"
+        "create_and_apply_sample"
     log: 
         "logs/apply_sample/{scenario}_{mode}.log"
     script:

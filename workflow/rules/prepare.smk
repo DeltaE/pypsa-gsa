@@ -187,7 +187,7 @@ rule prepare_set_values:
     log: 
         "logs/prepare_set_values/{scenario}.log"
     group:
-        "params_uncertainity"
+        "prepare_data"
     script:
         "../scripts/set_ua_values.py"
 
@@ -208,7 +208,7 @@ rule prepare_ua_params:
     log: 
         "logs/prepare_ua_params/{scenario}.log"
     group:
-        "params_uncertainity"
+        "prepare_data"
     run:
         import pandas as pd
         df = pd.read_csv(input.parameters)
@@ -231,6 +231,6 @@ checkpoint sanitize_ua_plot_params:
     log: 
         "logs/prepare_ua_params/{scenario}.log"
     group:
-        "params_uncertainity"
+        "prepare_data"
     script:
         "../scripts/sanitize_ua_plot_params.py"
