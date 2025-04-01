@@ -1,6 +1,5 @@
 """Analyzes objective value results from model"""
 
-from math import ceil
 from SALib.analyze import morris as analyze_morris
 from SALib.plotting import morris as plot_morris
 import numpy as np

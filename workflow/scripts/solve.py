@@ -104,7 +104,7 @@ def add_land_use_constraint_perfect(n):
             > p_nom_max.groupby(level=[0, 1]).min()
         )
         if check.sum():
-            logger.warning(
+            logger.debug(
                 f"summed p_min_pu values at node larger than technical potential {check[check].index}",
             )
 
@@ -425,7 +425,7 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
     )
 
     if df.empty:
-        logger.warning("No co2 policies applied")
+        logger.debug("No co2 policies applied")
         return
 
     sectors = df.sector.unique()
@@ -439,7 +439,7 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
             years = [x for x in df_state.year.unique() if x in n.investment_periods]
 
             if not years:
-                logger.warning(
+                logger.debug(
                     f"No co2 policies applied for {sector} due to no defined years",
                 )
                 continue
@@ -479,7 +479,7 @@ def add_ng_import_export_limits(
                 try:
                     rhs = data.at[link, "rhs"] * multiplier
                 except KeyError:
-                    # logger.warning(f"Can not set gas import limit for {link}")
+                    # logger.debug(f"Can not set gas import limit for {link}")
                     continue
                 lhs = n.model["Link-p"].mul(weights).sel(snapshot=year, Link=link).sum()
 
@@ -510,7 +510,7 @@ def add_ng_import_export_limits(
                 try:
                     rhs = data.at[link, "rhs"] * multiplier
                 except KeyError:
-                    # logger.warning(f"Can not set gas import limit for {link}")
+                    # logger.debug(f"Can not set gas import limit for {link}")
                     continue
                 lhs = n.model["Link-p"].mul(weights).sel(snapshot=year, Link=link).sum()
 
@@ -1044,7 +1044,7 @@ if __name__ == "__main__":
     elif len(co2_sample) > 1:
         raise ValueError("Too many samples for co2L")
     else:
-        logger.warning("No CO2 Limits provided")
+        logger.debug("No CO2 Limits provided")
         extra_fn.pop("co2L")
 
     ###

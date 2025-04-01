@@ -216,6 +216,29 @@ def calc_difference(ref: float, sampled: float, car: str, attr: str) -> float:
     else:
         return abs(sampled - ref) / ref * 100
 
+def _apply_demand_response_marginal_cost(n: pypsa.Network, value: int | float) -> None:
+    """Applied demand response to both forward and backwards directions."""
+
+    df = getattr(n, "stores")
+
+    assert all(df[df.carrier == "demand_response"].marginal_cost_storage != 0)
+
+    fwd_slicer = df[
+        (df.carrier == "demand_response") & (df.marginal_cost_storage < 0)
+    ].index
+    bck_slicer = df[
+        (df.carrier == "demand_response") & (df.marginal_cost_storage > 0)
+    ].index
+
+    # forward demand reponse will have negative marginal cost
+
+    getattr(n, "stores").loc[fwd_slicer, "marginal_cost_storage"] = value * (-1)
+
+    # backwards demand response will have positive marginal cost
+
+    getattr(n, "stores").loc[bck_slicer, "marginal_cost_storage"] = value
+
+
 def _apply_static_sample(
     n: pypsa.Network, c: str, car: str, attr: str, value: int | float, absolute: bool
 ) -> dict[str, float]:
@@ -231,14 +254,17 @@ def _apply_static_sample(
         ref = getattr(n, c).loc[slicer, attr].mean()
         diff = calc_difference(ref, sampled, car, attr)
         # apply value
-        getattr(n, c).loc[slicer, attr] = value
+        if car == "demand_response":
+            _apply_demand_response_marginal_cost(n, value)
+        else:
+            getattr(n, c).loc[slicer, attr] = value
     else:
         # get metadata
         ref = getattr(n, c).loc[slicer, attr]
         if attr == "p_nom":  # only include existing capacity
             ref = ref[ref > 0]
             if ref.empty:
-                logger.warning(f"No exsiting p_nom for {car}")
+                logger.debug(f"No exsiting p_nom for {car}")
                 ref = 1 # temporary correction to avoid divide by zero 
             else:
                 ref = ref.mean()

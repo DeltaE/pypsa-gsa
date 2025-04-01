@@ -464,6 +464,8 @@ def is_valid_gshp(params: pd.DataFrame) -> bool:
 
 
 def is_valid_demand_response(params: pd.DataFrame) -> bool:
+    """As demand response sample needs to be modified for forward/backwards shifting."""
+    
     df = params.copy()
 
     df = df[df.carrier == "demand_response"]
@@ -473,9 +475,12 @@ def is_valid_demand_response(params: pd.DataFrame) -> bool:
     if len(df) != 1:
         logger.error("Can only define one uncertainity for demand response")
         return False
-    # elif df.loc[:, "range"].values[0] != "percent":
-    #     print("Must define demand response as a percentage")
-    #     return False
+    elif df.loc[:, "range"].values[0] != "absolute":
+        logger.error("Must define demand response in absolute terms")
+        return False
+    elif df.loc[:, "range"].unit[0] != "usd/mwh":
+        logger.error("Must define demand response in usd/mwh")
+        return False
     else:
         return True
 

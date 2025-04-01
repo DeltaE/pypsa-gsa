@@ -228,7 +228,7 @@ class EnergyDemand(EiaData):
         """Initializes data extractor."""
         if self.year < 2024:
             if self.scenario:
-                logger.warning("Can not apply AEO scenario to historical demand")
+                logger.debug("Can not apply AEO scenario to historical demand")
             return _HistoricalSectorEnergyDemand(self.sector, self.year, self.api)
         elif self.year >= 2024:
             aeo = "reference" if not self.scenario else self.scenario
@@ -1017,7 +1017,7 @@ class _StateEmissions(DataExtractor):
             )
         super().__init__(year, api_key)
         if self.year > 2021:
-            logger.warning(f"Emissions data only available until {2021}")
+            logger.debug(f"Emissions data only available until {2021}")
             self.year = 2021
 
     def build_url(self) -> str:
