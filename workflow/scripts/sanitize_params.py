@@ -478,7 +478,7 @@ def is_valid_demand_response(params: pd.DataFrame) -> bool:
     elif df.loc[:, "range"].values[0] != "absolute":
         logger.error("Must define demand response in absolute terms")
         return False
-    elif df.loc[:, "range"].unit[0] != "usd/mwh":
+    elif df.loc[:, "unit"].values[0] != "usd/mwh":
         logger.error("Must define demand response in usd/mwh")
         return False
     else:
