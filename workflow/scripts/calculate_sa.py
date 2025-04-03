@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import utils
 import matplotlib.pyplot as plt
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ if __name__ == "__main__":
         scaled = snakemake.params.scaled
         csv = snakemake.output.csv
         png = snakemake.output.png
+        configure_logging(snakemake)
     else:
         result_name = "com_ashp_capacity"
         parameters_f = "results/gsa/Testing/parameters.csv"

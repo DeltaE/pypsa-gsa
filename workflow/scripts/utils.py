@@ -4,6 +4,7 @@ from typing import Any
 import pandas as pd
 import pypsa
 from constants import NG_MWH_2_MMCF
+from pathlib import Path
 
 import logging
 logger = logging.getLogger(__name__)
@@ -81,6 +82,37 @@ def calculate_annuity(lifetime: int, dr: float | int):
         return dr / (1.0 - 1.0 / (1.0 + dr) ** lifetime)
     else:
         return 1 / lifetime
+    
+def configure_logging(snakemake, skip_handlers=False):
+    """
+    Configure the basic behaviour for the logging module.
+
+    Note: Must only be called once from the __main__ section of a script.
+    """
+    kwargs = snakemake.config.get("logging", dict()).copy()
+    kwargs.setdefault("level", "INFO")
+
+    if skip_handlers is False:
+        fallback_path = Path(__file__).parent.joinpath(
+            "..",
+            "logs",
+            f"{snakemake.rule}.log",
+        )
+        logfile = snakemake.log.get(
+            "python",
+            snakemake.log[0] if snakemake.log else fallback_path,
+        )
+        kwargs.update(
+            {
+                "handlers": [
+                    # Prefer the 'python' log, otherwise take the first log for each
+                    # Snakemake rule
+                    logging.FileHandler(logfile),
+                    logging.StreamHandler(),
+                ],
+            },
+        )
+    logging.basicConfig(**kwargs)
     
 #################
 ## Constraints ##

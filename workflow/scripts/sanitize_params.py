@@ -11,6 +11,7 @@ from constants import (
     CONSTRAINT_ATTRS,
     MMBTU_2_MWH,
 )
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -504,6 +505,7 @@ if __name__ == "__main__":
     if "snakemake" in globals():
         in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
+        configure_logging(snakemake)
     else:
         in_params = "config/parameters.csv"
         out_params = "results/Test/parameters.csv"
