@@ -50,6 +50,10 @@ rule all:
     shell:
         "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua']"
 
+###
+# Main execution
+###
+
 rule gsa:
     input:
         expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=GSA_MODELRUNS),
@@ -62,6 +66,22 @@ rule ua:
         expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
         expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=UA_SCATTERPLOTS),
         expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=UA_BARPLOTS),
+
+###
+# Testing solve resources on hpc
+###
+
+rule test_gsa:
+    input:
+        expand("results/{scenario}/gsa/modelruns/0/network.nc", scenario=SCENARIO)
+
+rule test_ua:
+    input:
+        expand("results/{scenario}/ua/modelruns/0/network.nc", scenario=SCENARIO)
+
+### 
+# Cleaning rules
+###
 
 rule clean_all:
     params:
