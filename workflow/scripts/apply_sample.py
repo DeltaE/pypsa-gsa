@@ -99,7 +99,7 @@ class MethaneLeakageCache:
         if not self.gwp:
             raise ValueError("gwp")
         elif not self.leakage:
-            raise ValueError("fom")
+            raise ValueError("leakage")
         else:
             return True
 
@@ -115,6 +115,7 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     sa_cars = df.carrier.unique()
     n_cars = n.carriers.index.to_list()
     n_cars.append("portfolio")  # for aggregating constraints
+    n_cars.extend(["leakage_upstream", "leakage_downstream"])  # ng leaks
 
     errors = []
 
@@ -334,17 +335,35 @@ def _apply_cached_capex(
 
 
 def _apply_cached_ch4_leakage(
-    n: pypsa.Network, car: str, data: dict[str, Any]
+    n: pypsa.Network, data: dict[str, Any], upstream: bool
 ) -> dict[str, float]:
     try:
         cache = MethaneLeakageCache(**data)
         leakage = cache.calculate_leakage()
     except ValueError as ex:
-        logger.error(f"Methane Leakage error with {car}")
+        logger.error("Methane Leakage error")
         raise ValueError(ex)
-    sampled = _apply_static_sample(
-        n, cache.component, car, "efficiency2", leakage, "absolute"
-    )
+
+    if upstream:  # applies sampled value to gas production of nat gas
+        sampled = _apply_static_sample(
+            n, cache.component, "gas production", "efficiency3", leakage, "absolute"
+        )
+    else:  # applies same sampled value to all end-users of nat gas
+        gas_buses = n.buses[n.buses.carrier == "gas"]
+        carriers = (
+            n.links[
+                (n.links.bus0.isin(gas_buses.index))
+                & ~(n.links.carrier.isin(["gas storage", "gas trade"]))
+            ]
+            .carrier.unique()
+            .tolist()
+        )
+        for car in carriers:
+            # sampled value will always be the same
+            sampled = _apply_static_sample(
+                n, cache.component, car, "efficiency3", leakage, "absolute"
+            )
+
     return sampled
 
 
@@ -614,14 +633,17 @@ def apply_sample(
 
     # as these values are intermediate, they are not part of the actual sample
     for car, data in cached.items():
-        if car == "gas production":
-            sampled = _apply_cached_ch4_leakage(n, car, data)
-            attr = "efficiency2"
+        if car == "leakage_upstream":
+            sampled = _apply_cached_ch4_leakage(n=n, data=data, upstream=True)
+            attr = "efficiency3"
+        elif car == "leakage_downstream":
+            sampled = _apply_cached_ch4_leakage(n=n, data=data, upstream=False)
+            attr = "efficiency3"
         else:
             sampled = _apply_cached_capex(n, car, data)
             attr = "capital_cost"
 
-        meta[str(name)] = {
+        meta[str(car)] = {
             "component": data["component"],
             "carrier": car,
             "attribute": attr,

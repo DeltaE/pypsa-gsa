@@ -83,4 +83,4 @@ rule clean_ua:
 
 rule make_dag:
     shell:
-        "snakemake all --dag | dot -Tpdf > dag.pdf"
+        "snakemake ua --dag | dot -Tpng > dag.png"

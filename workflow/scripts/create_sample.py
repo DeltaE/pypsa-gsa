@@ -43,7 +43,7 @@ if __name__ == "__main__":
         replicates = int(snakemake.params.replicates)
         sample_file = snakemake.output.sample_file
     else:
-        param_file = "results/Testing2/ua/parameters.csv"
+        param_file = "results/caiso/gsa/parameters.csv"
         replicates = 10
         sample_file = "sample.csv"
         method = "sobol"

@@ -88,10 +88,10 @@ if __name__ == "__main__":
         model_run = snakemake.wildcards.run
         csv = snakemake.output.csv
     else:
-        network = "results/updates/ua/modelruns/10/network.nc"
-        results_f = "results/updates/ua/results.csv"
-        csv = "results/Testing/ua/modelruns/10/results.csv"
-        model_run = 0
+        network = "results/caiso/ua/modelruns/10/network.nc"
+        results_f = "results/caiso/ua/results.csv"
+        csv = "results/caiso/ua/modelruns/10/results.csv"
+        model_run = 10
 
     n = pypsa.Network(network)
 

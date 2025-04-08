@@ -67,7 +67,6 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "fixed_cost",
         "occ",
         "vmt_per_year",
-        "efficiency2",
         "itc",
         "leakage",
         "gwp",
