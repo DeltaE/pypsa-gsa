@@ -2,6 +2,7 @@
 
 import pandas as pd
 import pypsa
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -87,6 +88,7 @@ if __name__ == "__main__":
         results_f = snakemake.input.results
         model_run = snakemake.wildcards.run
         csv = snakemake.output.csv
+        configure_logging(snakemake)
     else:
         network = "results/caiso/ua/modelruns/10/network.nc"
         results_f = "results/caiso/ua/results.csv"

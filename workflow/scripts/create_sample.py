@@ -3,6 +3,8 @@
 from SALib.sample import morris, latin, sobol
 import pandas as pd
 from utils import create_salib_problem
+from utils import configure_logging
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -42,6 +44,7 @@ if __name__ == "__main__":
         method = snakemake.params.method
         replicates = int(snakemake.params.replicates)
         sample_file = snakemake.output.sample_file
+        configure_logging(snakemake)
     else:
         param_file = "results/caiso/gsa/parameters.csv"
         replicates = 10

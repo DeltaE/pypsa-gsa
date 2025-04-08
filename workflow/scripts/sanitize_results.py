@@ -5,6 +5,7 @@ import pypsa
 import itertools
 from constants import VALID_RESULTS
 from sanitize_params import sanitize_component_name
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -85,6 +86,7 @@ if __name__ == "__main__":
         network = snakemake.input.network
         in_results = snakemake.params.results
         out_results = snakemake.output.results
+        configure_logging(snakemake)
     else:
         network = "results/Testing/base.nc"
         in_results = "config/results.csv"

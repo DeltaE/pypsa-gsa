@@ -20,6 +20,7 @@ from utils import (
     format_raw_ng_trade_data,
     get_ng_trade_links,
     get_urban_rural_fraction,
+    configure_logging
 )
 
 import logging
@@ -904,6 +905,7 @@ if __name__ == "__main__":
         tct_f = snakemake.input.tct_f
         ev_policy_f = snakemake.input.ev_policy_f
         constraints_meta = snakemake.input.constraints
+        configure_logging(snakemake)
     else:
         in_network = "results/EvPolicy/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"

@@ -16,6 +16,7 @@ from utils import (
     get_ng_trade_links,
     format_raw_ng_trade_data,
     get_urban_rural_fraction,
+    configure_logging
 )
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
@@ -706,6 +707,7 @@ if __name__ == "__main__":
         rps_f = snakemake.input.rps_f
         ces_f = snakemake.input.ces_f
         ev_policy_f = snakemake.input.ev_policy_f
+        configure_logging(snakemake)
     else:
         param_file = "results/caiso/gsa/parameters.csv"
         sample_file = "results/caiso/gsa/sample.csv"

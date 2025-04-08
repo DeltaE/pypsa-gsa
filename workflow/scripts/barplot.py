@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -50,6 +51,7 @@ if __name__ == "__main__":
         group = snakemake.wildcards.plot
         parameters_f = snakemake.input.params
         results_f = snakemake.input.results
+        configure_logging(snakemake)
     else:
         csvs = [
             "results/Testing/gsa/SA/objective_cost.csv",

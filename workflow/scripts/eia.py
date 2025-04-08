@@ -11,8 +11,10 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 from constants import POINTS_OF_ENTRY
+from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 API_BASE = "https://api.eia.gov/v2/"
@@ -184,6 +186,7 @@ class DataExtractor(ABC):
             {"series-description": str, "value": float, "units": str, "state": str},
         )
 
+
 class Emissions(EiaData):
     """State level emissions data."""
 
@@ -202,6 +205,7 @@ class Emissions(EiaData):
     def data_creator(self):
         """Initializes data extractor."""
         return _StateEmissions(self.sector, self.fuel, self.year, self.api)
+
 
 class EnergyDemand(EiaData):
     """
@@ -345,6 +349,7 @@ class Trade(EiaData):
                 recived_option=self.fuel,
             )
 
+
 class InstalledCapacity(EiaData):
     """Technology Capacity Installations."""
 
@@ -356,7 +361,7 @@ class InstalledCapacity(EiaData):
         year: int,
         api: str,
     ) -> None:
-        self.sector = sector 
+        self.sector = sector
         self.fuel = fuel
         self.scenario = scenario
         self.year = year
@@ -794,6 +799,7 @@ class _FutureCosts(DataExtractor):
         df = df[["series-description", "value", "units", "state"]].sort_index()
         return self._assign_dtypes(df)
 
+
 class _InternationalGasTrade(DataExtractor):
     """
     Gets imports/exports by point of entry.
@@ -929,13 +935,14 @@ class _DomesticGasTrade(DataExtractor):
         except IndexError:  # country level
             return description.split(" Natural Gas Pipeline")[0]
 
+
 class _PowerCapacity(DataExtractor):
     """Extracts projected power sector capacity AEO 2023."""
 
     # https://www.eia.gov/outlooks/aeo/assumptions/case_descriptions.php
     scenario_codes = AEO_SCENARIOS
 
-    # See here for definitions on what is in each fuel 
+    # See here for definitions on what is in each fuel
     # https://www.eia.gov/outlooks/aeo/data/browser/#/?id=9-AEO2023&cases=ref2023&sourcekey=0
     fuel_codes: ClassVar[dict[str, str]] = {
         "coal": "cl",
@@ -980,6 +987,7 @@ class _PowerCapacity(DataExtractor):
         df["state"] = "U.S."
         df = df[["series-description", "value", "units", "state"]].sort_index()
         return self._assign_dtypes(df)
+
 
 class _StateEmissions(DataExtractor):
     """State Level CO2 Emissions."""
@@ -1046,6 +1054,7 @@ class _StateEmissions(DataExtractor):
         )
 
         return self._assign_dtypes(df)
+
 
 if __name__ == "__main__":
     api = ""
