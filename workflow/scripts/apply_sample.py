@@ -674,8 +674,14 @@ def apply_load_shedding(n: pypsa.Network) -> None:
     - (Table ES1) https://www.osti.gov/servlets/purl/1172643
     """
 
-    # TODO: retrieve color and nice name from config
     n.add("Carrier", "load", color="#dd2e23", nice_name="Load shedding")
+
+    # Table ES1 - average of 1hr Cost per Unserved kWh over all customers
+    shed_cost = 106000
+
+    ###
+    # This applies at power sector level
+    ###
 
     buses_i = n.buses.query("carrier == 'AC'").index
 
@@ -685,11 +691,41 @@ def apply_load_shedding(n: pypsa.Network) -> None:
         " load",
         bus=buses_i,
         carrier="load",
-        marginal_cost=106000,  # Table ES1 - average of 1hr Cost per Unserved kWh over all customers
+        marginal_cost=shed_cost,
         p_nom=0,  # kW
         capital_cost=0,
         p_nom_extendable=True,
     )
+
+    ###
+    # This applies at LPG transport level
+    ###
+
+    buses1 = n.links[
+        (n.links.carrier.str.startswith("trn-"))
+        & (n.links.carrier.str.endswith("-veh"))
+        & (n.links.carrier.str.contains("-lpg-"))
+    ].bus1.to_list()
+
+    buses2 = n.links[
+        (n.links.carrier.str.startswith("trn-"))
+        & (n.links.carrier.str.endswith(("-air", "-rail", "-boat")))
+    ].bus1.to_list()
+
+    buses_i = buses1 + buses2
+
+    n.madd(
+        "Generator",
+        buses_i,
+        " load",
+        bus=buses_i,
+        carrier="load",
+        marginal_cost=shed_cost,
+        p_nom=0,
+        capital_cost=0,
+        p_nom_extendable=True,
+    )
+
 
 if __name__ == "__main__":
     if "snakemake" in globals():
