@@ -63,7 +63,13 @@ if __name__ == "__main__":
         assert len(yaxis) == 1
         yaxis_data = pd.read_csv(Path(root_dir, f"{yaxis[0]}.csv"), index_col="run")
         yaxis_data.columns = ["yvalue"]
-        
+
+        if yaxis[0] == "marginal_cost_carbon":
+            yaxis_data.yvalue *= -1  # just for nicer plotting
+
+        q01 = yaxis_data.quantile(0.01)
+        q99 = yaxis_data.quantile(0.99)
+
         dfs = []
         for xcsv in xaxis:
             temp = pd.read_csv(Path(root_dir, f"{xcsv}.csv"), index_col="run")
@@ -73,6 +79,12 @@ if __name__ == "__main__":
             dfs.append(temp)
             
         df = pd.concat(dfs)
+
+        # drop outliers
+
+        df["to_plot"] = (df.yvalue <= q99.values[0]) & (df.yvalue >= q01.values[0])
+        df = df[df.to_plot].drop(columns="to_plot")
+
         df["hue"] = df.hue.map(res_name_group.set_index("xaxis")["xlabel"])
         
         plot_data["xlabel"] = xaxis_label
