@@ -855,6 +855,7 @@ def solve_network(
         False,
     )
     options["assign_all_duals"] = solving_options.get("assign_all_duals", False)
+    options["multi_investment_periods"] = True  # needed for correct lifetimes
 
     if log:
         options["log_fn"] = log
