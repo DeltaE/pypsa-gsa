@@ -124,7 +124,7 @@ def get_gsa_tct_data(n: pypsa.Network) -> pd.DataFrame:
             f"tct_{name}",
             f"{name.capitalize()} Max Capacity",
             "generator",
-            ",".join(cars),
+            ";".join(cars),
             "tct",
             "absolute",
             "per_unit",

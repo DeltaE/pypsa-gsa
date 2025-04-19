@@ -1,12 +1,13 @@
 import pandas as pd
 from itertools import chain
 import sys
+from pathlib import Path
 
 configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua
+localrules: all, gsa, ua, generate, clean_all, clean_gsa, clean_ua, clean_generate
 
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
@@ -16,9 +17,16 @@ SCENARIO = config["scenario"]["name"]
 
 # only use groups/names, so its okay to not use sanitized values
 # Calculates GSA specific parameters
-GSA_PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
+if config["scenario"]["include_generated"]:
+    generated_f = f"results/{SCENARIO}/generated/{config['gsa']['parameters']}"
+    if not Path(generated_f).exists():
+        raise ValueError("Input data must first be generated")
+    GSA_PARAMETERS = pd.read_csv(generated_f)
+else:
+    GSA_PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
+
 GSA_RESULTS = pd.read_csv(config["gsa"]["results"])
-GSA_GROUPS = GSA_PARAMETERS.group.unique()
+GSA_GROUPS = [x for x in GSA_PARAMETERS.group.unique() if x not in config["gsa"]["remove"]]
 GSA_MODELRUNS = range((len(GSA_GROUPS) + 1) * config["gsa"]["replicates"])
 GSA_RESULT_FILES = list(set(GSA_RESULTS.name.to_list()))
 plots_temp = GSA_RESULTS.plots.dropna().str.split(";").to_list()
@@ -48,7 +56,7 @@ include: "rules/results.smk"
 
 rule all:
     shell:
-        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua']"
+        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua', 'snakemake generate']"
 
 ###
 # Main execution
@@ -56,16 +64,22 @@ rule all:
 
 rule gsa:
     input:
-        expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=GSA_MODELRUNS),
+        # expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=GSA_MODELRUNS),
         expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=GSA_RESULT_FILES),
         expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS),
         expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS)
 
 rule ua:
     input:
-        expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
+        # expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
         expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=UA_SCATTERPLOTS),
         expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=UA_BARPLOTS),
+
+# generates network sepecific TCT and CO2L constraints
+rule generate:
+    input:
+        f"results/{SCENARIO}/generated/{config['gsa']['parameters']}",
+        f"results/{SCENARIO}/generated/tct_aeo.csv",
 
 ###
 # Testing solve resources on hpc
@@ -100,6 +114,10 @@ rule clean_ua:
         scenario=config["scenario"]["name"]
     shell:
         "rm -rf results/{params.scenario}/ua/*"
+
+rule clean_generate:
+    shell:
+        "rm config/generated_parameters.csv"
 
 rule make_dag:
     shell:

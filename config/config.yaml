@@ -1,7 +1,8 @@
 
 # name of base pypsa network
 scenario: 
-  name: "caiso"
+  name: "caiso2"
+  include_generated: true # to include model specific tct and co2L data
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
@@ -14,6 +15,10 @@ gsa:
   results: config/results_gsa.csv # results to run SA over
   replicates: 10 
   scale: True # Scale Elementary Effects 
+  remove: # remove these **groups** from the gsa, but retain in master sample
+  - ng_leakage_upstream
+  - ng_leakage_downstream
+  - ng_gwp
 
 uncertainity:
   # general scaling guidlines
@@ -22,7 +27,7 @@ uncertainity:
   # lhs -> N = r -> N ~ > 10d
   sample: lhs # (lhs|sobol)
   replicates: 600
-  parameters: # index names from parameters csv to include in sample
+  parameters: # **index names** from parameters csv to include in sample
   - capex_com_elec_water_heater
   - capex_res_elec_water_heater
   - eff_trn_lpg_lgt

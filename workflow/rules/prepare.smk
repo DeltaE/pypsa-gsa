@@ -50,11 +50,17 @@ rule process_reeds_policy:
     script:
         "../scripts/rps.py"
         
+def get_extra_tct_data(wildards):
+    if config["scenario"]["include_generated"]:
+        return "results/{scenario}/generated/tct_aeo.csv"
+    else:
+        return []
 
 rule copy_tct_data:
     message: "Copying TCT data"
     input:
-        csv="resources/policy/technology_limits.csv"
+        base="resources/policy/technology_limits.csv",
+        extras=get_extra_tct_data
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
@@ -62,8 +68,17 @@ rule copy_tct_data:
         runtime=1
     group:
         "prepare_data"
-    shell:
-        "cp {input.csv} {output.csv}"
+    run:
+        import shutil
+        import pandas as pd
+
+        if input.extras:
+            base = pd.read_csv(input.base)
+            extras = pd.read_csv(input.extras)
+            df = pd.concat([base, extras])
+            df.to_csv(output.csv)
+        else:
+            shutil(input.base, output.base)
 
 rule copy_ev_policy_data:
     message: "Copying EV Policy data"
@@ -78,6 +93,7 @@ rule copy_ev_policy_data:
         "prepare_data"
     shell:
         "cp {input.csv} {output.csv}"
+
 
 rule retrieve_natural_gas_data:
     message: "Retrieving import/export natural gas data"
@@ -100,10 +116,16 @@ rule retrieve_natural_gas_data:
     script:
         "../scripts/retrieve_ng_data.py"
 
+def get_input_parameters_file(wildards):
+    if config["scenario"]["include_generated"]:
+        return f"results/{wildards.scenario}/generated/{config['gsa']['parameters']}"
+    else:
+        return config["gsa"]["parameters"]
+
 rule sanitize_parameters:
     message: "Sanitizing parameters"
     input:
-        parameters=config["gsa"]["parameters"]
+        parameters=get_input_parameters_file
     output:
         parameters="results/{scenario}/gsa/parameters.csv"
     log: 
@@ -118,6 +140,7 @@ rule sanitize_parameters:
     script:
         "../scripts/sanitize_params.py"
 
+
 def get_raw_result_path(wildards):
     if wildards.mode == "gsa":
         return config["gsa"]["results"]
@@ -125,6 +148,7 @@ def get_raw_result_path(wildards):
          return config["uncertainity"]["results"]
     else:
         raise ValueError(f"Invalid input {wildards.mode} for raw result path.")
+
 
 checkpoint sanitize_results:
     message: "Sanitizing results"
@@ -148,6 +172,7 @@ checkpoint sanitize_results:
     script:
         "../scripts/sanitize_results.py"
 
+
 rule process_natural_gas:
     message: "Filtering constraint files"
     input:
@@ -169,7 +194,8 @@ rule process_natural_gas:
     script:
         "../scripts/process_ng.py"
 
-# for the uncertainity characterization
+
+# for the uncertainity propogation
 rule prepare_set_values:
     message: "Setting static paramters for the uncertainity."
     params:
@@ -190,6 +216,7 @@ rule prepare_set_values:
         "prepare_data"
     script:
         "../scripts/set_ua_values.py"
+
 
 rule prepare_ua_params:
     message: "Getting parameters for the uncertainity sample."
@@ -215,6 +242,7 @@ rule prepare_ua_params:
         df = df[df.name.isin(params.to_sample)]
         assert len(df) == len(params.to_sample)
         df.to_csv(output.parameters, index=False)
+
 
 checkpoint sanitize_ua_plot_params:
     message: "Sanitizing uncertainity analysis plotting parameters."

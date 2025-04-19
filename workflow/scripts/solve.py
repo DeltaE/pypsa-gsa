@@ -908,19 +908,19 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/EvPolicy/gsa/modelruns/0/n.nc"
+        in_network = "results/caiso2/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
-        pop_f = "results/EvPolicy/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/EvPolicy/constraints/ng_domestic.csv"
-        ng_international_f = "results/EvPolicy/constraints/ng_international.csv"
-        rps_f = "results/EvPolicy/constraints/rps.csv"
-        ces_f = "results/EvPolicy/constraints/ces.csv"
-        tct_f = "results/EvPolicy/constraints/tct.csv"
-        ev_policy_f = "results/EvPolicy/constraints/ev_policy.csv"
-        constraints_meta = "results/EvPolicy/gsa/modelruns/0/constraints.csv"
+        pop_f = "results/caiso2/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso2/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso2/constraints/ng_international.csv"
+        rps_f = "results/caiso2/constraints/rps.csv"
+        ces_f = "results/caiso2/constraints/ces.csv"
+        tct_f = "results/caiso2/constraints/tct.csv"
+        ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
+        constraints_meta = "results/caiso2/gsa/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
