@@ -1,2 +1,0 @@
-name,group,nice_name,component,carrier,attribute,range,unit,min_value,max_value,source,notes
-emission_limit,emission_limit,Emission Limit,store,co2,co2L,absolute,mmt,194.42,233.31,https://www.eia.gov/outlooks/aeo/,40 to 50 % reduction from 2005 levels

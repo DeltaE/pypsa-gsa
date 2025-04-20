@@ -1,9 +1,0 @@
-name,group,nice_name,component,carrier,attribute,range,unit,min_value,max_value,source,notes
-tct_biomass,tct_biomass,Biomass Max Capacity,generator,biomass,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_geothermal,tct_geothermal,Geothermal Max Capacity,generator,geothermal,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_nuclear,tct_nuclear,Nuclear Max Capacity,generator,nuclear,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_wind,tct_wind,Wind Max Capacity,generator,"onwind,offwind_floating",tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_solar,tct_solar,Solar Max Capacity,generator,solar,tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_hydro,tct_hydro,Hydro Max Capacity,generator,hydro,tct,absolute,per_unit,1.0,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_ccgt,tct_ccgt,Ccgt Max Capacity,generator,"CCGT,CCGT-95CCS",tct,absolute,per_unit,1.05,1.18,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_ocgt,tct_ocgt,Ocgt Max Capacity,generator,OCGT,tct,absolute,per_unit,1.65,1.89,https://www.eia.gov/outlooks/aeo/,See notebook in repository
