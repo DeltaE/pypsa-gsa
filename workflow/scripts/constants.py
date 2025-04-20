@@ -71,8 +71,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "leakage",
         "gwp",
     ],
-    # "generators": ["tct", "rps", "ces", "discount_rate", "fixed_cost", "occ", "itc"],
-    "generators": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
+    "generators": ["tct", "discount_rate", "fixed_cost", "occ", "itc", "rps", "ces"],
     "stores": ["co2L"],
     "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
     "lines": [],
@@ -98,8 +97,8 @@ CONSTRAINT_ATTRS = [
     "tct",
     "co2L",
     "ev_policy",
-    # "rps",
-    # "ces",
+    "rps",
+    "ces",
 ]
 
 VALID_RANGES = ["percent", "absolute"]

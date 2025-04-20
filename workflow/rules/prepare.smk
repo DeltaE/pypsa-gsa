@@ -78,7 +78,7 @@ rule copy_tct_data:
             df = pd.concat([base, extras])
             df.to_csv(output.csv)
         else:
-            shutil(input.base, output.base)
+            shutil.copy(input.base, output.csv)
 
 rule copy_ev_policy_data:
     message: "Copying EV Policy data"
