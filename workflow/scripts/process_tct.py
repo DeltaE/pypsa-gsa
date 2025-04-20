@@ -76,8 +76,11 @@ def _get_current_capactity(n: pypsa.Network, cars: list[str]) -> float:
     return round(gens + links, 5)
 
 
-def get_tct_data(n: pypsa.Network) -> pd.DataFrame:
+def get_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFrame:
     """Gets TCT constraint data."""
+
+    if not ccs_limit:
+        ccs_limit = 0
 
     planning_year = n.investment_periods[0]
 
@@ -94,11 +97,19 @@ def get_tct_data(n: pypsa.Network) -> pd.DataFrame:
         tct = [f"tct_{name}", planning_year, "all", ",".join(cars), "", ref_cap]
         data.append(tct)
 
+        if name == "CCGT":
+            ccs_cap = round(ref_cap * ccs_limit / 100, 5)
+            tct = [f"tct_{name}_ccs", planning_year, "all", "CCGT-95CCS", "", ccs_cap]
+            data.append(tct)
+
     return pd.DataFrame(data, columns=TCT_COLUMNS)
 
 
-def get_gsa_tct_data(n: pypsa.Network) -> pd.DataFrame:
+def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFrame:
     """Gets formatted TCT data to pass into GSA."""
+
+    if not ccs_limit:
+        ccs_limit = 0
 
     data = []
 
@@ -135,6 +146,25 @@ def get_gsa_tct_data(n: pypsa.Network) -> pd.DataFrame:
         ]
         data.append(gsa)
 
+        if name == "ccgt":
+            min_value = round(min_value * ccs_limit / 100, 5)
+            max_value = round(max_value * ccs_limit / 100, 5)
+            gsa = [
+                f"tct_{name}_ccs",
+                f"tct_{name}_ccs",
+                f"{name.capitalize()}-95CCS Max Capacity",
+                "generator",
+                "CCGT-95CCS",
+                "tct",
+                "absolute",
+                "per_unit",
+                min_value,
+                max_value,
+                "Assumed in config file",
+                "",
+            ]
+            data.append(gsa)
+
     return pd.DataFrame(
         data,
         columns=GSA_COLUMNS,
@@ -143,13 +173,15 @@ def get_gsa_tct_data(n: pypsa.Network) -> pd.DataFrame:
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        network = snakemake.params.network
+        network = snakemake.input.network
         tct_aeo_f = snakemake.output.tct_aeo
         tct_gsa_f = snakemake.output.tct_gsa
+        ccs_limit = snakemake.params.ccs_limit  # as a percentage of max ccgt cap
     else:
         network = ""
         tct_aeo_f = ""
         tct_gsa_f = ""
+        ccs_limit = 50  # as a percentage of max ccgt cap
 
     n = pypsa.Network(network)
     assert len(n.investment_periods) == 1

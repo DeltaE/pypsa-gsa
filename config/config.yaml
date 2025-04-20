@@ -1,8 +1,9 @@
 
 # name of base pypsa network
 scenario: 
-  name: "caiso2"
-  include_generated: true # to include model specific tct and co2L data
+  name: "caiso3"
+  include_generated: false # to include model specific tct and co2L data
+  ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget. 
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
@@ -10,15 +11,23 @@ pypsa_usa:
   pop_layout: "caiso/pop_layout_elec_s12_c4m.csv"
   era5_year: 2018
 
+# write out GSA associated metadata with each run
+metadata:
+  csv: True
+  yaml: True
+  networks: True # keep solved networks 
+
+# config options for data that is generated
+generated:
+  co2L_min: 40 # as percentage of 2005 level emissions
+  co2L_max: 50 # as percentage of 2005 level emissions
+  ccgtccs_max: 50 # as a percentage of max natgas capacity 
+
 gsa:
   parameters: config/parameters.csv 
   results: config/results_gsa.csv # results to run SA over
   replicates: 10 
   scale: True # Scale Elementary Effects 
-  remove: # remove these **groups** from the gsa, but retain in master sample
-  - ng_leakage_upstream
-  - ng_leakage_downstream
-  - ng_gwp
 
 uncertainity:
   # general scaling guidlines
@@ -48,15 +57,7 @@ solver:
   name: gurobi # (cbc|gurobi|cplex|highs)
   options: gurobi-default # see solving config
 
-# write out GSA associated metadata with each run
-metadata:
-  csv: True
-  yaml: True
 
-# config options for data that is generated
-generated:
-  co2L_min: 40 # as percentage of 2005 level emissions 
-  co2L_max: 50 # as percentage of 2005 level emissions
 
 
 

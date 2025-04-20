@@ -3,6 +3,8 @@
 rule generate_tct_data:
     message: "Generating TCT data based on the AEO"
     params:
+        ccs_limit = config["generated"]["ccgtccs_max"]
+    input:
         network = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
         tct_aeo = "results/{scenario}/generated/tct_aeo.csv",
