@@ -286,14 +286,6 @@ itc_hydro,itc_hydro,ITC Hydro,generator,hydro,itc,absolute,percent,0,30,https://
 itc_4hrbat,itc_battery,ITC Battery,StorageUnit,4hr_battery_storage,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 itc_8hrbat,itc_battery,ITC Battery,StorageUnit,8hr_battery_storage,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 itc_nuclear,itc_nuclear,ITC Nuclear,generator,nuclear,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
-tct_biomass,tct_biomass,Biomass Max Capacity,generator,biomass,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_geothermal,tct_geothermal,Geothermal Max Capacity,generator,geothermal,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_nuclear,tct_nuclear,Nuclear Max Capacity,generator,nuclear,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_wind,tct_wind,Wind Max Capacity,generator,onwind;offwind_floating,tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_solar,tct_solar,Solar Max Capacity,generator,solar,tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_hydro,tct_hydro,Hydro Max Capacity,generator,hydro,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_ccgt,tct_ccgt,Ccgt Max Capacity,generator,CCGT;CCGT-95CCS,tct,absolute,per_unit,1.05,1.18,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_ocgt,tct_ocgt,Ocgt Max Capacity,generator,OCGT,tct,absolute,per_unit,1.65,1.89,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 discount_rate_res_gas_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-gas-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_lpg_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-oil-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_elec_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-elec-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
@@ -335,9 +327,9 @@ lpg_cost,lpg_cost,LPG Fuel Cost,store_t,lpg,marginal_cost,percent,percent,-28.5,
 nuclear_cost,nuclear_cost,Uranium Fuel Cost,generator,nuclear,marginal_cost,percent,percent,-0.3,0.3,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 demand_response,demand_response,Demand Response,store,demand_response,marginal_cost_storage,absolute,USD/mwh,123.8,144.2,https://www.eia.gov/outlooks/aeo/,min/max of 2030 electrical price to all consumers
 load_shedding,load_shedding,Load Shedding,generator,load,marginal_cost,absolute,USD/mwh,90666,825400,https://www.osti.gov/servlets/purl/1172643,Table ES-1. Min/max average of over all timr frames
+carbon_shedding,carbon_shedding,Carbon Shedding,store,co2_shed,marginal_cost,absolute,USD/T,75,100,https://www.ipcc.ch/site/assets/uploads/2018/03/Chapter-10-Mitigation-Potential-and-Costs-1.pdf,Table 10.9. Estimated lower bound
 transmission_expansion,transmission_expansion,Transmission Expansion,link,AC,lv,absolute,per_unit,0,0.064,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario (6.4%)
 transmission_itl,transmission_itl,Transmission Flows,link,AC,p_nom,percent,percent,-1,1,https://arxiv.org/abs/2308.03612,Assumed as no uncertainity given
-emission_limit,emission_limit,Emission Limit,store,co2,co2L,absolute,mmt,194.42,233.31,https://www.eia.gov/outlooks/aeo/,40 to 50 % reduction from 2005 levels
 ev_policy_lgt_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-lgt,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_med_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-med,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_hvy_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-hvy,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given

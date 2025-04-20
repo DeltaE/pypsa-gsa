@@ -111,6 +111,7 @@ VALID_UNITS = [
     "usd/mw",
     "usd/mwh",
     "usd/kvmt",
+    "usd/T",
     "kvmt/year",
     "kvmt/mwh",
     "years",
