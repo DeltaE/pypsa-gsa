@@ -145,18 +145,6 @@ def add_technology_capacity_target_constraints(
     Each constraint can be designated for a specified planning horizon in multi-period models.
     Opts and path for technology_capacity_targets.csv must be defined in config.yaml.
     Default file is available at config/policy_constraints/technology_capacity_targets.csv.
-
-    Parameters
-    ----------
-    n : pypsa.Network
-    config : dict
-
-    Example
-    -------
-    scenario:
-        opts: [Co2L-TCT-24H]
-    electricity:
-        technology_capacity_target: config/policy_constraints/technology_capacity_target.csv
     """
 
     tct_data = data.copy()
@@ -375,36 +363,39 @@ def add_RPS_constraints(
             )
 
 
-def add_sector_co2_constraints(n: pypsa.Network, sample: float):
-    """
-    Adds sector co2 constraints.
-
-    Parameters
-    ----------
-        n : pypsa.Network
-        config : dict
-    """
+def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: bool):
+    """Adds sector co2 constraints."""
 
     def apply_national_limit(
-        n: pypsa.Network, year: int, value: float, sector: str | None = None
+        n: pypsa.Network,
+        year: int,
+        value: float,
+        include_ch4: bool,
+        sector: str | None = None,
     ):
         """For every snapshot, sum of co2 and ch4 must be less than limit."""
         if sector:
-            stores = n.stores[
-                (
-                    (n.stores.index.str.endswith(f"{sector}-co2"))
-                    | (n.stores.index.str.endswith(f"{sector}-ch4"))
-                )
-            ].index
+            if include_ch4:
+                stores = n.stores[
+                    (
+                        (n.stores.index.str.endswith(f"{sector}-co2"))
+                        | (n.stores.index.str.endswith(f"{sector}-ch4"))
+                    )
+                ].index
+            else:
+                stores = n.stores[n.stores.index.str.endswith(f"{sector}-co2")].index
             name = f"co2_limit-{year}-{sector}"
             log_statement = f"Adding national {sector} co2 Limit in {year} of"
         else:
-            stores = n.stores[
-                (
-                    (n.stores.index.str.endswith("-co2"))
-                    | (n.stores.index.str.endswith("-ch4"))
-                )
-            ].index
+            if include_ch4:
+                stores = n.stores[
+                    (
+                        (n.stores.index.str.endswith("-co2"))
+                        | (n.stores.index.str.endswith("-ch4"))
+                    )
+                ].index
+            else:
+                stores = n.stores[n.stores.index.str.endswith("-co2")].index
             name = f"co2_limit-{year}"
             log_statement = f"Adding national co2 Limit in {year} of"
 
@@ -454,9 +445,9 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
 
                 if state.lower() == "all":
                     if sector == "all":
-                        apply_national_limit(n, year, value)
+                        apply_national_limit(n, year, value, include_ch4)
                     else:
-                        apply_national_limit(n, year, value, sector)
+                        apply_national_limit(n, year, value, include_ch4, sector)
                 else:
                     raise ValueError(state.lower())
 
@@ -767,7 +758,9 @@ def extra_functionality(n, sns):
             n, opts["ev_gen"]["data"], opts["ev_gen"]["sample"]
         )
     if "co2L" in opts:
-        add_sector_co2_constraints(n, opts["co2L"]["sample"])
+        add_sector_co2_constraints(
+            n, opts["co2L"]["sample"], opts["co2L"]["include_ch4"]
+        )
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
     if "ng_limits" in opts:
@@ -906,6 +899,7 @@ if __name__ == "__main__":
         tct_f = snakemake.input.tct_f
         ev_policy_f = snakemake.input.ev_policy_f
         constraints_meta = snakemake.input.constraints
+        include_ch4 = snakemake.params.include_ch4
         configure_logging(snakemake)
     else:
         in_network = "results/caiso2/gsa/modelruns/0/n.nc"
@@ -921,6 +915,7 @@ if __name__ == "__main__":
         tct_f = "results/caiso2/constraints/tct.csv"
         ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
         constraints_meta = "results/caiso2/gsa/modelruns/0/constraints.csv"
+        include_ch4 = False
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1039,6 +1034,8 @@ if __name__ == "__main__":
     # Carbon Limit Constraint
     ###
     extra_fn["co2L"] = {}
+
+    extra_fn["co2L"]["include_ch4"] = include_ch4
 
     co2_sample = constraints[constraints.attribute == "co2L"].round(5)
 

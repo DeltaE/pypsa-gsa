@@ -17,7 +17,7 @@ SCENARIO = config["scenario"]["name"]
 
 # only use groups/names, so its okay to not use sanitized values
 # Calculates GSA specific parameters
-if config["scenario"]["include_generated"]:
+if config["scenario"]["include_generated"]: # gets model specific params
     generated_f = f"results/{SCENARIO}/generated/{config['gsa']['parameters']}"
     if not Path(generated_f).exists():
         raise ValueError("Input data must first be generated")
@@ -25,8 +25,13 @@ if config["scenario"]["include_generated"]:
 else:
     GSA_PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
 
+if config["scenario"]["ch4"]: # remove ch4 leakage from params if not tracking
+    GSA_GROUPS = GSA_PARAMETERS.group.unique().tolist()
+else:
+    to_remove = ["ng_leakage_upstream", "ng_leakage_downstream", "ng_gwp"]
+    GSA_GROUPS = [x for x in GSA_PARAMETERS.group.unique() if x not in to_remove]
+
 GSA_RESULTS = pd.read_csv(config["gsa"]["results"])
-GSA_GROUPS = [x for x in GSA_PARAMETERS.group.unique() if x not in config["gsa"]["remove"]]
 GSA_MODELRUNS = range((len(GSA_GROUPS) + 1) * config["gsa"]["replicates"])
 GSA_RESULT_FILES = list(set(GSA_RESULTS.name.to_list()))
 plots_temp = GSA_RESULTS.plots.dropna().str.split(";").to_list()
