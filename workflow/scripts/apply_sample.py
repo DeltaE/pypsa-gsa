@@ -701,31 +701,57 @@ def apply_load_shedding(n: pypsa.Network) -> None:
     # This applies at LPG transport level
     ###
 
-    buses1 = n.links[
-        (n.links.carrier.str.startswith("trn-"))
-        & (n.links.carrier.str.endswith("-veh"))
-        & (n.links.carrier.str.contains("-lpg-"))
-    ].bus1.to_list()
+    # buses1 = n.links[
+    #     (n.links.carrier.str.startswith("trn-"))
+    #     & (n.links.carrier.str.endswith("-veh"))
+    #     & (n.links.carrier.str.contains("-lpg-"))
+    # ].bus1.to_list()
 
-    buses2 = n.links[
-        (n.links.carrier.str.startswith("trn-"))
-        & (n.links.carrier.str.endswith(("-air", "-rail", "-boat")))
-    ].bus1.to_list()
+    # buses2 = n.links[
+    #     (n.links.carrier.str.startswith("trn-"))
+    #     & (n.links.carrier.str.endswith(("-air", "-rail", "-boat")))
+    # ].bus1.to_list()
 
-    buses_i = buses1 + buses2
+    # buses_i = buses1 + buses2
+
+    # n.madd(
+    #     "Generator",
+    #     buses_i,
+    #     " load",
+    #     bus=buses_i,
+    #     carrier="load",
+    #     marginal_cost=shed_cost,
+    #     p_nom=0,
+    #     capital_cost=0,
+    #     p_nom_extendable=True,
+    # )
+
+def apply_carbon_shedding(n: pypsa.Network) -> None:
+    """Marginal Abatement Cost Curves
+    
+    (Table 10.9) 
+    https://www.ipcc.ch/site/assets/uploads/2018/03/Chapter-10-Mitigation-Potential-and-Costs-1.pdf
+    """
+
+    # CARRIER CAN NOT END WITH '-co2' AS EMISSION LIMIT CONSTRAINT FILTERS BY THIS
+    n.add("Carrier", "co2_shed", color="#dd2e23", nice_name="CO2 shedding")
+
+    # Upper bound estimate from table 10.9 for 2030 USA 
+    shed_cost = 100 # $ / T CO2eq
+
+    buses_i = n.buses[n.buses.carrier == "co2"].index
 
     n.madd(
-        "Generator",
+        "Store",
         buses_i,
-        " load",
+        " co2_shed",
         bus=buses_i,
-        carrier="load",
+        carrier="co2_shed",
         marginal_cost=shed_cost,
-        p_nom=0,
+        e_nom = 0, # T 
         capital_cost=0,
-        p_nom_extendable=True,
+        e_nom_extendable=True,
     )
-
 
 if __name__ == "__main__":
     if "snakemake" in globals():
@@ -765,6 +791,7 @@ if __name__ == "__main__":
     base_n = pypsa.Network(base_network_file)
 
     apply_load_shedding(base_n)
+    apply_carbon_shedding(base_n)
 
     # check carrier here as it requires reading in network
     assert is_valid_carrier(base_n, params)

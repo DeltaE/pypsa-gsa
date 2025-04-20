@@ -1,4 +1,4 @@
-"""Rules that generate data, which are not used in the main GSA workflow"""
+"""Rules that generate data, which are not used in the main GSA/UA workflow"""
 
 rule generate_tct_data:
     message: "Generating TCT data based on the AEO"
