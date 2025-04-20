@@ -97,7 +97,7 @@ def get_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFra
         tct = [f"tct_{name}", planning_year, "all", ",".join(cars), "", ref_cap]
         data.append(tct)
 
-        if name == "CCGT":
+        if name == "ccgt":
             ccs_cap = round(ref_cap * ccs_limit / 100, 5)
             tct = [f"tct_{name}_ccs", planning_year, "all", "CCGT-95CCS", "", ccs_cap]
             data.append(tct)
@@ -185,8 +185,8 @@ if __name__ == "__main__":
 
     n = pypsa.Network(network)
     assert len(n.investment_periods) == 1
-    tct_aeo = get_tct_data(n)
-    tct_gsa = get_gsa_tct_data(n)
+    tct_aeo = get_tct_data(n, ccs_limit)
+    tct_gsa = get_gsa_tct_data(n, ccs_limit)
 
     tct_aeo.to_csv(tct_aeo_f, index=False)
     tct_gsa.to_csv(tct_gsa_f, index=False)
