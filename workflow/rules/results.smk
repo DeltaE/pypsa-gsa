@@ -166,7 +166,7 @@ rule heatmap:
     group:
         "results"
     script:
-        "../scripts/heatmap.py"
+        "../scripts/plot_gsa_heatmap.py"
 
 rule barplot:
     message:
@@ -187,7 +187,7 @@ rule barplot:
     group:
         "results"
     script:
-        "../scripts/barplot.py"
+        "../scripts/plot_gsa_barplot.py"
 
 ###
 # UA RULES

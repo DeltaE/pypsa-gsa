@@ -13,7 +13,7 @@ rule generate_tct_data:
     group:
         "generate_data"
     script:
-        "../scripts/generate_tct.py"
+        "../scripts/process_tct.py"
 
 rule retrieve_co2L_data:
     message: "Retrieving State level CO2 data."
@@ -46,7 +46,7 @@ rule generate_co2L_data:
     group:
         "generate_data"
     script:
-        "../scripts/generate_co2L.py"
+        "../scripts/process_co2L.py"
 
 rule append_generated_parameters:
     message: "Appending generated GSA parameters."

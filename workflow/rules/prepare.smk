@@ -48,7 +48,7 @@ rule process_reeds_policy:
     benchmark:
         "benchmarks/process_reeds/{scenario}_{policy}.txt"
     script:
-        "../scripts/rps.py"
+        "../scripts/process_rps.py"
         
 def get_extra_tct_data(wildards):
     if config["scenario"]["include_generated"]:
