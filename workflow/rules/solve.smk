@@ -14,7 +14,7 @@ rule solve_network:
         solver = config["solver"]["name"],
         solver_opts = get_solver_options,
         solving_opts = config["solving"]["options"],
-        pypsa_usa_opts = config["pypsa_usa"]
+        pypsa_usa_opts = config["pypsa_usa"],
         include_ch4 = config["scenario"]["ch4"]
     input:
         network = "results/{scenario}/{mode}/modelruns/{run}/n.nc",
