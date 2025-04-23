@@ -250,7 +250,7 @@ def add_technology_capacity_target_constraints(
 
         if not lhs_link_ext.empty:
             grouper_l = pd.concat(
-                [lhs_link_ext.bus.map(n.buses.country), lhs_link_ext.carrier],
+                [lhs_link_ext.bus1.map(n.buses.country), lhs_link_ext.carrier],
                 axis=1,
             ).rename_axis(
                 "Link-ext",
