@@ -14,14 +14,14 @@ def get_replicates(wildards):
     else:
         raise ValueError(f"{wildards.mode} is not valid for selecing replicates.")
 
-def get_set_values(wildards):
+def get_static_values(wildards):
     """For the uncertainity analysis, we lock a bunch of values to the average of the unceratinity range."""
     if wildards.mode == "gsa":
         return []
     elif wildards.mode == "ua":
         return "results/{scenario}/ua/set_values.csv"
     else:
-        raise ValueError(f"{wildards.mode} is not valid for set values.")
+        raise ValueError(f"{wildards.mode} is not valid for static values.")
 
 rule create_sample:
     message: "Creating sample"
@@ -63,7 +63,7 @@ rule apply_gsa_sample_to_network:
         meta_csv = config["metadata"]["csv"],
     input: 
         parameters = "results/{scenario}/{mode}/parameters.csv",
-        set_values_file = get_set_values,
+        set_values_file = get_static_values,
         sample_file = "results/{scenario}/{mode}/sample.csv",
         network = "results/{scenario}/base.nc",
         pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
@@ -98,7 +98,7 @@ rule apply_ua_sample_to_network:
         meta_csv = config["metadata"]["csv"],
     input: 
         parameters = "results/{scenario}/{mode}/parameters.csv",
-        set_values_file = get_set_values,
+        set_values_file = get_static_values,
         sample_file = "results/{scenario}/{mode}/sample.csv",
         network = "results/{scenario}/base.nc",
         pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",

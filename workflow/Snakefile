@@ -25,11 +25,17 @@ if config["scenario"]["include_generated"]: # gets model specific params
 else:
     GSA_PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
 
-if config["scenario"]["ch4"]: # remove ch4 leakage from params if not tracking
+# TODO: This messes up the counting of samples as the parameter.csv still has ch4
+# also, if we treat ch4 as a set value, then the ua parameter csv will miss that
+"""
+# if not tracking ch4, treat it as a static value 
+if config["scenario"]["ch4"]: 
     GSA_GROUPS = GSA_PARAMETERS.group.unique().tolist()
 else:
     to_remove = ["ng_leakage_upstream", "ng_leakage_downstream", "ng_gwp"]
     GSA_GROUPS = [x for x in GSA_PARAMETERS.group.unique() if x not in to_remove]
+"""
+GSA_GROUPS = GSA_PARAMETERS.group.unique().tolist()
 
 GSA_RESULTS = pd.read_csv(config["gsa"]["results"])
 GSA_MODELRUNS = range((len(GSA_GROUPS) + 1) * config["gsa"]["replicates"])

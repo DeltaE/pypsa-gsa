@@ -771,20 +771,20 @@ if __name__ == "__main__":
         ev_policy_f = snakemake.input.ev_policy_f
         configure_logging(snakemake)
     else:
-        param_file = "results/caiso/gsa/parameters.csv"
-        sample_file = "results/caiso/gsa/sample.csv"
+        param_file = "results/caiso2/gsa/parameters.csv"
+        sample_file = "results/caiso2/gsa/sample.csv"
         set_values_file = ""
-        base_network_file = "results/caiso/base.nc"
-        root_dir = Path("results/caiso/gsa/modelruns/")
-        meta_yaml = True
-        meta_csv = True
-        scaled_sample_file = "results/caiso/gsa/scaled_sample.csv"
-        pop_f = "results/caiso/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"
-        ng_international_f = "results/caiso/constraints/ng_international.csv"
-        rps_f = "results/caiso/constraints/rps.csv"
-        ces_f = "results/caiso/constraints/ces.csv"
-        ev_policy_f = "results/caiso/constraints/ev_policy.csv"
+        base_network_file = "results/caiso2/base.nc"
+        root_dir = Path("results/caiso2/gsa/modelruns/")
+        meta_yaml = False
+        meta_csv = False
+        scaled_sample_file = "results/caiso2/gsa/scaled_sample.csv"
+        pop_f = "results/caiso2/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso2/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso2/constraints/ng_international.csv"
+        rps_f = "results/caiso2/constraints/rps.csv"
+        ces_f = "results/caiso2/constraints/ces.csv"
+        ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
@@ -798,7 +798,7 @@ if __name__ == "__main__":
 
     sample_data = get_sample_data(params, sample)
 
-    # add in pre-defined valies to the sample.
+    # add in pre-defined values to the sample.
     if set_values_file:
         set_values = pd.read_csv(set_values_file)
         num_runs = len(sample)
@@ -823,31 +823,42 @@ if __name__ == "__main__":
 
     # MUST BE 'sample' and NOT 'sample_data' as set_values is added to the 'sample_data'
 
-    for run in range(len(sample)):
-        n = base_n.copy()
+    try:
+        for run in range(len(sample)):
+            n = base_n.copy()
 
-        scaled, meta, meta_constraints = apply_sample(
-            n, sample_data, run, **constraint_data
-        )
+            scaled, meta, meta_constraints = apply_sample(
+                n, sample_data, run, **constraint_data
+            )
 
-        scaled_sample.append(scaled)
+            scaled_sample.append(scaled)
 
-        n_save_name = Path(root_dir, str(run), "n.nc")
-        meta_constraints_save_name = Path(root_dir, str(run), "constraints.csv")
+            n_save_name = Path(root_dir, str(run), "n.nc")
+            meta_constraints_save_name = Path(root_dir, str(run), "constraints.csv")
 
-        n.export_to_netcdf(n_save_name)
+            n.export_to_netcdf(n_save_name)
 
-        meta_constraints.to_csv(meta_constraints_save_name, index=False)
+            logger.info(f"{n_save_name} written")
 
-        if meta_yaml:
-            meta_save_name = Path(root_dir, str(run), "meta.yaml")
-            with open(meta_save_name, "w") as f:
-                yaml.dump(meta, f)
+            meta_constraints.to_csv(meta_constraints_save_name, index=False)
 
-        if meta_csv:
-            meta_save_name = Path(root_dir, str(run), "meta.csv")
-            meta_df = pd.DataFrame.from_dict(meta).T
-            meta_df.to_csv(meta_save_name, index=True)
+            logger.info(f"{meta_constraints_save_name} written")
+
+            if meta_yaml:
+                meta_save_name = Path(root_dir, str(run), "meta.yaml")
+                with open(meta_save_name, "w") as f:
+                    yaml.dump(meta, f)
+                logger.info(f"{meta_save_name} written")
+
+            if meta_csv:
+                meta_save_name = Path(root_dir, str(run), "meta.csv")
+                meta_df = pd.DataFrame.from_dict(meta).T
+                meta_df.to_csv(meta_save_name, index=True)
+                logger.info(f"{meta_save_name} written")
+    except Exception as e:
+        logger.error(e)
 
     ss = pd.DataFrame(scaled_sample, columns=scaled_scample_columns).round(5)
+    logger.info("Scaled Sample read")
     ss.to_csv(scaled_sample_file, index=False)
+    logger.info(f"{scaled_sample_file} written")

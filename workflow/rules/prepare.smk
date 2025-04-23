@@ -196,7 +196,7 @@ rule process_natural_gas:
 
 
 # for the uncertainity propogation
-rule prepare_set_values:
+rule prepare_static_values:
     message: "Setting static paramters for the uncertainity."
     params:
         to_remove=config["uncertainity"]["parameters"]
@@ -215,7 +215,7 @@ rule prepare_set_values:
     group:
         "prepare_data"
     script:
-        "../scripts/set_ua_values.py"
+        "../scripts/prepare_static_values.py"
 
 
 rule prepare_ua_params:
