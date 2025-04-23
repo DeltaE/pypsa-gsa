@@ -334,3 +334,5 @@ ev_policy_lgt_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-lgt,ev_policy
 ev_policy_med_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-med,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_hvy_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-hvy,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_bus,ev_policy,EV Generation Limit,link,trn-elec-veh-bus,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
+ces,ces,Clean Energy Standard,generator,portfolio,ces,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
