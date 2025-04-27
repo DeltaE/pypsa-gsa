@@ -11,6 +11,7 @@ from constants import (
     CONSTRAINT_ATTRS,
     MMBTU_2_MWH,
 )
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -319,7 +320,7 @@ def is_valid_min_max(params: pd.DataFrame) -> bool:
         return True
     else:
         error = df[df["min_value"] > df["max_value"]]
-        print(f"Min values greater than max valuse for {error.name.to_list()}")
+        logger.error(f"Min values greater than max valuse for {error.name.to_list()}")
         return False
 
 
@@ -342,7 +343,7 @@ def is_valid_fom_units(params: pd.DataFrame) -> bool:
         return True
     else:
         error = units[units["fom"] != units["occ"]]
-        print(f"FOM and OCC units for {error.index.to_list()} do not match")
+        logger.error(f"FOM and OCC units for {error.index.to_list()} do not match")
         return False
 
 
@@ -355,7 +356,7 @@ def is_valid_range(params: pd.DataFrame) -> bool:
         return True
     else:
         error = df[~df["range"].isin(VALID_RANGES)]
-        print(f"{error.name.to_list()} do not have valid ranges of {VALID_RANGES}")
+        logger.error(f"{error.name.to_list()} do not have valid ranges of {VALID_RANGES}")
         return False
 
 def is_valid_units(params: pd.DataFrame) -> bool:
@@ -367,7 +368,7 @@ def is_valid_units(params: pd.DataFrame) -> bool:
         return True
     else:
         error = df[~df["unit"].isin(VALID_UNITS)]
-        print(f"{error.name.to_list()} do not have valid units of {VALID_UNITS}")
+        logger.error(f"{error.name.to_list()} do not have valid units of {VALID_UNITS}")
         return False
     
 def no_empty_values(params: pd.DataFrame) -> bool:
@@ -380,7 +381,7 @@ def no_empty_values(params: pd.DataFrame) -> bool:
     for col in req_cols:
         if any(df[col].isna()):
             error = df[df[col].isna()]
-            print(f"{error.name.to_list()} in {col} column do not have values")
+            logger.error(f"{error.name.to_list()} in {col} column do not have values")
             return False
     
     return True
@@ -393,7 +394,7 @@ def is_valid_nice_name(params: pd.DataFrame) -> bool:
     for group in df.group.unique():
         temp = df[df.group == group]
         if len(temp.nice_name.unique()) != 1:
-            print(f"Inconsistent nice_names for group {group}")
+            logger.error(f"Inconsistent nice_names for group {group}")
             return False
     return True
     
@@ -421,7 +422,7 @@ def is_no_duplicates(params: pd.DataFrame) -> bool:
     df = df[df.duplicated("name")]
     if not df.empty:
         duplicates = set(df.name.to_list())
-        print(f"Duplicate definitions of {duplicates}")
+        logger.error(f"Duplicate definitions of {duplicates}")
         return False
     else:
         return True
@@ -435,7 +436,7 @@ def is_constraints_abs(params: pd.DataFrame) -> bool:
 
     if not df.empty:
         errors = set(df.name.to_list())
-        print(f"{errors} must have absolute ranges")
+        logger.error(f"{errors} must have absolute ranges")
         return False
     else:
         return True
@@ -454,27 +455,32 @@ def is_valid_gshp(params: pd.DataFrame) -> bool:
     unique_maxes = df.max_value.unique().tolist()
 
     if len(unique_groups) > 1:
-        print("Only one GSHP group (ie. attribute == gshp) is allowed")
+        logger.error("Only one GSHP group (ie. attribute == gshp) is allowed")
         return False
     elif (len(unique_mins) > 1) or (len(unique_maxes) > 1):
-        print("Inconsistent ranges for gshp constraints (ie. attribute == gshp)")
+        logger.error("Inconsistent ranges for gshp constraints (ie. attribute == gshp)")
         return False
     else:
         return True
 
 
 def is_valid_demand_response(params: pd.DataFrame) -> bool:
+    """As demand response sample needs to be modified for forward/backwards shifting."""
+    
     df = params.copy()
 
-    df = df[df.carrier == "demand-response"]
+    df = df[df.carrier == "demand_response"]
     if df.empty:
         return True
 
     if len(df) != 1:
-        print("Can only define one uncertainity for demand response")
+        logger.error("Can only define one uncertainity for demand response")
         return False
-    elif df.loc[:, "range"].values[0] != "percent":
-        print("Must define demand response as a percentage")
+    elif df.loc[:, "range"].values[0] != "absolute":
+        logger.error("Must define demand response in absolute terms")
+        return False
+    elif df.loc[:, "unit"].values[0] != "usd/mwh":
+        logger.error("Must define demand response in usd/mwh")
         return False
     else:
         return True
@@ -488,7 +494,7 @@ def is_attr_t_pct(params: pd.DataFrame) -> bool:
 
     if not df.empty:
         errors = set(df.name.to_list())
-        print(f"{errors} must have percent ranges")
+        logger.error(f"{errors} must have percent ranges")
         return False
     else:
         return True
@@ -499,6 +505,7 @@ if __name__ == "__main__":
     if "snakemake" in globals():
         in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
+        configure_logging(snakemake)
     else:
         in_params = "config/parameters.csv"
         out_params = "results/Test/parameters.csv"

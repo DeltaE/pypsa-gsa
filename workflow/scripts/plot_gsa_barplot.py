@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -47,15 +48,16 @@ if __name__ == "__main__":
     if "snakemake" in globals():
         csvs = snakemake.input.csvs
         barplot = snakemake.output.barplot
-        group = snakemake.wildcards.group
+        group = snakemake.wildcards.plot
         parameters_f = snakemake.input.params
         results_f = snakemake.input.results
+        configure_logging(snakemake)
     else:
         csvs = [
-            "results/Testing/SA/objective_cost.csv",
-            "results/Testing/SA/marginal_cost_energy.csv",
-            "results/Testing/SA/marginal_cost_elec.csv",
-            "results/Testing/SA/marginal_cost_carbon.csv"
+            "results/Testing/gsa/SA/objective_cost.csv",
+            "results/Testing/gsa/SA/marginal_cost_energy.csv",
+            "results/Testing/gsa/SA/marginal_cost_elec.csv",
+            "results/Testing/gsa/SA/marginal_cost_carbon.csv"
         ]
         barplot = "results/Testing/barplots/summary.png"
         group = ""

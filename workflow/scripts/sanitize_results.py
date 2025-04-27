@@ -5,6 +5,7 @@ import pypsa
 import itertools
 from constants import VALID_RESULTS
 from sanitize_params import sanitize_component_name
+from utils import configure_logging
 
 import logging
 logger = logging.getLogger(__name__)
@@ -19,7 +20,8 @@ def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     df["carriers"] = df.carriers.str.strip()
     df["variable"] = df.variable.str.strip()
     df["unit"] = df.unit.str.strip()
-    df["plots"] = df.plots.str.strip()
+    if "plots" in df.columns:
+        df["plots"] = df.plots.str.strip()
     return df
 
 def is_valid_variables(results: pd.DataFrame) -> bool:
@@ -72,7 +74,7 @@ def is_unique_names(results: pd.DataFrame) -> bool:
     df = df[df.duplicated("name")]
     if not df.empty:
         duplicates = set(df.name.to_list())
-        print(f"Duplicate definitions of {duplicates}")
+        logger.error(f"Duplicate definitions of {duplicates}")
         return False
     else:
         return True
@@ -84,10 +86,11 @@ if __name__ == "__main__":
         network = snakemake.input.network
         in_results = snakemake.params.results
         out_results = snakemake.output.results
+        configure_logging(snakemake)
     else:
         network = "results/Testing/base.nc"
         in_results = "config/results.csv"
-        out_results = "results/Testing/results.csv"
+        out_results = "results/Testing/gsa/results.csv"
     
     df = pd.read_csv(in_results)
     

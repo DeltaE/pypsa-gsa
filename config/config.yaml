@@ -1,34 +1,63 @@
 
 # name of base pypsa network
 scenario: 
-  name: "Testing"
+  name: "caiso3"
+  include_generated: false # to include model specific tct and co2L data
+  ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget. 
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  network: "elec_s40_c4m_ec_lv1.0_12h_E-G.nc"
-  pop_layout: "pop_layout_elec_s40_c4m.csv"
+  network: "caiso/elec_s12_c4m_ec_lv1.0_4h_E-G.nc"
+  pop_layout: "caiso/pop_layout_elec_s12_c4m.csv"
   era5_year: 2018
 
+# write out GSA associated metadata with each run
+metadata:
+  csv: True
+  yaml: True
+  networks: True # keep solved networks 
+
+# config options for data that is generated
+generated:
+  co2L_min: 40 # as percentage of 2005 level emissions
+  co2L_max: 50 # as percentage of 2005 level emissions
+  ccgtccs_max: 50 # as a percentage of max natgas capacity 
+
 gsa:
-  parameters: config/parameters.csv # Define the uncertain parameters
-  results: config/results.csv # Define what results to run SA over
-  replicates: 10 # Sampling - how large should the sample be?
-  scale: True # Scale Elementary Effects (True/False)
+  parameters: config/parameters.csv 
+  results: config/results_gsa.csv # results to run SA over
+  replicates: 10 
+  scale: True # Scale Elementary Effects 
+
+uncertainity:
+  # general scaling guidlines
+  # N = number of samples. d = number of parametes. r = replicates
+  # sobol -> N=2^m (m is a power of 2) -> N ~ 10d
+  # lhs -> N = r -> N ~ > 10d
+  sample: lhs # (lhs|sobol)
+  replicates: 600
+  parameters: # **index names** from parameters csv to include in sample
+  - capex_com_elec_water_heater
+  - capex_res_elec_water_heater
+  - eff_trn_lpg_lgt
+  - trn_veh_lgt_demand
+  - eff_trn_lpg_hvy
+  - trn_veh_hvy_demand
+  - capex_ocgt
+  - capex_ccgt
+  - capex_ccgt95ccs
+  - emission_limit
+  - lpg_cost
+  - ng_leakage
+  results: config/results_ua.csv # results to extract from ua
+  plots: config/plots_ua.csv
 
 # Choose a solver
 solver:
   name: gurobi # (cbc|gurobi|cplex|highs)
   options: gurobi-default # see solving config
 
-# write out GSA associated metadata with each run
-metadata:
-  csv: True
-  yaml: True
 
-# config options for data that is generated
-generated:
-  co2L_min: 40 # as percentage of 2005 level emissions 
-  co2L_max: 50 # as percentage of 2005 level emissions
 
 
 

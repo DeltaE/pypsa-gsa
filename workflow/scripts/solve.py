@@ -20,6 +20,7 @@ from utils import (
     format_raw_ng_trade_data,
     get_ng_trade_links,
     get_urban_rural_fraction,
+    configure_logging
 )
 
 import logging
@@ -104,7 +105,7 @@ def add_land_use_constraint_perfect(n):
             > p_nom_max.groupby(level=[0, 1]).min()
         )
         if check.sum():
-            logger.warning(
+            logger.debug(
                 f"summed p_min_pu values at node larger than technical potential {check[check].index}",
             )
 
@@ -144,18 +145,6 @@ def add_technology_capacity_target_constraints(
     Each constraint can be designated for a specified planning horizon in multi-period models.
     Opts and path for technology_capacity_targets.csv must be defined in config.yaml.
     Default file is available at config/policy_constraints/technology_capacity_targets.csv.
-
-    Parameters
-    ----------
-    n : pypsa.Network
-    config : dict
-
-    Example
-    -------
-    scenario:
-        opts: [Co2L-TCT-24H]
-    electricity:
-        technology_capacity_target: config/policy_constraints/technology_capacity_target.csv
     """
 
     tct_data = data.copy()
@@ -261,7 +250,7 @@ def add_technology_capacity_target_constraints(
 
         if not lhs_link_ext.empty:
             grouper_l = pd.concat(
-                [lhs_link_ext.bus.map(n.buses.country), lhs_link_ext.carrier],
+                [lhs_link_ext.bus1.map(n.buses.country), lhs_link_ext.carrier],
                 axis=1,
             ).rename_axis(
                 "Link-ext",
@@ -374,36 +363,39 @@ def add_RPS_constraints(
             )
 
 
-def add_sector_co2_constraints(n: pypsa.Network, sample: float):
-    """
-    Adds sector co2 constraints.
-
-    Parameters
-    ----------
-        n : pypsa.Network
-        config : dict
-    """
+def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: bool):
+    """Adds sector co2 constraints."""
 
     def apply_national_limit(
-        n: pypsa.Network, year: int, value: float, sector: str | None = None
+        n: pypsa.Network,
+        year: int,
+        value: float,
+        include_ch4: bool,
+        sector: str | None = None,
     ):
         """For every snapshot, sum of co2 and ch4 must be less than limit."""
         if sector:
-            stores = n.stores[
-                (
-                    (n.stores.index.str.endswith(f"{sector}-co2"))
-                    | (n.stores.index.str.endswith(f"{sector}-ch4"))
-                )
-            ].index
+            if include_ch4:
+                stores = n.stores[
+                    (
+                        (n.stores.index.str.endswith(f"{sector}-co2"))
+                        | (n.stores.index.str.endswith(f"{sector}-ch4"))
+                    )
+                ].index
+            else:
+                stores = n.stores[n.stores.index.str.endswith(f"{sector}-co2")].index
             name = f"co2_limit-{year}-{sector}"
             log_statement = f"Adding national {sector} co2 Limit in {year} of"
         else:
-            stores = n.stores[
-                (
-                    (n.stores.index.str.endswith("-co2"))
-                    | (n.stores.index.str.endswith("-ch4"))
-                )
-            ].index
+            if include_ch4:
+                stores = n.stores[
+                    (
+                        (n.stores.index.str.endswith("-co2"))
+                        | (n.stores.index.str.endswith("-ch4"))
+                    )
+                ].index
+            else:
+                stores = n.stores[n.stores.index.str.endswith("-co2")].index
             name = f"co2_limit-{year}"
             log_statement = f"Adding national co2 Limit in {year} of"
 
@@ -425,7 +417,7 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
     )
 
     if df.empty:
-        logger.warning("No co2 policies applied")
+        logger.debug("No co2 policies applied")
         return
 
     sectors = df.sector.unique()
@@ -439,7 +431,7 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
             years = [x for x in df_state.year.unique() if x in n.investment_periods]
 
             if not years:
-                logger.warning(
+                logger.debug(
                     f"No co2 policies applied for {sector} due to no defined years",
                 )
                 continue
@@ -453,9 +445,9 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float):
 
                 if state.lower() == "all":
                     if sector == "all":
-                        apply_national_limit(n, year, value)
+                        apply_national_limit(n, year, value, include_ch4)
                     else:
-                        apply_national_limit(n, year, value, sector)
+                        apply_national_limit(n, year, value, include_ch4, sector)
                 else:
                     raise ValueError(state.lower())
 
@@ -479,7 +471,7 @@ def add_ng_import_export_limits(
                 try:
                     rhs = data.at[link, "rhs"] * multiplier
                 except KeyError:
-                    # logger.warning(f"Can not set gas import limit for {link}")
+                    # logger.debug(f"Can not set gas import limit for {link}")
                     continue
                 lhs = n.model["Link-p"].mul(weights).sel(snapshot=year, Link=link).sum()
 
@@ -510,7 +502,7 @@ def add_ng_import_export_limits(
                 try:
                     rhs = data.at[link, "rhs"] * multiplier
                 except KeyError:
-                    # logger.warning(f"Can not set gas import limit for {link}")
+                    # logger.debug(f"Can not set gas import limit for {link}")
                     continue
                 lhs = n.model["Link-p"].mul(weights).sel(snapshot=year, Link=link).sum()
 
@@ -724,7 +716,12 @@ def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
 
     for mode in policy.columns:
         sample_mode = sample[sample.carrier == carrier_mapper[mode]]
-        assert len(sample_mode) == 1
+
+        if len(sample_mode) < 1:  # where no ev policy is uncertain
+            sample_value = 1
+        else:
+            assert len(sample_mode) == 1
+            sample_value = sample_mode.value.values[0]
 
         evs = n.links[n.links.carrier == f"trn-elec-veh-{mode_mapper[mode]}"].index
         dem_names = n.loads[n.loads.carrier == f"trn-veh-{mode_mapper[mode]}"].index
@@ -735,7 +732,7 @@ def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
             eff = n.links.loc[evs].efficiency.mean()
             lhs = n.model["Link-p"].loc[investment_period].sel(Link=evs).sum()
             rhs_ref = dem.loc[investment_period].sum().sum() * ratio / eff
-            rhs = rhs_ref + rhs_ref * sample_mode.value.values[0]
+            rhs = rhs_ref + rhs_ref * sample_value
 
             n.model.add_constraints(
                 lhs <= rhs, name=f"Link-ev_gen_{mode}_{investment_period}"
@@ -761,7 +758,9 @@ def extra_functionality(n, sns):
             n, opts["ev_gen"]["data"], opts["ev_gen"]["sample"]
         )
     if "co2L" in opts:
-        add_sector_co2_constraints(n, opts["co2L"]["sample"])
+        add_sector_co2_constraints(
+            n, opts["co2L"]["sample"], opts["co2L"]["include_ch4"]
+        )
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
     if "ng_limits" in opts:
@@ -849,6 +848,7 @@ def solve_network(
         False,
     )
     options["assign_all_duals"] = solving_options.get("assign_all_duals", False)
+    options["multi_investment_periods"] = True  # needed for correct lifetimes
 
     if log:
         options["log_fn"] = log
@@ -899,20 +899,23 @@ if __name__ == "__main__":
         tct_f = snakemake.input.tct_f
         ev_policy_f = snakemake.input.ev_policy_f
         constraints_meta = snakemake.input.constraints
+        include_ch4 = snakemake.params.include_ch4
+        configure_logging(snakemake)
     else:
-        in_network = "results/EvPolicy/modelruns/0/n.nc"
+        in_network = "results/caiso2/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
-        pop_f = "results/EvPolicy/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/EvPolicy/constraints/ng_domestic.csv"
-        ng_international_f = "results/EvPolicy/constraints/ng_international.csv"
-        rps_f = "results/EvPolicy/constraints/rps.csv"
-        ces_f = "results/EvPolicy/constraints/ces.csv"
-        tct_f = "results/EvPolicy/constraints/tct.csv"
-        ev_policy_f = "results/EvPolicy/constraints/ev_policy.csv"
-        constraints_meta = "results/EvPolicy/modelruns/0/constraints.csv"
+        pop_f = "results/caiso2/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso2/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso2/constraints/ng_international.csv"
+        rps_f = "results/caiso2/constraints/rps.csv"
+        ces_f = "results/caiso2/constraints/ces.csv"
+        tct_f = "results/caiso2/constraints/tct.csv"
+        ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
+        constraints_meta = "results/caiso2/gsa/modelruns/0/constraints.csv"
+        include_ch4 = False
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1032,6 +1035,8 @@ if __name__ == "__main__":
     ###
     extra_fn["co2L"] = {}
 
+    extra_fn["co2L"]["include_ch4"] = include_ch4
+
     co2_sample = constraints[constraints.attribute == "co2L"].round(5)
 
     if len(co2_sample) == 1:
@@ -1039,7 +1044,7 @@ if __name__ == "__main__":
     elif len(co2_sample) > 1:
         raise ValueError("Too many samples for co2L")
     else:
-        logger.warning("No CO2 Limits provided")
+        logger.debug("No CO2 Limits provided")
         extra_fn.pop("co2L")
 
     ###

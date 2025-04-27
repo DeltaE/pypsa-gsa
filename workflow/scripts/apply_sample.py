@@ -16,6 +16,7 @@ from utils import (
     get_ng_trade_links,
     format_raw_ng_trade_data,
     get_urban_rural_fraction,
+    configure_logging
 )
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
@@ -99,7 +100,7 @@ class MethaneLeakageCache:
         if not self.gwp:
             raise ValueError("gwp")
         elif not self.leakage:
-            raise ValueError("fom")
+            raise ValueError("leakage")
         else:
             return True
 
@@ -114,7 +115,8 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
 
     sa_cars = df.carrier.unique()
     n_cars = n.carriers.index.to_list()
-    n_cars.append("portfolio")  # for aggregating constraints
+    # for aggregating constraints and ng leaks
+    n_cars.extend(["portfolio", "leakage_upstream", "leakage_downstream"])
 
     errors = []
 
@@ -171,6 +173,25 @@ def get_sample_data(
         data[name]["value"] = sample[name].to_dict()  # run: value
     return data
 
+def get_set_value_data(
+    set_values: pd.DataFrame, num_runs: int
+) -> dict[str, dict[str, Any]]:
+    """Gets data structure for applying data from set_values"""
+
+    data = {}
+    sv = set_values.set_index("name")
+    for name in sv.index:
+        data[name] = {}
+        data[name]["component"] = sv.at[name, "component"]
+        data[name]["carrier"] = sv.at[name, "carrier"]
+        data[name]["attribute"] = sv.at[name, "attribute"]
+        data[name]["range"] = sv.at[name, "range"]  # absolute | percent
+        data[name]["value"] = {
+            x: sv.at[name, "value"] for x in range(num_runs)
+        }  # run: value
+    return data
+
+
 def _is_valid_ref_value(value: Any, car: str, attr: str) -> bool:
     """Checks if the ref value extracted is valid."""
     # edge case used to discout
@@ -179,8 +200,9 @@ def _is_valid_ref_value(value: Any, car: str, attr: str) -> bool:
     elif (attr == "efficiency2") and (car == "gas production"):
         return True
     # main condition to satisty
-    if value == np.nan or value == 0:
-        print(f"Invalid reference value of {value} for {attr} {car}")
+    # if value == np.nan or value == 0:
+    if value == np.nan:
+        logger.info(f"Invalid reference value of {value} for {attr} {car}")
         return False
     else:
         return True
@@ -189,12 +211,35 @@ def _is_valid_ref_value(value: Any, car: str, attr: str) -> bool:
 def calc_difference(ref: float, sampled: float, car: str, attr: str) -> float:
     """Calucates percent difference between original and sampled values."""
 
-    # assert _is_valid_ref_value(ref, car, attr)
+    assert _is_valid_ref_value(ref, car, attr)
 
     if (ref == 0) or (ref == np.nan):
         return np.nan
     else:
         return abs(sampled - ref) / ref * 100
+
+def _apply_demand_response_marginal_cost(n: pypsa.Network, value: int | float) -> None:
+    """Applied demand response to both forward and backwards directions."""
+
+    df = getattr(n, "stores")
+
+    assert all(df[df.carrier == "demand_response"].marginal_cost_storage != 0)
+
+    fwd_slicer = df[
+        (df.carrier == "demand_response") & (df.marginal_cost_storage < 0)
+    ].index
+    bck_slicer = df[
+        (df.carrier == "demand_response") & (df.marginal_cost_storage > 0)
+    ].index
+
+    # forward demand reponse will have negative marginal cost
+
+    getattr(n, "stores").loc[fwd_slicer, "marginal_cost_storage"] = value * (-1)
+
+    # backwards demand response will have positive marginal cost
+
+    getattr(n, "stores").loc[bck_slicer, "marginal_cost_storage"] = value
+
 
 def _apply_static_sample(
     n: pypsa.Network, c: str, car: str, attr: str, value: int | float, absolute: bool
@@ -211,14 +256,17 @@ def _apply_static_sample(
         ref = getattr(n, c).loc[slicer, attr].mean()
         diff = calc_difference(ref, sampled, car, attr)
         # apply value
-        getattr(n, c).loc[slicer, attr] = value
+        if car == "demand_response":
+            _apply_demand_response_marginal_cost(n, value)
+        else:
+            getattr(n, c).loc[slicer, attr] = value
     else:
         # get metadata
         ref = getattr(n, c).loc[slicer, attr]
         if attr == "p_nom":  # only include existing capacity
             ref = ref[ref > 0]
             if ref.empty:
-                logger.warning(f"No exsiting p_nom for {car}")
+                logger.debug(f"No exsiting p_nom for {car}")
                 ref = 1 # temporary correction to avoid divide by zero 
             else:
                 ref = ref.mean()
@@ -288,17 +336,35 @@ def _apply_cached_capex(
 
 
 def _apply_cached_ch4_leakage(
-    n: pypsa.Network, car: str, data: dict[str, Any]
+    n: pypsa.Network, data: dict[str, Any], upstream: bool
 ) -> dict[str, float]:
     try:
         cache = MethaneLeakageCache(**data)
         leakage = cache.calculate_leakage()
     except ValueError as ex:
-        logger.error(f"Methane Leakage error with {car}")
+        logger.error("Methane Leakage error")
         raise ValueError(ex)
-    sampled = _apply_static_sample(
-        n, cache.component, car, "efficiency2", leakage, "absolute"
-    )
+
+    if upstream:  # applies sampled value to gas production of nat gas
+        sampled = _apply_static_sample(
+            n, cache.component, "gas production", "efficiency3", leakage, "absolute"
+        )
+    else:  # applies same sampled value to all end-users of nat gas
+        gas_buses = n.buses[n.buses.carrier == "gas"]
+        carriers = (
+            n.links[
+                (n.links.bus0.isin(gas_buses.index))
+                & ~(n.links.carrier.isin(["gas storage", "gas trade"]))
+            ]
+            .carrier.unique()
+            .tolist()
+        )
+        for car in carriers:
+            # sampled value will always be the same
+            sampled = _apply_static_sample(
+                n, cache.component, car, "efficiency3", leakage, "absolute"
+            )
+
     return sampled
 
 
@@ -568,14 +634,17 @@ def apply_sample(
 
     # as these values are intermediate, they are not part of the actual sample
     for car, data in cached.items():
-        if car == "gas production":
-            sampled = _apply_cached_ch4_leakage(n, car, data)
-            attr = "efficiency2"
+        if car == "leakage_upstream":
+            sampled = _apply_cached_ch4_leakage(n=n, data=data, upstream=True)
+            attr = "efficiency3"
+        elif car == "leakage_downstream":
+            sampled = _apply_cached_ch4_leakage(n=n, data=data, upstream=False)
+            attr = "efficiency3"
         else:
             sampled = _apply_cached_capex(n, car, data)
             attr = "capital_cost"
 
-        meta[str(name)] = {
+        meta[str(car)] = {
             "component": data["component"],
             "carrier": car,
             "attribute": attr,
@@ -605,8 +674,14 @@ def apply_load_shedding(n: pypsa.Network) -> None:
     - (Table ES1) https://www.osti.gov/servlets/purl/1172643
     """
 
-    # TODO: retrieve color and nice name from config
     n.add("Carrier", "load", color="#dd2e23", nice_name="Load shedding")
+
+    # Table ES1 - average of 1hr Cost per Unserved kWh over all customers
+    shed_cost = 106000
+
+    ###
+    # This applies at power sector level
+    ###
 
     buses_i = n.buses.query("carrier == 'AC'").index
 
@@ -616,16 +691,73 @@ def apply_load_shedding(n: pypsa.Network) -> None:
         " load",
         bus=buses_i,
         carrier="load",
-        marginal_cost=106000,  # Table ES1 - average of 1hr Cost per Unserved kWh over all customers
+        marginal_cost=shed_cost,
         p_nom=0,  # kW
         capital_cost=0,
         p_nom_extendable=True,
+    )
+
+    ###
+    # This applies at LPG transport level
+    ###
+
+    # buses1 = n.links[
+    #     (n.links.carrier.str.startswith("trn-"))
+    #     & (n.links.carrier.str.endswith("-veh"))
+    #     & (n.links.carrier.str.contains("-lpg-"))
+    # ].bus1.to_list()
+
+    # buses2 = n.links[
+    #     (n.links.carrier.str.startswith("trn-"))
+    #     & (n.links.carrier.str.endswith(("-air", "-rail", "-boat")))
+    # ].bus1.to_list()
+
+    # buses_i = buses1 + buses2
+
+    # n.madd(
+    #     "Generator",
+    #     buses_i,
+    #     " load",
+    #     bus=buses_i,
+    #     carrier="load",
+    #     marginal_cost=shed_cost,
+    #     p_nom=0,
+    #     capital_cost=0,
+    #     p_nom_extendable=True,
+    # )
+
+def apply_carbon_shedding(n: pypsa.Network) -> None:
+    """Marginal Abatement Cost Curves
+    
+    (Table 10.9) 
+    https://www.ipcc.ch/site/assets/uploads/2018/03/Chapter-10-Mitigation-Potential-and-Costs-1.pdf
+    """
+
+    # CARRIER CAN NOT END WITH '-co2' AS EMISSION LIMIT CONSTRAINT FILTERS BY THIS
+    n.add("Carrier", "co2_shed", color="#dd2e23", nice_name="CO2 shedding")
+
+    # Upper bound estimate from table 10.9 for 2030 USA 
+    shed_cost = 100 # $ / T CO2eq
+
+    buses_i = n.buses[n.buses.carrier == "co2"].index
+
+    n.madd(
+        "Store",
+        buses_i,
+        " co2_shed",
+        bus=buses_i,
+        carrier="co2_shed",
+        marginal_cost=shed_cost,
+        e_nom = 0, # T 
+        capital_cost=0,
+        e_nom_extendable=True,
     )
 
 if __name__ == "__main__":
     if "snakemake" in globals():
         param_file = snakemake.input.parameters
         sample_file = snakemake.input.sample_file
+        set_values_file = snakemake.input.set_values_file
         base_network_file = snakemake.input.network
         root_dir = Path(snakemake.params.root_dir)
         meta_yaml = snakemake.params.meta_yaml
@@ -637,31 +769,45 @@ if __name__ == "__main__":
         rps_f = snakemake.input.rps_f
         ces_f = snakemake.input.ces_f
         ev_policy_f = snakemake.input.ev_policy_f
+        configure_logging(snakemake)
     else:
-        param_file = "results/EvPolicy/parameters.csv"
-        sample_file = "results/EvPolicy/sample.csv"
-        base_network_file = "results/EvPolicy/base.nc"
-        root_dir = Path("results/EvPolicy/modelruns/")
-        meta_yaml = True
-        meta_csv = True
-        scaled_sample_file = "results/EvPolicy/scaled_sample.csv"
-        pop_f = "results/EvPolicy/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/EvPolicy/constraints/ng_domestic.csv"
-        ng_international_f = "results/EvPolicy/constraints/ng_international.csv"
-        rps_f = "results/EvPolicy/constraints/rps.csv"
-        ces_f = "results/EvPolicy/constraints/ces.csv"
-        ev_policy_f = "results/EvPolicy/constraints/ev_policy.csv"
+        param_file = "results/caiso2/gsa/parameters.csv"
+        sample_file = "results/caiso2/gsa/sample.csv"
+        set_values_file = ""
+        base_network_file = "results/caiso2/base.nc"
+        root_dir = Path("results/caiso2/gsa/modelruns/")
+        meta_yaml = False
+        meta_csv = False
+        scaled_sample_file = "results/caiso2/gsa/scaled_sample.csv"
+        pop_f = "results/caiso2/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso2/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso2/constraints/ng_international.csv"
+        rps_f = "results/caiso2/constraints/rps.csv"
+        ces_f = "results/caiso2/constraints/ces.csv"
+        ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
     base_n = pypsa.Network(base_network_file)
 
     apply_load_shedding(base_n)
+    apply_carbon_shedding(base_n)
 
     # check carrier here as it requires reading in network
     assert is_valid_carrier(base_n, params)
 
     sample_data = get_sample_data(params, sample)
+
+    # add in pre-defined values to the sample.
+    if set_values_file:
+        set_values = pd.read_csv(set_values_file)
+        num_runs = len(sample)
+        set_values_data = get_set_value_data(set_values, num_runs)
+        assert all([x not in set_values_data for x in sample_data])
+        sample_data = sample_data | set_values_data
+        scaled_scample_columns = sample.columns.to_list() + set_values.name.to_list()
+    else:
+        scaled_scample_columns = sample.columns
 
     scaled_sample = []
 
@@ -675,32 +821,44 @@ if __name__ == "__main__":
         "ev_policy": pd.read_csv(ev_policy_f, index_col=0),
     }
 
-    for run in range(len(sample)):
+    # MUST BE 'sample' and NOT 'sample_data' as set_values is added to the 'sample_data'
 
-        n = base_n.copy()
+    try:
+        for run in range(len(sample)):
+            n = base_n.copy()
 
-        scaled, meta, meta_constraints = apply_sample(
-            n, sample_data, run, **constraint_data
-        )
+            scaled, meta, meta_constraints = apply_sample(
+                n, sample_data, run, **constraint_data
+            )
 
-        scaled_sample.append(scaled)
+            scaled_sample.append(scaled)
 
-        n_save_name = Path(root_dir, str(run), "n.nc")
-        meta_constraints_save_name = Path(root_dir, str(run), "constraints.csv")
+            n_save_name = Path(root_dir, str(run), "n.nc")
+            meta_constraints_save_name = Path(root_dir, str(run), "constraints.csv")
 
-        n.export_to_netcdf(n_save_name)
+            n.export_to_netcdf(n_save_name)
 
-        meta_constraints.to_csv(meta_constraints_save_name, index=False)
+            logger.info(f"{n_save_name} written")
 
-        if meta_yaml:
-            meta_save_name = Path(root_dir, str(run), "meta.yaml")
-            with open(meta_save_name, "w") as f:
-                yaml.dump(meta, f)
+            meta_constraints.to_csv(meta_constraints_save_name, index=False)
 
-        if meta_csv:
-            meta_save_name = Path(root_dir, str(run), "meta.csv")
-            meta_df = pd.DataFrame.from_dict(meta).T
-            meta_df.to_csv(meta_save_name, index=True)
+            logger.info(f"{meta_constraints_save_name} written")
 
-    ss = pd.DataFrame(scaled_sample, columns=sample.columns).round(5)
+            if meta_yaml:
+                meta_save_name = Path(root_dir, str(run), "meta.yaml")
+                with open(meta_save_name, "w") as f:
+                    yaml.dump(meta, f)
+                logger.info(f"{meta_save_name} written")
+
+            if meta_csv:
+                meta_save_name = Path(root_dir, str(run), "meta.csv")
+                meta_df = pd.DataFrame.from_dict(meta).T
+                meta_df.to_csv(meta_save_name, index=True)
+                logger.info(f"{meta_save_name} written")
+    except Exception as e:
+        logger.error(e)
+
+    ss = pd.DataFrame(scaled_sample, columns=scaled_scample_columns).round(5)
+    logger.info("Scaled Sample read")
     ss.to_csv(scaled_sample_file, index=False)
+    logger.info(f"{scaled_sample_file} written")

@@ -48,13 +48,19 @@ rule process_reeds_policy:
     benchmark:
         "benchmarks/process_reeds/{scenario}_{policy}.txt"
     script:
-        "../scripts/rps.py"
+        "../scripts/process_rps.py"
         
+def get_extra_tct_data(wildards):
+    if config["scenario"]["include_generated"]:
+        return "results/{scenario}/generated/tct_aeo.csv"
+    else:
+        return []
 
 rule copy_tct_data:
     message: "Copying TCT data"
     input:
-        csv="resources/policy/technology_limits.csv"
+        base="resources/policy/technology_limits.csv",
+        extras=get_extra_tct_data
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
@@ -62,8 +68,17 @@ rule copy_tct_data:
         runtime=1
     group:
         "prepare_data"
-    shell:
-        "cp {input.csv} {output.csv}"
+    run:
+        import shutil
+        import pandas as pd
+
+        if input.extras:
+            base = pd.read_csv(input.base)
+            extras = pd.read_csv(input.extras)
+            df = pd.concat([base, extras])
+            df.to_csv(output.csv)
+        else:
+            shutil.copy(input.base, output.csv)
 
 rule copy_ev_policy_data:
     message: "Copying EV Policy data"
@@ -78,6 +93,7 @@ rule copy_ev_policy_data:
         "prepare_data"
     shell:
         "cp {input.csv} {output.csv}"
+
 
 rule retrieve_natural_gas_data:
     message: "Retrieving import/export natural gas data"
@@ -100,12 +116,18 @@ rule retrieve_natural_gas_data:
     script:
         "../scripts/retrieve_ng_data.py"
 
+def get_input_parameters_file(wildards):
+    if config["scenario"]["include_generated"]:
+        return f"results/{wildards.scenario}/generated/{config['gsa']['parameters']}"
+    else:
+        return config["gsa"]["parameters"]
+
 rule sanitize_parameters:
     message: "Sanitizing parameters"
     input:
-        parameters=config["gsa"]["parameters"]
+        parameters=get_input_parameters_file
     output:
-        parameters="results/{scenario}/parameters.csv"
+        parameters="results/{scenario}/gsa/parameters.csv"
     log: 
         "logs/sanitize_parameters/{scenario}.log"
     benchmark:
@@ -118,26 +140,38 @@ rule sanitize_parameters:
     script:
         "../scripts/sanitize_params.py"
 
-# checkpoint needed for heatmap input function
+
+def get_raw_result_path(wildards):
+    if wildards.mode == "gsa":
+        return config["gsa"]["results"]
+    elif wildards.mode == "ua":
+         return config["uncertainity"]["results"]
+    else:
+        raise ValueError(f"Invalid input {wildards.mode} for raw result path.")
+
+
 checkpoint sanitize_results:
     message: "Sanitizing results"
+    wildcard_constraints:
+        mode="gsa|ua"
     params:
-        results=config["gsa"]["results"]
+        results=get_raw_result_path
     input:
         network = "results/{scenario}/base.nc"
     output:
-        results="results/{scenario}/results.csv"
+        results="results/{scenario}/{mode}/results.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
         runtime=1
     benchmark:
-        "benchmarks/sanitize_results/{scenario}.txt"
+        "benchmarks/sanitize_results/{scenario}_{mode}.txt"
     log: 
-        "logs/sanitize_results/{scenario}.log"
+        "logs/sanitize_results/{scenario}_{mode}.log"
     group:
         "prepare_data"
     script:
         "../scripts/sanitize_results.py"
+
 
 rule process_natural_gas:
     message: "Filtering constraint files"
@@ -159,3 +193,72 @@ rule process_natural_gas:
         "prepare_data"
     script:
         "../scripts/process_ng.py"
+
+
+# for the uncertainity propogation
+rule prepare_static_values:
+    message: "Setting static paramters for the uncertainity."
+    params:
+        to_remove=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/set_values.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_set_values/{scenario}.txt"
+    log: 
+        "logs/prepare_set_values/{scenario}.log"
+    group:
+        "prepare_data"
+    script:
+        "../scripts/prepare_static_values.py"
+
+
+rule prepare_ua_params:
+    message: "Getting parameters for the uncertainity sample."
+    params:
+        to_sample=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/parameters.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_ua_params/{scenario}.txt"
+    log: 
+        "logs/prepare_ua_params/{scenario}.log"
+    group:
+        "prepare_data"
+    run:
+        import pandas as pd
+        df = pd.read_csv(input.parameters)
+        df = df[df.name.isin(params.to_sample)]
+        assert len(df) == len(params.to_sample)
+        df.to_csv(output.parameters, index=False)
+
+
+checkpoint sanitize_ua_plot_params:
+    message: "Sanitizing uncertainity analysis plotting parameters."
+    input:
+        plots=config["uncertainity"]["plots"],
+        results="results/{scenario}/ua/results.csv"
+    output:
+        plots="results/{scenario}/ua/plots.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_ua_params/{scenario}.txt"
+    log: 
+        "logs/prepare_ua_params/{scenario}.log"
+    group:
+        "prepare_data"
+    script:
+        "../scripts/sanitize_ua_plot_params.py"

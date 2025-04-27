@@ -240,14 +240,16 @@ p_nom_trn_lpg_lgt,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-lgt,p_nom,pe
 p_nom_trn_lpg_med,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-med,p_nom,percent,percent,-10,10,https://www.eia.gov/electricity/monthly/pdf/technotes-appendix-d.pdf,Estimated as vehicle stock uncertanity not quatified
 p_nom_trn_lpg_hvy,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-hvy,p_nom,percent,percent,-10,10,https://www.eia.gov/electricity/monthly/pdf/technotes-appendix-d.pdf,Estimated as vehicle stock uncertanity not quatified
 p_nom_trn_lpg_bus,p_nom_trn_lpg,Stock LPG Vehicles,link,trn-lpg-veh-bus,p_nom,percent,percent,-10,10,https://www.eia.gov/electricity/monthly/pdf/technotes-appendix-d.pdf,Estimated as vehicle stock uncertanity not quatified
-ng_imports,ng_imports,Nat Gas Imports,link,gas trade,nat_gas_import,absolute,per_unit,-0.12,0.088,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all export prices from 2019 to 2024
-ng_exports,ng_exports,Nat Gas Exports,link,gas trade,nat_gas_export,absolute,per_unit,-0.39,0.16,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import prices from 2019 to 2024
+ng_imports,ng_imports,Nat Gas Imports,link,gas trade,nat_gas_import,absolute,per_unit,-0.12,0.088,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all export volume from 2019 to 2024
+ng_exports,ng_exports,Nat Gas Exports,link,gas trade,nat_gas_export,absolute,per_unit,-0.39,0.16,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import volume from 2019 to 2024
 ng_pipeline_efficiency,ng_pipeline_efficiency,Nat Gas Pipeline Efficiency,link,gas pipeline,efficiency,absolute,percent,80,100,https://www.sciencedirect.com/science/article/pii/S0360544219317645#sec5,Estimated upper bounds as this is anecdotally a common assumption 
 ng_pipeline_dom_p_nom,ng_pipeline_p_nom,Nat Gas Pipeline Capacity,link,gas pipeline,p_nom,percent,percent,0,10,https://github.com/PyPSA/pypsa-usa/issues/487,Estimated due to inconsistencies in datasets from EIA
 ng_pipeline_int_p_nom,ng_pipeline_p_nom,Nat Gas Pipeline Capacity,link,gas trade,p_nom,percent,percent,0,10,https://github.com/PyPSA/pypsa-usa/issues/487,Estimated due to inconsistencies in datasets from EIA
 ng_processing_p_nom,ng_processing_p_nom,Nat Gas Processing Capacity,link,gas production,p_nom,percent,percent,0,50,https://www.eia.gov/todayinenergy/detail.php?id=62984,Export capacity used as a proxy
-ng_leakage,ng_leakage,Nat Gas Leakage,link,gas production,leakage,absolute,per_unit,0,0.17,https://www.research.howarthlab.org/documents/Howarth_2021_Methane_and_Climate.pdf,Table 6.1. Excludes astrix data
-ng_gwp,ng_gwp,Global Warming Potential,link,gas production,gwp,absolute,per_unit,27,83,https://www.epa.gov/ghgemissions/understanding-global-warming-potentials#changingGWPs,"See ""Are there alternatives to the 100-year GWP for comparing GHGs?"" section"
+ng_leakage_upstream,ng_leakage_upstream,Nat Gas Leakage Upstream,link,leakage_upstream,leakage,absolute,per_unit,0.003,0.043,https://www.research.howarthlab.org/documents/Howarth_2021_Methane_and_Climate.pdf,Page 3 when discussing Table 6.1.
+ng_leakage_downstream,ng_leakage_downstream,Nat Gas Leakage Downstream,link,leakage_downstream,leakage,absolute,per_unit,0.014,0.036,https://www.research.howarthlab.org/documents/Howarth_2021_Methane_and_Climate.pdf,Page 3 when discussing Table 6.1.
+ng_gwp_upstream,ng_gwp,Global Warming Potential,link,leakage_upstream,gwp,absolute,per_unit,27,83,https://www.epa.gov/ghgemissions/understanding-global-warming-potentials#changingGWPs,Re. Are there alternatives to the 100-year GWP for comparing GHGs?
+ng_gwp_downstream,ng_gwp,Global Warming Potential,link,leakage_downstream,gwp,absolute,per_unit,27,83,https://www.epa.gov/ghgemissions/understanding-global-warming-potentials#changingGWPs,Re. Are there alternatives to the 100-year GWP for comparing GHGs
 ng_marginal_cost_import,ng_marginal_cost_import,Nat Gas Import Cost,link_t,gas trade,marginal_cost,percent,percent,-52,42,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all export prices from 2019 to 2024
 ng_marginal_cost_export,ng_marginal_cost_export,Nat Gas Export Cost,link_t,gas trade,marginal_cost,percent,percent,-62,47,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import prices from 2019 to 2024
 ng_linepack,ng_linepack,Nat Gas Linepack Capacity,link,gas pipeline,p_nom,percent,percent,-10,10,https://www.eia.gov/naturalgas/data.php,Estimated as no validation data sourced
@@ -274,7 +276,6 @@ ptc_solar,ptc_solar,PTC Solar,generator,solar,marginal_cost,absolute,USD/mwh,-27
 ptc_onwind,ptc_wind,PTC Wind,generator,onwind,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_offwind,ptc_wind,PTC Wind,generator,offwind_floating,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_geo,ptc_geo,PTC Geo,generator,geothermal,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
-ptc_bio,ptc_bio,PTC Bio,generator,biomass,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 ptc_hydro,ptc_hydro,PTC Hydro,generator,hydro,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources
 itc_solar,itc_solar,ITC Solar,generator,solar,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 itc_onwind,itc_wind,ITC Wind,generator,onwind,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
@@ -285,14 +286,6 @@ itc_hydro,itc_hydro,ITC Hydro,generator,hydro,itc,absolute,percent,0,30,https://
 itc_4hrbat,itc_battery,ITC Battery,StorageUnit,4hr_battery_storage,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 itc_8hrbat,itc_battery,ITC Battery,StorageUnit,8hr_battery_storage,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
 itc_nuclear,itc_nuclear,ITC Nuclear,generator,nuclear,itc,absolute,percent,0,30,https://www.epa.gov/green-power-markets/summary-inflation-reduction-act-provisions-related-renewable-energy,Max applied to all clean techs
-tct_biomass,tct_biomass,Biomass Max Capacity,generator,biomass,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_geothermal,tct_geothermal,Geothermal Max Capacity,generator,geothermal,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_nuclear,tct_nuclear,Nuclear Max Capacity,generator,nuclear,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_wind,tct_wind,Wind Max Capacity,generator,onwind;offwind_floating,tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_solar,tct_solar,Solar Max Capacity,generator,solar,tct,absolute,per_unit,2.82,3.46,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_hydro,tct_hydro,Hydro Max Capacity,generator,hydro,tct,absolute,per_unit,1,1.02,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_ccgt,tct_ccgt,Ccgt Max Capacity,generator,CCGT;CCGT-95CCS,tct,absolute,per_unit,1.05,1.18,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-tct_ocgt,tct_ocgt,Ocgt Max Capacity,generator,OCGT,tct,absolute,per_unit,1.65,1.89,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 discount_rate_res_gas_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-gas-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_lpg_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-oil-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
 discount_rate_res_elec_furnace,res_discount_rate,Residenital Discount Rate,link,res-total-space-elec-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Figure A-5
@@ -332,11 +325,14 @@ coal_cost,coal_cost,Coal Fuel Cost,store_t,coal,marginal_cost,percent,percent,-6
 oil_cost,oil_cost,Oil Fuel Cost,store_t,oil,marginal_cost,percent,percent,-40,66,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 lpg_cost,lpg_cost,LPG Fuel Cost,store_t,lpg,marginal_cost,percent,percent,-28.5,59.6,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 nuclear_cost,nuclear_cost,Uranium Fuel Cost,generator,nuclear,marginal_cost,percent,percent,-0.3,0.3,https://www.eia.gov/outlooks/aeo/,See notebook in repository
-demand_response,demand_response,Demand Response,store,demand-response,marginal_cost_storage,percent,percent,-25,25,,
+demand_response,demand_response,Demand Response,store,demand_response,marginal_cost_storage,absolute,USD/mwh,123.8,144.2,https://www.eia.gov/outlooks/aeo/,min/max of 2030 electrical price to all consumers
+load_shedding,load_shedding,Load Shedding,generator,load,marginal_cost,absolute,USD/mwh,90666,825400,https://www.osti.gov/servlets/purl/1172643,Table ES-1. Min/max average of over all timr frames
+carbon_shedding,carbon_shedding,Carbon Shedding,store,co2_shed,marginal_cost,absolute,USD/T,75,100,https://www.ipcc.ch/site/assets/uploads/2018/03/Chapter-10-Mitigation-Potential-and-Costs-1.pdf,Table 10.9. Estimated lower bound
 transmission_expansion,transmission_expansion,Transmission Expansion,link,AC,lv,absolute,per_unit,0,0.064,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario (6.4%)
 transmission_itl,transmission_itl,Transmission Flows,link,AC,p_nom,percent,percent,-1,1,https://arxiv.org/abs/2308.03612,Assumed as no uncertainity given
-emission_limit,emission_limit,Emission Limit,store,co2,co2L,absolute,mmt,194.42,233.31,https://www.eia.gov/outlooks/aeo/,40 to 50 % reduction from 2005 levels
 ev_policy_lgt_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-lgt,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_med_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-med,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_hvy_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-hvy,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_bus,ev_policy,EV Generation Limit,link,trn-elec-veh-bus,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
+ces,ces,Clean Energy Standard,generator,portfolio,ces,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)

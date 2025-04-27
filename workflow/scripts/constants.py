@@ -67,13 +67,11 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "fixed_cost",
         "occ",
         "vmt_per_year",
-        "efficiency2",
         "itc",
         "leakage",
         "gwp",
     ],
-    # "generators": ["tct", "rps", "ces", "discount_rate", "fixed_cost", "occ", "itc"],
-    "generators": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
+    "generators": ["tct", "discount_rate", "fixed_cost", "occ", "itc", "rps", "ces"],
     "stores": ["co2L"],
     "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
     "lines": [],
@@ -99,8 +97,8 @@ CONSTRAINT_ATTRS = [
     "tct",
     "co2L",
     "ev_policy",
-    # "rps",
-    # "ces",
+    "rps",
+    "ces",
 ]
 
 VALID_RANGES = ["percent", "absolute"]
@@ -113,6 +111,7 @@ VALID_UNITS = [
     "usd/mw",
     "usd/mwh",
     "usd/kvmt",
+    "usd/T",
     "kvmt/year",
     "kvmt/mwh",
     "years",
@@ -120,14 +119,16 @@ VALID_UNITS = [
 ]
 
 VALID_RESULTS = {
-    "generators":["p_nom_opt"],
-    "generators_t":["p"],
-    "links":["p_nom_opt"],
-    "links_t":["p0","p1","p2"],
-    "buses_t":["marginal_price"],
-    "system":["cost"],
-    "stores":["e_nom_opt"],
+    "generators": ["p_nom_opt", "p_nom_new"],
+    "generators_t": ["p"],
+    "links": ["p_nom_opt", "p_nom_new"],
+    "links_t": ["p0", "p1", "p2"],
+    "buses_t": ["marginal_price"],
+    "system": ["cost"],
+    "stores": ["e_nom_opt"],
 }
+
+VALID_UA_PLOTS = ["scatter", "bar"]
 
 # hard codes where gas can enter/exit the states
 # if multiple POEs exist, the larger pipeline is used as the POE
