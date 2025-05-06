@@ -499,19 +499,30 @@ def is_attr_t_pct(params: pd.DataFrame) -> bool:
     else:
         return True
 
+def remove_ch4(params: pd.DataFrame) -> pd.DataFrame:
+    """Removes ch4 from the parameters file."""
+    df = params.copy()
+    to_remove = ["ng_leakage_upstream", "ng_leakage_downstream", "ng_gwp"]
+    df = df[~df.name.isin(to_remove)].copy()
+    return df
 
 if __name__ == "__main__":
 
     if "snakemake" in globals():
         in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
+        track_ch4 = snakemake.params.track_ch4
         configure_logging(snakemake)
     else:
         in_params = "config/parameters.csv"
         out_params = "results/Test/parameters.csv"
+        track_ch4 = False
     
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
     
+    if track_ch4:
+        df = remove_ch4(df)
+        
     # top level sanitize 
     df = sanitize_component_name(df)
     df = strip_whitespace(df)

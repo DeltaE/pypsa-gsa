@@ -128,6 +128,8 @@ rule sanitize_parameters:
         parameters=get_input_parameters_file
     output:
         parameters="results/{scenario}/gsa/parameters.csv"
+    params:
+        track_ch4=config["scenario"]["ch4"],
     log: 
         "logs/sanitize_parameters/{scenario}.log"
     benchmark:
