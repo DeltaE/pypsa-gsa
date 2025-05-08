@@ -64,10 +64,11 @@ include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/solve.smk"
 include: "rules/results.smk"
+include: "rules/dashboard.smk"
 
 rule all:
     shell:
-        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua', 'snakemake generate']"
+        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua', 'snakemake generate', 'snakemake dashboard']"
 
 ###
 # Main execution
@@ -91,6 +92,10 @@ rule generate:
     input:
         f"results/{SCENARIO}/generated/{config['gsa']['parameters']}",
         f"results/{SCENARIO}/generated/tct_aeo.csv",
+
+rule dashboard:
+    input:
+        expand("dashboard/data/{scenario}/{file}.csv", scenario=SCENARIO, file=["sa", "models_sa"])
 
 ###
 # Testing solve resources on hpc
