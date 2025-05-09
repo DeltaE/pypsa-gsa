@@ -2,6 +2,8 @@
 
 import pandas as pd
 from pathlib import Path
+import json
+
 from utils import ISOS
 
 import logging
@@ -10,13 +12,25 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)s - %(message)s")
 
 root = Path(__file__).parent.parent
 
+def get_param_names(root: Path, iso: str, mode: str) -> dict[str, str]:
+    """Gets names and nice_names for the parameter data."""
+
+    assert mode in ("gsa", "ua"), f"Invalid mode: {mode}. Must be 'gsa' or 'ua'."
+
+    data_f = Path(root, "results", iso, mode, "parameters.csv")
+    logger.debug(f"Collecting nice names from {data_f}.")
+    df = pd.read_csv(data_f, index_col=0)[["group", "nice_name"]]
+    df = df.drop_duplicates()
+    return df.set_index("group")["nice_name"].to_dict()
+
+
 def get_result_names(root: Path, iso: str, mode: str) -> dict[str, str]:
-    """Gets names and nice_names for the SA data."""
+    """Gets names and nice_names for the result data."""
     
     assert mode in ("gsa", "ua"), f"Invalid mode: {mode}. Must be 'gsa' or 'ua'."
     
     data_f = Path(root, "results", iso, mode, "results.csv")
-    logger.debug(f"Collecting SA nice names from {data_f}.")
+    logger.debug(f"Collecting nice names from {data_f}.")
     df = pd.read_csv(data_f, index_col=0)
     return df.nice_name.to_dict()
 
@@ -122,11 +136,41 @@ if __name__ == "__main__":
             result_names = get_result_names(root, iso, "ua")
             df = collect_runs(root, iso, "ua", result_names.keys())
             dfs.append(df)
-        
     if not dfs:
         logger.error("No data found.")
         raise ValueError("No ISO data found.")
     
     sa = pd.concat(dfs, axis=0)
     sa.to_csv(Path(root, "dashboard", "data", "ua_runs.csv"), index=True)
-    
+
+    # get nice names
+
+    for iso in ISOS:
+        try:
+            sa_params = get_param_names(root, iso, "gsa")
+            sa_results = get_result_names(root, iso, "gsa")
+        except FileNotFoundError:
+            pass
+        else:
+            continue
+
+    with open(Path(root, "dashboard", "data", "sa_params.json"), "w") as f:
+        json.dump(sa_params, f, indent=4)
+
+    with open(Path(root, "dashboard", "data", "sa_results.json"), "w") as f:
+        json.dump(sa_results, f, indent=4)
+
+    for iso in ISOS:
+        try:
+            ua_params = get_param_names(root, iso, "ua")
+            ua_results = get_result_names(root, iso, "ua")
+        except FileNotFoundError:
+            pass
+        else:
+            continue
+
+    with open(Path(root, "dashboard", "data", "ua_params.json"), "w") as f:
+        json.dump(ua_params, f, indent=4)
+
+    with open(Path(root, "dashboard", "data", "ua_results.json"), "w") as f:
+        json.dump(ua_results, f, indent=4)
