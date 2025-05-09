@@ -1,0 +1,132 @@
+"""Independent script to collect result data into a database."""
+
+import pandas as pd
+from pathlib import Path
+from utils import ISOS
+
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG, format="%(levelname)s - %(message)s")
+
+root = Path(__file__).parent.parent
+
+def get_result_names(root: Path, iso: str, mode: str) -> dict[str, str]:
+    """Gets names and nice_names for the SA data."""
+    
+    assert mode in ("gsa", "ua"), f"Invalid mode: {mode}. Must be 'gsa' or 'ua'."
+    
+    data_f = Path(root, "results", iso, mode, "results.csv")
+    logger.debug(f"Collecting SA nice names from {data_f}.")
+    df = pd.read_csv(data_f, index_col=0)
+    return df.nice_name.to_dict()
+
+def collect_sa(root: Path, iso: str, results: list[str]) -> pd.DataFrame:
+    """Collects the SA data from the results directory."""
+    
+    data_dir = Path(root, "results", iso, "gsa", "SA")
+    logger.debug(f"Collecting SA data for {iso} from {data_dir}.")
+    
+    inputs = [Path(data_dir, f"{x}.csv") for x in results]
+
+    dfs = []
+    for f in inputs:
+        name = f.stem
+        df = pd.read_csv(f, index_col=0).mu_star
+        df.name = name
+        dfs.append(df)
+    df = pd.concat(dfs, axis=1)
+    df["iso"] = iso
+    df = df.reset_index(names=["param"])
+    return df.set_index(["param", "iso"])
+
+def collect_runs(root: Path, iso: str, mode: str, results: list[str]) -> pd.DataFrame:
+    """Collects the model run results data from the results directory."""
+    
+    assert mode in ("gsa", "ua"), f"Invalid mode: {mode}. Must be 'gsa' or 'ua'."
+    
+    data_dir = Path(root, "results", iso, mode, "results")
+    logger.debug(f"Collecting model run results data for {iso} from {data_dir}.")
+    
+    inputs = [Path(data_dir, f"{x}.csv") for x in results]
+
+    dfs = []
+    for f in inputs:
+        name = f.stem
+        df = pd.read_csv(f, index_col=1)
+        df = df.rename(columns={"value": name})
+        dfs.append(df)
+    df = pd.concat(dfs, axis=1)
+    df["iso"] = iso
+    df = df.reset_index(names=["run"])
+    return df.set_index(["run", "iso"])
+
+def get_empty_sa() -> pd.DataFrame:
+    """Returns an empty dataframe for the SA data."""
+    return pd.DataFrame(columns=["param", "iso"]).set_index(["param", "iso"])
+    
+def get_empty_run() -> pd.DataFrame:
+    """Returns an empty dataframe for the run data."""
+    return pd.DataFrame(columns=["param", "iso"]).set_index(["param", "iso"])
+
+if __name__ == "__main__":
+    
+    # sensitivity measures
+    
+    dfs = []
+    for iso in ISOS:
+        iso_data = Path(root, "results", iso, "gsa", "SA")
+        if not iso_data.exists():
+            logger.warning(f"No gsa sa data for '{iso}'")
+            dfs.append(get_empty_sa())
+        else:
+            sa_names = get_result_names(root, iso, "gsa")
+            df = collect_sa(root, iso, sa_names.keys())
+            dfs.append(df)
+        
+    if not dfs:
+        logger.error("No data found.")
+        raise ValueError("No ISO data found.")
+    
+    sa = pd.concat(dfs, axis=0)
+    sa.to_csv(Path(root, "dashboard", "data", "sa.csv"), index=True)
+    
+    # model run results gsa
+    
+    dfs = []
+    for iso in ISOS:
+        iso_data = Path(root, "results", iso, "gsa", "results")
+        if not iso_data.exists():
+            logger.warning(f"No gsa model run data for '{iso}'")
+            dfs.append(get_empty_run())
+        else:
+            result_names = get_result_names(root, iso, "gsa")
+            df = collect_runs(root, iso, "gsa", result_names.keys())
+            dfs.append(df)
+        
+    if not dfs:
+        logger.error("No data found.")
+        raise ValueError("No ISO data found.")
+    
+    sa = pd.concat(dfs, axis=0)
+    sa.to_csv(Path(root, "dashboard", "data", "gsa_runs.csv"), index=True)
+    
+    # model run results ua
+    
+    dfs = []
+    for iso in ISOS:
+        iso_data = Path(root, "results", iso, "ua", "results")
+        if not iso_data.exists():
+            logger.warning(f"No ua model run data for '{iso}'")
+            dfs.append(get_empty_run())
+        else:
+            result_names = get_result_names(root, iso, "ua")
+            df = collect_runs(root, iso, "ua", result_names.keys())
+            dfs.append(df)
+        
+    if not dfs:
+        logger.error("No data found.")
+        raise ValueError("No ISO data found.")
+    
+    sa = pd.concat(dfs, axis=0)
+    sa.to_csv(Path(root, "dashboard", "data", "ua_runs.csv"), index=True)
+    
