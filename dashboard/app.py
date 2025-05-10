@@ -9,8 +9,24 @@ import base64
 import io
 
 from components.ids import SA_TAB, UP_TAB
+from components.shared import iso_dropdown
+from components.gsa import gsa_params_dropdown, gsa_results_dropdown
 
-# Initialize the Dash app with Bootstrap styling
+from utils import (
+    get_gsa_params_dropdown,
+    get_ua_params_dropdown,
+    get_gsa_results_dropdown,
+    get_ua_results_dropdown
+)
+
+
+GSA_PARAMS_DROPDOWNS = get_gsa_params_dropdown()
+GSA_RESULTS_DROPDOWNS = get_gsa_results_dropdown()
+UA_PARAMS_DROPDOWNS = get_ua_params_dropdown()
+UA_RESULTS_DROPDOWNS = get_ua_results_dropdown()
+
+
+
 
 app = dash.Dash(
     __name__,
@@ -35,7 +51,7 @@ app.layout = html.Div(
                     [
                         dbc.Tab(label="Sensitivity Analysis", tab_id=SA_TAB),
                         dbc.Tab(
-                            label="Uncertainty Propagation",
+                            label="Uncertainty Analysis",
                             tab_id=UP_TAB,
                         ),
                     ],
