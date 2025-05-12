@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 import json
 
-from utils import ISOS
+from dashboard.components.utils import ISOS
 
 import logging
 logger = logging.getLogger(__name__)
