@@ -1,5 +1,6 @@
 """Component to display GSA data."""
 
+from typing import Any
 from dash import dcc, html
 from pathlib import Path
 from .utils import (
@@ -7,6 +8,10 @@ from .utils import (
     get_gsa_results_dropdown_options,
 )
 from . import ids as ids
+
+import pandas as pd
+import plotly
+import plotly.express as px
 
 root = Path(__file__).parent.parent
 
@@ -41,15 +46,27 @@ def gsa_results_dropdown() -> html.Div:
         className="dropdown-container",
     )
     
-def plot_gsa_heatmap() -> html.Div:
+def get_gsa_heatmap(data: dict[str, Any]) -> plotly.graph_objects.Figure:
     """GSA heatmap component."""
-    return html.Div(
-        [
-            dcc.Graph(
-                id=ids.GSA_HEATAMP,
-                config={"displayModeBar": False},
-                style={"height": "100%"},
-            ),
-        ],
-        className="graph-container",
+    df = pd.DataFrame(data)
+    
+    fig = px.imshow(
+        df,
+        color_continuous_scale="RdBu",
+        color_continuous_midpoint=0,
+        aspect="auto",  # Automatically adjust aspect ratio
+        labels=dict(x="Parameters", y="Results", color="Sensitivity"),
     )
+    
+    fig.update_layout(
+        title="Global Sensitivity Analysis",
+        xaxis_title="Parameters",
+        yaxis_title="Results",
+        height=600,
+        xaxis={'side': 'bottom'}
+    )
+    fig.update_xaxes(tickangle=45)
+    
+    return fig
+
+    

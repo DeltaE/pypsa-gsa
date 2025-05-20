@@ -21,6 +21,10 @@ UA_RESULTS_DROPDOWN = "ua-results-dropdown"
 SA_STORE = "sa-store"
 UA_STORE = "ua-store"
 
+# data tables
+SA_DATA_TABLE = "sa-data-table"
+UA_DATA_TABLE = "ua-data-table"
+
 # gsa
-GSA_HEATAMP = "gsa-heatmap"
+GSA_HEATMAP = "gsa-heatmap"
 GSA_BAR_CHART = "gsa-bar-chart"
