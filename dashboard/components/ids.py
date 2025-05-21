@@ -17,14 +17,27 @@ GSA_RESULTS_DROPDOWN = "gsa-results-dropdown"
 UA_PARAM_DROPDOWN = "ua-param-dropdown"
 UA_RESULTS_DROPDOWN = "ua-results-dropdown"
 
-# stores
+# buttons 
+GSA_PARAM_SELECT_ALL = "gsa-param-select-all"
+GSA_PARAM_REMOVE_ALL = "gsa-param-remove-all"
+GSA_RESULTS_SELECT_ALL = "gsa-results-select-all"
+GSA_RESULTS_REMOVE_ALL = "gsa-results-remove-all"
+
+# button states
+GSA_PARAM_BUTTON_STATE = "gsa-param-button-state"
+GSA_RESULTS_BUTTON_STATE = "gsa-results-button-state"
+
+# stores (filtered for ISOs)
 SA_STORE = "sa-store"
 UA_STORE = "ua-store"
 
-# data tables
+# data tables (filtered for params/results)
 SA_DATA_TABLE = "sa-data-table"
 UA_DATA_TABLE = "ua-data-table"
 
-# gsa
+# gsa plots
 GSA_HEATMAP = "gsa-heatmap"
 GSA_BAR_CHART = "gsa-bar-chart"
+GSA_MAP = "gsa-map"
+GSA_DATA_TABLE = "gsa-data-table"
+
