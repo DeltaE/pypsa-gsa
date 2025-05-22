@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 import json
 
-from dashboard.components.utils import ISOS
+from components.utils import ISOS
 
 import logging
 logger = logging.getLogger(__name__)
@@ -12,17 +12,22 @@ logging.basicConfig(level=logging.DEBUG, format="%(levelname)s - %(message)s")
 
 root = Path(__file__).parent.parent
 
+ROUND_TO = 5
+
+def _round_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Converts small values to zero."""
+    return df.mask(df.abs() < 1e-8, 0).round(ROUND_TO)
+
 def get_param_names(root: Path, iso: str, mode: str) -> dict[str, str]:
     """Gets names and nice_names for the parameter data."""
 
     assert mode in ("gsa", "ua"), f"Invalid mode: {mode}. Must be 'gsa' or 'ua'."
 
     data_f = Path(root, "results", iso, mode, "parameters.csv")
-    logger.debug(f"Collecting nice names from {data_f}.")
     df = pd.read_csv(data_f, index_col=0)[["group", "nice_name"]]
+    logger.debug(f"Collecting nice names from {data_f}.")
     df = df.drop_duplicates()
     return df.set_index("group")["nice_name"].to_dict()
-
 
 def get_result_names(root: Path, iso: str, mode: str) -> dict[str, str]:
     """Gets names and nice_names for the result data."""
@@ -30,8 +35,8 @@ def get_result_names(root: Path, iso: str, mode: str) -> dict[str, str]:
     assert mode in ("gsa", "ua"), f"Invalid mode: {mode}. Must be 'gsa' or 'ua'."
     
     data_f = Path(root, "results", iso, mode, "results.csv")
-    logger.debug(f"Collecting nice names from {data_f}.")
     df = pd.read_csv(data_f, index_col=0)
+    logger.debug(f"Collecting nice names from {data_f}.")
     return df.nice_name.to_dict()
 
 def collect_sa(root: Path, iso: str, results: list[str]) -> pd.DataFrame:
@@ -48,7 +53,7 @@ def collect_sa(root: Path, iso: str, results: list[str]) -> pd.DataFrame:
         df = pd.read_csv(f, index_col=0).mu_star
         df.name = name
         dfs.append(df)
-    df = pd.concat(dfs, axis=1)
+    df = _round_df(pd.concat(dfs, axis=1))
     df["iso"] = iso
     df = df.reset_index(names=["param"])
     return df.set_index(["param", "iso"])
@@ -69,7 +74,7 @@ def collect_runs(root: Path, iso: str, mode: str, results: list[str]) -> pd.Data
         df = pd.read_csv(f, index_col=1)
         df = df.rename(columns={"value": name})
         dfs.append(df)
-    df = pd.concat(dfs, axis=1)
+    df = _round_df(pd.concat(dfs, axis=1))
     df["iso"] = iso
     df = df.reset_index(names=["run"])
     return df.set_index(["run", "iso"])
@@ -150,6 +155,7 @@ if __name__ == "__main__":
             sa_params = get_param_names(root, iso, "gsa")
             sa_results = get_result_names(root, iso, "gsa")
         except FileNotFoundError:
+            logger.debug(f"No gsa nice names for {iso}.")
             pass
         else:
             continue
@@ -165,6 +171,7 @@ if __name__ == "__main__":
             ua_params = get_param_names(root, iso, "ua")
             ua_results = get_result_names(root, iso, "ua")
         except FileNotFoundError:
+            logger.debug(f"No ua nice names for {iso}.")
             pass
         else:
             continue
