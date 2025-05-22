@@ -38,15 +38,35 @@ def _default_gsa_results_value() -> list[str]:
         return GSA_RESULT_OPTIONS[0]["value"]
     return defaults
 
+def gsa_options_block() -> html.Div:
+    """GSA options block component."""
+    return html.Div(
+        [
+            gsa_filtering_rb(),
+            html.Div(html.Label("Select Parameter")),
+            gsa_params_dropdown(),
+            html.Div(html.Label("Select Result")),
+            gsa_results_dropdown(),
+        ],
+    )
+
+def gsa_filtering_rb() -> html.Div:
+    """GSA filtering radio buttons component."""
+    return html.Div(
+        [
+            dcc.RadioItems(
+                id=ids.GSA_FILTERING_RB,
+                options=[{"label": "By Name", "value": "name"}, {"label": "By Rank", "value": "rank"}],
+                value="name",
+                inline=True,
+            ),
+        ],
+        className="dropdown-container",
+    )
 def gsa_params_dropdown() -> html.Div:
     """GSA parameters dropdown component."""
     return html.Div(
         [
-            html.Div(
-                [
-                    html.Label("Select Parameter"),
-                ],
-            ),
             dcc.Dropdown(
                 id=ids.GSA_PARAM_DROPDOWN,
                 options=GSA_PARM_OPTIONS,
@@ -79,11 +99,6 @@ def gsa_results_dropdown() -> html.Div:
     """GSA results dropdown component."""
     return html.Div(
         [
-            html.Div(
-                [
-                    html.Label("Select Result"),
-                ],
-            ),
             dcc.Dropdown(
                 id=ids.GSA_RESULTS_DROPDOWN,
                 options=GSA_RESULT_OPTIONS,

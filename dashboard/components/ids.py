@@ -27,6 +27,14 @@ GSA_RESULTS_REMOVE_ALL = "gsa-results-remove-all"
 GSA_PARAM_BUTTON_STATE = "gsa-param-button-state"
 GSA_RESULTS_BUTTON_STATE = "gsa-results-button-state"
 
+# radio buttons
+GSA_FILTERING_RB = "gsa-filtering-rb"
+
+# collapsable blocks
+ISO_OPTIONS_BLOCK = "iso-options-block"
+GSA_OPTIONS_BLOCK = "gsa-options-block"
+UA_OPTIONS_BLOCK = "ua-options-block"
+
 # stores (filtered for ISOs)
 SA_STORE = "sa-store"
 UA_STORE = "ua-store"

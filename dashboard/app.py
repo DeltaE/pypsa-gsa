@@ -7,11 +7,11 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-from components.utils import get_gsa_params_dropdown_options, get_gsa_results_dropdown_options, get_iso_dropdown_options
+from components.utils import get_gsa_params_dropdown_options, get_gsa_results_dropdown_options
 import components.ids as ids
-from components.gsa import gsa_params_dropdown, gsa_results_dropdown, get_gsa_heatmap
-from components.shared import iso_dropdown
-from components.ua import ua_params_dropdown, ua_results_dropdown
+from components.gsa import gsa_options_block, get_gsa_heatmap
+from components.shared import iso_options_block
+from components.ua import ua_options_block
 
 import logging
 
@@ -61,31 +61,48 @@ app.layout = html.Div(
                                     [
                                         dbc.CardBody(
                                             [
-                                                html.H4(
-                                                    "Spatial Options",
-                                                    className="card-title",
+                                                dbc.Collapse(
+                                                    [
+                                                        html.H4(
+                                                            "Spatial Options",
+                                                            className="card-title",
+                                                        ),
+                                                        iso_options_block(RAW_GSA, RAW_UA),
+                                                    ],
+                                                    id=ids.ISO_OPTIONS_BLOCK,
+                                                    is_open=True,
                                                 ),
-                                                iso_dropdown(RAW_GSA, RAW_UA),
                                             ]
                                         ),
                                         dbc.CardBody(
                                             [
-                                                html.H4(
-                                                    "GSA Options",
-                                                    className="card-title",
+
+                                                dbc.Collapse(
+                                                    [
+                                                        html.H4(
+                                                            "GSA Options",
+                                                            className="card-title",
+                                                        ),
+                                                        gsa_options_block(),                                                        
+                                                    ],
+                                                    id=ids.GSA_OPTIONS_BLOCK,
+                                                    is_open=True,
                                                 ),
-                                                gsa_params_dropdown(),
-                                                gsa_results_dropdown(),
                                             ]
                                         ),
                                         dbc.CardBody(
                                             [
-                                                html.H4(
-                                                    "Uncertaintiy Options",
-                                                    className="card-title",
+                                                dbc.Collapse(
+                                                    [
+                                                        html.H4(
+                                                            "Uncertaintiy Options",
+                                                            className="card-title",
+                                                        ),
+                                                        ua_options_block(),
+                                                    ],
+                                                    id=ids.UA_OPTIONS_BLOCK,
+                                                    is_open=True,
                                                 ),
-                                                ua_params_dropdown(),
-                                                ua_results_dropdown(),
                                             ]
                                         ),
                                     ]
@@ -245,37 +262,34 @@ def filter_raw_data_gsa(isos: list[str]) -> dict[str, Any]:
 
 
 ###
-# Enable/disable dropdowns
+# Enable/disable collapsable blocks
 ###
 
 @app.callback(
     [
-        Output(ids.ISO_DROPDOWN, "disabled"),
-        Output(ids.GSA_PARAM_DROPDOWN, "disabled"),
-        Output(ids.GSA_RESULTS_DROPDOWN, "disabled"),
-        Output(ids.UA_PARAM_DROPDOWN, "disabled"),
-        Output(ids.UA_RESULTS_DROPDOWN, "disabled"),
+        Output(ids.ISO_OPTIONS_BLOCK, "is_open"),
+        Output(ids.GSA_OPTIONS_BLOCK, "is_open"),
+        Output(ids.UA_OPTIONS_BLOCK, "is_open"),
     ],
     Input(ids.TABS, "active_tab"),
 )
-def enable_disable_dropdowns(active_tab):
-    isos = True
-    gsa_params = True
-    gsa_results = True
-    ua_params = True
-    ua_results = True
+def enable_disable_option_blocks(active_tab):
+    """Enable/disable dropdowns based on active tab and filtering mode."""
+    # Start with all disabled
+    iso_open = False
+    gsa_open = False
+    ua_open = False
     if active_tab == ids.SA_TAB:
-        isos = False
-        gsa_params = False
-        gsa_results = False
+        iso_open = True
+        gsa_open = True
     elif active_tab == ids.UA_TAB:
-        isos = False
-        ua_params = False
-        ua_results = False
-    return isos, gsa_params, gsa_results, ua_params, ua_results
+        iso_open = True
+        gsa_open = True
+
+    return iso_open, gsa_open, ua_open
 
 ###
-# GSA Button Callbacks
+# GSA Options Callbacks
 ###
 
 @app.callback(
@@ -294,6 +308,8 @@ def select_gsa_params(*args):
     
     # id of the button that was clicked
     button_id = ctx.triggered[0]["prop_id"].split(".")[0] 
+    
+    logger.debug(f"Button ID: {button_id}")
     
     if button_id == ids.GSA_PARAM_SELECT_ALL:
         return [option["value"] for option in GSA_PARM_OPTIONS]
@@ -317,6 +333,8 @@ def select_gsa_results(*args):
     
     # id of the button that was clicked
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    
+    logger.debug(f"Button ID: {button_id}")
     
     if button_id == ids.GSA_RESULTS_SELECT_ALL:
         return [option["value"] for option in GSA_RESULT_OPTIONS]
