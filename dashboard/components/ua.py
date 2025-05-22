@@ -17,9 +17,9 @@ def ua_options_block() -> html.Div:
     """UA options block component."""
     return html.Div(
         [
-            html.Div(html.Label("Select Parameter")),
+            html.H6("Select Parameter"),
             ua_params_dropdown(),
-            html.Div(html.Label("Select Result")),
+            html.H6("Select Result"),
             ua_results_dropdown(),
         ],
     )
@@ -29,7 +29,7 @@ def ua_params_dropdown() -> html.Div:
     """UA parameters dropdown component."""
     return html.Div(
         [
-            html.Label("Select Parameter"),
+            html.H6("Select Parameter"),
             dcc.Dropdown(
                 id=ids.UA_PARAM_DROPDOWN,
                 options=UA_PARM_OPTIONS,
@@ -43,7 +43,7 @@ def ua_results_dropdown() -> html.Div:
     """UA results dropdown component."""
     return html.Div(
         [
-            html.Label("Select Result"),
+            html.H6("Select Result"),
             dcc.Dropdown(
                 id=ids.UA_RESULTS_DROPDOWN,
                 options=UA_RESULT_OPTIONS,

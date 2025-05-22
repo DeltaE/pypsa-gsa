@@ -43,10 +43,46 @@ def gsa_options_block() -> html.Div:
     return html.Div(
         [
             gsa_filtering_rb(),
-            html.Div(html.Label("Select Parameter")),
-            gsa_params_dropdown(),
-            html.Div(html.Label("Select Result")),
+            dbc.Collapse(
+                [
+                    gsa_params_dropdown(),
+                ],
+                id=ids.GSA_PARAMS_RESULTS_COLLAPSE,
+                is_open=True,
+            ),
+            dbc.Collapse(
+                [
+                    gsa_params_slider(),
+                ],
+                id=ids.GSA_PARAMS_SLIDER_COLLAPSE,
+                is_open=True,
+            ),
             gsa_results_dropdown(),
+        ],
+    )
+
+def gsa_params_slider() -> html.Div:
+    """GSA slider component."""
+    max_num = len(GSA_PARM_OPTIONS)
+    marks = {
+        0: "0",
+        max_num//2: str(max_num//2),
+        max_num: str(max_num),
+    }
+    
+    return html.Div(
+        [
+            html.H6("Select top number of parameters:"),
+            dcc.Slider(
+                id=ids.GSA_PARAMS_SLIDER,
+                min=0,
+                max=max_num,
+                value=5,
+                step=1,
+                included=False,
+                marks=marks,
+                tooltip={"placement": "bottom", "always_visible": False}
+            ),
         ],
     )
 
@@ -54,19 +90,31 @@ def gsa_filtering_rb() -> html.Div:
     """GSA filtering radio buttons component."""
     return html.Div(
         [
+            html.H6(
+                "Select parameters by:",
+                className="card-title",
+            ),
             dcc.RadioItems(
-                id=ids.GSA_FILTERING_RB,
-                options=[{"label": "By Name", "value": "name"}, {"label": "By Rank", "value": "rank"}],
+                id=ids.GSA_PARAM_SELECTION_RB,
+                # add margin to the left of the label text
+                options=[
+                    {"label": html.Span("Name", className="ms-2"), "value": "name"},
+                    {"label": html.Span("Rank", className="ms-2"), "value": "rank"}
+                ],
                 value="name",
                 inline=True,
+                className="me-3",
+                labelStyle={"marginRight": "20px"},
             ),
         ],
         className="dropdown-container",
     )
+    
 def gsa_params_dropdown() -> html.Div:
     """GSA parameters dropdown component."""
     return html.Div(
         [
+            html.H6("Select Parameter(s)"),
             dcc.Dropdown(
                 id=ids.GSA_PARAM_DROPDOWN,
                 options=GSA_PARM_OPTIONS,
@@ -99,6 +147,7 @@ def gsa_results_dropdown() -> html.Div:
     """GSA results dropdown component."""
     return html.Div(
         [
+            html.H6("Select Result(s)"),
             dcc.Dropdown(
                 id=ids.GSA_RESULTS_DROPDOWN,
                 options=GSA_RESULT_OPTIONS,
@@ -126,6 +175,20 @@ def gsa_results_dropdown() -> html.Div:
         ],
         className="dropdown-container",
     )
+
+def get_top_n_params(raw: pd.DataFrame, num_params: int, results: list[str]) -> list[str]:
+    """Get the top n most impactful parameters."""
+    
+    df = raw.copy()[results]
+    
+    if df.empty:
+        logger.debug("No top_n parameters found")
+        return []
+    
+    top_n = []
+    for col in df.columns:
+        top_n.extend(df[col].sort_values(ascending=False).index[:num_params].to_list())
+    return sorted(list(set(top_n)))
     
 def _get_heatmap_height(num_params: int) -> int:
     """Get the height of the heatmap based on the number of parameters."""
@@ -134,15 +197,17 @@ def _get_heatmap_height(num_params: int) -> int:
         return 800
     return height
     
-def get_gsa_heatmap(data: dict[str, Any], nice_names: bool = True) -> plotly.graph_objects.Figure:
+def get_gsa_heatmap(data: dict[str, Any], nice_names: bool = True, **kwargs: Any) -> plotly.graph_objects.Figure:
     """GSA heatmap component."""
     
     if not data:
         logger.debug("No heatmap data found")
         return px.imshow(
             pd.DataFrame(),
-            color_continuous_scale="RdBu",
+            color_continuous_scale="Bluered",
             color_continuous_midpoint=0,
+            zmin=0,
+            zmax=1,
             aspect="auto",
         )
     
@@ -155,11 +220,16 @@ def get_gsa_heatmap(data: dict[str, Any], nice_names: bool = True) -> plotly.gra
         gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
         df = df.rename(columns=gsa_results).rename(index=gsa_params)
     
+    color_scale = kwargs.get("color_scale", "PuBu")
+    logger.debug(f"Color scale: {color_scale}")
+    
     fig = px.imshow(
         df,
-        color_continuous_scale="RdBu",
+        color_continuous_scale=color_scale,
         color_continuous_midpoint=0,
-        aspect="auto",  # Automatically adjust aspect ratio
+        zmin=0, 
+        zmax=1,
+        aspect="auto", 
         labels=dict(x="Parameters", y="Results", color="Scaled Elementary Effect"),
     )
     

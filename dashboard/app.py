@@ -9,8 +9,8 @@ import plotly.graph_objects as go
 
 from components.utils import get_gsa_params_dropdown_options, get_gsa_results_dropdown_options
 import components.ids as ids
-from components.gsa import gsa_options_block, get_gsa_heatmap
-from components.shared import iso_options_block
+from components.gsa import gsa_options_block, get_gsa_heatmap, get_top_n_params
+from components.shared import iso_options_block, plotting_options_block
 from components.ua import ua_options_block
 
 import logging
@@ -59,6 +59,15 @@ app.layout = html.Div(
                             [
                                 dbc.Card(
                                     [
+                                        dbc.CardBody(
+                                            [
+                                                html.H4(
+                                                    "Data Viewing Options",
+                                                    className="card-title",
+                                                ),
+                                                plotting_options_block(),
+                                            ]
+                                        ),
                                         dbc.CardBody(
                                             [
                                                 dbc.Collapse(
@@ -159,12 +168,12 @@ app.layout = html.Div(
     [
         Input(ids.TABS, "active_tab"),
         Input(ids.SA_DATA_TABLE, "data"),
-    ],
-    [
-        State(ids.UA_STORE, "data"),
+        Input(ids.UA_STORE, "data"),
+        Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+        Input(ids.COLOR_SCALE_DROPDOWN, "value"),
     ],
 )
-def render_tab_content(active_tab, sa_data, ua_data) -> html.Div:
+def render_tab_content(active_tab, sa_data, ua_data, plotting_type, color_scale) -> html.Div:
     logger.debug(f"Active Tab: {active_tab}")
     if active_tab == ids.DATA_TAB:
         return html.Div()
@@ -176,7 +185,7 @@ def render_tab_content(active_tab, sa_data, ua_data) -> html.Div:
                         dbc.CardBody(
                             [
                                 dcc.Graph(
-                                    id=ids.GSA_HEATMAP, figure=get_gsa_heatmap(sa_data)
+                                    id=ids.GSA_HEATMAP, figure=get_gsa_heatmap(sa_data, color_scale=color_scale)
                                 )
                             ]
                         )
@@ -213,20 +222,32 @@ def filter_raw_data_gsa(isos: list[str]) -> dict[str, Any]:
 @app.callback(
     Output(ids.SA_DATA_TABLE, "data"),
     [
+        Input(ids.GSA_PARAM_SELECTION_RB, "value"),
         Input(ids.GSA_PARAM_DROPDOWN, "value"),
+        Input(ids.GSA_PARAMS_SLIDER, "value"),
         Input(ids.GSA_RESULTS_DROPDOWN, "value"),
         Input(ids.SA_STORE, "data"), 
     ],
 )
 def update_gsa_si_data(
-    params: str | list[str], results: str | list[str], raw: dict[str, Any] | None = None
+    param_option: str, params_dropdown: str | list[str], params_slider: int, results: str | list[str], raw: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """Update the GSA SI data based on the selected parameters and results."""
-    logger.debug(f"Params: {params}, Results: {results}")
-    logger.debug(f"Raw data type: {type(raw)}")
-
+    
     if not raw:
         logger.debug("No raw data available")
+        return []
+
+    raw_df = pd.DataFrame(raw).set_index("param").copy()
+    
+    if param_option == "name":
+        logger.debug(f"Params: {params_dropdown}, Results: {results}")
+        params = params_dropdown
+    elif param_option == "rank":
+        logger.debug(f"Param Num: {params_slider}, Results: {results}")
+        params = get_top_n_params(raw_df, params_slider, results)
+    else:
+        logger.debug(f"Invalid parameter option: {param_option}")
         return []
 
     if not params or not results:
@@ -237,8 +258,6 @@ def update_gsa_si_data(
         params = [params]
     if isinstance(results, str):
         results = [results]
-    
-    raw_df = pd.DataFrame(raw).set_index("param").copy()
     
     logger.debug(f"Length raw dataframe columns (results): {len(raw_df.columns)}")
     logger.debug(f"Length raw dataframe index (params): {len(raw_df.index)}")
@@ -273,7 +292,7 @@ def filter_raw_data_gsa(isos: list[str]) -> dict[str, Any]:
     ],
     Input(ids.TABS, "active_tab"),
 )
-def enable_disable_option_blocks(active_tab):
+def enable_disable_option_blocks(active_tab: str) -> tuple[bool, bool, bool]:
     """Enable/disable dropdowns based on active tab and filtering mode."""
     # Start with all disabled
     iso_open = False
@@ -288,6 +307,27 @@ def enable_disable_option_blocks(active_tab):
 
     return iso_open, gsa_open, ua_open
 
+@app.callback(
+    [
+        Output(ids.GSA_PARAMS_SLIDER_COLLAPSE, "is_open"),
+        Output(ids.GSA_PARAMS_RESULTS_COLLAPSE, "is_open"),
+    ],
+    Input(ids.GSA_PARAM_SELECTION_RB, "value"),
+)
+def enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
+    """Enable/disable GSA parameter selection collapse based on filtering mode."""
+    params_slider_open = False
+    params_dropdown_open = False
+    if value == "rank":
+        params_slider_open = True
+    elif value == "name":
+        params_dropdown_open = True
+    else:
+        logger.debug(f"Invalid value for GSA parameter selection: {value}")
+        params_slider_open = True
+        params_dropdown_open = True 
+    return params_slider_open, params_dropdown_open
+
 ###
 # GSA Options Callbacks
 ###
@@ -300,7 +340,7 @@ def enable_disable_option_blocks(active_tab):
     ],
     prevent_initial_call=True,
 )
-def select_gsa_params(*args):
+def select_gsa_params(*args: Any) -> list[str]:
     """Select/remove all parameters when button is clicked."""
     ctx = dash.callback_context # to determine which button was clicked
     if not ctx.triggered:
@@ -325,7 +365,7 @@ def select_gsa_params(*args):
     ],
     prevent_initial_call=True,
 )
-def select_gsa_results(*args):
+def select_gsa_results(*args: Any) -> list[str]:
     """Select/remove all results when button is clicked."""
     ctx = dash.callback_context # to determine which button was clicked
     if not ctx.triggered:

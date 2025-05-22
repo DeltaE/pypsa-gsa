@@ -16,6 +16,8 @@ GSA_PARAM_DROPDOWN = "gsa-param-dropdown"
 GSA_RESULTS_DROPDOWN = "gsa-results-dropdown"
 UA_PARAM_DROPDOWN = "ua-param-dropdown"
 UA_RESULTS_DROPDOWN = "ua-results-dropdown"
+COLOR_SCALE_DROPDOWN = "color-scale-dropdown"
+PLOTTING_TYPE_DROPDOWN = "plotting-type-dropdown"
 
 # buttons 
 GSA_PARAM_SELECT_ALL = "gsa-param-select-all"
@@ -28,11 +30,16 @@ GSA_PARAM_BUTTON_STATE = "gsa-param-button-state"
 GSA_RESULTS_BUTTON_STATE = "gsa-results-button-state"
 
 # radio buttons
-GSA_FILTERING_RB = "gsa-filtering-rb"
+GSA_PARAM_SELECTION_RB = "gsa-param-selection-rb"
+
+# sliders
+GSA_PARAMS_SLIDER = "gsa-range-slider"
 
 # collapsable blocks
 ISO_OPTIONS_BLOCK = "iso-options-block"
 GSA_OPTIONS_BLOCK = "gsa-options-block"
+GSA_PARAMS_RESULTS_COLLAPSE = "gsa-params-results-collapse"
+GSA_PARAMS_SLIDER_COLLAPSE = "gsa-range-slider-collapse"
 UA_OPTIONS_BLOCK = "ua-options-block"
 
 # stores (filtered for ISOs)

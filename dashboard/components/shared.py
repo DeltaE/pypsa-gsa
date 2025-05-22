@@ -2,6 +2,7 @@
 
 from dash import html, dcc
 import pandas as pd
+import plotly.colors as pc
 from . import ids as ids
 from .utils import get_iso_dropdown_options
 
@@ -46,12 +47,62 @@ def iso_dropdown(options: list[str], default: list[str] | None = None) -> html.D
     
     return html.Div(
         [
-            html.Label("ISO"),
+            html.H6("Select ISO(s)"),
             dcc.Dropdown(
                 id=ids.ISO_DROPDOWN,
                 options=options,
                 value=default if default else options[0],
                 multi=True
+            ),
+        ],
+        className="dropdown-container",
+    )
+
+def plotting_options_block() -> html.Div:
+    """Plotting options block component."""
+    
+    return html.Div(
+        [
+            plotting_type_dropdown(),
+            color_scale_dropdown(),
+        ],
+        className="dropdown-container",
+    )
+
+def color_scale_dropdown() -> html.Div:
+    """Color scale dropdown component."""
+    
+    return html.Div(
+        [
+            html.H6("Select Color Scale"),
+            dcc.Dropdown(
+                id=ids.COLOR_SCALE_DROPDOWN,
+                options=sorted(pc.named_colorscales()),
+                value="pubu",
+                multi=False
+            ),
+        ],
+        className="dropdown-container",
+    )
+    
+def plotting_type_dropdown() -> html.Div:
+    """Plotting type dropdown component."""
+    
+    return html.Div(
+        [
+            html.H6("Select Data Visualization"),
+            dcc.Dropdown(
+                id=ids.PLOTTING_TYPE_DROPDOWN,
+                options=[
+                    {
+                        "label": "Data Table", "value": "data_table",
+                        "label": "Heatmap", "value": "heatmap",
+                        "label": "Bar Chart", "value": "barchart",
+                        "label": "Scatter Plot", "value": "scatterplot",
+                    }
+                ],
+                value="heatmap",
+                multi=False
             ),
         ],
         className="dropdown-container",
