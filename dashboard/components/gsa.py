@@ -1,7 +1,7 @@
 """Component to display GSA data."""
 
 from typing import Any
-from dash import dcc, html
+from dash import dcc, html, dash_table
 from pathlib import Path
 from .utils import (
     get_gsa_params_dropdown_options,
@@ -101,7 +101,7 @@ def gsa_filtering_rb() -> html.Div:
                     {"label": html.Span("Name", className="ms-2"), "value": "name"},
                     {"label": html.Span("Rank", className="ms-2"), "value": "rank"}
                 ],
-                value="name",
+                value="rank",
                 inline=True,
                 className="me-3",
                 labelStyle={"marginRight": "20px"},
@@ -176,6 +176,53 @@ def gsa_results_dropdown() -> html.Div:
         className="dropdown-container",
     )
 
+def filter_gsa_data(
+    param_option: str,
+    params_dropdown: str | list[str],
+    params_slider: int,
+    results: str | list[str],
+    raw: dict[str, Any] | None,
+) -> pd.DataFrame:
+    """Filter GSA data based on selected parameters and results.
+    
+    This is a reusable function that can be used by multiple callbacks.
+    Returns a DataFrame instead of dict to allow for further processing.
+    """
+    if not raw:
+        logger.debug("No raw data available")
+        return pd.DataFrame()
+
+    raw_df = pd.DataFrame(raw).set_index("param").copy()
+
+    if param_option == "name":
+        logger.debug(f"Params: {params_dropdown}, Results: {results}")
+        params = params_dropdown
+    elif param_option == "rank":
+        logger.debug(f"Param Num: {params_slider}, Results: {results}")
+        params = get_top_n_params(raw_df, params_slider, results)
+    else:
+        logger.debug(f"Invalid parameter option: {param_option}")
+        return pd.DataFrame()
+
+    if not params or not results:
+        logger.debug("No params or results selected")
+        return pd.DataFrame()
+
+    if isinstance(params, str):
+        params = [params]
+    if isinstance(results, str):
+        results = [results]
+
+    logger.debug(f"Length raw dataframe columns (results): {len(raw_df.columns)}")
+    logger.debug(f"Length raw dataframe index (params): {len(raw_df.index)}")
+
+    result = raw_df.loc[params][results].copy()
+
+    logger.debug(f"Length filtered dataframe columns (results): {len(result.columns)}")
+    logger.debug(f"Length filtered dataframe index (params): {len(result.index)}")
+
+    return result
+
 def get_top_n_params(raw: pd.DataFrame, num_params: int, results: list[str]) -> list[str]:
     """Get the top n most impactful parameters."""
     
@@ -244,4 +291,138 @@ def get_gsa_heatmap(data: dict[str, Any], nice_names: bool = True, **kwargs: Any
     
     return fig
 
+def get_gsa_data_table(data: dict[str, Any], nice_names: bool = True) -> dash_table.DataTable:
+    """GSA data table component."""
+    if not data:
+        logger.debug("No data table data found")
+        return dash_table.DataTable(
+            data=[],
+            columns=[],
+            style_table={'overflowX': 'auto'},
+        )
+    
+    df = pd.DataFrame(data).set_index("param")
+    logger.debug(f"Data table shape: {df.shape}")
+    
+    if nice_names:
+        logger.debug("Applying nice names to data table")
+        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
+        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
+        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+    
+    df = df.reset_index()
+    
+    # Format columns for display
+    columns = [
+        {"name": "Parameter", "id": "param", "type": "text"},
+    ] + [
+        {
+            "name": col,
+            "id": col,
+            "type": "numeric",
+            "format": {"specifier": ".3f"}
+        }
+        for col in df.columns if col != "param"
+    ]
+    
+    return dash_table.DataTable(
+        data=df.to_dict('records'),
+        columns=columns,
+        style_table={'overflowX': 'auto'},
+        style_cell={
+            'textAlign': 'left',
+            'padding': '10px',
+            'whiteSpace': 'normal',
+            'height': 'auto',
+        },
+        style_header={
+            'backgroundColor': 'rgb(230, 230, 230)',
+            'fontWeight': 'bold',
+            'border': '1px solid black'
+        },
+        style_data={
+            'border': '1px solid lightgrey'
+        },
+        style_data_conditional=[
+            {
+                'if': {'row_index': 'odd'},
+                'backgroundColor': 'rgb(248, 248, 248)'
+            }
+        ],
+        page_size=50,
+        sort_action='native',
+        filter_action='native',
+        sort_mode='multi',
+        export_format='csv',
+        export_headers='display',
+    )
+
+def normalize_mu_star_data(all_data: pd.DataFrame) -> pd.DataFrame:
+    """Normalize the data to be between 0 and 1."""
+    df = all_data.copy().set_index("param")
+        
+    for column in df.columns:
+        max_value = df[column].max()
+        df[column] = df[column].div(max_value)
+
+    return df.reset_index()
+
+def get_gsa_barchart(normed_data: dict[str, Any], nice_names: bool = True) -> plotly.graph_objects.Figure:
+    """GSA barchart component."""
+    if not normed_data:
+        logger.debug("No nomred data found")
+        return px.bar(pd.DataFrame(), x="param", y="value", color="param")
+    
+    df = pd.DataFrame(normed_data).set_index("param")
+    
+    logger.debug(f"Barchart data shape: {df.shape}")
+    
+    if nice_names:
+        logger.debug("Applying nice names to barchart")
+        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
+        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
+        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+    
+    # melt to get it in long format for plotting
+    df_melted = df.reset_index().melt(
+        id_vars=["param"],
+        var_name="result",
+        value_name="value"
+    )
+    
+    fig = px.bar(
+        df_melted,
+        x="value",
+        y="param",
+        color="result",
+        orientation="h",
+        barmode="group",
+        labels={
+            "value": "µ*/µ*_max",
+            "param": "Parameter",
+            "result": "Result"
+        },
+        title="Scaled µ*",
+    )
+    
+    fig.update_layout(
+        height=max(800, len(df.index) * 100),
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.01,
+            xanchor="right",
+            x=1
+        ),
+        xaxis=dict(
+            range=[0, 1],
+            title_standoff=10
+        ),
+        margin=dict(l=20, r=20, t=60, b=20),
+    )
+    
+    return fig
+    
+    
     

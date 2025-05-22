@@ -45,10 +45,12 @@ UA_OPTIONS_BLOCK = "ua-options-block"
 # stores (filtered for ISOs)
 SA_STORE = "sa-store"
 UA_STORE = "ua-store"
+GSA_NORMED = "gsa-normed" # for mu/mu_max clac
 
 # data tables (filtered for params/results)
 SA_DATA_TABLE = "sa-data-table"
 UA_DATA_TABLE = "ua-data-table"
+GSA_NORMED_DATA_TABLE = "gsa-normed-data-table"
 
 # gsa plots
 GSA_HEATMAP = "gsa-heatmap"

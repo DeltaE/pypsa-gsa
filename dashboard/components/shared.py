@@ -93,14 +93,7 @@ def plotting_type_dropdown() -> html.Div:
             html.H6("Select Data Visualization"),
             dcc.Dropdown(
                 id=ids.PLOTTING_TYPE_DROPDOWN,
-                options=[
-                    {
-                        "label": "Data Table", "value": "data_table",
-                        "label": "Heatmap", "value": "heatmap",
-                        "label": "Bar Chart", "value": "barchart",
-                        "label": "Scatter Plot", "value": "scatterplot",
-                    }
-                ],
+                options=[],
                 value="heatmap",
                 multi=False
             ),
