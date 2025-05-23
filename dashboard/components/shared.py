@@ -12,9 +12,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def iso_options_block(*args: pd.DataFrame | None) -> html.Div:
     """ISO options block component."""
-    
+
     # only allow available isos to be selected if data is loaded
     if not args:
         loaded_isos = [x["value"] for x in ISO_OPTIONS]
@@ -27,12 +28,12 @@ def iso_options_block(*args: pd.DataFrame | None) -> html.Div:
             loaded_isos = [x["value"] for x in ISO_OPTIONS]
         else:
             loaded_isos = list(set(loaded_isos))
-            
+
     options = [x for x in ISO_OPTIONS if x["value"] in loaded_isos]
-    
+
     logger.debug(f"Loaded isos: {options}")
-    
-    default=[x["value"] for x in options] if options else None
+
+    default = [x["value"] for x in options] if options else None
 
     logger.debug(f"Default ISO options: {default}")
 
@@ -42,9 +43,10 @@ def iso_options_block(*args: pd.DataFrame | None) -> html.Div:
         ],
     )
 
+
 def iso_dropdown(options: list[str], default: list[str] | None = None) -> html.Div:
     """ISO dropdown component."""
-    
+
     return html.Div(
         [
             html.H6("Select ISO(s)"),
@@ -52,15 +54,16 @@ def iso_dropdown(options: list[str], default: list[str] | None = None) -> html.D
                 id=ids.ISO_DROPDOWN,
                 options=options,
                 value=default if default else options[0],
-                multi=True
+                multi=True,
             ),
         ],
         className="dropdown-container",
     )
 
+
 def plotting_options_block() -> html.Div:
     """Plotting options block component."""
-    
+
     return html.Div(
         [
             plotting_type_dropdown(),
@@ -69,9 +72,10 @@ def plotting_options_block() -> html.Div:
         className="dropdown-container",
     )
 
+
 def color_scale_dropdown() -> html.Div:
     """Color scale dropdown component."""
-    
+
     return html.Div(
         [
             html.H6("Select Color Scale"),
@@ -79,23 +83,21 @@ def color_scale_dropdown() -> html.Div:
                 id=ids.COLOR_SCALE_DROPDOWN,
                 options=sorted(pc.named_colorscales()),
                 value="pubu",
-                multi=False
+                multi=False,
             ),
         ],
         className="dropdown-container",
     )
-    
+
+
 def plotting_type_dropdown() -> html.Div:
     """Plotting type dropdown component."""
-    
+
     return html.Div(
         [
             html.H6("Select Data Visualization"),
             dcc.Dropdown(
-                id=ids.PLOTTING_TYPE_DROPDOWN,
-                options=[],
-                value="heatmap",
-                multi=False
+                id=ids.PLOTTING_TYPE_DROPDOWN, options=[], value="heatmap", multi=False
             ),
         ],
         className="dropdown-container",

@@ -4,7 +4,7 @@ import pandas as pd
 from pathlib import Path
 import json
 
-# scenarios must follow these names as they are tied to geographic locations 
+# scenarios must follow these names as they are tied to geographic locations
 ISOS = {
     "caiso": "California (CAISO)",
     "ercot": "Texas (ERCOT)",
@@ -29,23 +29,31 @@ ISO_STATES = {
     "spp": ["KS", "ND", "NE", "OK", "SD"],
     "northwest": ["ID", "MT", "OR", "WA", "WY"],
     "southeast": ["AL", "FL", "GA", "NC", "SC", "TN"],
-    "southwest": ["AZ", "CO", "NM", "NV", "UT"]
+    "southwest": ["AZ", "CO", "NM", "NV", "UT"],
 }
 
-def _convert_to_dropdown_options(options: dict[str,str]) -> list[dict[str, str]]:
+
+def _convert_to_dropdown_options(options: dict[str, str]) -> list[dict[str, str]]:
     """Convert a dictionary to a list of dropdown options, sorted alphabetically by label."""
     options_list = [{"label": v, "value": k} for k, v in options.items()]
-    return sorted(options_list, key=lambda x: x["label"].lower()) # alphabetical label order
+    return sorted(
+        options_list, key=lambda x: x["label"].lower()
+    )  # alphabetical label order
+
 
 def _unflatten_dropdown_options(options: list[dict[str, str]]) -> dict[str, str]:
     """Unflatten a dictionary of options."""
     return {x["value"]: x["label"] for x in options}
 
+
 def get_iso_dropdown_options() -> list[dict[str, str]]:
     """Get the ISO dropdown options."""
     return _convert_to_dropdown_options(ISOS)
 
-def get_gsa_params_dropdown_options(root: str, flatten: bool = True) -> list[dict[str, str]]:
+
+def get_gsa_params_dropdown_options(
+    root: str, flatten: bool = True
+) -> list[dict[str, str]]:
     """Get the GSA parameters dropdown options."""
     with open(Path(root, "data", "sa_params.json"), "r") as f:
         loaded = json.load(f)
@@ -55,7 +63,9 @@ def get_gsa_params_dropdown_options(root: str, flatten: bool = True) -> list[dic
         return loaded
 
 
-def get_ua_params_dropdown_options(root: str, flatten: bool = True) -> list[dict[str, str]]:
+def get_ua_params_dropdown_options(
+    root: str, flatten: bool = True
+) -> list[dict[str, str]]:
     """Get the UA parameters dropdown options."""
     with open(Path(root, "data", "ua_params.json"), "r") as f:
         loaded = json.load(f)
@@ -65,7 +75,9 @@ def get_ua_params_dropdown_options(root: str, flatten: bool = True) -> list[dict
         return loaded
 
 
-def get_gsa_results_dropdown_options(root: str, flatten: bool = True) -> list[dict[str, str]]:
+def get_gsa_results_dropdown_options(
+    root: str, flatten: bool = True
+) -> list[dict[str, str]]:
     """Get the GSA results dropdown options."""
     with open(Path(root, "data", "sa_results.json"), "r") as f:
         loaded = json.load(f)
@@ -75,7 +87,9 @@ def get_gsa_results_dropdown_options(root: str, flatten: bool = True) -> list[di
         return loaded
 
 
-def get_ua_results_dropdown_options(root: str, flatten: bool = True) -> list[dict[str, str]]:
+def get_ua_results_dropdown_options(
+    root: str, flatten: bool = True
+) -> list[dict[str, str]]:
     """Get the UA results dropdown options."""
     with open(Path(root, "data", "ua_results.json"), "r") as f:
         loaded = json.load(f)

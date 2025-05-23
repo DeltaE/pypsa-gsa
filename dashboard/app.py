@@ -7,6 +7,7 @@ import pandas as pd
 import plotly
 import plotly.express as px
 import plotly.graph_objects as go
+import geopandas as gpd
 
 from components.utils import (
     get_gsa_params_dropdown_options,
@@ -44,6 +45,7 @@ app = dash.Dash(
 
 RAW_GSA = pd.read_csv("data/sa.csv")
 RAW_UA = pd.read_csv("data/ua_runs.csv")
+ISO_SHAPE = gpd.read_file("data/iso_shapes.geojson")
 
 root = Path(__file__).parent
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
@@ -209,6 +211,11 @@ def render_tab_content(
                 id=ids.GSA_BAR_CHART,
                 figure=get_gsa_barchart(gsa_normed_data),
             )
+        elif plotting_type == "map":
+            view = dcc.Graph(
+                id=ids.GSA_MAP,
+                figure=get_gsa_map(sa_data),
+            )
 
         return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.UA_TAB:
@@ -231,6 +238,7 @@ def update_plotting_type_dropdown_options(active_tab: str) -> list[dict[str, str
             {"label": "Data Table", "value": "data_table"},
             {"label": "Heatmap", "value": "heatmap"},
             {"label": "Bar Chart", "value": "barchart"},
+            {"label": "Map", "value": "map"},
         ]
     else:
         logger.debug(f"Invalid active tab: {active_tab}")

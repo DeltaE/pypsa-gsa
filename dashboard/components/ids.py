@@ -19,7 +19,7 @@ UA_RESULTS_DROPDOWN = "ua-results-dropdown"
 COLOR_SCALE_DROPDOWN = "color-scale-dropdown"
 PLOTTING_TYPE_DROPDOWN = "plotting-type-dropdown"
 
-# buttons 
+# buttons
 GSA_PARAM_SELECT_ALL = "gsa-param-select-all"
 GSA_PARAM_REMOVE_ALL = "gsa-param-remove-all"
 GSA_RESULTS_SELECT_ALL = "gsa-results-select-all"
@@ -45,7 +45,7 @@ UA_OPTIONS_BLOCK = "ua-options-block"
 # stores (filtered for ISOs)
 SA_STORE = "sa-store"
 UA_STORE = "ua-store"
-GSA_NORMED = "gsa-normed" # for mu/mu_max clac
+GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
 
 # data tables (filtered for params/results)
 SA_DATA_TABLE = "sa-data-table"
@@ -57,4 +57,3 @@ GSA_HEATMAP = "gsa-heatmap"
 GSA_BAR_CHART = "gsa-bar-chart"
 GSA_MAP = "gsa-map"
 GSA_DATA_TABLE = "gsa-data-table"
-

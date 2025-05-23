@@ -13,6 +13,7 @@ root = Path(__file__).parent.parent
 UA_PARM_OPTIONS = get_ua_params_dropdown_options(root)
 UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
 
+
 def ua_options_block() -> html.Div:
     """UA options block component."""
     return html.Div(
@@ -39,6 +40,7 @@ def ua_params_dropdown() -> html.Div:
         className="dropdown-container",
     )
 
+
 def ua_results_dropdown() -> html.Div:
     """UA results dropdown component."""
     return html.Div(
@@ -52,4 +54,3 @@ def ua_results_dropdown() -> html.Div:
         ],
         className="dropdown-container",
     )
-    
