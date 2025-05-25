@@ -42,15 +42,23 @@ GSA_PARAMS_RESULTS_COLLAPSE = "gsa-params-results-collapse"
 GSA_PARAMS_SLIDER_COLLAPSE = "gsa-range-slider-collapse"
 UA_OPTIONS_BLOCK = "ua-options-block"
 
-# stores (filtered for ISOs)
-SA_STORE = "sa-store"
+# gsa stores
+GSA_ISO_DATA = "gsa-iso-data" # other stores use this
+GSA_ISO_NORMED_DATA = "gsa-iso-normed-data"
+GSA_HM_DATA = "gsa-hm-data"
+GSA_BAR_DATA = "gsa-bar-data"
+GSA_MAP_DATA = "gsa-map-data"
+
+
+
 UA_STORE = "ua-store"
 GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
+GSA_RUNS_STORE = "gsa-runs-store"
 
 # data tables (filtered for params/results)
-SA_DATA_TABLE = "sa-data-table"
 UA_DATA_TABLE = "ua-data-table"
 GSA_NORMED_DATA_TABLE = "gsa-normed-data-table"
+GSA_RUNS_DATA_TABLE = "gsa-runs-data-table"
 
 # gsa plots
 GSA_HEATMAP = "gsa-heatmap"

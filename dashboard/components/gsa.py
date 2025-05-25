@@ -12,6 +12,7 @@ from . import ids as ids
 import dash_bootstrap_components as dbc
 
 import pandas as pd
+import geopandas as gpd
 import plotly
 import plotly.express as px
 
@@ -23,6 +24,11 @@ root = Path(__file__).parent.parent
 
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(root)
+
+GSA_RB_OPTIONS = [
+    {"label": html.Span("Name", className="ms-2"), "value": "name", "disabled": False},
+    {"label": html.Span("Rank", className="ms-2"), "value": "rank", "disabled": False},
+]
 
 
 def _default_gsa_params_value() -> list[str]:
@@ -109,11 +115,7 @@ def gsa_filtering_rb() -> html.Div:
             ),
             dcc.RadioItems(
                 id=ids.GSA_PARAM_SELECTION_RB,
-                # add margin to the left of the label text
-                options=[
-                    {"label": html.Span("Name", className="ms-2"), "value": "name"},
-                    {"label": html.Span("Rank", className="ms-2"), "value": "rank"},
-                ],
+                options=GSA_RB_OPTIONS,
                 value="rank",
                 inline=True,
                 className="me-3",
@@ -193,51 +195,80 @@ def gsa_results_dropdown() -> html.Div:
 
 
 def filter_gsa_data(
+    data: list[dict[str, Any]] | None,
     param_option: str,
     params_dropdown: str | list[str],
     params_slider: int,
     results: str | list[str],
-    raw: dict[str, Any] | None,
+    keep_iso: bool = False,
 ) -> pd.DataFrame:
-    """Filter GSA data based on selected parameters and results.
-
-    This is a reusable function that can be used by multiple callbacks.
-    Returns a DataFrame instead of dict to allow for further processing.
-    """
-    if not raw:
-        logger.debug("No raw data available")
+    """Filter GSA data based on selected parameters and results."""
+    if not data:
+        logger.debug("No raw GSA data available to filter")
         return pd.DataFrame()
 
-    raw_df = pd.DataFrame(raw).set_index("param").copy()
+    df = pd.DataFrame(data).set_index("param").copy()
 
     if param_option == "name":
-        logger.debug(f"Params: {params_dropdown}, Results: {results}")
+        logger.info("Filtering GSA data by name")
+        logger.debug(f"Params: {params_dropdown} | Results: {results}")
         params = params_dropdown
     elif param_option == "rank":
-        logger.debug(f"Param Num: {params_slider}, Results: {results}")
-        params = get_top_n_params(raw_df, params_slider, results)
+        logger.info("Filtering GSA data by rank")
+        logger.debug(f"Num Params: {params_slider} | Results: {results}")
+        params = get_top_n_params(df, params_slider, results)
     else:
-        logger.debug(f"Invalid parameter option: {param_option}")
+        logger.debug(f"Invalid flitering GSA selection of: {param_option}")
         return pd.DataFrame()
 
     if not params or not results:
-        logger.debug("No params or results selected")
+        logger.debug("No params or results selected for GSA filtering")
         return pd.DataFrame()
 
     if isinstance(params, str):
         params = [params]
     if isinstance(results, str):
         results = [results]
+    if keep_iso:
+        logger.debug("Removing ISO in GSA filtering")
+        results.append("iso")
 
-    logger.debug(f"Length raw dataframe columns (results): {len(raw_df.columns)}")
-    logger.debug(f"Length raw dataframe index (params): {len(raw_df.index)}")
-
-    result = raw_df.loc[params][results].copy()
-
-    logger.debug(f"Length filtered dataframe columns (results): {len(result.columns)}")
-    logger.debug(f"Length filtered dataframe index (params): {len(result.index)}")
+    result = df.loc[params][results].copy()
 
     return result
+
+
+def filter_gsa_data_for_map(
+    data: list[dict[str, Any]] | None,
+    params_slider: int,
+    result: str,
+) -> pd.DataFrame:
+    """Filter GSA data for the map."""
+
+    if not data:
+        logger.debug("No raw GSA data available to filter")
+        return pd.DataFrame()
+
+    if isinstance(result, list):
+        logger.debug(f"GSA results not a single result: {result}")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(data).set_index(["iso"])[["param", result]]
+
+    df = df.pivot_table(columns="param", index=df.index).T.droplevel(
+        0
+    )  # level 0 is the result
+
+    for col in df.columns:
+        df[col] = df[col].rank(method="dense", ascending=False).astype(int)
+
+    ranking = {}
+    for rank in range(1, params_slider):
+        ranking[rank] = {}
+        for col in df.columns:
+            ranking[rank][col] = df[col][df[col] == rank].index[0]
+
+    return pd.DataFrame(ranking)
 
 
 def get_top_n_params(
@@ -248,7 +279,7 @@ def get_top_n_params(
     df = raw.copy()[results]
 
     if df.empty:
-        logger.debug("No top_n parameters found")
+        logger.debug("No top_n parameters found for GSA")
         return []
 
     top_n = []
@@ -271,7 +302,7 @@ def get_gsa_heatmap(
     """GSA heatmap component."""
 
     if not data:
-        logger.debug("No heatmap data found")
+        logger.debug("No GSA heatmap data found")
         return px.imshow(
             pd.DataFrame(),
             color_continuous_scale="Bluered",
@@ -282,16 +313,16 @@ def get_gsa_heatmap(
         )
 
     df = pd.DataFrame(data).set_index("param")
-    logger.debug(f"Heatmap data shape: {df.shape}")
+    logger.debug(f"Heatmap GSA data shape: {df.shape}")
 
     if nice_names:
-        logger.debug("Applying nice names to heatmap")
+        logger.debug("Applying nice names to GSA heatmap")
         gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
         gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
         df = df.rename(columns=gsa_results).rename(index=gsa_params)
 
     color_scale = kwargs.get("color_scale", "PuBu")
-    logger.debug(f"Color scale: {color_scale}")
+    logger.debug(f"GSA heatmap color scale: {color_scale}")
 
     fig = px.imshow(
         df,
@@ -320,7 +351,7 @@ def get_gsa_data_table(
 ) -> dash_table.DataTable:
     """GSA data table component."""
     if not data:
-        logger.debug("No data table data found")
+        logger.debug("No GSA data table data found")
         return dash_table.DataTable(
             data=[],
             columns=[],
@@ -328,10 +359,10 @@ def get_gsa_data_table(
         )
 
     df = pd.DataFrame(data).set_index("param")
-    logger.debug(f"Data table shape: {df.shape}")
+    logger.debug(f"GSA data table shape: {df.shape}")
 
     if nice_names:
-        logger.debug("Applying nice names to data table")
+        logger.debug("Applying nice names to GSA data table")
         gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
         gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
         df = df.rename(columns=gsa_results).rename(index=gsa_params)
@@ -375,11 +406,17 @@ def get_gsa_data_table(
     )
 
 
-def normalize_mu_star_data(all_data: pd.DataFrame) -> pd.DataFrame:
+def normalize_mu_star_data(data: pd.DataFrame) -> pd.DataFrame:
     """Normalize the data to be between 0 and 1."""
-    df = all_data.copy().set_index("param")
+    if data.empty:
+        logger.debug("No GSA data to normalize")
+        return pd.DataFrame()
+
+    df = data.copy().set_index("param")
 
     for column in df.columns:
+        if column == "iso":
+            continue
         max_value = df[column].max()
         df[column] = df[column].div(max_value)
 
@@ -391,15 +428,15 @@ def get_gsa_barchart(
 ) -> plotly.graph_objects.Figure:
     """GSA barchart component."""
     if not normed_data:
-        logger.debug("No nomred data found")
+        logger.debug("No nomred GSA data found")
         return px.bar(pd.DataFrame(), x="param", y="value", color="param")
 
     df = pd.DataFrame(normed_data).set_index("param")
 
-    logger.debug(f"Barchart data shape: {df.shape}")
+    logger.debug(f"GSA barchart data shape: {df.shape}")
 
     if nice_names:
-        logger.debug("Applying nice names to barchart")
+        logger.debug("Applying nice names to GSA barchart")
         gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
         gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
         df = df.rename(columns=gsa_results).rename(index=gsa_params)
@@ -426,6 +463,73 @@ def get_gsa_barchart(
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),
         xaxis=dict(range=[0, 1], title_standoff=10),
         margin=dict(l=20, r=20, t=60, b=20),
+    )
+
+    return fig
+
+
+def get_gsa_map(
+    data: list[dict[str, Any]], gdf: gpd.GeoDataFrame
+) -> plotly.graph_objects.Figure:
+    """GSA map component."""
+
+    # to fill in any missing ISOs
+    no_data = pd.DataFrame({"iso": gdf.iso.astype(str), "value": "No Data"}).set_index(
+        "iso"
+    )
+
+    if not data:
+        logger.debug("No GSA map data found")
+        rankings = no_data
+    else:
+        rankings = pd.DataFrame(data, dtype=str)
+        rankings = rankings.set_index("iso").astype(str)
+        rankings = rankings.iloc[:, 0].rename("value")
+
+    rankings = (
+        no_data.join(rankings, how="left", lsuffix="_drop")
+        .fillna("No Data")
+        .drop(columns=["value_drop"])
+    )
+
+    categories = rankings["value"].unique()
+    color_map = {
+        cat: px.colors.qualitative.Set3[i % len(px.colors.qualitative.Set3)]
+        for i, cat in enumerate(categories)
+    }
+
+    logger.debug(f"Rankings:\n{rankings}")
+    logger.debug(f"GDF:\n{gdf}")
+
+    fig = px.choropleth(
+        rankings,
+        geojson=gdf.set_index("iso"),
+        locations=rankings.index,
+        color="value",
+        # color_continuous_scale='Viridis',
+        # hover_name='iso',
+        hover_data=["value"],
+        # color_discrete_sequence=["grey"],
+        # color_discrete_map={"": "grey"},
+        color_discrete_map=color_map,
+    )
+
+    fig.update_geos(
+        visible=False,  # remove background world map
+        showframe=False,
+        showcoastlines=False,
+        showland=False,
+        showlakes=False,
+        showcountries=False,
+    )
+
+    fig.update_layout(
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        geo=dict(
+            fitbounds="locations",  # fit the map to geometries
+            projection=dict(type="albers usa"),
+            scope="usa",  # Set the scope to USA
+        ),
     )
 
     return fig

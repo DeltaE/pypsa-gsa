@@ -15,10 +15,12 @@ from components.utils import (
 )
 import components.ids as ids
 from components.gsa import (
+    GSA_RB_OPTIONS,
     filter_gsa_data,
+    filter_gsa_data_for_map,
+    get_gsa_map,
     gsa_options_block,
     get_gsa_heatmap,
-    get_top_n_params,
     get_gsa_data_table,
     get_gsa_barchart,
     normalize_mu_star_data,
@@ -43,9 +45,12 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
 )
 
+SIDEBAR_WIDTH = 3
+CONTENT_WIDTH = int(12 - SIDEBAR_WIDTH)
+
 RAW_GSA = pd.read_csv("data/sa.csv")
 RAW_UA = pd.read_csv("data/ua_runs.csv")
-ISO_SHAPE = gpd.read_file("data/iso_shapes.geojson")
+ISO_SHAPE = gpd.read_file("data/iso.geojson")
 
 root = Path(__file__).parent
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
@@ -132,7 +137,7 @@ app.layout = html.Div(
                                     ]
                                 )
                             ],
-                            md=2,  # Takes up 1/6 of the width
+                            md=SIDEBAR_WIDTH,
                         ),
                         dbc.Col(
                             [
@@ -157,17 +162,18 @@ app.layout = html.Div(
                                 ),
                                 html.Div(id=ids.TAB_CONTENT),
                             ],
-                            md=10,
+                            md=CONTENT_WIDTH,
                         ),
                     ]
                 ),
                 # Store components to share data between callbacks
-                dcc.Store(id=ids.SA_STORE),  # raw data
+                dcc.Store(id=ids.GSA_ISO_DATA),
+                dcc.Store(id=ids.GSA_ISO_NORMED_DATA),
+                dcc.Store(id=ids.GSA_HM_DATA),
+                dcc.Store(id=ids.GSA_BAR_DATA),
+                dcc.Store(id=ids.GSA_MAP_DATA),
                 dcc.Store(id=ids.UA_STORE),
-                dcc.Store(id=ids.SA_DATA_TABLE),  # filtered by iso
                 dcc.Store(id=ids.UA_DATA_TABLE),
-                dcc.Store(id=ids.GSA_NORMED), # mu/mu_max calculation
-                dcc.Store(id=ids.GSA_NORMED_DATA_TABLE), 
                 dcc.Store(id=ids.GSA_PARAM_BUTTON_STATE, data=""),
                 dcc.Store(id=ids.GSA_RESULTS_BUTTON_STATE, data=""),
             ],
@@ -185,38 +191,47 @@ app.layout = html.Div(
     Output(ids.TAB_CONTENT, "children"),
     [
         Input(ids.TABS, "active_tab"),
-        Input(ids.SA_DATA_TABLE, "data"),
-        Input(ids.GSA_NORMED_DATA_TABLE, "data"),
+        Input(ids.GSA_HM_DATA, "data"),
+        Input(ids.GSA_BAR_DATA, "data"),
+        Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_STORE, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_SCALE_DROPDOWN, "value"),
     ],
 )
 def render_tab_content(
-    active_tab, sa_data, gsa_normed_data, ua_data, plotting_type, color_scale
+    active_tab: str,
+    gsa_hm_data: list[dict[str, Any]],
+    gsa_bar_data: list[dict[str, Any]],
+    gsa_map_data: list[dict[str, Any]],
+    ua_data: list[dict[str, Any]],
+    plotting_type: str,
+    color_scale: str,
 ) -> html.Div:
-    logger.debug(f"Active Tab: {active_tab}")
+    logger.debug(f"Rendering tab content for: {active_tab}")
     if active_tab == ids.DATA_TAB:
         return html.Div()
     elif active_tab == ids.SA_TAB:
         if plotting_type == "heatmap":
             view = dcc.Graph(
                 id=ids.GSA_HEATMAP,
-                figure=get_gsa_heatmap(sa_data, color_scale=color_scale),
+                figure=get_gsa_heatmap(gsa_hm_data, color_scale=color_scale),
             )
         elif plotting_type == "data_table":
-            view = get_gsa_data_table(sa_data)
+            view = get_gsa_data_table(gsa_hm_data)
         elif plotting_type == "barchart":
             view = dcc.Graph(
                 id=ids.GSA_BAR_CHART,
-                figure=get_gsa_barchart(gsa_normed_data),
+                figure=get_gsa_barchart(gsa_bar_data),
             )
         elif plotting_type == "map":
             view = dcc.Graph(
                 id=ids.GSA_MAP,
-                figure=get_gsa_map(sa_data),
+                figure=get_gsa_map(gsa_map_data, ISO_SHAPE),
             )
-
+        else:
+            logger.debug(f"Invalid plotting type: {plotting_type}")
+            view = get_gsa_data_table(gsa_hm_data)
         return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.UA_TAB:
         return html.Div()
@@ -225,23 +240,31 @@ def render_tab_content(
 
 
 @app.callback(
-    Output(ids.PLOTTING_TYPE_DROPDOWN, "options"),
+    [
+        Output(ids.PLOTTING_TYPE_DROPDOWN, "options"),
+        Output(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+    ],
     Input(ids.TABS, "active_tab"),
 )
-def update_plotting_type_dropdown_options(active_tab: str) -> list[dict[str, str]]:
+def update_plotting_type_dropdown_options(
+    active_tab: str,
+) -> tuple[list[dict[str, str]], str]:
     """Update the plotting type dropdown options based on the active tab."""
-    logger.debug(f"Active Tab: {active_tab}")
+    logger.debug(f"Updating plotting type dropdown options for: {active_tab}")
     if active_tab == ids.DATA_TAB:
         return [{"label": "Data Table", "value": "data_table"}]
     elif active_tab == ids.SA_TAB:
-        return [
-            {"label": "Data Table", "value": "data_table"},
-            {"label": "Heatmap", "value": "heatmap"},
-            {"label": "Bar Chart", "value": "barchart"},
-            {"label": "Map", "value": "map"},
-        ]
+        return (
+            [
+                {"label": "Data Table", "value": "data_table"},
+                {"label": "Heatmap", "value": "heatmap"},
+                {"label": "Bar Chart", "value": "barchart"},
+                {"label": "Map", "value": "map"},
+            ],
+            "heatmap",
+        )
     else:
-        logger.debug(f"Invalid active tab: {active_tab}")
+        logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")
         return [{"label": "Data Table", "value": "data_table"}]
 
 
@@ -253,77 +276,122 @@ def update_plotting_type_dropdown_options(active_tab: str) -> list[dict[str, str
 
 
 @app.callback(
-    Output(ids.SA_STORE, "data"),
+    Output(ids.GSA_ISO_DATA, "data"),
     Input(ids.ISO_DROPDOWN, "value"),
 )
-def filter_raw_data_gsa(isos: list[str]) -> dict[str, Any]:
+def callback_filter_gsa_on_iso(isos: list[str]) -> list[dict[str, Any]]:
     """Update the GSA store data based on the selected ISOs."""
     logger.debug(f"ISO dropdown value: {isos}")
     if not isos:
-        logger.debug("No ISOs selected")
-        return None  # Change empty list to None to be more explicit
-    data = RAW_GSA[RAW_GSA.iso.isin(isos)].drop(columns=["iso"]).to_dict("records")
-    logger.debug(f"SA_STORE data length: {len(data)}")
+        logger.debug("No ISOs selected from dropdown")
+        return []
+    data = RAW_GSA[RAW_GSA.iso.isin(isos)].to_dict("records")
     return data
 
 
 @app.callback(
-    Output(ids.GSA_NORMED, "data"),
-    Input(ids.SA_STORE, "data"),
+    Output(ids.GSA_ISO_NORMED_DATA, "data"),
+    Input(ids.GSA_ISO_DATA, "data"),
 )
-def normalize_mu_star(data: dict[str, Any]) -> dict[str, Any]:
+def callback_normalize_mu_star_data(
+    gsa_iso_data: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """Normalize data for the mu/mu_max calculation.
 
     Treat this as a store so that it is not recalculated every time the data is filtered,
     as this is independent of the result selections.
     """
-    df = pd.DataFrame(data)
+    df = pd.DataFrame(gsa_iso_data)
+    logger.debug(f"Normalizing GSA data of shape: {df.shape}")
     return normalize_mu_star_data(df).to_dict("records")
 
-# Original callback for data table
+
 @app.callback(
-    Output(ids.SA_DATA_TABLE, "data"),
+    Output(ids.GSA_HM_DATA, "data"),
     [
+        Input(ids.GSA_ISO_DATA, "data"),
         Input(ids.GSA_PARAM_SELECTION_RB, "value"),
         Input(ids.GSA_PARAM_DROPDOWN, "value"),
         Input(ids.GSA_PARAMS_SLIDER, "value"),
         Input(ids.GSA_RESULTS_DROPDOWN, "value"),
-        Input(ids.SA_STORE, "data"),
     ],
+    State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
 )
-def update_gsa_si_data(
+def callback_filter_gsa_data_for_heatmap(
+    gsa_iso_data: list[dict[str, Any]] | None,
     param_option: str,
     params_dropdown: str | list[str],
     params_slider: int,
     results: str | list[str],
-    raw_data: dict[str, Any] | None,
-) -> dict[str, Any]:
+    plotting_type: str,
+) -> list[dict[str, Any]]:
     """Update the GSA SI data for the data table."""
-    df = filter_gsa_data(param_option, params_dropdown, params_slider, results, raw_data)
+    if plotting_type == "map": # map updates some dropdowns
+        return dash.no_update
+    df = filter_gsa_data(
+        data=gsa_iso_data,
+        param_option=param_option,
+        params_dropdown=params_dropdown,
+        params_slider=params_slider,
+        results=results,
+        keep_iso=False,
+    )
     return df.reset_index().to_dict("records")
 
 
-# New callback for barchart
 @app.callback(
-    Output(ids.GSA_NORMED_DATA_TABLE, "data"),
+    Output(ids.GSA_BAR_DATA, "data"),
     [
+        Input(ids.GSA_ISO_NORMED_DATA, "data"),
         Input(ids.GSA_PARAM_SELECTION_RB, "value"),
         Input(ids.GSA_PARAM_DROPDOWN, "value"),
         Input(ids.GSA_PARAMS_SLIDER, "value"),
         Input(ids.GSA_RESULTS_DROPDOWN, "value"),
-        Input(ids.GSA_NORMED, "data"),
     ],
+    State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
 )
-def update_gsa_si_nomred_data(
+def callback_filter_gsa_data_for_barchart(
+    gsa_iso_normed_data: list[dict[str, Any]] | None,
     param_option: str,
     params_dropdown: str | list[str],
     params_slider: int,
     results: str | list[str],
-    normed_data: dict[str, Any] | None,
-) -> dict[str, Any]:
+    plotting_type: str,
+) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
-    df = filter_gsa_data(param_option, params_dropdown, params_slider, results, normed_data)
+    if plotting_type == "map": # map updates some dropdowns
+        return dash.no_update
+    df = filter_gsa_data(
+        data=gsa_iso_normed_data,
+        param_option=param_option,
+        params_dropdown=params_dropdown,
+        params_slider=params_slider,
+        results=results,
+        keep_iso=False,
+    )
     return df.reset_index().to_dict("records")
+
+
+@app.callback(
+    Output(ids.GSA_MAP_DATA, "data"),
+    [
+        Input(ids.GSA_ISO_DATA, "data"),
+        Input(ids.GSA_PARAMS_SLIDER, "value"),
+        Input(ids.GSA_RESULTS_DROPDOWN, "value"),
+    ],
+)
+def callback_filter_gsa_data_for_map(
+    gsa_iso_data: list[dict[str, Any]] | None,
+    params_slider: int,
+    result: str,  # only one result for map
+) -> list[dict[str, Any]]:
+    """Update the GSA barchart."""
+    df = filter_gsa_data_for_map(
+        data=gsa_iso_data,
+        params_slider=params_slider,
+        result=result,
+    )
+    return df.reset_index(names="iso").to_dict("records")
 
 
 ### UA
@@ -333,8 +401,8 @@ def update_gsa_si_nomred_data(
     Output(ids.UA_STORE, "data"),
     Input(ids.ISO_DROPDOWN, "value"),
 )
-def filter_raw_data_ua(isos: list[str]) -> dict[str, Any]:
-    return RAW_GSA[RAW_GSA.iso.isin(isos)].drop(columns=["iso"]).to_dict("records")
+def callback_filter_raw_data_ua(isos: list[str]) -> dict[str, Any]:
+    return RAW_GSA[RAW_GSA.iso.isin(isos)].to_dict("records")
 
 
 ###
@@ -350,7 +418,7 @@ def filter_raw_data_ua(isos: list[str]) -> dict[str, Any]:
     ],
     Input(ids.TABS, "active_tab"),
 )
-def enable_disable_option_blocks(active_tab: str) -> tuple[bool, bool, bool]:
+def callback_enable_disable_option_blocks(active_tab: str) -> tuple[bool, bool, bool]:
     """Enable/disable dropdowns based on active tab and filtering mode."""
     # Start with all disabled
     iso_open = False
@@ -373,7 +441,7 @@ def enable_disable_option_blocks(active_tab: str) -> tuple[bool, bool, bool]:
     ],
     Input(ids.GSA_PARAM_SELECTION_RB, "value"),
 )
-def enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
+def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
     """Enable/disable GSA parameter selection collapse based on filtering mode."""
     params_slider_open = False
     params_dropdown_open = False
@@ -382,7 +450,7 @@ def enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
     elif value == "name":
         params_dropdown_open = True
     else:
-        logger.debug(f"Invalid value for GSA parameter selection: {value}")
+        logger.debug(f"Invalid GSA radio button value: {value}")
         params_slider_open = True
         params_dropdown_open = True
     return params_slider_open, params_dropdown_open
@@ -395,14 +463,17 @@ def enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
 
 @app.callback(
     Output(ids.GSA_PARAM_DROPDOWN, "value"),
+    State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
     [
         Input(ids.GSA_PARAM_SELECT_ALL, "n_clicks"),
         Input(ids.GSA_PARAM_REMOVE_ALL, "n_clicks"),
     ],
     prevent_initial_call=True,
 )
-def select_gsa_params(*args: Any) -> list[str]:
+def callback_select_remove_all_gsa_params(plotting_type: str, *args: Any) -> list[str]:
     """Select/remove all parameters when button is clicked."""
+    if plotting_type == "map":
+        return dash.no_update
     ctx = dash.callback_context  # to determine which button was clicked
     if not ctx.triggered:
         return dash.no_update
@@ -410,7 +481,7 @@ def select_gsa_params(*args: Any) -> list[str]:
     # id of the button that was clicked
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    logger.debug(f"Button ID: {button_id}")
+    logger.debug(f"Triggered GSA param button ID of: {button_id}")
 
     if button_id == ids.GSA_PARAM_SELECT_ALL:
         return [option["value"] for option in GSA_PARM_OPTIONS]
@@ -420,15 +491,18 @@ def select_gsa_params(*args: Any) -> list[str]:
 
 
 @app.callback(
-    Output(ids.GSA_RESULTS_DROPDOWN, "value"),
+    Output(ids.GSA_RESULTS_DROPDOWN, "value", allow_duplicate=True),
+    State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
     [
         Input(ids.GSA_RESULTS_SELECT_ALL, "n_clicks"),
         Input(ids.GSA_RESULTS_REMOVE_ALL, "n_clicks"),
     ],
     prevent_initial_call=True,
 )
-def select_gsa_results(*args: Any) -> list[str]:
+def callback_select_remove_all_gsa_results(plotting_type: str, *args: Any) -> list[str]:
     """Select/remove all results when button is clicked."""
+    if plotting_type == "map":
+        return dash.no_update
     ctx = dash.callback_context  # to determine which button was clicked
     if not ctx.triggered:
         return dash.no_update
@@ -436,13 +510,55 @@ def select_gsa_results(*args: Any) -> list[str]:
     # id of the button that was clicked
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    logger.debug(f"Button ID: {button_id}")
+    logger.debug(f"Triggered GSA result button ID of: {button_id}")
 
     if button_id == ids.GSA_RESULTS_SELECT_ALL:
         return [option["value"] for option in GSA_RESULT_OPTIONS]
     elif button_id == ids.GSA_RESULTS_REMOVE_ALL:
         return []
     return dash.no_update
+
+
+@app.callback(
+    [
+        Output(ids.GSA_RESULTS_DROPDOWN, "multi"),
+        Output(ids.GSA_RESULTS_DROPDOWN, "value", allow_duplicate=True),
+        Output(ids.GSA_RESULTS_SELECT_ALL, "active"),
+        Output(ids.GSA_RESULTS_REMOVE_ALL, "active"),
+    ],
+    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+    State(ids.TABS, "active_tab"),
+    State(ids.GSA_RESULTS_DROPDOWN, "value"),
+    prevent_initial_call="initial_duplicate",  # for the allow duplicates
+)
+def callback_update_gsa_results_dropdown(
+    plotting_type: str, active_tab: str, current_results: list[str]
+) -> tuple[bool, bool, bool]:
+    if active_tab != ids.SA_TAB:
+        return dash.no_update
+    elif plotting_type == "map":
+        if isinstance(current_results, str):
+            current_results = [current_results]
+        return False, current_results[0], False, False
+    else:
+        return dash.no_update
+
+
+@app.callback(
+    Output(ids.GSA_PARAM_SELECTION_RB, "options"),
+    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+    State(ids.TABS, "active_tab"),
+)
+def callback_update_gsa_rb(plotting_type: str, active_tab: str) -> tuple[str, bool]:
+    if active_tab != ids.SA_TAB:
+        return dash.no_update
+    options = GSA_RB_OPTIONS.copy()
+    if plotting_type == "map":
+        for option in options:
+            option["disabled"] = True
+        return options
+    else:
+        return options
 
 
 # Run the server
