@@ -469,7 +469,7 @@ def get_gsa_barchart(
 
 
 def get_gsa_map(
-    data: list[dict[str, Any]], gdf: gpd.GeoDataFrame
+    data: list[dict[str, Any]], gdf: gpd.GeoDataFrame, top_n: int = 1
 ) -> plotly.graph_objects.Figure:
     """GSA map component."""
 
@@ -484,7 +484,7 @@ def get_gsa_map(
     else:
         rankings = pd.DataFrame(data, dtype=str)
         rankings = rankings.set_index("iso").astype(str)
-        rankings = rankings.iloc[:, 0].rename("value")
+        rankings = rankings.iloc[:, top_n - 1].rename("value")
 
     rankings = (
         no_data.join(rankings, how="left", lsuffix="_drop")
@@ -506,11 +506,7 @@ def get_gsa_map(
         geojson=gdf.set_index("iso"),
         locations=rankings.index,
         color="value",
-        # color_continuous_scale='Viridis',
-        # hover_name='iso',
         hover_data=["value"],
-        # color_discrete_sequence=["grey"],
-        # color_discrete_map={"": "grey"},
         color_discrete_map=color_map,
     )
 
@@ -528,7 +524,7 @@ def get_gsa_map(
         geo=dict(
             fitbounds="locations",  # fit the map to geometries
             projection=dict(type="albers usa"),
-            scope="usa",  # Set the scope to USA
+            scope="usa",
         ),
     )
 
