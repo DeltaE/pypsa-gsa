@@ -4,9 +4,6 @@ import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 import pandas as pd
-import plotly
-import plotly.express as px
-import plotly.graph_objects as go
 import geopandas as gpd
 
 from components.utils import (
@@ -225,10 +222,7 @@ def render_tab_content(
                 figure=get_gsa_barchart(gsa_bar_data),
             )
         elif plotting_type == "map":
-            view = dcc.Graph(
-                id=ids.GSA_MAP,
-                figure=get_gsa_map(gsa_map_data, ISO_SHAPE),
-            )
+            view = get_gsa_map(gsa_map_data, ISO_SHAPE)
         else:
             logger.debug(f"Invalid plotting type: {plotting_type}")
             view = get_gsa_data_table(gsa_hm_data)
@@ -326,7 +320,7 @@ def callback_filter_gsa_data_for_heatmap(
     plotting_type: str,
 ) -> list[dict[str, Any]]:
     """Update the GSA SI data for the data table."""
-    if plotting_type == "map": # map updates some dropdowns
+    if plotting_type == "map":  # map updates some dropdowns
         return dash.no_update
     df = filter_gsa_data(
         data=gsa_iso_data,
@@ -359,7 +353,7 @@ def callback_filter_gsa_data_for_barchart(
     plotting_type: str,
 ) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
-    if plotting_type == "map": # map updates some dropdowns
+    if plotting_type == "map":  # map updates some dropdowns
         return dash.no_update
     df = filter_gsa_data(
         data=gsa_iso_normed_data,
@@ -523,8 +517,8 @@ def callback_select_remove_all_gsa_results(plotting_type: str, *args: Any) -> li
     [
         Output(ids.GSA_RESULTS_DROPDOWN, "multi"),
         Output(ids.GSA_RESULTS_DROPDOWN, "value", allow_duplicate=True),
-        Output(ids.GSA_RESULTS_SELECT_ALL, "active"),
-        Output(ids.GSA_RESULTS_REMOVE_ALL, "active"),
+        Output(ids.GSA_RESULTS_SELECT_ALL, "disabled"),
+        Output(ids.GSA_RESULTS_REMOVE_ALL, "disabled"),
     ],
     Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
     State(ids.TABS, "active_tab"),
@@ -536,12 +530,12 @@ def callback_update_gsa_results_dropdown(
 ) -> tuple[bool, bool, bool]:
     if active_tab != ids.SA_TAB:
         return dash.no_update
-    elif plotting_type == "map":
+    if plotting_type == "map":
         if isinstance(current_results, str):
             current_results = [current_results]
-        return False, current_results[0], False, False
+        return False, current_results[0], True, True
     else:
-        return dash.no_update
+        return True, current_results, False, False
 
 
 @app.callback(
@@ -558,8 +552,34 @@ def callback_update_gsa_rb(plotting_type: str, active_tab: str) -> tuple[str, bo
             option["disabled"] = True
         return options
     else:
+        for option in options:
+            option["disabled"] = False
         return options
 
+@app.callback(
+    [
+        Output(ids.GSA_PARAMS_SLIDER, "max"),
+        Output(ids.GSA_PARAMS_SLIDER, "marks"),
+        Output(ids.GSA_PARAMS_SLIDER, "value"),
+    ],
+    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+)
+def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, str]]:
+    """Update the GSA map top n."""
+    def _calc_marks(num_params: int) -> dict[int, str]:
+        return {
+            0: "0",
+            num_params // 2: str(num_params // 2),
+            num_params: str(num_params),
+        }
+        
+    if plotting_type == "map":
+        num_params = 10 # limit as maps are heavy to render
+        top_n = 4
+    else:
+        num_params = len(GSA_PARM_OPTIONS)
+        top_n = 6
+    return num_params, _calc_marks(num_params), top_n
 
 # Run the server
 if __name__ == "__main__":

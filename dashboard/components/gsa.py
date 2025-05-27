@@ -209,6 +209,11 @@ def filter_gsa_data(
 
     df = pd.DataFrame(data).set_index("param").copy()
 
+    if isinstance(params_dropdown, str):
+        params_dropdown = [params_dropdown]
+    if isinstance(results, str):
+        results = [results]
+
     if param_option == "name":
         logger.info("Filtering GSA data by name")
         logger.debug(f"Params: {params_dropdown} | Results: {results}")
@@ -263,7 +268,7 @@ def filter_gsa_data_for_map(
         df[col] = df[col].rank(method="dense", ascending=False).astype(int)
 
     ranking = {}
-    for rank in range(1, params_slider):
+    for rank in range(1, params_slider):  # rankings start at 1, not zero!
         ranking[rank] = {}
         for col in df.columns:
             ranking[rank][col] = df[col][df[col] == rank].index[0]
@@ -329,7 +334,7 @@ def get_gsa_heatmap(
         color_continuous_scale=color_scale,
         color_continuous_midpoint=0,
         zmin=0,
-        zmax=1,
+        # zmax=1,
         aspect="auto",
         labels=dict(x="Parameters", y="Results", color="Scaled Elementary Effect"),
     )
@@ -468,10 +473,14 @@ def get_gsa_barchart(
     return fig
 
 
-def get_gsa_map(
-    data: list[dict[str, Any]], gdf: gpd.GeoDataFrame, top_n: int = 1
+def _get_gsa_map_figure(
+    data: list[dict[str, Any]], gdf: gpd.GeoDataFrame, top_n: int = 0
 ) -> plotly.graph_objects.Figure:
     """GSA map component."""
+
+    if top_n <= 0:
+        logger.debug(f"Top n is {top_n}, setting to 1")
+        top_n = 1
 
     # to fill in any missing ISOs
     no_data = pd.DataFrame({"iso": gdf.iso.astype(str), "value": "No Data"}).set_index(
@@ -484,7 +493,8 @@ def get_gsa_map(
     else:
         rankings = pd.DataFrame(data, dtype=str)
         rankings = rankings.set_index("iso").astype(str)
-        rankings = rankings.iloc[:, top_n - 1].rename("value")
+        logger.debug(f"\nGSA map data: {rankings}")
+        rankings = rankings.iloc[:, top_n].rename("value")
 
     rankings = (
         no_data.join(rankings, how="left", lsuffix="_drop")
@@ -497,9 +507,6 @@ def get_gsa_map(
         cat: px.colors.qualitative.Set3[i % len(px.colors.qualitative.Set3)]
         for i, cat in enumerate(categories)
     }
-
-    logger.debug(f"Rankings:\n{rankings}")
-    logger.debug(f"GDF:\n{gdf}")
 
     fig = px.choropleth(
         rankings,
@@ -529,3 +536,59 @@ def get_gsa_map(
     )
 
     return fig
+
+
+def get_gsa_map(
+    gsa_map_data: list[dict[str, Any]],
+    iso_shape: gpd.GeoDataFrame,
+    top_n: int = 1,
+    num_cols: int = 2,
+    card_class: str = "h-20",  # Makes cards in same row equal height
+    row_class: str = "mb-4 g-4",  # Adds margin bottom and gap between cards
+) -> html.Div:
+    """Position maps on a grid system for lazy loading."""
+    logger.debug(f"Top num GSA map data: {top_n}")
+
+    # top n is indexed one higher than actual.
+    # For example, top_n = 4 will only show the first 3 parameters
+    if not gsa_map_data or top_n < 1:
+        num_maps = 1  # print an empty map
+    else:
+        num_maps = top_n + 1
+
+    if num_maps == 1:
+        return dcc.Graph(
+            id=ids.GSA_MAP,
+            figure=_get_gsa_map_figure(gsa_map_data, iso_shape, num_maps),
+        )
+
+    # Calculate column width (Bootstrap uses 12 columns)
+    col_width = int(12 / num_cols)
+
+    cards = []
+    for num_map in range(num_maps):
+        card = dbc.Card(
+            [
+                dbc.CardHeader(f"No. {num_map} Parameter"),
+                dbc.CardBody(
+                    [
+                        dcc.Graph(
+                            id=f"{ids.GSA_MAP}-{num_map}",
+                            figure=_get_gsa_map_figure(
+                                gsa_map_data, iso_shape, num_map
+                            ),
+                        )
+                    ]
+                ),
+            ],
+            className=card_class,
+        )
+        cards.append(card)
+
+    rows = []
+    for i in range(0, len(cards), num_cols):
+        row_cards = cards[i : i + num_cols]
+        cols = [dbc.Col(card, width=col_width) for card in row_cards]
+        rows.append(dbc.Row(cols, className=row_class))
+
+    return html.Div(rows, id=ids.GSA_MAP)
