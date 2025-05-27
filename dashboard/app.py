@@ -378,6 +378,7 @@ def callback_filter_gsa_data_for_map(
     gsa_iso_data: list[dict[str, Any]] | None,
     params_slider: int,
     result: str,  # only one result for map
+    nice_names: bool = True,
 ) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
     df = filter_gsa_data_for_map(
@@ -385,6 +386,10 @@ def callback_filter_gsa_data_for_map(
         params_slider=params_slider,
         result=result,
     )
+    if nice_names:
+        logger.debug("Using nice names for GSA map")
+        nn = {x["value"]: x["label"] for x in GSA_PARM_OPTIONS}
+        df = df.replace(nn)
     return df.reset_index(names="iso").to_dict("records")
 
 
@@ -556,6 +561,7 @@ def callback_update_gsa_rb(plotting_type: str, active_tab: str) -> tuple[str, bo
             option["disabled"] = False
         return options
 
+
 @app.callback(
     [
         Output(ids.GSA_PARAMS_SLIDER, "max"),
@@ -566,20 +572,22 @@ def callback_update_gsa_rb(plotting_type: str, active_tab: str) -> tuple[str, bo
 )
 def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, str]]:
     """Update the GSA map top n."""
+
     def _calc_marks(num_params: int) -> dict[int, str]:
         return {
             0: "0",
             num_params // 2: str(num_params // 2),
             num_params: str(num_params),
         }
-        
+
     if plotting_type == "map":
-        num_params = 10 # limit as maps are heavy to render
+        num_params = 10  # limit as maps are heavy to render
         top_n = 4
     else:
         num_params = len(GSA_PARM_OPTIONS)
         top_n = 6
     return num_params, _calc_marks(num_params), top_n
+
 
 # Run the server
 if __name__ == "__main__":

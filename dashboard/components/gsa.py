@@ -247,6 +247,7 @@ def filter_gsa_data_for_map(
     data: list[dict[str, Any]] | None,
     params_slider: int,
     result: str,
+    nice_names: bool = True,
 ) -> pd.DataFrame:
     """Filter GSA data for the map."""
 
@@ -528,9 +529,20 @@ def _get_gsa_map_figure(
     fig.update_layout(
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         geo=dict(
-            fitbounds="locations",  # fit the map to geometries
-            projection=dict(type="albers usa"),
-            scope="usa",
+            # fitbounds="locations",
+            projection=dict(
+                type="albers usa",
+                scale=0.85,
+            ),
+            center=dict(lat=39, lon=-95),  # CONUS center
+        ),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="center",
+            x=0.5,
+            title=None,
         ),
     )
 
@@ -541,8 +553,8 @@ def get_gsa_map(
     gsa_map_data: list[dict[str, Any]],
     iso_shape: gpd.GeoDataFrame,
     num_cols: int = 2,
-    card_class: str = "h-20",  # Makes cards in same row equal height
-    row_class: str = "mb-4 g-4",  # Adds margin bottom and gap between cards
+    card_class: str = "h-100",
+    row_class: str = "mb-2 g-2",  # Adds margin bottom and gap between cards
 ) -> html.Div:
     """Position maps on a grid system for lazy loading."""
 
@@ -556,9 +568,10 @@ def get_gsa_map(
         return dcc.Graph(
             id=ids.GSA_MAP,
             figure=_get_gsa_map_figure(gsa_map_data, iso_shape, num_maps),
+            style={"height": "400px"},
         )
 
-    # Calculate column width (Bootstrap uses 12 columns)
+    # bootstrap uses 12 columns
     col_width = int(12 / num_cols)
 
     logger.debug(f"Creating num of maps: {num_maps}")
@@ -576,6 +589,7 @@ def get_gsa_map(
                             figure=_get_gsa_map_figure(
                                 gsa_map_data, iso_shape, num_map
                             ),
+                            style={"height": "300px"},  # fixed height for map
                         )
                     ]
                 ),
