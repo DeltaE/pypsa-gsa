@@ -7,6 +7,8 @@ from .utils import (
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
     _unflatten_dropdown_options,
+    DEFAULT_CONTINOUS_COLOR_SCALE,
+    DEFAULT_DISCRETE_COLOR_SCALE,
 )
 from . import ids as ids
 import dash_bootstrap_components as dbc
@@ -327,7 +329,7 @@ def get_gsa_heatmap(
         gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
         df = df.rename(columns=gsa_results).rename(index=gsa_params)
 
-    color_scale = kwargs.get("color_scale", "PuBu")
+    color_scale = kwargs.get("color_scale", DEFAULT_CONTINOUS_COLOR_SCALE)
     logger.debug(f"GSA heatmap color scale: {color_scale}")
 
     fig = px.imshow(
@@ -430,7 +432,7 @@ def normalize_mu_star_data(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_gsa_barchart(
-    normed_data: dict[str, Any], nice_names: bool = True
+    normed_data: dict[str, Any], nice_names: bool = True, **kwargs: Any
 ) -> plotly.graph_objects.Figure:
     """GSA barchart component."""
     if not normed_data:
@@ -451,6 +453,8 @@ def get_gsa_barchart(
     df_melted = df.reset_index().melt(
         id_vars=["param"], var_name="result", value_name="value"
     )
+
+    color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
 
     fig = px.bar(
         df_melted,
@@ -474,8 +478,18 @@ def get_gsa_barchart(
     return fig
 
 
+def _get_gsa_map_color_map(color_palette: str, categories: list[str]) -> dict[str, str]:
+    """Get the color map for the GSA map."""
+    palette = getattr(px.colors.qualitative, color_palette)
+    return {cat: palette[i % len(palette)] for i, cat in enumerate(categories)}
+
+
 def _get_gsa_map_figure(
-    data: list[dict[str, Any]], gdf: gpd.GeoDataFrame, top_n: int = 0
+    data: list[dict[str, Any]],
+    gdf: gpd.GeoDataFrame,
+    top_n: int = 0,
+    color_map: dict[str, str] | None = None,
+    color_palette: str = "Set3",
 ) -> plotly.graph_objects.Figure:
     """GSA map component."""
 
@@ -503,10 +517,9 @@ def _get_gsa_map_figure(
     )
 
     categories = rankings["value"].unique()
-    color_map = {
-        cat: px.colors.qualitative.Set3[i % len(px.colors.qualitative.Set3)]
-        for i, cat in enumerate(categories)
-    }
+
+    if color_map is None:
+        color_map = _get_gsa_map_color_map(color_palette, categories)
 
     fig = px.choropleth(
         rankings,
@@ -555,6 +568,7 @@ def get_gsa_map(
     num_cols: int = 2,
     card_class: str = "h-100",
     row_class: str = "mb-2 g-2",  # Adds margin bottom and gap between cards
+    **kwargs: Any,
 ) -> html.Div:
     """Position maps on a grid system for lazy loading."""
 
@@ -564,10 +578,22 @@ def get_gsa_map(
         num_maps = len(gsa_map_data[0]) - 1  # minus 1 as iso is included
         logger.debug(f"User input for top params of: {num_maps}")
 
+    color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
+    categories = set(pd.DataFrame(gsa_map_data).set_index("iso").values.ravel())
+    color_map = _get_gsa_map_color_map(color_scale, categories)
+    color_map.update({"No Data": "lightgrey"})  # Modify in-place instead of reassigning
+    logger.debug(f"Color map: {color_map}")
+
     if num_maps == 1:
         return dcc.Graph(
             id=ids.GSA_MAP,
-            figure=_get_gsa_map_figure(gsa_map_data, iso_shape, num_maps),
+            figure=_get_gsa_map_figure(
+                data=gsa_map_data,
+                gdf=iso_shape,
+                top_n=num_maps,
+                color_palette=color_scale,
+                color_map=color_map,
+            ),
             style={"height": "400px"},
         )
 
@@ -587,7 +613,11 @@ def get_gsa_map(
                         dcc.Graph(
                             id=f"{ids.GSA_MAP}-{num_map}",
                             figure=_get_gsa_map_figure(
-                                gsa_map_data, iso_shape, num_map
+                                data=gsa_map_data,
+                                gdf=iso_shape,
+                                top_n=num_map,
+                                # color_palette=color_scale,
+                                color_map=color_map,
                             ),
                             style={"height": "300px"},  # fixed height for map
                         )

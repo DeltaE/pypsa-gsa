@@ -7,8 +7,12 @@ import pandas as pd
 import geopandas as gpd
 
 from components.utils import (
+    get_continuous_color_scale_options,
+    get_discrete_color_scale_options,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
+    DEFAULT_CONTINOUS_COLOR_SCALE,
+    DEFAULT_DISCRETE_COLOR_SCALE,
 )
 import components.ids as ids
 from components.gsa import (
@@ -193,7 +197,7 @@ app.layout = html.Div(
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_STORE, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
-        Input(ids.COLOR_SCALE_DROPDOWN, "value"),
+        Input(ids.COLOR_DROPDOWN, "value"),
     ],
 )
 def render_tab_content(
@@ -215,14 +219,14 @@ def render_tab_content(
                 figure=get_gsa_heatmap(gsa_hm_data, color_scale=color_scale),
             )
         elif plotting_type == "data_table":
-            view = get_gsa_data_table(gsa_hm_data)
+            view = get_gsa_data_table(gsa_hm_data, color_scale=color_scale)
         elif plotting_type == "barchart":
             view = dcc.Graph(
                 id=ids.GSA_BAR_CHART,
-                figure=get_gsa_barchart(gsa_bar_data),
+                figure=get_gsa_barchart(gsa_bar_data, color_scale=color_scale),
             )
         elif plotting_type == "map":
-            view = get_gsa_map(gsa_map_data, ISO_SHAPE)
+            view = get_gsa_map(gsa_map_data, ISO_SHAPE, color_scale=color_scale)
         else:
             logger.debug(f"Invalid plotting type: {plotting_type}")
             view = get_gsa_data_table(gsa_hm_data)
@@ -453,6 +457,30 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
         params_slider_open = True
         params_dropdown_open = True
     return params_slider_open, params_dropdown_open
+
+
+###
+# Shared Options Callbacks
+###
+
+
+@app.callback(
+    [
+        Output(ids.COLOR_DROPDOWN, "value"),
+        Output(ids.COLOR_DROPDOWN, "options"),
+    ],
+    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+)
+def callback_update_color_options(plotting_type: str) -> tuple[str, list[str]]:
+    logger.debug(f"Updating color options for: {plotting_type}")
+    if plotting_type in ["map", "barchart"]:
+        logger.debug("Updating discrete color options")
+        return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+    elif plotting_type in ["heatmap"]:
+        logger.debug("Updating continuous color options")
+        return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+    else:
+        return dash.no_update
 
 
 ###

@@ -3,6 +3,8 @@
 import pandas as pd
 from pathlib import Path
 import json
+import plotly.colors as pc
+import plotly.express as px
 
 # scenarios must follow these names as they are tied to geographic locations
 ISOS = {
@@ -31,6 +33,9 @@ ISO_STATES = {
     "southeast": ["AL", "FL", "GA", "NC", "SC", "TN"],
     "southwest": ["AZ", "CO", "NM", "NV", "UT"],
 }
+
+DEFAULT_CONTINOUS_COLOR_SCALE = "pubu"
+DEFAULT_DISCRETE_COLOR_SCALE = "Set3"
 
 
 def _convert_to_dropdown_options(options: dict[str, str]) -> list[dict[str, str]]:
@@ -97,3 +102,19 @@ def get_ua_results_dropdown_options(
         return _convert_to_dropdown_options(loaded)
     else:
         return loaded
+
+
+def get_continuous_color_scale_options() -> list[str]:
+    """Get the continuous color scale options."""
+    return sorted(pc.named_colorscales())
+
+
+def get_discrete_color_scale_options() -> list[str]:
+    """Get the discrete color scale options."""
+    return sorted(
+        [
+            k
+            for k in px.colors.qualitative.__dict__.keys()
+            if not k.startswith("__") and not k.endswith("_r")
+        ]
+    )

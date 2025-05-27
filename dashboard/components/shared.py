@@ -80,7 +80,7 @@ def color_scale_dropdown() -> html.Div:
         [
             html.H6("Select Color Scale"),
             dcc.Dropdown(
-                id=ids.COLOR_SCALE_DROPDOWN,
+                id=ids.COLOR_DROPDOWN,
                 options=sorted(pc.named_colorscales()),
                 value="pubu",
                 multi=False,

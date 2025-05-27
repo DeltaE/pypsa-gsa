@@ -16,7 +16,7 @@ GSA_PARAM_DROPDOWN = "gsa-param-dropdown"
 GSA_RESULTS_DROPDOWN = "gsa-results-dropdown"
 UA_PARAM_DROPDOWN = "ua-param-dropdown"
 UA_RESULTS_DROPDOWN = "ua-results-dropdown"
-COLOR_SCALE_DROPDOWN = "color-scale-dropdown"
+COLOR_DROPDOWN = "color-scale-dropdown"
 PLOTTING_TYPE_DROPDOWN = "plotting-type-dropdown"
 
 # buttons
@@ -43,12 +43,11 @@ GSA_PARAMS_SLIDER_COLLAPSE = "gsa-range-slider-collapse"
 UA_OPTIONS_BLOCK = "ua-options-block"
 
 # gsa stores
-GSA_ISO_DATA = "gsa-iso-data" # other stores use this
+GSA_ISO_DATA = "gsa-iso-data"  # other stores use this
 GSA_ISO_NORMED_DATA = "gsa-iso-normed-data"
 GSA_HM_DATA = "gsa-hm-data"
 GSA_BAR_DATA = "gsa-bar-data"
 GSA_MAP_DATA = "gsa-map-data"
-
 
 
 UA_STORE = "ua-store"
