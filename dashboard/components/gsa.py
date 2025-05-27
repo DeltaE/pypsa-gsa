@@ -268,7 +268,7 @@ def filter_gsa_data_for_map(
         df[col] = df[col].rank(method="dense", ascending=False).astype(int)
 
     ranking = {}
-    for rank in range(1, params_slider):  # rankings start at 1, not zero!
+    for rank in range(1, params_slider + 1):  # rankings start at 1, not zero!
         ranking[rank] = {}
         for col in df.columns:
             ranking[rank][col] = df[col][df[col] == rank].index[0]
@@ -493,8 +493,7 @@ def _get_gsa_map_figure(
     else:
         rankings = pd.DataFrame(data, dtype=str)
         rankings = rankings.set_index("iso").astype(str)
-        logger.debug(f"\nGSA map data: {rankings}")
-        rankings = rankings.iloc[:, top_n].rename("value")
+        rankings = rankings.loc[:, str(top_n)].rename("value")
 
     rankings = (
         no_data.join(rankings, how="left", lsuffix="_drop")
@@ -541,20 +540,17 @@ def _get_gsa_map_figure(
 def get_gsa_map(
     gsa_map_data: list[dict[str, Any]],
     iso_shape: gpd.GeoDataFrame,
-    top_n: int = 1,
     num_cols: int = 2,
     card_class: str = "h-20",  # Makes cards in same row equal height
     row_class: str = "mb-4 g-4",  # Adds margin bottom and gap between cards
 ) -> html.Div:
     """Position maps on a grid system for lazy loading."""
-    logger.debug(f"Top num GSA map data: {top_n}")
 
-    # top n is indexed one higher than actual.
-    # For example, top_n = 4 will only show the first 3 parameters
-    if not gsa_map_data or top_n < 1:
+    if not gsa_map_data:
         num_maps = 1  # print an empty map
     else:
-        num_maps = top_n + 1
+        num_maps = len(gsa_map_data[0]) - 1  # minus 1 as iso is included
+        logger.debug(f"User input for top params of: {num_maps}")
 
     if num_maps == 1:
         return dcc.Graph(
@@ -565,8 +561,11 @@ def get_gsa_map(
     # Calculate column width (Bootstrap uses 12 columns)
     col_width = int(12 / num_cols)
 
+    logger.debug(f"Creating num of maps: {num_maps}")
+
     cards = []
-    for num_map in range(num_maps):
+    for num_map in range(1, num_maps + 1):  # indixing of rank starts at 1
+        logger.debug(f"Creating card for map {num_map}")
         card = dbc.Card(
             [
                 dbc.CardHeader(f"No. {num_map} Parameter"),
