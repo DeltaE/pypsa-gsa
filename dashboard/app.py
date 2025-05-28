@@ -13,6 +13,7 @@ from components.utils import (
     get_gsa_results_dropdown_options,
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
+    get_ua_results_dropdown_options,
 )
 import components.ids as ids
 from components.gsa import (
@@ -27,7 +28,11 @@ from components.gsa import (
     normalize_mu_star_data,
 )
 from components.shared import iso_options_block, plotting_options_block
-from components.ua import ua_options_block
+from components.ua import (
+    _filter_ua_on_result_sector,
+    _filter_ua_on_result_type,
+    ua_options_block,
+)
 
 import logging
 
@@ -56,10 +61,11 @@ ISO_SHAPE = gpd.read_file("data/iso.geojson")
 root = Path(__file__).parent
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(root)
+UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
 
-###
-# Define the layout
-###
+########
+# layout
+########
 
 app.layout = html.Div(
     [
@@ -173,8 +179,8 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_HM_DATA),
                 dcc.Store(id=ids.GSA_BAR_DATA),
                 dcc.Store(id=ids.GSA_MAP_DATA),
-                dcc.Store(id=ids.UA_STORE),
-                dcc.Store(id=ids.UA_DATA_TABLE),
+                dcc.Store(id=ids.UA_ISO_DATA),
+                dcc.Store(id=ids.UA_RUN_DATA),
                 dcc.Store(id=ids.GSA_PARAM_BUTTON_STATE, data=""),
                 dcc.Store(id=ids.GSA_RESULTS_BUTTON_STATE, data=""),
             ],
@@ -183,9 +189,9 @@ app.layout = html.Div(
     ]
 )
 
-###
+########################
 # Update tab content
-###
+########################
 
 
 @app.callback(
@@ -195,17 +201,17 @@ app.layout = html.Div(
         Input(ids.GSA_HM_DATA, "data"),
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
-        Input(ids.UA_STORE, "data"),
+        Input(ids.UA_RUN_DATA, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
 )
 def render_tab_content(
     active_tab: str,
-    gsa_hm_data: list[dict[str, Any]],
-    gsa_bar_data: list[dict[str, Any]],
-    gsa_map_data: list[dict[str, Any]],
-    ua_data: list[dict[str, Any]],
+    gsa_hm_data: list[dict[str, Any]] | None,
+    gsa_bar_data: list[dict[str, Any]] | None,
+    gsa_map_data: list[dict[str, Any]] | None,
+    ua_run_data: list[dict[str, Any]] | None,
     plotting_type: str,
     color_scale: str,
 ) -> html.Div:
@@ -219,7 +225,7 @@ def render_tab_content(
                 figure=get_gsa_heatmap(gsa_hm_data, color_scale=color_scale),
             )
         elif plotting_type == "data_table":
-            view = get_gsa_data_table(gsa_hm_data, color_scale=color_scale)
+            view = get_gsa_data_table(gsa_hm_data)
         elif plotting_type == "barchart":
             view = dcc.Graph(
                 id=ids.GSA_BAR_CHART,
@@ -228,13 +234,23 @@ def render_tab_content(
         elif plotting_type == "map":
             view = get_gsa_map(gsa_map_data, ISO_SHAPE, color_scale=color_scale)
         else:
-            logger.debug(f"Invalid plotting type: {plotting_type}")
-            view = get_gsa_data_table(gsa_hm_data)
+            return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.UA_TAB:
-        return html.Div()
+        if plotting_type == "data_table":
+            return html.Div([dbc.Card([dbc.CardBody()])])
+        elif plotting_type == "barchart":
+            return html.Div([dbc.Card([dbc.CardBody()])])
+        elif plotting_type == "violin":
+            return html.Div([dbc.Card([dbc.CardBody()])])
+        elif plotting_type == "scatter":
+            return html.Div([dbc.Card([dbc.CardBody()])])
+        elif plotting_type == "histogram":
+            return html.Div([dbc.Card([dbc.CardBody()])])
+        else:
+            return html.Div([dbc.Alert("No plotting type selected", color="info")])
     else:
-        return html.Div([dbc.Alert("No data found", color="info")])
+        return html.Div([dbc.Alert("No active tab selected", color="info")])
 
 
 @app.callback(
@@ -250,7 +266,23 @@ def update_plotting_type_dropdown_options(
     """Update the plotting type dropdown options based on the active tab."""
     logger.debug(f"Updating plotting type dropdown options for: {active_tab}")
     if active_tab == ids.DATA_TAB:
-        return [{"label": "Data Table", "value": "data_table"}]
+        return (
+            [
+                {"label": "Data Table", "value": "data_table"},
+            ],
+            "data_table",
+        )
+    elif active_tab == ids.UA_TAB:
+        return (
+            [
+                {"label": "Data Table", "value": "data_table"},
+                {"label": "Bar Chart", "value": "barchart"},
+                {"label": "Violin Plot", "value": "violin"},
+                {"label": "Scatter Plot", "value": "scatter"},
+                {"label": "Histogram", "value": "histogram"},
+            ],
+            "scatter",
+        )
     elif active_tab == ids.SA_TAB:
         return (
             [
@@ -263,14 +295,16 @@ def update_plotting_type_dropdown_options(
         )
     else:
         logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")
-        return [{"label": "Data Table", "value": "data_table"}]
+        return ([{"label": "Data Table", "value": "data_table"}], "data_table")
 
 
-###
+#################
 # Get stored data
-###
+#################
 
-# callbacks to filter raw data based on ISO since ISO dropdown shared between GSA and UA
+#####
+# gsa
+#####
 
 
 @app.callback(
@@ -397,20 +431,57 @@ def callback_filter_gsa_data_for_map(
     return df.reset_index(names="iso").to_dict("records")
 
 
-### UA
+#####
+# ua
+#####
 
 
 @app.callback(
-    Output(ids.UA_STORE, "data"),
+    Output(ids.UA_ISO_DATA, "data"),
     Input(ids.ISO_DROPDOWN, "value"),
 )
-def callback_filter_raw_data_ua(isos: list[str]) -> dict[str, Any]:
-    return RAW_GSA[RAW_GSA.iso.isin(isos)].to_dict("records")
+def callback_filter_ua_on_iso(isos: list[str]) -> list[dict[str, Any]]:
+    """Update the UA store data based on the selected ISOs."""
+    logger.debug(f"ISO dropdown value: {isos}")
+    if not isos:
+        logger.debug("No ISOs selected from dropdown")
+        return []
+    return RAW_UA[RAW_UA.iso.isin(isos)].to_dict("records")
 
 
-###
+@app.callback(
+    Output(ids.UA_RUN_DATA, "data"),
+    [
+        Input(ids.UA_ISO_DATA, "data"),
+        Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+        Input(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
+    ],
+)
+def callback_filter_ua_on_param(
+    data: list[dict[str, Any]], result_type: str, result_sector: str
+) -> list[dict[str, Any]]:
+    df = pd.DataFrame(data)
+    if result_type != "all":
+        df = _filter_ua_on_result_sector(df, result_sector)
+    df = _filter_ua_on_result_type(df, result_type)
+    return df.to_dict("records")
+
+
+@app.callback(
+    Output(ids.UA_RESULTS_DROPDOWN, "options"),
+    Input(ids.TABS, "active_tab"),
+)
+def callback_update_ua_results_dropdown_options(
+    active_tab: str,
+) -> list[dict[str, str]]:
+    if active_tab == ids.UA_TAB:
+        return UA_RESULT_OPTIONS
+    return []
+
+
+###################################
 # Enable/disable collapsable blocks
-###
+###################################
 
 
 @app.callback(
@@ -432,7 +503,7 @@ def callback_enable_disable_option_blocks(active_tab: str) -> tuple[bool, bool, 
         gsa_open = True
     elif active_tab == ids.UA_TAB:
         iso_open = True
-        gsa_open = True
+        ua_open = True
 
     return iso_open, gsa_open, ua_open
 
@@ -459,9 +530,9 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
     return params_slider_open, params_dropdown_open
 
 
-###
+###########################
 # Shared Options Callbacks
-###
+###########################
 
 
 @app.callback(
@@ -469,23 +540,23 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
         Output(ids.COLOR_DROPDOWN, "value"),
         Output(ids.COLOR_DROPDOWN, "options"),
     ],
-    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+    [
+        Input(ids.TABS, "active_tab"),
+        Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+    ],
 )
-def callback_update_color_options(plotting_type: str) -> tuple[str, list[str]]:
+def callback_update_color_options(_: str, plotting_type: str) -> tuple[str, list[str]]:
     logger.debug(f"Updating color options for: {plotting_type}")
-    if plotting_type in ["map", "barchart"]:
-        logger.debug("Updating discrete color options")
-        return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
-    elif plotting_type in ["heatmap"]:
+    if plotting_type in ["heatmap"]:
         logger.debug("Updating continuous color options")
         return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
     else:
-        return dash.no_update
+        return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
 
 
-###
+########################
 # GSA Options Callbacks
-###
+########################
 
 
 @app.callback(

@@ -16,6 +16,8 @@ GSA_PARAM_DROPDOWN = "gsa-param-dropdown"
 GSA_RESULTS_DROPDOWN = "gsa-results-dropdown"
 UA_PARAM_DROPDOWN = "ua-param-dropdown"
 UA_RESULTS_DROPDOWN = "ua-results-dropdown"
+UA_RESULTS_TYPE_DROPDOWN = "ua-results-type-dropdown"
+UA_RESULTS_SECTOR_DROPDOWN = "ua-results-sector-dropdown"
 COLOR_DROPDOWN = "color-scale-dropdown"
 PLOTTING_TYPE_DROPDOWN = "plotting-type-dropdown"
 
@@ -48,11 +50,11 @@ GSA_ISO_NORMED_DATA = "gsa-iso-normed-data"
 GSA_HM_DATA = "gsa-hm-data"
 GSA_BAR_DATA = "gsa-bar-data"
 GSA_MAP_DATA = "gsa-map-data"
-
-
-UA_STORE = "ua-store"
 GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
-GSA_RUNS_STORE = "gsa-runs-store"
+
+UA_ISO_DATA = "ua-iso-data" # filtered by ISO
+UA_RUN_DATA = "ua-run-data" # filtered by result
+UA_FINAL_DATA = "ua-final-data" # filtered by aggregator
 
 # data tables (filtered for params/results)
 UA_DATA_TABLE = "ua-data-table"
@@ -64,3 +66,10 @@ GSA_HEATMAP = "gsa-heatmap"
 GSA_BAR_CHART = "gsa-bar-chart"
 GSA_MAP = "gsa-map"
 GSA_DATA_TABLE = "gsa-data-table"
+
+# ua plots
+UA_DATA_TABLE = "ua-data-table"
+UA_BAR_CHART = "ua-bar-chart"
+UA_SCATTER = "ua-scatter"
+UA_VIOLIN = "ua-violin"
+UA_HISTOGRAM = "ua-histogram"

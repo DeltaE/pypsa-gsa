@@ -90,8 +90,7 @@ def get_gsa_results_dropdown_options(
         return _convert_to_dropdown_options(loaded)
     else:
         return loaded
-
-
+    
 def get_ua_results_dropdown_options(
     root: str, flatten: bool = True
 ) -> list[dict[str, str]]:
@@ -100,6 +99,37 @@ def get_ua_results_dropdown_options(
         loaded = json.load(f)
     if flatten:
         return _convert_to_dropdown_options(loaded)
+    else:
+        return loaded
+
+
+def _filter_ua_results_on_type(
+    loaded: list[dict[str, str]], result_type: str
+) -> list[dict[str, str]]:
+    """Filter the UA results on type."""
+    if result_type == "marginal":
+        pass
+    elif result_type == "costs":
+        pass
+    elif result_type == "emissions":
+        pass
+    elif result_type == "capacity":
+        pass
+    elif result_type == "generation":
+        pass
+    else:
+        return loaded
+
+def get_ua_results_dropdown_options(
+    root: str, result_type: str | None = None, flatten: bool = True
+) -> list[dict[str, str]]:
+    """Get the UA results dropdown options."""
+    with open(Path(root, "data", "ua_results.json"), "r") as f:
+        loaded = json.load(f)
+    if flatten:
+        return _convert_to_dropdown_options(loaded)
+    if result_type:
+        return _filter_ua_results_on_type(loaded, result_type)
     else:
         return loaded
 
