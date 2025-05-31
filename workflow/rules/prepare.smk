@@ -194,6 +194,30 @@ rule process_natural_gas:
     script:
         "../scripts/process_ng.py"
 
+rule process_interchanges:
+    message: "Processing import/export data"
+    input:
+        network = "results/{scenario}/base.nc",
+        regions = "resources/interchanges/regions.csv",
+        membership = "resources/interchanges/membership.csv",
+        flowgates = "resources/interchanges/transmission_capacity_init_AC_ba_NARIS2024.csv",
+    params:
+        balancing_period = "month"
+        pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"
+    output:
+        net_flows = "results/{scenario}/constraints/import_export_flows.csv",
+        capacities = "results/{scenario}/constraints/import_export_capacity.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 5000),
+        runtime=3
+    benchmark:
+        "benchmarks/process_interchanges/{scenario}.txt"
+    log: 
+        "logs/process_interchanges/{scenario}.log"
+    group:
+        "prepare_data"
+    script:
+        "../scripts/process_imports_exports.py"
 
 # for the uncertainity propogation
 rule prepare_static_values:
