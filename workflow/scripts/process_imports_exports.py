@@ -4,6 +4,7 @@ from pathlib import Path
 import pypsa
 import pandas as pd
 import duckdb
+from eia import FuelCosts
 
 # See ./dashboard/components/shared.py for same mappings.
 ISO_STATES = {
@@ -39,11 +40,6 @@ REGION_2_ISO = {
     "Tennessee": "southeast",
     "Texas": "ercot",
 }
-
-STATE_2_ISO = {}
-for iso, states in ISO_STATES.items():
-    for state in states:
-        STATE_2_ISO[state] = iso
 
 
 def load_yearly_interchange_data(pudl_path: str, year: int) -> pd.DataFrame:
@@ -175,8 +171,28 @@ def get_aggregated_interchange_data(
     return df[["from", "to", "month", "interchange_reported_mwh"]]
 
 
+def format_fuel_costs(fuel_costs: pd.DataFrame) -> pd.DataFrame:
+    """Formats fuel costs for ISO mappings."""
+    df = fuel_costs.copy()
+    data = []
+
+    iso_2_states = ISO_STATES.copy()
+    for country in ["canada", "mexico"]:
+        iso_2_states.pop(country)
+
+    for iso, states in iso_2_states.items():
+        for period in df.index.unique():
+            temp = df[(df.index == period) & (df.state.isin(states))]
+            value = temp.value.mean()
+            data.append([period, iso, value, "usd/mwh"])
+    return pd.DataFrame(data, columns=["period", "iso", "value", "units"]).set_index(
+        "period"
+    )
+
+
 if __name__ == "__main__":
     if "snakemake" in globals():
+        api = snakemake.params.api
         network = snakemake.input.network
         year = snakemake.params.year
         balancing_period = snakemake.params.balancing_period
@@ -186,7 +202,9 @@ if __name__ == "__main__":
         flowgates_f = snakemake.input.flowgates
         net_flows_f = snakemake.output.net_flows
         capacities_f = snakemake.output.capacities
+        elec_costs_f = snakemake.output.costs
     else:
+        api = "O0kLkuarUMBg0dkmZGWDABbqU2etu4jA8Z8f2Rp4"
         network = Path("results", "caiso", "base.nc")
         year = 2019
         balancing_period = "month"
@@ -200,6 +218,7 @@ if __name__ == "__main__":
         )
         net_flows_f = "netflows.csv"
         capacities_f = "capacities.csv"
+        elec_costs_f = "elec_costs.csv"
 
     assert balancing_period in ["month"]
 
@@ -228,6 +247,13 @@ if __name__ == "__main__":
     flowgate_data = get_flowgate_data(pd.read_csv(flowgates_f), ba_2_iso)
     flowgate_data = get_flowgates_in_model(flowgate_data, zones)
 
+    # extract monthly fuel costs
+    elec_costs = FuelCosts(
+        fuel="electricity", year=year, api=api, sector="all"
+    ).get_data()
+    elec_costs = format_fuel_costs(elec_costs)
+
     # write to csv
     monthly_aggregated_interchange_data.to_csv(net_flows_f, index=False)
     flowgate_data.to_csv(capacities_f, index=False)
+    elec_costs.to_csv(elec_costs_f, index=True)
