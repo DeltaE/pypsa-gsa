@@ -128,10 +128,16 @@ def get_flowgate_data(
 def get_flowgates_in_model(flowgates: pd.DataFrame, zones: list[str]) -> dict[str, str]:
     """Returns a map of flowgates to regions."""
     df = flowgates.copy()
+    # keep only flowgates that are in the zones
     df = df[df["r"].isin(zones) ^ df["rr"].isin(zones)]
-    return df[["r", "rr_iso", "MW_f0", "MW_r0"]].rename(
-        columns={"r": "ba", "rr_iso": "iso", "MW_f0": "ba2iso_MW", "MW_r0": "iso2ba_MW"}
-    )
+    df["r0"] = df.r.where(df.r.isin(zones), df.r_iso)
+    df["r1"] = df.rr.where(df.rr.isin(zones), df.rr_iso)
+    df = df[["r0", "r1", "MW_f0", "MW_r0"]].rename(columns={"r0": "r", "r1": "rr"})
+    # organize so r is always the ba and rr is always the iso
+    mask = ~((df.r.str.startswith("p")) & (df.r.str.len() <= 4))
+    df.loc[mask, ["r", "rr"]] = df.loc[mask, ["rr", "r"]].values
+    df.loc[mask, ["MW_f0", "MW_r0"]] = df.loc[mask, ["MW_r0", "MW_f0"]].values
+    return df.groupby(["r", "rr"]).sum().round(2).reset_index()
 
 
 def get_aggregated_interchange_data(
