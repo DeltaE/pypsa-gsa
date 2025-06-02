@@ -3,7 +3,7 @@ rule copy_network:
     input:
         n = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
-        n = "results/{scenario}/base.nc"
+        n = temp("results/{scenario}/copy.nc")
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -13,7 +13,6 @@ rule copy_network:
         "benchmarks/copy_network/{scenario}.txt"
     shell:
         "cp {input.n} {output.n}"
-
 
 rule copy_pop_layout:
     message: "Copying population layout"
@@ -194,7 +193,7 @@ rule process_natural_gas:
     script:
         "../scripts/process_ng.py"
 
-rule process_interchanges:
+rule process_interchange_data:
     message: "Processing import/export data"
     input:
         network = "results/{scenario}/base.nc",
@@ -202,6 +201,7 @@ rule process_interchanges:
         membership = "resources/interchanges/membership.csv",
         flowgates = "resources/interchanges/transmission_capacity_init_AC_ba_NARIS2024.csv",
     params:
+        api = config["api"]["eia"],
         balancing_period = "month"
         pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"
     output:
@@ -219,6 +219,22 @@ rule process_interchanges:
         "prepare_data"
     script:
         "../scripts/process_imports_exports.py"
+
+rule add_import_export_to_network:
+    message: "Adding import/export to network"
+    input:
+        network = "results/{scenario}/copy.nc",
+        capacities_f = "results/{scenario}/constraints/import_export_capacity.csv",
+        elec_costs_f = "results/{scenario}/constraints/import_export_costs.csv"
+    output:
+        network = "results/{scenario}/base.nc",
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
+        runtime=1
+    group:
+        "prepare_data"
+    script:
+        "../scripts/apply_import_export.py"
 
 # for the uncertainity propogation
 rule prepare_static_values:
