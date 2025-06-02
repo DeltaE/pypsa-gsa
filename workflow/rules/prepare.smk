@@ -206,7 +206,8 @@ rule process_interchanges:
         pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"
     output:
         net_flows = "results/{scenario}/constraints/import_export_flows.csv",
-        capacities = "results/{scenario}/constraints/import_export_capacity.csv"
+        capacities = "results/{scenario}/constraints/import_export_capacity.csv",
+        costs = "results/{scenario}/constraints/import_export_costs.csv"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 5000),
         runtime=3

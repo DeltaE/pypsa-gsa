@@ -171,8 +171,15 @@ def get_aggregated_interchange_data(
     return df[["from", "to", "month", "interchange_reported_mwh"]]
 
 
-def format_fuel_costs(fuel_costs: pd.DataFrame) -> pd.DataFrame:
-    """Formats fuel costs for ISO mappings."""
+def format_fuel_costs(
+    fuel_costs: pd.DataFrame, target_year: int = None
+) -> pd.DataFrame:
+    """Formats fuel costs for ISO mappings.
+
+    Args:
+        fuel_costs: DataFrame with monthly fuel costs
+        target_year: Year to set in the datetime index. If None, keeps original year.
+    """
     df = fuel_costs.copy()
     data = []
 
@@ -185,9 +192,20 @@ def format_fuel_costs(fuel_costs: pd.DataFrame) -> pd.DataFrame:
             temp = df[(df.index == period) & (df.state.isin(states))]
             value = temp.value.mean()
             data.append([period, iso, value, "usd/mwh"])
-    return pd.DataFrame(data, columns=["period", "iso", "value", "units"]).set_index(
+
+    # Create DataFrame and set period as index
+    df_out = pd.DataFrame(data, columns=["period", "iso", "value", "units"]).set_index(
         "period"
     )
+
+    # Resample to hourly frequency and forward fill
+    df_out = df_out.resample("H").ffill()
+
+    # Replace year if target_year is provided
+    if target_year is not None:
+        df_out.index = df_out.index.map(lambda x: x.replace(year=target_year))
+
+    return df_out
 
 
 if __name__ == "__main__":
@@ -204,7 +222,7 @@ if __name__ == "__main__":
         capacities_f = snakemake.output.capacities
         elec_costs_f = snakemake.output.costs
     else:
-        api = "O0kLkuarUMBg0dkmZGWDABbqU2etu4jA8Z8f2Rp4"
+        api = ""
         network = Path("results", "caiso", "base.nc")
         year = 2019
         balancing_period = "month"
@@ -251,7 +269,7 @@ if __name__ == "__main__":
     elec_costs = FuelCosts(
         fuel="electricity", year=year, api=api, sector="all"
     ).get_data()
-    elec_costs = format_fuel_costs(elec_costs)
+    elec_costs = format_fuel_costs(elec_costs, target_year=year)
 
     # write to csv
     monthly_aggregated_interchange_data.to_csv(net_flows_f, index=False)
