@@ -5,41 +5,7 @@ import pypsa
 import pandas as pd
 import duckdb
 from eia import FuelCosts
-
-# See ./dashboard/components/shared.py for same mappings.
-ISO_STATES = {
-    "caiso": ["CA"],
-    "ercot": ["TX"],
-    "isone": ["CT", "ME", "MA", "NH", "RI", "VT"],
-    "miso": ["AR", "IL", "IN", "IA", "LA", "MI", "MN", "MO", "MS", "WI"],
-    "nyiso": ["NY"],
-    "pjm": ["DE", "KY", "MD", "NJ", "OH", "PA", "VA", "WV"],
-    "spp": ["KS", "ND", "NE", "OK", "SD"],
-    "northwest": ["ID", "MT", "OR", "WA", "WY"],
-    "southeast": ["AL", "FL", "GA", "NC", "SC", "TN"],
-    "southwest": ["AZ", "CO", "NM", "NV", "UT"],
-    "mexico": ["MX"],
-    "canada": ["BC", "AB", "SK", "MB", "ON", "QC", "NB", "NS", "NL", "NFI", "PEI"],
-}
-
-# manually mapped to match EIA regions to ISOs
-REGION_2_ISO = {
-    "California": "caiso",
-    "Canada": "canada",
-    "Carolinas": "southeast",
-    "Central": "spp",
-    "Florida": "southeast",
-    "Mexico": "mexico",
-    "Mid-Atlantic": "pjm",
-    "Midwest": "miso",
-    "New England": "isone",
-    "New York": "nyiso",
-    "Northwest": "northwest",
-    "Southeast": "southeast",
-    "Southwest": "southwest",
-    "Tennessee": "southeast",
-    "Texas": "ercot",
-}
+from constants import ISO_STATES, REGION_2_ISO
 
 
 def load_yearly_interchange_data(pudl_path: str, year: int) -> pd.DataFrame:
@@ -167,19 +133,50 @@ def get_aggregated_interchange_data(
         ["from", "to", "month", "abs"], ascending=[True, True, True, False]
     )
     df = df.drop_duplicates(subset=["from", "to", "month"], keep="first")
+    df = df[["from", "to", "month", "interchange_reported_mwh"]]
 
-    return df[["from", "to", "month", "interchange_reported_mwh"]]
+    return _expand_interchange_data(df)
 
 
-def format_fuel_costs(
-    fuel_costs: pd.DataFrame, target_year: int = None
-) -> pd.DataFrame:
-    """Formats fuel costs for ISO mappings.
+def _expand_interchange_data(interchange_data: pd.DataFrame) -> pd.DataFrame:
+    """Expands interchange data to be all permutations.
 
-    Args:
-        fuel_costs: DataFrame with monthly fuel costs
-        target_year: Year to set in the datetime index. If None, keeps original year.
+    For example, instead of showing negative net flows, we show one of net imports and exports
+    as positive values, and the otehr as zero. This makes setting up constraints easier.
     """
+    df = interchange_data.copy()
+    mask = df.interchange_reported_mwh < 0
+    df.loc[mask, ["from", "to"]] = df.loc[mask, ["to", "from"]].values
+    df.loc[mask, "interchange_reported_mwh"] *= -1
+
+    all_isos = list(set(df["from"].unique().tolist() + df["to"].unique().tolist()))
+    all_months = df.month.unique()
+    index = pd.MultiIndex.from_product(
+        [
+            all_isos,
+            all_isos,
+            all_months,
+        ],
+        names=["from", "to", "month"],
+    )
+    df_template = pd.DataFrame(index=index, columns=["interchange_reported_mwh"])
+    df_template = df_template[
+        df_template.index.get_level_values("from")
+        != df_template.index.get_level_values("to")
+    ]
+
+    df = df.set_index(["from", "to", "month"])
+
+    expanded = df.combine_first(df_template).reset_index()
+    expanded["interchange_reported_mwh"] = expanded["interchange_reported_mwh"].fillna(
+        0
+    )
+
+    return expanded
+
+
+def format_fuel_costs(fuel_costs: pd.DataFrame) -> pd.DataFrame:
+    """Formats fuel costs for ISO mappings."""
     df = fuel_costs.copy()
     data = []
 
@@ -192,20 +189,9 @@ def format_fuel_costs(
             temp = df[(df.index == period) & (df.state.isin(states))]
             value = temp.value.mean()
             data.append([period, iso, value, "usd/mwh"])
-
-    # Create DataFrame and set period as index
-    df_out = pd.DataFrame(data, columns=["period", "iso", "value", "units"]).set_index(
+    return pd.DataFrame(data, columns=["period", "iso", "value", "units"]).set_index(
         "period"
     )
-
-    # Resample to hourly frequency and forward fill
-    df_out = df_out.resample("H").ffill()
-
-    # Replace year if target_year is provided
-    if target_year is not None:
-        df_out.index = df_out.index.map(lambda x: x.replace(year=target_year))
-
-    return df_out
 
 
 if __name__ == "__main__":
@@ -269,7 +255,7 @@ if __name__ == "__main__":
     elec_costs = FuelCosts(
         fuel="electricity", year=year, api=api, sector="all"
     ).get_data()
-    elec_costs = format_fuel_costs(elec_costs, target_year=year)
+    elec_costs = format_fuel_costs(elec_costs)
 
     # write to csv
     monthly_aggregated_interchange_data.to_csv(net_flows_f, index=False)
