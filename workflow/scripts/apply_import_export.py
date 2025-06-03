@@ -119,7 +119,7 @@ def add_import_export_links(
             p_nom_extendable=False,
             p_min_pu=0,
             p_max_pu=1,
-            marginal_cost=0,  # use endogenous cost of electricity
+            marginal_cost=0.001,  # use endogenous cost of electricity
             p_nom=export_capacity,
         )
 
@@ -127,8 +127,8 @@ def add_import_export_links(
 if __name__ == "__main__":
     if "snakemake" in globals():
         network_in = snakemake.input.network
-        capacities_f = snakemake.input.capacities
-        elec_costs_f = snakemake.input.costs
+        capacities_f = snakemake.input.capacities_f
+        elec_costs_f = snakemake.input.elec_costs_f
         network_out = snakemake.output.network
     else:
         network_in = Path("results", "caiso", "base.nc")

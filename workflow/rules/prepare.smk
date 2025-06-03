@@ -196,13 +196,14 @@ rule process_natural_gas:
 rule process_interchange_data:
     message: "Processing import/export data"
     input:
-        network = "results/{scenario}/base.nc",
+        network = "results/{scenario}/copy.nc", # use copy to avoid cyclic dependency
         regions = "resources/interchanges/regions.csv",
         membership = "resources/interchanges/membership.csv",
         flowgates = "resources/interchanges/transmission_capacity_init_AC_ba_NARIS2024.csv",
     params:
         api = config["api"]["eia"],
-        balancing_period = "month"
+        year = config["pypsa_usa"]["era5_year"],
+        balancing_period = "month", # only one supported right now
         pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"
     output:
         net_flows = "results/{scenario}/constraints/import_export_flows.csv",
@@ -223,7 +224,7 @@ rule process_interchange_data:
 rule add_import_export_to_network:
     message: "Adding import/export to network"
     input:
-        network = "results/{scenario}/copy.nc",
+        network = "results/{scenario}/copy.nc", # base network will include imports/exports
         capacities_f = "results/{scenario}/constraints/import_export_capacity.csv",
         elec_costs_f = "results/{scenario}/constraints/import_export_costs.csv"
     output:

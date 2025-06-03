@@ -3,15 +3,17 @@
 from typing import Any
 import pandas as pd
 import pypsa
-from constants import NG_MWH_2_MMCF
+from constants import ISO_STATES, NG_MWH_2_MMCF
 from pathlib import Path
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 ##################
 ## GSA Specific ##
 ##################
+
 
 def create_salib_problem(parameters: pd.DataFrame, method: str) -> dict[str, list[Any]]:
     """Creates SALib problem from scenario configuration."""
@@ -70,19 +72,22 @@ def create_salib_problem(parameters: pd.DataFrame, method: str) -> dict[str, lis
     else:
         raise ValueError(f"{method} is not a valid sampling method")
 
+
 #####################
 ## General Helpers ##
 #####################
 
+
 def calculate_annuity(lifetime: int, dr: float | int):
     """
-    Calculate the annuity factor for an asset. 
+    Calculate the annuity factor for an asset.
     """
     if dr > 0:
         return dr / (1.0 - 1.0 / (1.0 + dr) ** lifetime)
     else:
         return 1 / lifetime
-    
+
+
 def configure_logging(snakemake, skip_handlers=False):
     """
     Configure the basic behaviour for the logging module.
@@ -113,7 +118,8 @@ def configure_logging(snakemake, skip_handlers=False):
             },
         )
     logging.basicConfig(**kwargs)
-    
+
+
 #################
 ## Constraints ##
 #################
@@ -141,24 +147,28 @@ def get_region_buses(n: pypsa.Network, region_list: list[str]) -> pd.DataFrame:
             | (1 if "all" in region_list else 0)
         )
     ]
-    
+
+
 ###
-# Transmission Expansion 
+# Transmission Expansion
 ###
 
 
 def get_existing_lv(n: pypsa.Network) -> float:
     """Gets exisitng line volume."""
     ac_links_existing = n.links.carrier == "AC" if not n.links.empty else pd.Series()
-    return n.links.loc[ac_links_existing, "p_nom"] @ n.links.loc[ac_links_existing, "length"]
+    return (
+        n.links.loc[ac_links_existing, "p_nom"]
+        @ n.links.loc[ac_links_existing, "length"]
+    )
 
 
 ###
-# RPS and CES 
+# RPS and CES
 ###
+
 
 def concat_rps_standards(n: pypsa.Network, rps: pd.DataFrame) -> pd.DataFrame:
-    
     planning_horizon = n.investment_periods[0]
 
     # Concatenate all portfolio standards
@@ -169,13 +179,15 @@ def concat_rps_standards(n: pypsa.Network, rps: pd.DataFrame) -> pd.DataFrame:
         & (portfolio_standards.planning_horizon == planning_horizon)
         & (portfolio_standards.region.isin(n.buses.reeds_state.unique()))
     ]
-    
-    return portfolio_standards
-    
 
-def get_rps_eligible(n: pypsa.Network, rps_region: str, rps_carrier: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    return portfolio_standards
+
+
+def get_rps_eligible(
+    n: pypsa.Network, rps_region: str, rps_carrier: str
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Buses and generators that can contribute to RPS in PyPSA format."""
-    
+
     region_list = [region.strip() for region in rps_region.split(",")]
     region_buses = get_region_buses(n, region_list)
 
@@ -188,10 +200,13 @@ def get_rps_eligible(n: pypsa.Network, rps_region: str, rps_carrier: str) -> tup
     # Filter region generators
     region_gens = n.generators[n.generators.bus.isin(region_buses.index)]
     region_gens = region_gens[region_gens.carrier.isin(carriers)]
-    
+
     return region_buses, region_gens
-    
-def get_rps_generation(n: pypsa.Network, planning_horizon: int, region_gens: pd.DataFrame):
+
+
+def get_rps_generation(
+    n: pypsa.Network, planning_horizon: int, region_gens: pd.DataFrame
+):
     """LHS of constrint. Generators that can contribute to RPS. Returns linopy sum."""
     p_eligible = n.model["Generator-p"].sel(
         period=planning_horizon,
@@ -199,11 +214,14 @@ def get_rps_generation(n: pypsa.Network, planning_horizon: int, region_gens: pd.
     )
     return p_eligible.sum()
 
-def get_rps_demand_gsa(n: pypsa.Network, planning_horizon: int, region_buses: pd.DataFrame):
+
+def get_rps_demand_gsa(
+    n: pypsa.Network, planning_horizon: int, region_buses: pd.DataFrame
+):
     """Demand to benchmark the rps against.
-    
+
     WARNING! This is an aproximation for GSA purposes only. The real constraint has a RHS
-    of zero and sums actual outgoing flows. 
+    of zero and sums actual outgoing flows.
     """
     load_buses = n.loads
     load_buses["country"] = load_buses.bus.map(n.buses.country)
@@ -214,24 +232,35 @@ def get_rps_demand_gsa(n: pypsa.Network, planning_horizon: int, region_buses: pd
 
     return n.loads_t.p_set.loc[planning_horizon, load_buses.index].sum().sum()
 
-def get_rps_demand_actual(n: pypsa.Network, planning_horizon: int, region_buses: pd.DataFrame):
+
+def get_rps_demand_actual(
+    n: pypsa.Network, planning_horizon: int, region_buses: pd.DataFrame
+):
     """LHS of constrint. Returns linopy sum.
-    
-    This is the sum of outflowing electricity from power sector links. 
+
+    This is the sum of outflowing electricity from power sector links.
     """
     # power level buses
-    pwr_buses = n.buses[(n.buses.carrier == "AC") & (n.buses.index.isin(region_buses.index))]
+    pwr_buses = n.buses[
+        (n.buses.carrier == "AC") & (n.buses.index.isin(region_buses.index))
+    ]
     # links delievering power within the region; removes any transmission links
-    pwr_links = n.links[(n.links.bus0.isin(pwr_buses.index)) & ~(n.links.bus1.isin(pwr_buses.index))]
+    pwr_links = n.links[
+        (n.links.bus0.isin(pwr_buses.index)) & ~(n.links.bus1.isin(pwr_buses.index))
+    ]
     region_demand = n.model["Link-p"].sel(period=planning_horizon, Link=pwr_links.index)
-    
+
     return region_demand.sum()
+
 
 ###
 # Natural Gas Trade
 ###
 
-def format_raw_ng_trade_data(prod: pd.DataFrame, link_suffix: str | None = None) -> pd.DataFrame:
+
+def format_raw_ng_trade_data(
+    prod: pd.DataFrame, link_suffix: str | None = None
+) -> pd.DataFrame:
     """Formats the raw EIA natural gas trade data into something usable"""
 
     def _format_link_name(s: str) -> str:
@@ -251,14 +280,15 @@ def format_raw_ng_trade_data(prod: pd.DataFrame, link_suffix: str | None = None)
         df["value"] = df["value"] * NG_MWH_2_MMCF
 
         return df[["link", "value"]].rename(columns={"value": "rhs"}).set_index("link")
-    
+
     return _format_data(prod, link_suffix)
 
-def get_ng_trade_links(n: pypsa.Network, direction: str) -> list[str]: 
+
+def get_ng_trade_links(n: pypsa.Network, direction: str) -> list[str]:
     """Gets natural gas trade links within the network."""
-    
+
     assert direction in ("imports", "exports")
-    
+
     if direction == "imports":
         return n.links[
             (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas trade"))
@@ -267,7 +297,7 @@ def get_ng_trade_links(n: pypsa.Network, direction: str) -> list[str]:
         return n.links[
             (n.links.carrier == "gas trade") & (n.links.bus0.str.endswith(" gas"))
         ].index.to_list()
-    else: 
+    else:
         raise ValueError(f"Undefined control flow for direction {direction}")
 
 
@@ -281,3 +311,18 @@ def get_urban_rural_fraction(pop: pd.DataFrame) -> pd.DataFrame:
 
     pop["urban_rural_fraction"] = (pop.urban_fraction / pop.rural_fraction).round(5)
     return pop.set_index("name")["urban_rural_fraction"].to_dict()
+
+
+###
+# Electricity trades
+###
+
+
+def get_network_iso(n: pypsa.Network) -> list[str]:
+    """Get the ISO of the network."""
+    isos = []
+    states = n.buses[n.buses.carrier == "AC"].reeds_state.unique()
+    for iso in ISO_STATES:
+        if all(state in ISO_STATES[iso] for state in states):
+            isos.append(iso)
+    return isos

@@ -12,6 +12,7 @@ from typing import Optional
 import yaml
 from utils import (
     get_existing_lv,
+    get_network_iso,
     get_region_buses,
     get_rps_demand_actual,
     get_rps_eligible,
@@ -20,10 +21,13 @@ from utils import (
     format_raw_ng_trade_data,
     get_ng_trade_links,
     get_urban_rural_fraction,
-    configure_logging
+    configure_logging,
 )
 
+from constants import ISO_STATES
+
 import logging
+
 logger = logging.getLogger(__name__)
 
 ###
@@ -88,9 +92,11 @@ def filter_components(
 
     return filtered
 
+
 ###
 # Custom constraints
 ###
+
 
 def add_land_use_constraint_perfect(n):
     """
@@ -134,6 +140,7 @@ def add_land_use_constraint_perfect(n):
         bus = df_carrier.bus
         n.buses.loc[bus, name] = df_carrier.p_nom_max.values
     return n
+
 
 def add_technology_capacity_target_constraints(
     n: pypsa.Network, data: pd.DataFrame, sample: pd.DataFrame
@@ -244,7 +251,12 @@ def add_technology_capacity_target_constraints(
             ).rename_axis(
                 "StorageUnit-ext",
             )
-            lhs_s = n.model["StorageUnit-p_nom"].loc[lhs_storage_ext.index].groupby(grouper_s).sum()
+            lhs_s = (
+                n.model["StorageUnit-p_nom"]
+                .loc[lhs_storage_ext.index]
+                .groupby(grouper_s)
+                .sum()
+            )
         else:
             lhs_s = None
 
@@ -305,9 +317,9 @@ def add_technology_capacity_target_constraints(
             )
 
         if not np.isnan(target["max"]):
-            assert (
-                target["max"] >= lhs_existing
-            ), f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
+            assert target["max"] >= lhs_existing, (
+                f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
+            )
 
             rhs = target["max"] - round(lhs_existing, 5)
 
@@ -326,6 +338,7 @@ def add_technology_capacity_target_constraints(
                 f"Max Value Adj: {rhs}",
             )
 
+
 def add_RPS_constraints(
     n: pypsa.Network, policy_name: str, rps: pd.DataFrame, sample: float
 ):
@@ -335,20 +348,25 @@ def add_RPS_constraints(
 
     if rps.empty:
         return
-    
+
     portfolio_standards = concat_rps_standards(n, rps)
 
     # Iterate through constraints
     for _, constraint_row in portfolio_standards.iterrows():
-        
-        region_buses, region_gens = get_rps_eligible(n, constraint_row.region, constraint_row.carrier)
-        
+        region_buses, region_gens = get_rps_eligible(
+            n, constraint_row.region, constraint_row.carrier
+        )
+
         if region_buses.empty:
             continue
 
         if not region_gens.empty:
-            region_demand = get_rps_demand_actual(n, constraint_row.planning_horizon, region_buses)
-            region_gen = get_rps_generation(n, constraint_row.planning_horizon, region_gens)
+            region_demand = get_rps_demand_actual(
+                n, constraint_row.planning_horizon, region_buses
+            )
+            region_gen = get_rps_generation(
+                n, constraint_row.planning_horizon, region_gens
+            )
 
             lhs = region_gen - constraint_row.pct * region_demand * sample
             rhs = 0
@@ -451,10 +469,10 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: boo
                 else:
                     raise ValueError(state.lower())
 
+
 def add_ng_import_export_limits(
     n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], limits: dict[str, float]
 ):
-
     def add_import_limits(n, data, constraint, multiplier=None):
         """Sets gas import limit over each year."""
         assert constraint in ("max", "min")
@@ -465,7 +483,7 @@ def add_ng_import_export_limits(
         weights = n.snapshot_weightings.objective
 
         links = get_ng_trade_links(n, "imports")
-        
+
         for year in n.investment_periods:
             for link in links:
                 try:
@@ -494,7 +512,7 @@ def add_ng_import_export_limits(
             multiplier = 1
 
         weights = n.snapshot_weightings.objective
-        
+
         links = get_ng_trade_links(n, "exports")
 
         for year in n.investment_periods:
@@ -516,6 +534,8 @@ def add_ng_import_export_limits(
                         lhs <= rhs,
                         name=f"ng_limit_export_max-{year}-{link}",
                     )
+
+    assert False, "Check the limits argument"
 
     # get limits
 
@@ -566,6 +586,105 @@ def add_ng_import_export_limits(
         add_import_limits(n, trade, "max", import_max)
     if not export_max == "inf":
         add_export_limits(n, trade, "max", export_max)
+
+
+def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
+    def _get_elec_import_links(n: pypsa.Network, iso: str) -> list[str]:
+        """Get all links for elec trade."""
+        return n.links[
+            (n.links.carrier == "imports") & (n.links.bus0.str.startswith(iso))
+        ].index
+
+    def _get_elec_export_links(n: pypsa.Network, iso: str) -> list[str]:
+        """Get all links for elec trade."""
+        return n.links[
+            (n.links.carrier == "exports") & (n.links.bus1.str.startswith(iso))
+        ].index
+
+    from_iso = get_network_iso(n)
+    if len(from_iso) < 1:
+        raise ValueError("No full ISOs found for network")
+    elif len(from_iso) > 1:
+        raise ValueError("Multiple ISOs found for network")
+    from_iso = from_iso[0]
+
+    # get unique to isos for constraint setup
+    flows = elec_trade[
+        ((elec_trade["to"] == from_iso) | (elec_trade["from"] == from_iso))
+        & (elec_trade["interchange_reported_mwh"] > 0)
+    ]
+    to_isos = list(set(flows["to"].unique().tolist() + flows["from"].unique().tolist()))
+    to_isos.remove(from_iso)  # list of unique connecting isos in the network
+
+    weights = n.snapshot_weightings.objective
+    period = n.snapshots.get_level_values("period").unique().tolist()
+    assert len(period) == 1, "Only one period supported for elec trade constraints"
+
+    for to_iso in to_isos:
+        import_links = _get_elec_import_links(n, to_iso)
+        export_links = _get_elec_export_links(n, to_iso)
+
+        if import_links.empty and export_links.empty:
+            raise ValueError(f"No links found for {to_iso}")
+
+        timesteps = n.snapshots.get_level_values("timestep")
+
+        for month in flows.month.unique():
+            timesteps_in_month = timesteps[timesteps.month == month].strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+
+            # filter flows to only include the current month
+            rhs_df = flows[
+                ((flows["from"] == to_iso) | (flows["to"] == to_iso))
+                & (flows.month == month)
+            ]
+            assert len(rhs_df) == 1, f"Multiple flows found for {to_iso} in {month}"
+
+            rhs = rhs_df.interchange_reported_mwh.values[0]
+
+            imports = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=period, Link=import_links)
+                .sel(
+                    timestep=timesteps_in_month
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
+            exports = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=period, Link=export_links)
+                .sel(
+                    timestep=timesteps_in_month
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
+
+            if rhs_df["from"].values[0] == to_iso:
+                # net trade from outside model scope to within model scope
+                # the model can import up to the limit, but not more
+                lhs = imports - exports
+
+                n.model.add_constraints(
+                    lhs <= rhs,
+                    name=f"elec_trade-{to_iso}-month_{month}",
+                )
+
+            elif rhs_df["to"].values[0] == to_iso:
+                # net trade from inside model scope to neighboring iso
+                # the model must export at least this amount
+                # it should naturally never export more than this amount
+                lhs = exports - imports
+
+                n.model.add_constraints(
+                    lhs >= rhs,
+                    name=f"elec_trade-{to_iso}-month_{month}",
+                )
+
+            else:
+                raise ValueError(f"Invalid flow direction for {to_iso} in {month}")
 
 
 def add_transmission_limit(n, factor):
@@ -627,7 +746,10 @@ def add_cooling_heat_pump_constraints(n):
 
         assert len(heating_hps) == len(cooling_hps)
 
-        lhs = n.model["Link-p_nom"].loc[heating_hps] - n.model["Link-p_nom"].loc[cooling_hps]
+        lhs = (
+            n.model["Link-p_nom"].loc[heating_hps]
+            - n.model["Link-p_nom"].loc[cooling_hps]
+        )
         rhs = 0
 
         n.model.add_constraints(lhs == rhs, name=f"Link-{hp_type}_cooling_capacity")
@@ -700,6 +822,7 @@ def add_gshp_capacity_constraint(
 
     n.model.add_constraints(lhs >= rhs, name="Link-gshp_capacity_ratio")
 
+
 def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
     mode_mapper = {
         "light_duty": "lgt",
@@ -738,6 +861,7 @@ def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
                 lhs <= rhs, name=f"Link-ev_gen_{mode}_{investment_period}"
             )
 
+
 def extra_functionality(n, sns):
     """
     Collects supplementary constraints which will be passed to `pypsa.optimization.optimize`
@@ -745,10 +869,10 @@ def extra_functionality(n, sns):
 
     opts = n.extra_fn
 
-    # if "rps" in opts:
-    #     add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
-    # if "ces" in opts:
-    #     add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
+    if "rps" in opts:
+        add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
+    if "ces" in opts:
+        add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
     if "tct" in opts:
         add_technology_capacity_target_constraints(
             n, opts["tct"]["data"], opts["tct"]["sample"]
@@ -769,6 +893,8 @@ def extra_functionality(n, sns):
         add_transmission_limit(n, opts["lv"]["sample"])
     if "hp_cooling" in opts:
         add_cooling_heat_pump_constraints(n)
+    if "elec_trade" in opts:
+        add_elec_trade_constraints(n, opts["elec_trade"]["flows"])
 
 
 ###
@@ -783,7 +909,6 @@ def prepare_network(
     foresight: Optional[str] = None,
     **kwargs,
 ):
-
     if clip_p_max_pu:
         if isinstance(clip_p_max_pu, float):
             _clip_p_max(n, clip_p_max_pu)
@@ -838,7 +963,6 @@ def solve_network(
     extra_fn: Optional[dict[str, pd.DataFrame]] = None,
     **kwargs,
 ):
-
     options = {}
     options["solver_name"] = solver_name
     options["solver_options"] = solver_options
@@ -898,23 +1022,25 @@ if __name__ == "__main__":
         ces_f = snakemake.input.ces_f
         tct_f = snakemake.input.tct_f
         ev_policy_f = snakemake.input.ev_policy_f
+        import_export_flows_f = snakemake.input.import_export_flows_f
         constraints_meta = snakemake.input.constraints
         include_ch4 = snakemake.params.include_ch4
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso2/gsa/modelruns/0/n.nc"
+        in_network = "results/caiso/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         solving_log = ""
         out_network = ""
-        pop_f = "results/caiso2/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/caiso2/constraints/ng_domestic.csv"
-        ng_international_f = "results/caiso2/constraints/ng_international.csv"
-        rps_f = "results/caiso2/constraints/rps.csv"
-        ces_f = "results/caiso2/constraints/ces.csv"
-        tct_f = "results/caiso2/constraints/tct.csv"
-        ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
-        constraints_meta = "results/caiso2/gsa/modelruns/0/constraints.csv"
+        pop_f = "results/caiso/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso/constraints/ng_international.csv"
+        rps_f = "results/caiso/constraints/rps.csv"
+        ces_f = "results/caiso/constraints/ces.csv"
+        tct_f = "results/caiso/constraints/tct.csv"
+        ev_policy_f = "results/caiso/constraints/ev_policy.csv"
+        import_export_flows_f = "results/caiso/constraints/import_export_flows.csv"
+        constraints_meta = "results/caiso/gsa/modelruns/0/constraints.csv"
         include_ch4 = False
 
         with open(solving_opts_config, "r") as f:
@@ -936,6 +1062,21 @@ if __name__ == "__main__":
     constraints = pd.read_csv(constraints_meta)
 
     extra_fn = {}
+
+    ###
+    # import/export constraints
+    ###
+    extra_fn["elec_trade"] = {}
+    trade = pd.read_csv(import_export_flows_f)
+    multipliers = constraints[constraints.attribute == "elec_trade"].round(5)
+    if len(multipliers) == 1:
+        trade["interchange_reported_mwh"] *= multipliers.value.values[0].round(5)
+        extra_fn["elec_trade"]["flows"] = trade
+    elif len(multipliers) > 1:
+        raise ValueError("Too many samples for elec_trade")
+    else:
+        logger.debug("No elec trade multipler provided")
+        extra_fn["elec_trade"]["flows"] = trade
 
     ###
     # natural gas constraints
@@ -1066,7 +1207,6 @@ if __name__ == "__main__":
     # Heat Pump cooling constraint
     ###
     extra_fn["hp_cooling"] = True
-
 
     n = solve_network(
         n,

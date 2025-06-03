@@ -25,7 +25,8 @@ rule solve_network:
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
         tct_f = "results/{scenario}/constraints/tct.csv",
-        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        import_export_flows_f = "results/{scenario}/constraints/import_export_flows.csv",
     output:
         network = temp("results/{scenario}/{mode}/modelruns/{run}/network.nc") if not config['metadata']['networks'] else "results/{scenario}/{mode}/modelruns/{run}/network.nc",
     threads: 12
