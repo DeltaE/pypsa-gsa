@@ -71,7 +71,8 @@ rule apply_gsa_sample_to_network:
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
-        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
     output:
         n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=GSA_MODELRUNS)),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
@@ -106,7 +107,8 @@ rule apply_ua_sample_to_network:
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
-        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
     output:
         n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=UA_MODELRUNS)),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
