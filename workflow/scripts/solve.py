@@ -381,7 +381,7 @@ def add_RPS_constraints(
             )
 
 
-def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: bool):
+def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: bool = True):
     """Adds sector co2 constraints."""
 
     def apply_national_limit(
@@ -881,7 +881,7 @@ def extra_functionality(n, sns):
         )
     if "co2L" in opts:
         add_sector_co2_constraints(
-            n, opts["co2L"]["sample"], opts["co2L"]["include_ch4"]
+            n, opts["co2L"]["sample"], True # true for include ch4
         )
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
@@ -1024,7 +1024,6 @@ if __name__ == "__main__":
         ev_policy_f = snakemake.input.ev_policy_f
         import_export_flows_f = snakemake.input.import_export_flows_f
         constraints_meta = snakemake.input.constraints
-        include_ch4 = snakemake.params.include_ch4
         configure_logging(snakemake)
     else:
         in_network = "results/caiso/gsa/modelruns/0/n.nc"
@@ -1041,7 +1040,6 @@ if __name__ == "__main__":
         ev_policy_f = "results/caiso/constraints/ev_policy.csv"
         import_export_flows_f = "results/caiso/constraints/import_export_flows.csv"
         constraints_meta = "results/caiso/gsa/modelruns/0/constraints.csv"
-        include_ch4 = False
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1175,8 +1173,6 @@ if __name__ == "__main__":
     # Carbon Limit Constraint
     ###
     extra_fn["co2L"] = {}
-
-    extra_fn["co2L"]["include_ch4"] = include_ch4
 
     co2_sample = constraints[constraints.attribute == "co2L"].round(5)
 
