@@ -381,7 +381,9 @@ def add_RPS_constraints(
             )
 
 
-def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: bool = True):
+def add_sector_co2_constraints(
+    n: pypsa.Network, sample: float, include_ch4: bool = True
+):
     """Adds sector co2 constraints."""
 
     def apply_national_limit(
@@ -667,18 +669,26 @@ def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
 
                 n.model.add_constraints(
                     lhs <= rhs,
-                    name=f"elec_trade-{to_iso}-month_{month}",
+                    name=f"elec_trade_imports-{to_iso}-month_{month}",
                 )
 
             elif rhs_df["to"].values[0] == to_iso:
                 # net trade from inside model scope to neighboring iso
                 # the model must export at least this amount
-                # it should naturally never export more than this amount
                 lhs = exports - imports
 
+                # upper and lower as exports have a negative cost
+                lhs_lower = lhs.mul(0.99)
+                lhs_upper = lhs.mul(1.01)
+
                 n.model.add_constraints(
-                    lhs >= rhs,
-                    name=f"elec_trade-{to_iso}-month_{month}",
+                    lhs_lower >= rhs,
+                    name=f"elec_trade_exports_lower-{to_iso}-month_{month}",
+                )
+
+                n.model.add_constraints(
+                    lhs_upper <= rhs,
+                    name=f"elec_trade_exports_upper-{to_iso}-month_{month}",
                 )
 
             else:
@@ -880,9 +890,7 @@ def extra_functionality(n, sns):
             n, opts["ev_gen"]["data"], opts["ev_gen"]["sample"]
         )
     if "co2L" in opts:
-        add_sector_co2_constraints(
-            n, opts["co2L"]["sample"]
-        )
+        add_sector_co2_constraints(n, opts["co2L"]["sample"])
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
     if "ng_trade" in opts:

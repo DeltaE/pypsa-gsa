@@ -119,7 +119,7 @@ def add_import_export_links(
             p_nom_extendable=False,
             p_min_pu=0,
             p_max_pu=1,
-            marginal_cost=0.001,  # use endogenous cost of electricity
+            marginal_cost=marginal_cost.value.mul(-1),  # constraint will limit exports
             p_nom=export_capacity,
         )
 
