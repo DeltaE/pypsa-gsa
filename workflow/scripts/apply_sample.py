@@ -257,6 +257,13 @@ def _apply_static_sample(
     """
     df = getattr(n, c)
     slicer = df[df.carrier == car].index
+    if slicer.empty:
+        logger.debug(f"No {car} found in {c}")
+        return {
+            "ref": 1,
+            "scaled": 1,
+            "difference": 0,
+        }
     if absolute:
         # get metadata
         sampled = value
@@ -522,7 +529,7 @@ def _get_constraint_sample(
         itl = _get_ng_trade(n, ng_domestic, "imports")
         # return total imports
         ref = dom + itl
-        scaled = ref + (ref * sample)
+        scaled = ref * sample
     elif attr == "nat_gas_export":
         # domestic trade
         ng_domestic = kwargs.get("ng_domestic", pd.DataFrame())
@@ -816,7 +823,7 @@ if __name__ == "__main__":
         base_network_file = "results/caiso/base.nc"
         root_dir = Path("results/caiso/gsa/modelruns/")
         meta_yaml = False
-        meta_csv = False
+        meta_csv = True
         scaled_sample_file = "results/caiso/gsa/scaled_sample.csv"
         pop_f = "results/caiso/constraints/pop_layout.csv"
         ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"

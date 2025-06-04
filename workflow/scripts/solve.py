@@ -471,7 +471,7 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: boo
 
 
 def add_ng_import_export_limits(
-    n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], limits: dict[str, float]
+    n: pypsa.Network, ng_trade: dict[str, pd.DataFrame | float]
 ):
     def add_import_limits(n, data, constraint, multiplier=None):
         """Sets gas import limit over each year."""
@@ -535,25 +535,23 @@ def add_ng_import_export_limits(
                         name=f"ng_limit_export_max-{year}-{link}",
                     )
 
-    assert False, "Check the limits argument"
-
     # get limits
 
-    import_min = limits.get("import_min", 1)
-    import_max = limits.get("import_max", 1)
-    export_min = limits.get("export_min", 1)
-    export_max = limits.get("export_max", 1)
+    import_min = ng_trade.get("min_import", 1)
+    import_max = ng_trade.get("max_import", 1)
+    export_min = ng_trade.get("min_export", 1)
+    export_max = ng_trade.get("max_export", 1)
 
     # to avoid numerical issues, ensure there is a gap between min/max constraints
     if abs(import_max - import_min) < 0.0001:
-        import_min -= 0.001
-        import_max += 0.001
+        import_min -= 0.01
+        import_max += 0.01
         if import_min < 0:
             import_min = 0
 
     if abs(export_max - export_min) < 0.0001:
-        export_min -= 0.001
-        export_max += 0.001
+        export_min -= 0.01
+        export_max += 0.01
         if export_min < 0:
             export_min = 0
 
@@ -887,8 +885,10 @@ def extra_functionality(n, sns):
         )
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
-    if "ng_limits" in opts:
-        add_ng_import_export_limits(n, opts["ng_limits"])
+    if "ng_trade" in opts:
+        add_ng_import_export_limits(n, opts["ng_trade"])
+    else:
+        raise ValueError("No ng_limits provided")
     if "lv" in opts:
         add_transmission_limit(n, opts["lv"]["sample"])
     if "hp_cooling" in opts:
