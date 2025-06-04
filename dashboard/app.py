@@ -36,6 +36,7 @@ from components.ua import (
     get_ua_data_table,
     get_ua_histogram,
     get_ua_scatter_plot,
+    get_ua_violin_plot,
     remove_ua_outliers,
     ua_options_block,
     get_ua_barchart,
@@ -252,7 +253,10 @@ def render_tab_content(
                 figure=get_ua_barchart(ua_run_data),
             )
         elif plotting_type == "violin":
-            return html.Div([dbc.Card([dbc.CardBody()])])
+            view = dcc.Graph(
+                id=ids.UA_VIOLIN,
+                figure=get_ua_violin_plot(ua_run_data),
+            )
         elif plotting_type == "scatter":
             view = dcc.Graph(
                 id=ids.UA_SCATTER,

@@ -387,13 +387,6 @@ def get_ua_histogram(
         x_range = np.linspace(result_data.min(), result_data.max(), 100)
         y_range = kde(x_range)
 
-        # Scale the density to match the histogram scale
-        # Get the histogram bin width to scale the density appropriately
-        hist_data = fig.data[0]  # Get first histogram trace
-        bin_width = (hist_data.x[1] - hist_data.x[0]) if len(hist_data.x) > 1 else 1
-        total_count = len(result_data)
-        y_range = y_range * total_count * bin_width * (-1) # bin width is negative
-
         fig.add_trace(
             go.Scatter(
                 x=x_range,
@@ -412,6 +405,32 @@ def get_ua_histogram(
         height=600,
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+
+    return fig
+
+
+def get_ua_violin_plot(
+    data: dict[str, Any], nice_names: bool = True, **kwargs
+) -> go.Figure:
+    """UA violin plot component."""
+    if not data:
+        logger.debug("No UA violin plot data found")
+        return px.violin(pd.DataFrame(), x="result", y="value")
+
+    df = _read_serialized_ua_data(data)
+
+    if nice_names:
+        df = _apply_nice_names(df)
+
+    df = df.reset_index()
+    df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+
+    fig = px.violin(
+        df_melted,
+        x="result",
+        y="value",
+        labels=dict(result="", value="Value"),
     )
 
     return fig
