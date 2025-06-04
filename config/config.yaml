@@ -1,7 +1,7 @@
 
 # name of base pypsa network
 scenario: 
-  name: "caiso3"
+  name: "caiso"
   include_generated: false # to include model specific tct and co2L data
   ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget. 
 
@@ -14,7 +14,7 @@ pypsa_usa:
 # write out GSA associated metadata with each run
 metadata:
   csv: True
-  yaml: True
+  yaml: False
   networks: True # keep solved networks 
 
 # config options for data that is generated
