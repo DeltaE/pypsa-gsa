@@ -5,7 +5,7 @@ from dash import dcc, html, dash_table
 import pandas as pd
 from pathlib import Path
 from .utils import (
-    DEFAULT_DISCRETE_COLOR_SCALE,
+    DEFAULT_PLOTLY_THEME,
     get_ua_params_dropdown_options,
     get_ua_results_dropdown_options,
 )
@@ -50,6 +50,9 @@ RESULT_TYPE_DROPDOWN_OPTIONS = [
     {"label": "Total Capacity", "value": "total_capacity"},
     {"label": "Generation", "value": "generation"},
 ]
+
+DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+DEFAULT_HEIGHT = 600
 
 
 def ua_options_block() -> html.Div:
@@ -153,7 +156,6 @@ def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
         f"Removing UA outliers with interval {interval_low} and {interval_high}"
     )
 
-    logger.debug(f"Removing UA outliers from: {df}")
     df_out = df.copy()
     for col in df.columns:
         if col == "run":  # shouldnt really happen, but just in case
@@ -174,7 +176,7 @@ def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
 def _read_serialized_ua_data(data: dict[str, Any]) -> pd.DataFrame:
     """Read serialized UA data from the dash store."""
     df = pd.DataFrame(data)
-    logger.debug(f"Searlized UA data read: {df}")
+    # logger.debug(f"Searlized UA data read: {df}")
     df["run"] = df.run.astype(int)
     return df.set_index("run")
 
@@ -275,8 +277,7 @@ def get_ua_scatter_plot(
     # drop outlier data
     df_melted = df_melted.dropna(subset=["value"])
 
-    color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
-    logger.debug(f"UA scatter plot color scale: {color_scale}")
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
 
     fig = px.scatter(
         df_melted,
@@ -290,9 +291,10 @@ def get_ua_scatter_plot(
         title="Uncertainty Analysis Results",
         xaxis_title="Run Number",
         yaxis_title="Value",
-        height=600,
+        height=DEFAULT_HEIGHT,
         showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=DEFAULT_LEGEND,
+        template=color_theme,
     )
 
     return fig
@@ -314,8 +316,9 @@ def get_ua_barchart(
     df = df.reset_index()
     df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
 
-    # Remove NaN values
     df_melted = df_melted.dropna(subset=["value"])
+
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
 
     # Calculate mean and std for each result category
     stats_df = (
@@ -334,11 +337,12 @@ def get_ua_barchart(
 
     # Update layout
     fig.update_layout(
-        title="Uncertainty Analysis (Mean ± 95% CI)",
+        title="(Mean ± 95% CI)",
         showlegend=False,
-        height=600,
+        height=DEFAULT_HEIGHT,
         bargap=0.2,
         xaxis=dict(tickangle=45),
+        template=color_theme,
     )
 
     return fig
@@ -359,6 +363,8 @@ def get_ua_histogram(
 
     df = df.reset_index()
     df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
 
     # base histogram
     fig = px.histogram(
@@ -399,12 +405,13 @@ def get_ua_histogram(
         )
 
     fig.update_layout(
-        title="Uncertainty Analysis Distribution",
+        title="",
         xaxis_title="Value",
         yaxis_title="Count",
-        height=600,
+        height=DEFAULT_HEIGHT,
         showlegend=True,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend=DEFAULT_LEGEND,
+        template=color_theme,
     )
 
     return fig
@@ -426,11 +433,23 @@ def get_ua_violin_plot(
     df = df.reset_index()
     df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
 
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+
     fig = px.violin(
         df_melted,
         x="result",
         y="value",
         labels=dict(result="", value="Value"),
+    )
+
+    fig.update_layout(
+        title="",
+        xaxis_title="",
+        yaxis_title="Count",
+        height=DEFAULT_HEIGHT,
+        showlegend=True,
+        legend=DEFAULT_LEGEND,
+        template=color_theme,
     )
 
     return fig

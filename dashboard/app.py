@@ -7,12 +7,14 @@ import pandas as pd
 import geopandas as gpd
 
 from components.utils import (
+    DEFAULT_PLOTLY_THEME,
     get_continuous_color_scale_options,
     get_discrete_color_scale_options,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
+    get_plotly_plotting_themes,
     get_ua_results_dropdown_options,
 )
 import components.ids as ids
@@ -221,7 +223,7 @@ def render_tab_content(
     gsa_map_data: list[dict[str, Any]] | None,
     ua_run_data: list[dict[str, Any]] | None,
     plotting_type: str,
-    color_scale: str,
+    color: str,
 ) -> html.Div:
     logger.debug(f"Rendering tab content for: {active_tab}")
     if active_tab == ids.DATA_TAB:
@@ -230,17 +232,17 @@ def render_tab_content(
         if plotting_type == "heatmap":
             view = dcc.Graph(
                 id=ids.GSA_HEATMAP,
-                figure=get_gsa_heatmap(gsa_hm_data, color_scale=color_scale),
+                figure=get_gsa_heatmap(gsa_hm_data, color_scale=color),
             )
         elif plotting_type == "data_table":
             view = get_gsa_data_table(gsa_hm_data)
         elif plotting_type == "barchart":
             view = dcc.Graph(
                 id=ids.GSA_BAR_CHART,
-                figure=get_gsa_barchart(gsa_bar_data, color_scale=color_scale),
+                figure=get_gsa_barchart(gsa_bar_data, color_scale=color),
             )
         elif plotting_type == "map":
-            view = get_gsa_map(gsa_map_data, ISO_SHAPE, color_scale=color_scale)
+            view = get_gsa_map(gsa_map_data, ISO_SHAPE, color_scale=color)
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
@@ -250,22 +252,22 @@ def render_tab_content(
         elif plotting_type == "barchart":
             view = dcc.Graph(
                 id=ids.UA_BAR_CHART,
-                figure=get_ua_barchart(ua_run_data),
+                figure=get_ua_barchart(ua_run_data, template=color),
             )
         elif plotting_type == "violin":
             view = dcc.Graph(
                 id=ids.UA_VIOLIN,
-                figure=get_ua_violin_plot(ua_run_data),
+                figure=get_ua_violin_plot(ua_run_data, template=color),
             )
         elif plotting_type == "scatter":
             view = dcc.Graph(
                 id=ids.UA_SCATTER,
-                figure=get_ua_scatter_plot(ua_run_data),
+                figure=get_ua_scatter_plot(ua_run_data, template=color),
             )
         elif plotting_type == "histogram":
             view = dcc.Graph(
                 id=ids.UA_HISTOGRAM,
-                figure=get_ua_histogram(ua_run_data),
+                figure=get_ua_histogram(ua_run_data, template=color),
             )
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
@@ -557,13 +559,20 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
     ],
 )
-def callback_update_color_options(_: str, plotting_type: str) -> tuple[str, list[str]]:
-    logger.debug(f"Updating color options for: {plotting_type}")
-    if plotting_type in ["heatmap"]:
-        logger.debug("Updating continuous color options")
-        return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+def callback_update_color_options(
+    active_tab: str, plotting_type: str
+) -> tuple[str, list[str]]:
+    logger.debug(f"Updating color options for: {plotting_type} in {active_tab}")
+    if active_tab == ids.UA_TAB:
+        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+    elif active_tab == ids.SA_TAB:
+        if plotting_type in ["heatmap"]:
+            logger.debug("Updating continuous color options")
+            return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+        else:
+            return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
     else:
-        return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+        return "", []
 
 
 ########################

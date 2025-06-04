@@ -5,6 +5,7 @@ from pathlib import Path
 import json
 import plotly.colors as pc
 import plotly.express as px
+import plotly.io as pio
 
 # scenarios must follow these names as they are tied to geographic locations
 ISOS = {
@@ -36,6 +37,7 @@ ISO_STATES = {
 
 DEFAULT_CONTINOUS_COLOR_SCALE = "pubu"
 DEFAULT_DISCRETE_COLOR_SCALE = "Set3"
+DEFAULT_PLOTLY_THEME = "plotly"
 
 
 def _convert_to_dropdown_options(options: dict[str, str]) -> list[dict[str, str]]:
@@ -120,19 +122,6 @@ def _filter_ua_results_on_type(
     else:
         return loaded
 
-def get_ua_results_dropdown_options(
-    root: str, result_type: str | None = None, flatten: bool = True
-) -> list[dict[str, str]]:
-    """Get the UA results dropdown options."""
-    with open(Path(root, "data", "ua_results.json"), "r") as f:
-        loaded = json.load(f)
-    if flatten:
-        return _convert_to_dropdown_options(loaded)
-    if result_type:
-        return _filter_ua_results_on_type(loaded, result_type)
-    else:
-        return loaded
-
 
 def get_continuous_color_scale_options() -> list[str]:
     """Get the continuous color scale options."""
@@ -148,3 +137,7 @@ def get_discrete_color_scale_options() -> list[str]:
             if not k.startswith("__") and not k.endswith("_r")
         ]
     )
+
+def get_plotly_plotting_themes() -> list[str]:
+    """Get the plotly plotting themes."""
+    return list(pio.templates.keys())
