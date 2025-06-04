@@ -36,6 +36,7 @@ GSA_PARAM_SELECTION_RB = "gsa-param-selection-rb"
 
 # sliders
 GSA_PARAMS_SLIDER = "gsa-range-slider"
+UA_INTERVAL_SLIDER = "ua-interval-slider"
 
 # collapsable blocks
 ISO_OPTIONS_BLOCK = "iso-options-block"

@@ -34,6 +34,8 @@ from components.ua import (
     SECTOR_DROPDOWN_OPTIONS,
     filter_ua_on_result_sector_and_type,
     get_ua_data_table,
+    get_ua_scatter_plot,
+    remove_ua_outliers,
     ua_options_block,
 )
 
@@ -247,7 +249,10 @@ def render_tab_content(
         elif plotting_type == "violin":
             return html.Div([dbc.Card([dbc.CardBody()])])
         elif plotting_type == "scatter":
-            return html.Div([dbc.Card([dbc.CardBody()])])
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_ua_scatter_plot(ua_run_data),
+            )
         elif plotting_type == "histogram":
             return html.Div([dbc.Card([dbc.CardBody()])])
         else:
@@ -459,13 +464,18 @@ def callback_filter_ua_on_iso(isos: list[str]) -> list[dict[str, Any]]:
         Input(ids.UA_ISO_DATA, "data"),
         Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
         Input(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
+        Input(ids.UA_INTERVAL_SLIDER, "value"),
     ],
 )
-def callback_filter_ua_on_param(
-    data: list[dict[str, Any]], result_type: str, result_sector: str
+def callback_filter_ua_on_result_sector_and_type(
+    data: list[dict[str, Any]],
+    result_type: str,
+    result_sector: str,
+    interval: list[int],
 ) -> list[dict[str, Any]]:
     df = pd.DataFrame(data)
     df = filter_ua_on_result_sector_and_type(df, result_sector, result_type)
+    df = remove_ua_outliers(df, interval)
     return df.to_dict("records")
 
 
