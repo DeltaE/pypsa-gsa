@@ -881,7 +881,7 @@ def extra_functionality(n, sns):
         )
     if "co2L" in opts:
         add_sector_co2_constraints(
-            n, opts["co2L"]["sample"], True # true for include ch4
+            n, opts["co2L"]["sample"]
         )
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
