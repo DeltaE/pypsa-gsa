@@ -29,8 +29,11 @@ from components.gsa import (
 )
 from components.shared import iso_options_block, plotting_options_block
 from components.ua import (
-    _filter_ua_on_result_sector,
-    _filter_ua_on_result_type,
+    SECTOR_DROPDOWN_OPTIONS_ALL,
+    SECTOR_DROPDOWN_OPTIONS_IDV,
+    SECTOR_DROPDOWN_OPTIONS,
+    filter_ua_on_result_sector_and_type,
+    get_ua_data_table,
     ua_options_block,
 )
 
@@ -238,7 +241,7 @@ def render_tab_content(
         return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.UA_TAB:
         if plotting_type == "data_table":
-            return html.Div([dbc.Card([dbc.CardBody()])])
+            view = get_ua_data_table(ua_run_data)
         elif plotting_type == "barchart":
             return html.Div([dbc.Card([dbc.CardBody()])])
         elif plotting_type == "violin":
@@ -249,6 +252,7 @@ def render_tab_content(
             return html.Div([dbc.Card([dbc.CardBody()])])
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
+        return html.Div([dbc.Card([dbc.CardBody([view])])])
     else:
         return html.Div([dbc.Alert("No active tab selected", color="info")])
 
@@ -461,22 +465,8 @@ def callback_filter_ua_on_param(
     data: list[dict[str, Any]], result_type: str, result_sector: str
 ) -> list[dict[str, Any]]:
     df = pd.DataFrame(data)
-    if result_type != "all":
-        df = _filter_ua_on_result_sector(df, result_sector)
-    df = _filter_ua_on_result_type(df, result_type)
+    df = filter_ua_on_result_sector_and_type(df, result_sector, result_type)
     return df.to_dict("records")
-
-
-@app.callback(
-    Output(ids.UA_RESULTS_DROPDOWN, "options"),
-    Input(ids.TABS, "active_tab"),
-)
-def callback_update_ua_results_dropdown_options(
-    active_tab: str,
-) -> list[dict[str, str]]:
-    if active_tab == ids.UA_TAB:
-        return UA_RESULT_OPTIONS
-    return []
 
 
 ###################################
@@ -686,6 +676,40 @@ def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, 
         num_params = len(GSA_PARM_OPTIONS)
         top_n = 6
     return num_params, _calc_marks(num_params), top_n
+
+
+########################
+# UA Options Callbacks
+########################
+
+
+@app.callback(
+    [
+        Output(ids.UA_RESULTS_SECTOR_DROPDOWN, "options"),
+        Output(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
+    ],
+    Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+)
+def callback_update_ua_results_sector_dropdown_options(
+    result_type: str,
+) -> list[dict[str, str]]:
+    logger.debug(f"Updating UA sector dropdown options for: {result_type}")
+    if result_type == "costs":
+        options = SECTOR_DROPDOWN_OPTIONS_ALL
+    elif result_type == "marginal_costs":
+        options = SECTOR_DROPDOWN_OPTIONS
+    elif result_type == "emissions":
+        options = SECTOR_DROPDOWN_OPTIONS_ALL
+    elif result_type == "new_capacity":
+        options = SECTOR_DROPDOWN_OPTIONS_IDV
+    elif result_type == "total_capacity":
+        options = SECTOR_DROPDOWN_OPTIONS_IDV
+    elif result_type == "generation":
+        options = SECTOR_DROPDOWN_OPTIONS_IDV
+    else:
+        logger.debug(f"Invalid result type for UA sector dropdown: {result_type}")
+        options = SECTOR_DROPDOWN_OPTIONS_ALL
+    return options, options[0]["value"]
 
 
 # Run the server
