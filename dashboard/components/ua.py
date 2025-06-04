@@ -13,6 +13,8 @@ from . import ids as ids
 from .utils import _unflatten_dropdown_options
 import plotly.graph_objects as go
 import plotly.express as px
+import numpy as np
+from scipy.stats import gaussian_kde
 
 
 import logging
@@ -177,6 +179,13 @@ def _read_serialized_ua_data(data: dict[str, Any]) -> pd.DataFrame:
     return df.set_index("run")
 
 
+def _apply_nice_names(df: pd.DataFrame) -> pd.DataFrame:
+    """Apply nice names to UA data table."""
+    logger.debug("Applying nice names to UA data table")
+    ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
+    return df.rename(columns=ua_results)
+
+
 def filter_ua_on_result_sector_and_type(
     df: pd.DataFrame, result_sector: str, result_type: str
 ) -> pd.DataFrame:
@@ -205,9 +214,7 @@ def get_ua_data_table(
     logger.debug(f"UA data table: {df}")
 
     if nice_names:
-        logger.debug("Applying nice names to UA data table")
-        ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
-        df = df.rename(columns=ua_results)
+        df = _apply_nice_names(df)
 
     # Format columns for display
     columns = [
@@ -260,9 +267,7 @@ def get_ua_scatter_plot(
     df = _read_serialized_ua_data(data)
 
     if nice_names:
-        logger.debug("Applying nice names to UA data table")
-        ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
-        df = df.rename(columns=ua_results)
+        df = _apply_nice_names(df)
 
     df = df.reset_index()
     df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
@@ -304,9 +309,7 @@ def get_ua_barchart(
     df = _read_serialized_ua_data(data)
 
     if nice_names:
-        logger.debug("Applying nice names to UA data table")
-        ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
-        df = df.rename(columns=ua_results)
+        df = _apply_nice_names(df)
 
     df = df.reset_index()
     df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
@@ -336,6 +339,79 @@ def get_ua_barchart(
         height=600,
         bargap=0.2,
         xaxis=dict(tickangle=45),
+    )
+
+    return fig
+
+
+def get_ua_histogram(
+    data: dict[str, Any], nice_names: bool = True, **kwargs
+) -> go.Figure:
+    """UA histogram component with overlaid probability density functions."""
+    if not data:
+        logger.debug("No UA histogram data found")
+        return px.histogram(pd.DataFrame(), x="value")
+
+    df = _read_serialized_ua_data(data)
+
+    if nice_names:
+        df = _apply_nice_names(df)
+
+    df = df.reset_index()
+    df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+
+    # base histogram
+    fig = px.histogram(
+        df_melted,
+        x="value",
+        color="result",
+        labels=dict(value="Value", result="Result Type"),
+        opacity=0.7,
+    )
+
+    # Add secondary y-axis for density
+    fig.update_layout(
+        yaxis2=dict(
+            title="Probability Density",
+            overlaying="y",
+            side="right",
+            showgrid=False,
+        )
+    )
+
+    # PDF for each result
+    for result_type in df_melted["result"].unique():
+        result_data = df_melted[df_melted["result"] == result_type]["value"].dropna()
+
+        kde = gaussian_kde(result_data)
+        x_range = np.linspace(result_data.min(), result_data.max(), 100)
+        y_range = kde(x_range)
+
+        # Scale the density to match the histogram scale
+        # Get the histogram bin width to scale the density appropriately
+        hist_data = fig.data[0]  # Get first histogram trace
+        bin_width = (hist_data.x[1] - hist_data.x[0]) if len(hist_data.x) > 1 else 1
+        total_count = len(result_data)
+        y_range = y_range * total_count * bin_width * (-1) # bin width is negative
+
+        fig.add_trace(
+            go.Scatter(
+                x=x_range,
+                y=y_range,
+                name=f"{result_type} (PDF)",
+                line=dict(width=2),
+                showlegend=True,
+                yaxis="y2",  # secondary y-axis
+            )
+        )
+
+    fig.update_layout(
+        title="Uncertainty Analysis Distribution",
+        xaxis_title="Value",
+        yaxis_title="Count",
+        height=600,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
 
     return fig

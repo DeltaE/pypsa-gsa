@@ -34,6 +34,7 @@ from components.ua import (
     SECTOR_DROPDOWN_OPTIONS,
     filter_ua_on_result_sector_and_type,
     get_ua_data_table,
+    get_ua_histogram,
     get_ua_scatter_plot,
     remove_ua_outliers,
     ua_options_block,
@@ -258,7 +259,10 @@ def render_tab_content(
                 figure=get_ua_scatter_plot(ua_run_data),
             )
         elif plotting_type == "histogram":
-            return html.Div([dbc.Card([dbc.CardBody()])])
+            view = dcc.Graph(
+                id=ids.UA_HISTOGRAM,
+                figure=get_ua_histogram(ua_run_data),
+            )
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
