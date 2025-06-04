@@ -52,6 +52,9 @@ rule generate_co2L_data:
 
 rule append_generated_parameters:
     message: "Appending generated GSA parameters."
+    params:
+        include_co2L = config["generated"]["include"]["co2L"],
+        include_tct = config["generated"]["include"]["tct"],
     input:
         base=config["gsa"]["parameters"],
         tct="results/{scenario}/generated/tct_gsa.csv",
@@ -65,9 +68,15 @@ rule append_generated_parameters:
         "generate_data"
     run:
         import pandas as pd
+        dfs = []
         base = pd.read_csv(input.base)
-        tct = pd.read_csv(input.tct)
-        co2L = pd.read_csv(input.co2L)
-        df = pd.concat([base, tct, co2L])
+        dfs.append(base)
+        if params.include_tct:  
+            tct = pd.read_csv(input.tct)
+            dfs.append(tct)
+        if params.include_co2L:
+            co2L = pd.read_csv(input.co2L)
+            dfs.append(co2L)
+        df = pd.concat(dfs)
         df.to_csv(output.csv[0], index=False)
     

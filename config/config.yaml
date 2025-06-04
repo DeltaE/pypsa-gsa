@@ -19,6 +19,9 @@ metadata:
 
 # config options for data that is generated
 generated:
+  include:
+    co2L: False
+    tct: True
   co2L_min: 40 # as percentage of 2005 level emissions
   co2L_max: 50 # as percentage of 2005 level emissions
   ccgtccs_max: 50 # as a percentage of max natgas capacity 
