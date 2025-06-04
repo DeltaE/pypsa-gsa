@@ -37,6 +37,7 @@ from components.ua import (
     get_ua_scatter_plot,
     remove_ua_outliers,
     ua_options_block,
+    get_ua_barchart,
 )
 
 import logging
@@ -245,7 +246,10 @@ def render_tab_content(
         if plotting_type == "data_table":
             view = get_ua_data_table(ua_run_data)
         elif plotting_type == "barchart":
-            return html.Div([dbc.Card([dbc.CardBody()])])
+            view = dcc.Graph(
+                id=ids.UA_BAR_CHART,
+                figure=get_ua_barchart(ua_run_data),
+            )
         elif plotting_type == "violin":
             return html.Div([dbc.Card([dbc.CardBody()])])
         elif plotting_type == "scatter":

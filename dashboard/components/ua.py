@@ -291,3 +291,51 @@ def get_ua_scatter_plot(
     )
 
     return fig
+
+
+def get_ua_barchart(
+    data: dict[str, Any], nice_names: bool = True, **kwargs
+) -> go.Figure:
+    """UA barchart component showing mean values with 95% confidence intervals for each result category."""
+    if not data:
+        logger.debug("No UA barchart data found")
+        return px.bar(pd.DataFrame(), x="result", y="value")
+
+    df = _read_serialized_ua_data(data)
+
+    if nice_names:
+        logger.debug("Applying nice names to UA data table")
+        ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
+        df = df.rename(columns=ua_results)
+
+    df = df.reset_index()
+    df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+
+    # Remove NaN values
+    df_melted = df_melted.dropna(subset=["value"])
+
+    # Calculate mean and std for each result category
+    stats_df = (
+        df_melted.groupby("result")
+        .agg(value=("value", "mean"), std=("value", "std"))
+        .reset_index()
+    )
+
+    fig = px.bar(
+        stats_df,
+        x="result",
+        y="value",
+        error_y="std",
+        labels=dict(result="", value="Value"),
+    )
+
+    # Update layout
+    fig.update_layout(
+        title="Uncertainty Analysis (Mean ± 95% CI)",
+        showlegend=False,
+        height=600,
+        bargap=0.2,
+        xaxis=dict(tickangle=45),
+    )
+
+    return fig
