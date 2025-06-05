@@ -372,11 +372,13 @@ def get_ua_barchart(
 
 def get_ua_histogram(
     data: dict[str, Any], nice_names: bool = True, **kwargs
-) -> go.Figure:
-    """UA histogram component with overlaid probability density functions."""
+) -> html.Div:
+    """UA histogram component with overlaid probability density functions"""
     if not data:
         logger.debug("No UA histogram data found")
-        return px.histogram(pd.DataFrame(columns=["value"]), x="value")
+        return html.Div(
+            [dcc.Graph(figure=px.histogram(pd.DataFrame(columns=["value"]), x="value"))]
+        )
 
     df = _read_serialized_ua_data(data)
 
@@ -390,55 +392,86 @@ def get_ua_histogram(
     ylabel = kwargs.get("result_type", None)
     ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
 
-    # base histogram
-    fig = px.histogram(
-        df_melted,
-        x="value",
-        color="result",
-        labels=dict(value=ylabel, result="Result Type"),
-        opacity=DEFAULT_OPACITY,
+    result_types = df_melted["result"].unique()
+    logger.debug(f"Historgram result types: {result_types}")
+    fig_height = (
+        int(DEFAULT_HEIGHT * (2 / 3)) if len(result_types) > 1 else DEFAULT_HEIGHT
     )
 
-    # Add secondary y-axis for density
-    fig.update_layout(
-        yaxis2=dict(
-            title="Probability Density",
-            overlaying="y",
-            side="right",
-            showgrid=False,
+    figures = []
+
+    for result_type in result_types:
+        result_data = df_melted[df_melted["result"] == result_type]
+
+        # Calculate number of bins using Freedman-Diaconis rule
+
+        fig = px.histogram(
+            result_data,
+            x="value",
+            labels=dict(value=ylabel),
+            opacity=DEFAULT_OPACITY,
+            title=f"{result_type}",
         )
-    )
 
-    # PDF for each result
-    for result_type in df_melted["result"].unique():
-        result_data = df_melted[df_melted["result"] == result_type]["value"].dropna()
+        fig.update_layout(
+            yaxis=dict(title="Count"),
+            yaxis2=dict(
+                title="Probability Density",
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
-        kde = gaussian_kde(result_data)
-        x_range = np.linspace(result_data.min(), result_data.max(), 100)
+        # Add PDF overlay
+        kde = gaussian_kde(result_data["value"].dropna())
+        x_range = np.linspace(
+            result_data["value"].min(), result_data["value"].max(), 100
+        )
         y_range = kde(x_range)
+
+        # Verify that the KDE integrates to approximately 1
+        dx = x_range[1] - x_range[0]
+        area = np.sum(y_range * dx)
+        logger.debug(f"KDE area under curve with dx={dx} is: {area:.6f}")
 
         fig.add_trace(
             go.Scatter(
                 x=x_range,
                 y=y_range,
-                name=f"{result_type} (PDF)",
+                name="PDF",
                 line=dict(width=2),
                 showlegend=True,
-                yaxis="y2",  # secondary y-axis
+                yaxis="y2",
             )
         )
 
-    fig.update_layout(
-        title="",
-        xaxis_title="Value",
-        yaxis_title=ylabel,
-        height=DEFAULT_HEIGHT,
-        showlegend=True,
-        legend=DEFAULT_LEGEND,
-        template=color_theme,
-    )
+        fig.update_layout(
+            height=fig_height,
+            showlegend=True,
+            legend=DEFAULT_LEGEND,
+            template=color_theme,
+            margin=dict(t=50, l=50, r=50, b=50),
+        )
 
-    return fig
+        figures.append(dcc.Graph(figure=fig))
+
+    if len(result_types) > 1:
+        return html.Div(
+            figures,
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "repeat(2, 1fr)",
+                "gap": "20px",
+                "padding": "20px",
+            },
+            id=ids.UA_HISTOGRAM,
+        )
+    else:
+        return html.Div(
+            figures[0],
+            id=ids.UA_HISTOGRAM,
+        )
 
 
 def get_ua_violin_plot(

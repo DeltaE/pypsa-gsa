@@ -297,11 +297,8 @@ def render_tab_content(
                 ),
             )
         elif plotting_type == "histogram":
-            view = dcc.Graph(
-                id=ids.UA_HISTOGRAM,
-                figure=get_ua_histogram(
-                    ua_run_data, template=color, result_type=ua_result_type
-                ),
+            view = get_ua_histogram(
+                ua_run_data, template=color, result_type=ua_result_type
             )
         elif plotting_type == "box_whisker":
             view = dcc.Graph(
