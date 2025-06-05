@@ -35,6 +35,7 @@ from components.ua import (
     SECTOR_DROPDOWN_OPTIONS_IDV,
     SECTOR_DROPDOWN_OPTIONS,
     filter_ua_on_result_sector_and_type,
+    get_ua_box_whisker,
     get_ua_data_table,
     get_ua_histogram,
     get_ua_scatter_plot,
@@ -64,6 +65,8 @@ app = dash.Dash(
 SIDEBAR_WIDTH = 3
 CONTENT_WIDTH = int(12 - SIDEBAR_WIDTH)
 
+OPTIONS_BLOCK_CLASS = "py-1"
+
 RAW_GSA = pd.read_csv("data/sa.csv")
 RAW_UA = pd.read_csv("data/ua_runs.csv")
 ISO_SHAPE = gpd.read_file("data/iso.geojson")
@@ -80,33 +83,46 @@ UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
 app.layout = html.Div(
     [
         dbc.NavbarSimple(
-            brand="High Impact Options to Reach Near Term Targets",
+            brand="PyPSA-USA Sector Uncertainity Analysis",
             brand_href="#",
             color="primary",
             dark=True,
             id=ids.NAVBAR,
+            className="mb-3",
         ),
         dbc.Container(
             [
-                html.H1("PyPSA-USA Uncertainity Analysis", className="my-4"),
+                # html.H1("PyPSA-USA Uncertainity Analysis", className="my-4"),
                 dbc.Row(
                     [
+                        # not using collapsable cards as when you collapse the cards
+                        # padding is retained and it looks weird. lol.
                         dbc.Col(
                             [
-                                dbc.Card(
+                                html.Div(
                                     [
-                                        dbc.CardBody(
+                                        dbc.Card(
                                             [
-                                                html.H4(
-                                                    "Data Viewing Options",
-                                                    className="card-title",
+                                                dbc.CardBody(
+                                                    [
+                                                        html.H4(
+                                                            "Data Viewing Options",
+                                                            className="card-title",
+                                                        ),
+                                                        plotting_options_block(),
+                                                    ]
                                                 ),
-                                                plotting_options_block(),
                                             ]
                                         ),
-                                        dbc.CardBody(
+                                    ],
+                                    id=ids.PLOTTING_OPTIONS_BLOCK,
+                                    className=OPTIONS_BLOCK_CLASS,
+                                ),
+                                html.Div(
+                                    [
+                                        dbc.Card(
                                             [
-                                                dbc.Collapse(
+                                                dbc.CardBody(
                                                     [
                                                         html.H4(
                                                             "Spatial Options",
@@ -115,44 +131,52 @@ app.layout = html.Div(
                                                         iso_options_block(
                                                             RAW_GSA, RAW_UA
                                                         ),
-                                                    ],
-                                                    id=ids.ISO_OPTIONS_BLOCK,
-                                                    is_open=True,
+                                                    ]
                                                 ),
                                             ]
                                         ),
-                                        dbc.CardBody(
+                                    ],
+                                    id=ids.ISO_OPTIONS_BLOCK,
+                                    className=OPTIONS_BLOCK_CLASS,
+                                ),
+                                html.Div(
+                                    [
+                                        dbc.Card(
                                             [
-                                                dbc.Collapse(
+                                                dbc.CardBody(
                                                     [
                                                         html.H4(
                                                             "GSA Options",
                                                             className="card-title",
                                                         ),
                                                         gsa_options_block(),
-                                                    ],
-                                                    id=ids.GSA_OPTIONS_BLOCK,
-                                                    is_open=True,
+                                                    ]
                                                 ),
                                             ]
                                         ),
-                                        dbc.CardBody(
+                                    ],
+                                    id=ids.GSA_OPTIONS_BLOCK,
+                                    className=OPTIONS_BLOCK_CLASS,
+                                ),
+                                html.Div(
+                                    [
+                                        dbc.Card(
                                             [
-                                                dbc.Collapse(
+                                                dbc.CardBody(
                                                     [
                                                         html.H4(
                                                             "Uncertaintiy Options",
                                                             className="card-title",
                                                         ),
                                                         ua_options_block(),
-                                                    ],
-                                                    id=ids.UA_OPTIONS_BLOCK,
-                                                    is_open=True,
+                                                    ]
                                                 ),
                                             ]
                                         ),
-                                    ]
-                                )
+                                    ],
+                                    id=ids.UA_OPTIONS_BLOCK,
+                                    className=OPTIONS_BLOCK_CLASS,
+                                ),
                             ],
                             md=SIDEBAR_WIDTH,
                         ),
@@ -215,6 +239,7 @@ app.layout = html.Div(
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
+    State(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
 )
 def render_tab_content(
     active_tab: str,
@@ -224,6 +249,7 @@ def render_tab_content(
     ua_run_data: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
+    ua_result_type: str,
 ) -> html.Div:
     logger.debug(f"Rendering tab content for: {active_tab}")
     if active_tab == ids.DATA_TAB:
@@ -252,22 +278,37 @@ def render_tab_content(
         elif plotting_type == "barchart":
             view = dcc.Graph(
                 id=ids.UA_BAR_CHART,
-                figure=get_ua_barchart(ua_run_data, template=color),
+                figure=get_ua_barchart(
+                    ua_run_data, template=color, result_type=ua_result_type
+                ),
             )
         elif plotting_type == "violin":
             view = dcc.Graph(
                 id=ids.UA_VIOLIN,
-                figure=get_ua_violin_plot(ua_run_data, template=color),
+                figure=get_ua_violin_plot(
+                    ua_run_data, template=color, result_type=ua_result_type
+                ),
             )
         elif plotting_type == "scatter":
             view = dcc.Graph(
                 id=ids.UA_SCATTER,
-                figure=get_ua_scatter_plot(ua_run_data, template=color),
+                figure=get_ua_scatter_plot(
+                    ua_run_data, template=color, result_type=ua_result_type
+                ),
             )
         elif plotting_type == "histogram":
             view = dcc.Graph(
                 id=ids.UA_HISTOGRAM,
-                figure=get_ua_histogram(ua_run_data, template=color),
+                figure=get_ua_histogram(
+                    ua_run_data, template=color, result_type=ua_result_type
+                ),
+            )
+        elif plotting_type == "box_whisker":
+            view = dcc.Graph(
+                id=ids.UA_BOX_WHISKER,
+                figure=get_ua_box_whisker(
+                    ua_run_data, template=color, result_type=ua_result_type
+                ),
             )
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
@@ -298,20 +339,21 @@ def update_plotting_type_dropdown_options(
     elif active_tab == ids.UA_TAB:
         return (
             [
-                {"label": "Data Table", "value": "data_table"},
                 {"label": "Bar Chart", "value": "barchart"},
-                {"label": "Violin Plot", "value": "violin"},
-                {"label": "Scatter Plot", "value": "scatter"},
+                {"label": "Box Whisker", "value": "box_whisker"},
+                {"label": "Data Table", "value": "data_table"},
                 {"label": "Histogram", "value": "histogram"},
+                {"label": "Scatter Plot", "value": "scatter"},
+                {"label": "Violin Plot", "value": "violin"},
             ],
             "scatter",
         )
     elif active_tab == ids.SA_TAB:
         return (
             [
+                {"label": "Bar Chart", "value": "barchart"},
                 {"label": "Data Table", "value": "data_table"},
                 {"label": "Heatmap", "value": "heatmap"},
-                {"label": "Bar Chart", "value": "barchart"},
                 {"label": "Map", "value": "map"},
             ],
             "heatmap",
@@ -319,6 +361,73 @@ def update_plotting_type_dropdown_options(
     else:
         logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")
         return ([{"label": "Data Table", "value": "data_table"}], "data_table")
+
+
+#############################
+# Enable/disable option cards
+#############################
+
+
+@app.callback(
+    [
+        Output(ids.PLOTTING_OPTIONS_BLOCK, "style"),
+        Output(ids.ISO_OPTIONS_BLOCK, "style"),
+        Output(ids.GSA_OPTIONS_BLOCK, "style"),
+        Output(ids.UA_OPTIONS_BLOCK, "style"),
+    ],
+    Input(ids.TABS, "active_tab"),
+)
+def callback_show_hide_option_blocks(
+    active_tab: str,
+) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str]]:
+    """Show/hide option blocks based on active tab."""
+    # Default style to hide blocks
+    hidden = {"display": "none"}
+    visible = {"display": "block"}
+
+    # Start with all hidden
+    plotting_style = hidden
+    iso_style = hidden
+    gsa_style = hidden
+    ua_style = hidden
+
+    plotting_style = visible
+
+    if active_tab == ids.SA_TAB:
+        iso_style = visible
+        gsa_style = visible
+    elif active_tab == ids.UA_TAB:
+        iso_style = visible
+        ua_style = visible
+
+    return plotting_style, iso_style, gsa_style, ua_style
+
+
+###################################
+# Enable/disable collapsable blocks
+###################################
+
+
+@app.callback(
+    [
+        Output(ids.GSA_PARAMS_SLIDER_COLLAPSE, "is_open"),
+        Output(ids.GSA_PARAMS_RESULTS_COLLAPSE, "is_open"),
+    ],
+    Input(ids.GSA_PARAM_SELECTION_RB, "value"),
+)
+def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
+    """Enable/disable GSA parameter selection collapse based on filtering mode."""
+    params_slider_open = False
+    params_dropdown_open = False
+    if value == "rank":
+        params_slider_open = True
+    elif value == "name":
+        params_dropdown_open = True
+    else:
+        logger.debug(f"Invalid GSA radio button value: {value}")
+        params_slider_open = True
+        params_dropdown_open = True
+    return params_slider_open, params_dropdown_open
 
 
 #################
@@ -491,57 +600,6 @@ def callback_filter_ua_on_result_sector_and_type(
     df = filter_ua_on_result_sector_and_type(df, result_sector, result_type)
     df = remove_ua_outliers(df, interval)
     return df.to_dict("records")
-
-
-###################################
-# Enable/disable collapsable blocks
-###################################
-
-
-@app.callback(
-    [
-        Output(ids.ISO_OPTIONS_BLOCK, "is_open"),
-        Output(ids.GSA_OPTIONS_BLOCK, "is_open"),
-        Output(ids.UA_OPTIONS_BLOCK, "is_open"),
-    ],
-    Input(ids.TABS, "active_tab"),
-)
-def callback_enable_disable_option_blocks(active_tab: str) -> tuple[bool, bool, bool]:
-    """Enable/disable dropdowns based on active tab and filtering mode."""
-    # Start with all disabled
-    iso_open = False
-    gsa_open = False
-    ua_open = False
-    if active_tab == ids.SA_TAB:
-        iso_open = True
-        gsa_open = True
-    elif active_tab == ids.UA_TAB:
-        iso_open = True
-        ua_open = True
-
-    return iso_open, gsa_open, ua_open
-
-
-@app.callback(
-    [
-        Output(ids.GSA_PARAMS_SLIDER_COLLAPSE, "is_open"),
-        Output(ids.GSA_PARAMS_RESULTS_COLLAPSE, "is_open"),
-    ],
-    Input(ids.GSA_PARAM_SELECTION_RB, "value"),
-)
-def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
-    """Enable/disable GSA parameter selection collapse based on filtering mode."""
-    params_slider_open = False
-    params_dropdown_open = False
-    if value == "rank":
-        params_slider_open = True
-    elif value == "name":
-        params_dropdown_open = True
-    else:
-        logger.debug(f"Invalid GSA radio button value: {value}")
-        params_slider_open = True
-        params_dropdown_open = True
-    return params_slider_open, params_dropdown_open
 
 
 ###########################

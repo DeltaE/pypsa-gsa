@@ -299,8 +299,8 @@ def get_top_n_params(
 def _get_heatmap_height(num_params: int) -> int:
     """Get the height of the heatmap based on the number of parameters."""
     height = num_params * 20
-    if height < 800:
-        return 800
+    if height < 700:
+        return 700
     return height
 
 
@@ -343,7 +343,7 @@ def get_gsa_heatmap(
     )
 
     fig.update_layout(
-        title="Global Sensitivity Analysis",
+        title="",
         xaxis_title="",
         yaxis_title="",
         height=_get_heatmap_height(len(df.index)),
@@ -468,6 +468,7 @@ def get_gsa_barchart(
     )
 
     fig.update_layout(
+        title="",
         height=max(800, len(df.index) * 100),
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),

@@ -39,6 +39,7 @@ GSA_PARAMS_SLIDER = "gsa-range-slider"
 UA_INTERVAL_SLIDER = "ua-interval-slider"
 
 # collapsable blocks
+PLOTTING_OPTIONS_BLOCK = "plotting-options-block"
 ISO_OPTIONS_BLOCK = "iso-options-block"
 GSA_OPTIONS_BLOCK = "gsa-options-block"
 GSA_PARAMS_RESULTS_COLLAPSE = "gsa-params-results-collapse"
@@ -53,9 +54,9 @@ GSA_BAR_DATA = "gsa-bar-data"
 GSA_MAP_DATA = "gsa-map-data"
 GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
 
-UA_ISO_DATA = "ua-iso-data" # filtered by ISO
-UA_RUN_DATA = "ua-run-data" # filtered by result
-UA_FINAL_DATA = "ua-final-data" # filtered by aggregator
+UA_ISO_DATA = "ua-iso-data"  # filtered by ISO
+UA_RUN_DATA = "ua-run-data"  # filtered by result
+UA_FINAL_DATA = "ua-final-data"  # filtered by aggregator
 
 # data tables (filtered for params/results)
 UA_DATA_TABLE = "ua-data-table"
@@ -74,3 +75,4 @@ UA_BAR_CHART = "ua-bar-chart"
 UA_SCATTER = "ua-scatter"
 UA_VIOLIN = "ua-violin"
 UA_HISTOGRAM = "ua-histogram"
+UA_BOX_WHISKER = "ua-box-whisker"

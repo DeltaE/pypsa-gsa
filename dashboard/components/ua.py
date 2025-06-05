@@ -53,6 +53,18 @@ RESULT_TYPE_DROPDOWN_OPTIONS = [
 
 DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 DEFAULT_HEIGHT = 600
+DEFAULT_OPACITY = 0.7
+
+DEFAULT_Y_LABEL = {
+    "costs": "Cost ($)",
+    "marginal_costs": "Marginal Costs ($/MWh)",
+    "emissions": "Emissions (MtCO2)",
+    "new_capacity": "New Capacity (GW)",
+    "total_capacity": "Total Capacity (GW)",
+    "new_capacity_trn": "New Capacity (kVMT)",
+    "total_capacity_trn": "Total Capacity (kVMT)",
+    "generation": "Generation (MWh)",
+}
 
 
 def ua_options_block() -> html.Div:
@@ -188,6 +200,11 @@ def _apply_nice_names(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=ua_results)
 
 
+def _melt_results(df: pd.DataFrame) -> pd.DataFrame:
+    """Melt results from UA data table."""
+    return df.melt(id_vars=["run"], var_name="result", value_name="value")
+
+
 def filter_ua_on_result_sector_and_type(
     df: pd.DataFrame, result_sector: str, result_type: str
 ) -> pd.DataFrame:
@@ -264,7 +281,7 @@ def get_ua_scatter_plot(
 
     if not data:
         logger.debug("No UA scatter plot data found")
-        return px.scatter(pd.DataFrame(), x="run", y="value")
+        return px.scatter(pd.DataFrame(columns=["run", "value"]), x="run", y="value")
 
     df = _read_serialized_ua_data(data)
 
@@ -272,25 +289,27 @@ def get_ua_scatter_plot(
         df = _apply_nice_names(df)
 
     df = df.reset_index()
-    df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+    df_melted = _melt_results(df)
 
     # drop outlier data
     df_melted = df_melted.dropna(subset=["value"])
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+    ylabel = kwargs.get("result_type", None)
+    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
 
     fig = px.scatter(
         df_melted,
         x="run",
         y="value",
         color="result",
-        labels=dict(run="Run Number", value="Value", result="Result Type"),
+        labels=dict(run="Run Number", value=ylabel, result="Result Type"),
     )
 
     fig.update_layout(
-        title="Uncertainty Analysis Results",
+        title="",
         xaxis_title="Run Number",
-        yaxis_title="Value",
+        yaxis_title=ylabel,
         height=DEFAULT_HEIGHT,
         showlegend=True,
         legend=DEFAULT_LEGEND,
@@ -306,7 +325,7 @@ def get_ua_barchart(
     """UA barchart component showing mean values with 95% confidence intervals for each result category."""
     if not data:
         logger.debug("No UA barchart data found")
-        return px.bar(pd.DataFrame(), x="result", y="value")
+        return px.bar(pd.DataFrame(columns=["result", "value"]), x="result", y="value")
 
     df = _read_serialized_ua_data(data)
 
@@ -314,11 +333,13 @@ def get_ua_barchart(
         df = _apply_nice_names(df)
 
     df = df.reset_index()
-    df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+    df_melted = _melt_results(df)
 
     df_melted = df_melted.dropna(subset=["value"])
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+    ylabel = kwargs.get("result_type", None)
+    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
 
     # Calculate mean and std for each result category
     stats_df = (
@@ -332,7 +353,8 @@ def get_ua_barchart(
         x="result",
         y="value",
         error_y="std",
-        labels=dict(result="", value="Value"),
+        labels=dict(result="", value=ylabel),
+        opacity=DEFAULT_OPACITY,
     )
 
     # Update layout
@@ -354,7 +376,7 @@ def get_ua_histogram(
     """UA histogram component with overlaid probability density functions."""
     if not data:
         logger.debug("No UA histogram data found")
-        return px.histogram(pd.DataFrame(), x="value")
+        return px.histogram(pd.DataFrame(columns=["value"]), x="value")
 
     df = _read_serialized_ua_data(data)
 
@@ -362,17 +384,19 @@ def get_ua_histogram(
         df = _apply_nice_names(df)
 
     df = df.reset_index()
-    df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+    df_melted = _melt_results(df)
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+    ylabel = kwargs.get("result_type", None)
+    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
 
     # base histogram
     fig = px.histogram(
         df_melted,
         x="value",
         color="result",
-        labels=dict(value="Value", result="Result Type"),
-        opacity=0.7,
+        labels=dict(value=ylabel, result="Result Type"),
+        opacity=DEFAULT_OPACITY,
     )
 
     # Add secondary y-axis for density
@@ -407,7 +431,7 @@ def get_ua_histogram(
     fig.update_layout(
         title="",
         xaxis_title="Value",
-        yaxis_title="Count",
+        yaxis_title=ylabel,
         height=DEFAULT_HEIGHT,
         showlegend=True,
         legend=DEFAULT_LEGEND,
@@ -423,7 +447,9 @@ def get_ua_violin_plot(
     """UA violin plot component."""
     if not data:
         logger.debug("No UA violin plot data found")
-        return px.violin(pd.DataFrame(), x="result", y="value")
+        return px.violin(
+            pd.DataFrame(columns=["result", "value"]), x="result", y="value"
+        )
 
     df = _read_serialized_ua_data(data)
 
@@ -431,24 +457,65 @@ def get_ua_violin_plot(
         df = _apply_nice_names(df)
 
     df = df.reset_index()
-    df_melted = df.melt(id_vars=["run"], var_name="result", value_name="value")
+    df_melted = _melt_results(df)
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+    ylabel = kwargs.get("result_type", None)
+    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
 
     fig = px.violin(
         df_melted,
         x="result",
         y="value",
-        labels=dict(result="", value="Value"),
+        labels=dict(result="", value=ylabel),
     )
 
     fig.update_layout(
         title="",
         xaxis_title="",
-        yaxis_title="Count",
+        yaxis_title=ylabel,
         height=DEFAULT_HEIGHT,
         showlegend=True,
         legend=DEFAULT_LEGEND,
+        template=color_theme,
+    )
+
+    return fig
+
+
+def get_ua_box_whisker(
+    data: dict[str, Any], nice_names: bool = True, **kwargs
+) -> go.Figure:
+    """UA box whisker plot component."""
+    if not data:
+        logger.debug("No UA box whisker plot data found")
+        return px.box(pd.DataFrame(columns=["result", "value"]), x="result", y="value")
+
+    df = _read_serialized_ua_data(data)
+
+    if nice_names:
+        df = _apply_nice_names(df)
+
+    df = df.reset_index()
+    df_melted = _melt_results(df)
+
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+    ylabel = kwargs.get("result_type", None)
+    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
+
+    fig = px.box(
+        df_melted,
+        x="result",
+        y="value",
+        labels=dict(result="", value=ylabel),
+    )
+
+    # Update layout
+    fig.update_layout(
+        title="",
+        showlegend=False,
+        height=DEFAULT_HEIGHT,
+        xaxis=dict(tickangle=45),
         template=color_theme,
     )
 
