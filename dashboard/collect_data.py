@@ -196,6 +196,20 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
     return params
 
 
+def assign_parameter_nice_names(params: pd.DataFrame) -> pd.DataFrame:
+    """Assigns nice names to the parameter attributes.
+    
+    For plotting, we want to show costs of res/com seperate, but nice_names
+    groups them together for Morris Groups. This function assigns seperate nice_names. 
+    """
+    params["group_nice_name"] = params.nice_name
+    res_mask = params.name.str.contains("_res_")
+    com_mask = params.name.str.contains("_com_")
+    params.loc[res_mask, "nice_name"] = params.loc[res_mask, "nice_name"].str.replace("Service", "Residential")
+    params.loc[com_mask, "nice_name"] = params.loc[com_mask, "nice_name"].str.replace("Service", "Commercial")
+    return params
+
+
 if __name__ == "__main__":
     # sensitivity measures
 
@@ -256,11 +270,13 @@ if __name__ == "__main__":
 
     params = pd.concat(dfs, axis=0)
     params = assign_parameter_filters(params)
+    params = assign_parameter_nice_names(params)
     params = params[
         [
             "name",
-            "group",
             "nice_name",
+            "group",
+            "group_nice_name",
             "iso",
             "component",
             "carrier",

@@ -4,6 +4,8 @@ from typing import Any
 from dash import dcc, html, dash_table
 import pandas as pd
 from pathlib import Path
+
+from .styles import DATA_TABLE_STYLE
 from .utils import (
     DEFAULT_PLOTLY_THEME,
     get_ua_params_dropdown_options,
@@ -249,28 +251,7 @@ def get_ua_data_table(
     return dash_table.DataTable(
         data=df.to_dict("records"),
         columns=columns,
-        style_table={"overflowX": "auto"},
-        style_cell={
-            "textAlign": "left",
-            "padding": "10px",
-            "whiteSpace": "normal",
-            "height": "auto",
-        },
-        style_header={
-            "backgroundColor": "rgb(230, 230, 230)",
-            "fontWeight": "bold",
-            "border": "1px solid black",
-        },
-        style_data={"border": "1px solid lightgrey"},
-        style_data_conditional=[
-            {"if": {"row_index": "odd"}, "backgroundColor": "rgb(248, 248, 248)"}
-        ],
-        page_size=50,
-        sort_action="native",
-        filter_action="native",
-        sort_mode="multi",
-        export_format="csv",
-        export_headers="display",
+        **DATA_TABLE_STYLE,
     )
 
 

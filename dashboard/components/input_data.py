@@ -4,7 +4,7 @@ from typing import Any
 
 import pandas as pd
 
-from .styles import BUTTON_STYLE
+from .styles import BUTTON_STYLE, DATA_TABLE_STYLE
 from . import ids as ids
 from dash import dash_table, dcc, html
 import dash_bootstrap_components as dbc
@@ -88,8 +88,9 @@ def get_inputs_data_table(data: dict[str, Any]) -> dash_table.DataTable:
 
     columns = [
         {"name": "name", "id": "name", "type": "text"},
+        {"name": "nice_name", "id": "name", "type": "text"},
         {"name": "group", "id": "group", "type": "text"},
-        {"name": "nice_name", "id": "nice_name", "type": "text"},
+        {"name": "group_nice_name", "id": "group_nice_name", "type": "text"},
         {"name": "iso", "id": "iso", "type": "text"},
         {"name": "component", "id": "component", "type": "text"},
         {"name": "carrier", "id": "carrier", "type": "text"},
@@ -97,6 +98,7 @@ def get_inputs_data_table(data: dict[str, Any]) -> dash_table.DataTable:
         {"name": "attribute_nice_name", "id": "attribute_nice_name", "type": "text"},
         {"name": "sector", "id": "sector", "type": "text"},
         {"name": "unit", "id": "unit", "type": "text"},
+        {"name": "range", "id": "range", "type": "text"},
         {
             "name": "min_value",
             "id": "min_value",
@@ -116,26 +118,5 @@ def get_inputs_data_table(data: dict[str, Any]) -> dash_table.DataTable:
     return dash_table.DataTable(
         data=df.to_dict("records"),
         columns=columns,
-        style_table={"overflowX": "auto"},
-        style_cell={
-            "textAlign": "left",
-            "padding": "10px",
-            "whiteSpace": "normal",
-            "height": "auto",
-        },
-        style_header={
-            "backgroundColor": "rgb(230, 230, 230)",
-            "fontWeight": "bold",
-            "border": "1px solid black",
-        },
-        style_data={"border": "1px solid lightgrey"},
-        style_data_conditional=[
-            {"if": {"row_index": "odd"}, "backgroundColor": "rgb(248, 248, 248)"}
-        ],
-        page_size=50,
-        sort_action="native",
-        filter_action="native",
-        sort_mode="multi",
-        export_format="csv",
-        export_headers="display",
+        **DATA_TABLE_STYLE,
     )
