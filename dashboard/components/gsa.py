@@ -11,6 +11,7 @@ from .utils import (
     DEFAULT_DISCRETE_COLOR_SCALE,
 )
 from . import ids as ids
+from .styles import BUTTON_STYLE
 import dash_bootstrap_components as dbc
 
 import pandas as pd
@@ -144,16 +145,12 @@ def gsa_params_dropdown() -> html.Div:
                     dbc.Button(
                         "Select All",
                         id=ids.GSA_PARAM_SELECT_ALL,
-                        size="sm",
-                        color="secondary",
-                        outline=True,
+                        **BUTTON_STYLE,
                     ),
                     dbc.Button(
                         "Remove All",
                         id=ids.GSA_PARAM_REMOVE_ALL,
-                        size="sm",
-                        color="secondary",
-                        outline=True,
+                        **BUTTON_STYLE,
                     ),
                 ],
             ),
@@ -178,16 +175,12 @@ def gsa_results_dropdown() -> html.Div:
                     dbc.Button(
                         "Select All",
                         id=ids.GSA_RESULTS_SELECT_ALL,
-                        size="sm",
-                        color="secondary",
-                        outline=True,
+                        **BUTTON_STYLE,
                     ),
                     dbc.Button(
                         "Remove All",
                         id=ids.GSA_RESULTS_REMOVE_ALL,
-                        size="sm",
-                        color="secondary",
-                        outline=True,
+                        **BUTTON_STYLE,
                     ),
                 ]
             ),

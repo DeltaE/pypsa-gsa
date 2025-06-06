@@ -20,12 +20,15 @@ UA_RESULTS_TYPE_DROPDOWN = "ua-results-type-dropdown"
 UA_RESULTS_SECTOR_DROPDOWN = "ua-results-sector-dropdown"
 COLOR_DROPDOWN = "color-scale-dropdown"
 PLOTTING_TYPE_DROPDOWN = "plotting-type-dropdown"
+INPUT_DATA_ATTRIBUTE_DROPDOWN = "inputs-attribute-dropdown"
+INPUT_DATA_SECTOR_DROPDOWN = "inputs-sector-dropdown"
 
 # buttons
 GSA_PARAM_SELECT_ALL = "gsa-param-select-all"
 GSA_PARAM_REMOVE_ALL = "gsa-param-remove-all"
 GSA_RESULTS_SELECT_ALL = "gsa-results-select-all"
 GSA_RESULTS_REMOVE_ALL = "gsa-results-remove-all"
+INPUT_DATA_REMOVE_FILTERS = "input-data-remove-filters"
 
 # button states
 GSA_PARAM_BUTTON_STATE = "gsa-param-button-state"
@@ -45,6 +48,7 @@ GSA_OPTIONS_BLOCK = "gsa-options-block"
 GSA_PARAMS_RESULTS_COLLAPSE = "gsa-params-results-collapse"
 GSA_PARAMS_SLIDER_COLLAPSE = "gsa-range-slider-collapse"
 UA_OPTIONS_BLOCK = "ua-options-block"
+INPUT_DATA_OPTIONS_BLOCK = "input-data-options-block"
 
 # gsa stores
 GSA_ISO_DATA = "gsa-iso-data"  # other stores use this
@@ -58,6 +62,8 @@ UA_ISO_DATA = "ua-iso-data"  # filtered by ISO
 UA_RUN_DATA = "ua-run-data"  # filtered by result
 
 INPUTS_DATA = "inputs-data"
+INPUTS_DATA_BY_ATTRIBUTE = "inputs-data-by-attribute"
+INPUTS_DATA_BY_ATTRIBUTE_CARRIER = "inputs-data-by-attribute-carrier"
 
 # data tables (filtered for params/results)
 UA_DATA_TABLE = "ua-data-table"

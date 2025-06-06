@@ -78,7 +78,7 @@ def color_scale_dropdown() -> html.Div:
 
     return html.Div(
         [
-            html.H6("Select Color Scale"),
+            html.H6("Select Color Theme"),
             dcc.Dropdown(
                 id=ids.COLOR_DROPDOWN,
                 options=sorted(pc.named_colorscales()),

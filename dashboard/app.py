@@ -44,7 +44,7 @@ from components.ua import (
     ua_options_block,
     get_ua_barchart,
 )
-from components.input_data import get_inputs_data_table
+from components.input_data import get_inputs_data_table, input_data_options_block
 
 import logging
 
@@ -167,6 +167,25 @@ app.layout = html.Div(
                                                 dbc.CardBody(
                                                     [
                                                         html.H4(
+                                                            "Input Data Options",
+                                                            className="card-title",
+                                                        ),
+                                                        input_data_options_block(),
+                                                    ]
+                                                ),
+                                            ]
+                                        ),
+                                    ],
+                                    id=ids.INPUT_DATA_OPTIONS_BLOCK,
+                                    className=OPTIONS_BLOCK_CLASS,
+                                ),
+                                html.Div(
+                                    [
+                                        dbc.Card(
+                                            [
+                                                dbc.CardBody(
+                                                    [
+                                                        html.H4(
                                                             "Uncertaintiy Options",
                                                             className="card-title",
                                                         ),
@@ -218,6 +237,8 @@ app.layout = html.Div(
                 dcc.Store(id=ids.UA_ISO_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
                 dcc.Store(id=ids.INPUTS_DATA),
+                dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE),
+                dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER),
                 dcc.Store(id=ids.GSA_PARAM_BUTTON_STATE, data=""),
                 dcc.Store(id=ids.GSA_RESULTS_BUTTON_STATE, data=""),
             ],
@@ -239,7 +260,7 @@ app.layout = html.Div(
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_RUN_DATA, "data"),
-        Input(ids.INPUTS_DATA, "data"),
+        Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
@@ -375,6 +396,7 @@ def update_plotting_type_dropdown_options(
     [
         Output(ids.PLOTTING_OPTIONS_BLOCK, "style"),
         Output(ids.ISO_OPTIONS_BLOCK, "style"),
+        Output(ids.INPUT_DATA_OPTIONS_BLOCK, "style"),
         Output(ids.GSA_OPTIONS_BLOCK, "style"),
         Output(ids.UA_OPTIONS_BLOCK, "style"),
     ],
@@ -390,20 +412,24 @@ def callback_show_hide_option_blocks(
 
     # Start with all hidden
     plotting_style = hidden
-    iso_style = hidden
-    gsa_style = hidden
-    ua_style = hidden
+    iso_options = hidden
+    input_data_options = hidden
+    gsa_options = hidden
+    ua_options = hidden
 
     plotting_style = visible
 
-    if active_tab == ids.SA_TAB:
-        iso_style = visible
-        gsa_style = visible
+    if active_tab == ids.DATA_TAB:
+        iso_options = visible
+        input_data_options = visible
+    elif active_tab == ids.SA_TAB:
+        iso_options = visible
+        gsa_options = visible
     elif active_tab == ids.UA_TAB:
-        iso_style = visible
-        ua_style = visible
+        gsa_options = visible
+        ua_options = visible
 
-    return plotting_style, iso_style, gsa_style, ua_style
+    return plotting_style, iso_options, input_data_options, gsa_options, ua_options
 
 
 ###################################
@@ -454,6 +480,61 @@ def callback_update_inputs_data(isos: list[str]) -> list[dict[str, Any]]:
     isos.append("all")
     data = RAW_PARAMS[RAW_PARAMS.iso.isin(isos)].to_dict("records")
     return data
+
+
+@app.callback(
+    [
+        Output(ids.INPUTS_DATA_BY_ATTRIBUTE, "data"),
+        Output(ids.INPUT_DATA_SECTOR_DROPDOWN, "options"),
+        Output(ids.INPUT_DATA_SECTOR_DROPDOWN, "disabled"),
+    ],
+    [
+        Input(ids.INPUTS_DATA, "data"),
+        Input(ids.INPUT_DATA_ATTRIBUTE_DROPDOWN, "value"),
+    ],
+)
+def callback_update_inputs_data_attribute(
+    data: list[dict[str, Any]], attribute: str
+) -> tuple[list[dict[str, Any]], list[dict[str, str]], bool]:
+    logger.debug(f"Attribute value: {attribute}")
+    if not data:
+        logger.debug("No data provided")
+        return [], [], True
+    if not attribute:
+        logger.debug("No attribute provided")
+        return data, [], True
+    df = pd.DataFrame(data)
+    df = df[df.attribute == attribute]
+    if df.empty:
+        logger.debug("No data found for the given attribute")
+        return [], [], True
+    options = [{"label": sector, "value": sector} for sector in df.sector.unique()]
+    return df.to_dict("records"), options, False
+
+
+@app.callback(
+    Output(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
+    [
+        Input(ids.INPUTS_DATA_BY_ATTRIBUTE, "data"),
+        Input(ids.INPUT_DATA_SECTOR_DROPDOWN, "value"),
+    ],
+)
+def callback_update_inputs_data_attribute_sector(
+    data: list[dict[str, Any]], sector: str
+) -> list[dict[str, Any]]:
+    logger.debug(f"Sector value: {sector}")
+    if not data:
+        logger.debug("No data provided")
+        return []
+    if not sector:
+        logger.debug("No sector provided")
+        return data
+    df = pd.DataFrame(data)
+    df = df[df.sector == sector]
+    if df.empty:
+        logger.debug("No data found for the given sector")
+        return []
+    return df.to_dict("records")
 
 
 #####
@@ -643,7 +724,9 @@ def callback_update_color_options(
     active_tab: str, plotting_type: str
 ) -> tuple[str, list[str]]:
     logger.debug(f"Updating color options for: {plotting_type} in {active_tab}")
-    if active_tab == ids.UA_TAB:
+    if active_tab == ids.DATA_TAB:
+        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+    elif active_tab == ids.UA_TAB:
         return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     elif active_tab == ids.SA_TAB:
         if plotting_type in ["heatmap"]:
@@ -653,6 +736,41 @@ def callback_update_color_options(
             return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
     else:
         return "", []
+
+
+######################
+# Input Data Callbacks
+######################
+
+
+@app.callback(
+    Output(ids.INPUT_DATA_ATTRIBUTE_DROPDOWN, "options"),
+    Input(ids.INPUTS_DATA, "data"),
+)
+def callback_input_data_attribute_dropdown(
+    data: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    if not data:
+        logger.debug("No input data provided")
+        return {}
+    return [
+        {"label": attr[0], "value": attr[1]}
+        for attr in sorted(
+            set((x["attribute_nice_name"], x["attribute"]) for x in data),
+            key=lambda x: x[0],  # sort based on nice_name
+        )
+    ]  # only unique elements
+
+
+@app.callback(
+    [
+        Output(ids.INPUT_DATA_ATTRIBUTE_DROPDOWN, "value"),
+        Output(ids.INPUT_DATA_SECTOR_DROPDOWN, "value"),
+    ],
+    Input(ids.INPUT_DATA_REMOVE_FILTERS, "n_clicks"),
+)
+def callback_remove_input_data_filters(_: int) -> tuple[str, str]:
+    return "", ""
 
 
 ########################
