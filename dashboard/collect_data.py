@@ -100,6 +100,24 @@ def get_empty_run() -> pd.DataFrame:
     return pd.DataFrame(columns=["param", "iso"]).set_index(["param", "iso"])
 
 
+def get_base_params_file(root: Path, iso: str) -> pd.DataFrame:
+    """Returns the base parameters file for shared between all ISOs."""
+    df = pd.read_csv(Path(root, "results", iso, "gsa", "parameters.csv"))
+    # remove iso specific data
+    df = df[~((df.name.str.startswith("tct_")) | (df.name == ("emission_limit")))]
+    df["iso"] = "all"
+    return df
+
+
+def get_iso_params(root: Path, iso: str) -> pd.DataFrame:
+    """Returns the parameters file for the given ISO and mode."""
+    df = pd.read_csv(Path(root, "results", iso, "gsa", "parameters.csv"))
+    # track iso specific data
+    df = df[(df.name.str.startswith("tct_")) | (df.name == ("emission_limit"))]
+    df["iso"] = iso
+    return df
+
+
 if __name__ == "__main__":
     # sensitivity measures
 
@@ -121,26 +139,6 @@ if __name__ == "__main__":
     sa = pd.concat(dfs, axis=0)
     sa.to_csv(Path(root, "dashboard", "data", "sa.csv"), index=True)
 
-    # model run results gsa
-
-    dfs = []
-    for iso in ISOS:
-        iso_data = Path(root, "results", iso, "gsa", "results")
-        if not iso_data.exists():
-            logger.warning(f"No gsa model run data for '{iso}'")
-            dfs.append(get_empty_run())
-        else:
-            result_names = get_result_names(root, iso, "gsa")
-            df = collect_runs(root, iso, "gsa", result_names.keys())
-            dfs.append(df)
-
-    if not dfs:
-        logger.error("No data found.")
-        raise ValueError("No ISO data found.")
-
-    sa = pd.concat(dfs, axis=0)
-    sa.to_csv(Path(root, "dashboard", "data", "gsa_runs.csv"), index=True)
-
     # model run results ua
 
     dfs = []
@@ -159,6 +157,44 @@ if __name__ == "__main__":
 
     sa = pd.concat(dfs, axis=0)
     sa.to_csv(Path(root, "dashboard", "data", "ua_runs.csv"), index=True)
+
+    # model parameters
+
+    dfs = []
+    base_params = pd.DataFrame()
+    for iso in ISOS:
+        iso_data = Path(root, "results", iso, "gsa")
+        if not iso_data.exists():
+            logger.warning(f"No parameter data for '{iso}'")
+        else:
+            if base_params.empty:
+                base_params = get_base_params_file(root, iso)
+                dfs.append(base_params)
+            iso_params = get_iso_params(root, iso)
+            dfs.append(iso_params)
+    if not dfs:
+        logger.error("No data found.")
+        raise ValueError("No ISO data found.")
+
+    params = pd.concat(dfs, axis=0)
+    params = params[
+        [
+            "name",
+            "group",
+            "nice_name",
+            "iso",
+            "component",
+            "carrier",
+            "attribute",
+            "range",
+            "unit",
+            "min_value",
+            "max_value",
+            "source",
+            "notes",
+        ]
+    ]
+    params.to_csv(Path(root, "dashboard", "data", "parameters.csv"), index=False)
 
     # get nice names
 

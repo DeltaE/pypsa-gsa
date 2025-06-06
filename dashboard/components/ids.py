@@ -56,12 +56,14 @@ GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
 
 UA_ISO_DATA = "ua-iso-data"  # filtered by ISO
 UA_RUN_DATA = "ua-run-data"  # filtered by result
-UA_FINAL_DATA = "ua-final-data"  # filtered by aggregator
+
+INPUTS_DATA = "inputs-data"
 
 # data tables (filtered for params/results)
 UA_DATA_TABLE = "ua-data-table"
 GSA_NORMED_DATA_TABLE = "gsa-normed-data-table"
 GSA_RUNS_DATA_TABLE = "gsa-runs-data-table"
+INPUTS_DATA_TABLE = "inputs-data-table"
 
 # gsa plots
 GSA_HEATMAP = "gsa-heatmap"

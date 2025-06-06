@@ -44,6 +44,7 @@ from components.ua import (
     ua_options_block,
     get_ua_barchart,
 )
+from components.input_data import get_inputs_data_table
 
 import logging
 
@@ -69,6 +70,7 @@ OPTIONS_BLOCK_CLASS = "py-1"
 
 RAW_GSA = pd.read_csv("data/sa.csv")
 RAW_UA = pd.read_csv("data/ua_runs.csv")
+RAW_PARAMS = pd.read_csv("data/parameters.csv")
 ISO_SHAPE = gpd.read_file("data/iso.geojson")
 
 root = Path(__file__).parent
@@ -215,6 +217,7 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_MAP_DATA),
                 dcc.Store(id=ids.UA_ISO_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
+                dcc.Store(id=ids.INPUTS_DATA),
                 dcc.Store(id=ids.GSA_PARAM_BUTTON_STATE, data=""),
                 dcc.Store(id=ids.GSA_RESULTS_BUTTON_STATE, data=""),
             ],
@@ -236,6 +239,7 @@ app.layout = html.Div(
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_RUN_DATA, "data"),
+        Input(ids.INPUTS_DATA, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
@@ -247,13 +251,15 @@ def render_tab_content(
     gsa_bar_data: list[dict[str, Any]] | None,
     gsa_map_data: list[dict[str, Any]] | None,
     ua_run_data: list[dict[str, Any]] | None,
+    inputs_data: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
     ua_result_type: str,
 ) -> html.Div:
     logger.debug(f"Rendering tab content for: {active_tab}")
     if active_tab == ids.DATA_TAB:
-        return html.Div()
+        view = get_inputs_data_table(inputs_data)
+        return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.SA_TAB:
         if plotting_type == "heatmap":
             view = dcc.Graph(
@@ -430,6 +436,25 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
 #################
 # Get stored data
 #################
+
+#####################
+# uncertainity inputs
+#####################
+
+
+@app.callback(
+    Output(ids.INPUTS_DATA, "data"),
+    Input(ids.ISO_DROPDOWN, "value"),
+)
+def callback_update_inputs_data(isos: list[str]) -> list[dict[str, Any]]:
+    logger.debug(f"ISO dropdown value: {isos}")
+    if not isos:
+        logger.debug("No ISOs selected from dropdown")
+        return []
+    isos.append("all")
+    data = RAW_PARAMS[RAW_PARAMS.iso.isin(isos)].to_dict("records")
+    return data
+
 
 #####
 # gsa
