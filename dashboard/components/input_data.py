@@ -40,6 +40,8 @@ def get_inputs_data_table(data: dict[str, Any]) -> dash_table.DataTable:
         {"name": "component", "id": "component", "type": "text"},
         {"name": "carrier", "id": "carrier", "type": "text"},
         {"name": "attribute", "id": "attribute", "type": "text"},
+        {"name": "attribute_nice_name", "id": "attribute_nice_name", "type": "text"},
+        {"name": "sector", "id": "sector", "type": "text"},
         {"name": "unit", "id": "unit", "type": "text"},
         {
             "name": "min_value",

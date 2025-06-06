@@ -15,6 +15,49 @@ root = Path(__file__).parent.parent
 
 ROUND_TO = 5
 
+PARAM_ATTRIBUTE_NICE_NAMES = {
+    "co2L": "Emission Limit",
+    "discount_rate": "Discount Rate",
+    "e_min_pu": "Minimum Storage Level",
+    "efficiency": "Efficiency",
+    "efficiency_store": "Efficiency",
+    "ev_policy": "EV Policy",
+    "fixed_cost": "Fixed Cost",
+    "gshp": "Ground Source Heat Pump",
+    "gwp": "Gloabl Warming Potential",
+    "itc": "Investment Tax Credit",
+    "leakage": "Methane Leakage",
+    "lifetime": "Lifetime",
+    "lv": "Transmission Expansion Volume",
+    "marginal_cost": "Marginal Cost",
+    "marginal_cost_storage": "Marginal Cost",
+    "nat_gas_export": "Natural Gas Trade",
+    "nat_gas_import": "Natural Gas Trade",
+    "occ": "Overnight Capital Cost",
+    "p_max_pu": "Capacity Factor",
+    "p_nom": "Existing Capacity",
+    "p_set": "Loads",
+    "tct": "Capacity Limits",
+    "vmt_per_year": "Lifetime",
+}
+
+PWR_CARRIERS = [
+    "CCGT",
+    "CCGT-95CCS",
+    "OCGT",
+    "biomass",
+    "coal",
+    "geothermal",
+    "hydro",
+    "lpg",
+    "nuclear",
+    "offwind_floating",
+    "oil",
+    "onwind",
+    "solar",
+    "waste",
+]
+
 
 def _round_df(df: pd.DataFrame) -> pd.DataFrame:
     """Converts small values to zero."""
@@ -118,6 +161,41 @@ def get_iso_params(root: Path, iso: str) -> pd.DataFrame:
     return df
 
 
+def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
+    """Assigns nice names to the parameter attributes."""
+
+    def _assign_sector(carrier: str) -> str:
+        prefix = carrier.split("-")[0]
+        if (prefix == "com") | (prefix == "res"):
+            return "Service"
+        elif prefix == "ind":
+            return "Industry"
+        elif prefix == "trn":
+            return "Transport"
+        elif carrier in PWR_CARRIERS:
+            return "Power"
+        elif carrier.split(";")[0] in PWR_CARRIERS:
+            return "Power"
+        elif carrier.endswith("_battery_storage"):
+            return "Power"
+        elif carrier in ["demand_response", "load"]:
+            return "Demand Response"
+        elif carrier.startswith("gas "):
+            return "Natural Gas"
+        elif carrier == "AC":
+            return "Transmission"
+        elif carrier == "co2":
+            return "Carbon"
+        else:
+            raise ValueError(f"Invalid carrier: {carrier}")
+
+    params["attribute_nice_name"] = params.attribute.map(PARAM_ATTRIBUTE_NICE_NAMES)
+    params["sector"] = params.carrier.map(_assign_sector)
+    fuel_cost_mask = params.component == "stores_t"
+    params.loc[fuel_cost_mask, "sector"] = "Primary Fuel"
+    return params
+
+
 if __name__ == "__main__":
     # sensitivity measures
 
@@ -177,6 +255,7 @@ if __name__ == "__main__":
         raise ValueError("No ISO data found.")
 
     params = pd.concat(dfs, axis=0)
+    params = assign_parameter_filters(params)
     params = params[
         [
             "name",
@@ -186,6 +265,8 @@ if __name__ == "__main__":
             "component",
             "carrier",
             "attribute",
+            "attribute_nice_name",
+            "sector",
             "range",
             "unit",
             "min_value",
