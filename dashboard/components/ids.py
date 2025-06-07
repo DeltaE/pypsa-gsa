@@ -71,6 +71,9 @@ GSA_NORMED_DATA_TABLE = "gsa-normed-data-table"
 GSA_RUNS_DATA_TABLE = "gsa-runs-data-table"
 INPUTS_DATA_TABLE = "inputs-data-table"
 
+# input data plots
+INPUT_DATA_BAR_CHART = "input-data-bar-chart"
+
 # gsa plots
 GSA_HEATMAP = "gsa-heatmap"
 GSA_BAR_CHART = "gsa-bar-chart"

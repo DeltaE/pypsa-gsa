@@ -8,6 +8,8 @@ from .styles import BUTTON_STYLE, DATA_TABLE_STYLE
 from . import ids as ids
 from dash import dash_table, dcc, html
 import dash_bootstrap_components as dbc
+import plotly.graph_objects as go
+import plotly.express as px
 
 import logging
 
@@ -119,4 +121,103 @@ def get_inputs_data_table(data: dict[str, Any]) -> dash_table.DataTable:
         data=df.to_dict("records"),
         columns=columns,
         **DATA_TABLE_STYLE,
+    )
+
+
+def get_input_data_barchart(data: dict[str, Any], **kwargs: Any) -> dcc.Graph:
+    """Input data barchart component."""
+    if not data:
+        logger.debug("No input data barchart data found")
+        return dcc.Graph(
+            id=ids.INPUT_DATA_BAR_CHART,
+            figure=px.bar(
+                pd.DataFrame(columns=["param", "value"]), x="param", y="value"
+            ),
+        )
+
+    df = _read_serialized_data(data)
+
+    if len(df.sector.unique()) > 1 or len(df.attribute.unique()) > 1:
+        logger.debug("More filtering required for barchart")
+        return dcc.Graph(
+            id=ids.INPUT_DATA_BAR_CHART,
+            figure=px.bar(
+                pd.DataFrame(columns=["param", "value"]), x="param", y="value"
+            ),
+        )
+
+    # seperate figures by absolute/percent ranges
+    figures = []
+
+    for range_type in df.range.unique():
+        df_range = df[df.range == range_type]
+        units = df_range.unit.unique()
+
+        if range_type == "absolute":
+            for unit in units:
+                df_range_unit = df_range[df_range.unit == unit]
+                x = df_range_unit.nice_name
+                y_start = df_range_unit.min_value
+                y_end = df_range_unit.max_value
+                heights = y_end - y_start
+
+                fig = go.Figure()
+                fig.add_trace(go.Bar(x=x, y=heights, base=y_start))
+
+                title = "Absolute Range"
+                yaxis_title = unit
+                xaxis_title = ""
+
+                fig.update_layout(
+                    title=title,
+                    yaxis_title=yaxis_title,
+                    xaxis_title=xaxis_title,
+                )
+
+                figures.append(dcc.Graph(figure=fig))
+
+        elif range_type == "percent":
+            # should only ever be percent
+            if len(units) > 1:
+                logger.debug(f"Non-unique units of {units} for {range_type}")
+                return dcc.Graph(
+                    id=ids.INPUT_DATA_BAR_CHART,
+                    figure=px.bar(
+                        pd.DataFrame(columns=["param", "value"]), x="param", y="value"
+                    ),
+                )
+
+            x = df_range.nice_name
+            y_start = df_range.min_value
+            y_end = df_range.max_value
+            heights = y_end - y_start
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Bar(x=x, y=heights, base=y_start))
+
+            title = "Percent Range"
+            yaxis_title = "%"
+            xaxis_title = ""
+
+            fig.update_layout(
+                title=title,
+                yaxis_title=yaxis_title,
+                xaxis_title=xaxis_title,
+            )
+
+            figures.append(dcc.Graph(figure=fig))
+
+        else:
+            logger.debug(f"Unknown range type: {range_type}")
+            return dcc.Graph(
+                id=ids.INPUT_DATA_BAR_CHART,
+                figure=px.bar(
+                    pd.DataFrame(columns=["param", "value"]), x="param", y="value"
+                ),
+            )
+
+    return html.Div(
+        figures,
+        id=ids.INPUT_DATA_BAR_CHART,
     )

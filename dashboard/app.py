@@ -44,7 +44,11 @@ from components.ua import (
     ua_options_block,
     get_ua_barchart,
 )
-from components.input_data import get_inputs_data_table, input_data_options_block
+from components.input_data import (
+    get_input_data_barchart,
+    get_inputs_data_table,
+    input_data_options_block,
+)
 
 import logging
 
@@ -279,7 +283,12 @@ def render_tab_content(
 ) -> html.Div:
     logger.debug(f"Rendering tab content for: {active_tab}")
     if active_tab == ids.DATA_TAB:
-        view = get_inputs_data_table(inputs_data)
+        if plotting_type == "data_table":
+            view = get_inputs_data_table(inputs_data)
+        elif plotting_type == "barchart":
+            view = get_input_data_barchart(inputs_data, color_scale=color)
+        else:
+            view = html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.SA_TAB:
         if plotting_type == "heatmap":
@@ -356,6 +365,7 @@ def update_plotting_type_dropdown_options(
     if active_tab == ids.DATA_TAB:
         return (
             [
+                {"label": "Bar Chart", "value": "barchart"},
                 {"label": "Data Table", "value": "data_table"},
             ],
             "data_table",

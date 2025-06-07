@@ -196,17 +196,26 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
     return params
 
 
-def assign_parameter_nice_names(params: pd.DataFrame) -> pd.DataFrame:
-    """Assigns nice names to the parameter attributes.
-    
-    For plotting, we want to show costs of res/com seperate, but nice_names
-    groups them together for Morris Groups. This function assigns seperate nice_names. 
+def assign_parameter_nice_names(root: Path, params: pd.DataFrame) -> pd.DataFrame:
+    """Assigns manually mapped nice names for plotting.
+
+    For plotting, we want to show costs of tech seperate seperate, but nice_names
+    groups them together for Morris.
     """
+    nice_names_f = Path(root, "dashboard", "data", "parameter_nice_names.csv")
+    nice_names = pd.read_csv(nice_names_f).set_index("name").to_dict()["nice_name"]
+
     params["group_nice_name"] = params.nice_name
-    res_mask = params.name.str.contains("_res_")
-    com_mask = params.name.str.contains("_com_")
-    params.loc[res_mask, "nice_name"] = params.loc[res_mask, "nice_name"].str.replace("Service", "Residential")
-    params.loc[com_mask, "nice_name"] = params.loc[com_mask, "nice_name"].str.replace("Service", "Commercial")
+    params["nice_name"] = params.name.map(nice_names).fillna(params.name)
+    return params
+
+
+def correct_params(params: pd.DataFrame) -> pd.DataFrame:
+    """Corrects the parameters dataframe for plotting.
+
+    These are just hacky fixes that account for modelling implementation oditities.
+    """
+    params.loc[params.name == "nuclear_cost", "component"] = "stores_t"
     return params
 
 
@@ -270,7 +279,8 @@ if __name__ == "__main__":
 
     params = pd.concat(dfs, axis=0)
     params = assign_parameter_filters(params)
-    params = assign_parameter_nice_names(params)
+    params = assign_parameter_nice_names(root, params)
+    params = correct_params(params)
     params = params[
         [
             "name",
