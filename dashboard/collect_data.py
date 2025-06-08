@@ -16,23 +16,23 @@ root = Path(__file__).parent.parent
 ROUND_TO = 5
 
 PARAM_ATTRIBUTE_NICE_NAMES = {
-    "co2L": "Emission Limit",
+    "co2L": "Constraints",
     "discount_rate": "Discount Rate",
-    "e_min_pu": "Minimum Storage Level",
+    "e_min_pu": "Natural Gas", # only one e_min_pu
     "efficiency": "Efficiency",
     "efficiency_store": "Efficiency",
-    "ev_policy": "EV Policy",
+    "ev_policy": "Constraints",
     "fixed_cost": "Fixed Cost",
-    "gshp": "Ground Source Heat Pump",
-    "gwp": "Gloabl Warming Potential",
+    "gshp": "Constraints",
+    "gwp": "Methane",
     "itc": "Investment Tax Credit",
-    "leakage": "Methane Leakage",
+    "leakage": "Methane",
     "lifetime": "Lifetime",
-    "lv": "Transmission Expansion Volume",
+    "lv": "Constraints",
     "marginal_cost": "Marginal Cost",
     "marginal_cost_storage": "Marginal Cost",
-    "nat_gas_export": "Natural Gas Trade",
-    "nat_gas_import": "Natural Gas Trade",
+    "nat_gas_export": "Natural Gas",
+    "nat_gas_import": "Natural Gas",
     "occ": "Overnight Capital Cost",
     "p_max_pu": "Capacity Factor",
     "p_nom": "Existing Capacity",
@@ -190,6 +190,7 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             raise ValueError(f"Invalid carrier: {carrier}")
 
     params["attribute_nice_name"] = params.attribute.map(PARAM_ATTRIBUTE_NICE_NAMES)
+    params["attribute"] = params.attribute_nice_name.str.replace(" ", "_").str.lower()
     params["sector"] = params.carrier.map(_assign_sector)
     fuel_cost_mask = params.component == "stores_t"
     params.loc[fuel_cost_mask, "sector"] = "Primary Fuel"
@@ -216,6 +217,7 @@ def correct_params(params: pd.DataFrame) -> pd.DataFrame:
     These are just hacky fixes that account for modelling implementation oditities.
     """
     params.loc[params.name == "nuclear_cost", "component"] = "stores_t"
+    params.loc[params.name == "nuclear_cost", "sector"] = "Primary Fuel"
     return params
 
 

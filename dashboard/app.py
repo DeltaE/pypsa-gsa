@@ -773,11 +773,26 @@ def callback_input_data_attribute_dropdown(
 
 
 @app.callback(
+    Output(ids.INPUT_DATA_SECTOR_DROPDOWN, "value", allow_duplicate=True),
+    [
+        Input(ids.INPUT_DATA_ATTRIBUTE_DROPDOWN, "value"),
+        Input(ids.INPUT_DATA_SECTOR_DROPDOWN, "options"),
+    ],
+    prevent_initial_call=True,
+)
+def callback_update_input_data_attribute_dropdown(
+    _: str, options: list[dict[str, str]]
+) -> str:
+    return options[0]["value"]
+
+
+@app.callback(
     [
         Output(ids.INPUT_DATA_ATTRIBUTE_DROPDOWN, "value"),
-        Output(ids.INPUT_DATA_SECTOR_DROPDOWN, "value"),
+        Output(ids.INPUT_DATA_SECTOR_DROPDOWN, "value", allow_duplicate=True),
     ],
     Input(ids.INPUT_DATA_REMOVE_FILTERS, "n_clicks"),
+    prevent_initial_call=True,
 )
 def callback_remove_input_data_filters(_: int) -> tuple[str, str]:
     return "", ""

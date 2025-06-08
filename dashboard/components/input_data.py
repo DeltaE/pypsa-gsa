@@ -46,7 +46,7 @@ def input_data_sector_dropdown() -> html.Div:
     """Input data sector type dropdown component."""
     return html.Div(
         [
-            html.H6("Select Sector"),
+            html.H6("Select Group"),
             dcc.Dropdown(
                 id=ids.INPUT_DATA_SECTOR_DROPDOWN,
                 options={},
