@@ -24,7 +24,6 @@ from utils import (
     configure_logging,
 )
 
-from constants import ISO_STATES
 
 import logging
 
@@ -317,9 +316,9 @@ def add_technology_capacity_target_constraints(
             )
 
         if not np.isnan(target["max"]):
-            assert target["max"] >= lhs_existing, (
-                f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
-            )
+            assert (
+                target["max"] >= lhs_existing
+            ), f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
 
             rhs = target["max"] - round(lhs_existing, 5)
 
@@ -539,10 +538,10 @@ def add_ng_import_export_limits(
 
     # get limits
 
-    import_min = ng_trade.get("min_import", 1)
-    import_max = ng_trade.get("max_import", 1)
-    export_min = ng_trade.get("min_export", 1)
-    export_max = ng_trade.get("max_export", 1)
+    import_min = round(ng_trade.get("min_import", 1), 3)
+    import_max = round(ng_trade.get("max_import", 1), 3)
+    export_min = round(ng_trade.get("min_export", 1), 3)
+    export_max = round(ng_trade.get("max_export", 1), 3)
 
     # to avoid numerical issues, ensure there is a gap between min/max constraints
     if abs(import_max - import_min) < 0.0001:
