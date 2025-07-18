@@ -1,0 +1,31 @@
+import pandas as pd
+from itertools import chain
+import sys
+from pathlib import Path
+
+configfile: "config/config.yaml"
+configfile: "config/api.yaml"
+configfile: "config/solving.yaml"
+
+localrules: all
+
+wildcard_constraints:
+    scenario="[a-zA-Z0-9_]+",
+    model_run=r"\d+"
+
+SCENARIO = config["scenario"]["name"]
+
+###
+# Include only generate-related rules
+###
+
+include: "rules/generate.smk"
+
+###
+# Main execution
+###
+
+rule all:
+    input:
+        f"results/{SCENARIO}/generated/{config['gsa']['parameters']}",
+        f"results/{SCENARIO}/generated/tct_aeo.csv",

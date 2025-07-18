@@ -141,6 +141,19 @@ def add_land_use_constraint_perfect(n):
     return n
 
 
+def add_no_coal_oil_investment_constraint(n):
+    """
+    Add constraint to prevent investment in coal and oil.
+    """
+    cars = [
+        x
+        for x in n.carriers.index
+        if any(fuel in x for fuel in ["coal", "oil", "waste"])
+    ]
+    n.links.loc[n.links.carrier.isin(cars), "p_nom_extendable"] = False
+    return n
+
+
 def add_technology_capacity_target_constraints(
     n: pypsa.Network, data: pd.DataFrame, sample: pd.DataFrame
 ):
@@ -316,9 +329,9 @@ def add_technology_capacity_target_constraints(
             )
 
         if not np.isnan(target["max"]):
-            assert (
-                target["max"] >= lhs_existing
-            ), f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
+            assert target["max"] >= lhs_existing, (
+                f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
+            )
 
             rhs = target["max"] - round(lhs_existing, 5)
 
@@ -914,6 +927,7 @@ def prepare_network(
     clip_p_max_pu: Optional[bool | float] = None,
     noisy_costs: Optional[bool] = None,
     foresight: Optional[str] = None,
+    no_coal_oil_investment: Optional[bool] = None,
     **kwargs,
 ):
     if clip_p_max_pu:
@@ -927,6 +941,9 @@ def prepare_network(
 
     if foresight == "perfect":
         n = add_land_use_constraint_perfect(n)
+
+    if no_coal_oil_investment:
+        n = add_no_coal_oil_investment_constraint(n)
 
     return n
 

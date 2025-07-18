@@ -48,18 +48,12 @@ rule process_reeds_policy:
         "benchmarks/process_reeds/{scenario}_{policy}.txt"
     script:
         "../scripts/process_rps.py"
-        
-def get_extra_tct_data(wildards):
-    if config["scenario"]["include_generated"]:
-        return "results/{scenario}/generated/tct_aeo.csv"
-    else:
-        return []
 
 rule copy_tct_data:
     message: "Copying TCT data"
     input:
         base="resources/policy/technology_limits.csv",
-        extras=get_extra_tct_data
+        tct="results/{scenario}/generated/tct_aeo.csv"
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
@@ -70,14 +64,10 @@ rule copy_tct_data:
     run:
         import shutil
         import pandas as pd
-
-        if input.extras:
-            base = pd.read_csv(input.base)
-            extras = pd.read_csv(input.extras)
-            df = pd.concat([base, extras])
-            df.to_csv(output.csv)
-        else:
-            shutil.copy(input.base, output.csv)
+        base = pd.read_csv(input.base)
+        tct = pd.read_csv(input.tct)
+        df = pd.concat([base, tct])
+        df.to_csv(output.csv)
 
 rule copy_ev_policy_data:
     message: "Copying EV Policy data"
@@ -116,10 +106,7 @@ rule retrieve_natural_gas_data:
         "../scripts/retrieve_ng_data.py"
 
 def get_input_parameters_file(wildards):
-    if config["scenario"]["include_generated"]:
-        return f"results/{wildards.scenario}/generated/{config['gsa']['parameters']}"
-    else:
-        return config["gsa"]["parameters"]
+    return f"results/{wildards.scenario}/generated/{config['gsa']['parameters']}"
 
 rule sanitize_parameters:
     message: "Sanitizing parameters"

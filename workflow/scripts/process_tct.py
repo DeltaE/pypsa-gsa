@@ -5,6 +5,7 @@ import pypsa
 from constants import GSA_COLUMNS
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 # user must populate this from the AEO notebook

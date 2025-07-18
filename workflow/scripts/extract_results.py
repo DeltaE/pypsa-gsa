@@ -5,42 +5,57 @@ import pypsa
 from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
 
+
 def _get_p_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
-    df = getattr(n,component)
+    df = getattr(n, component)
     return df[df.carrier.isin(carriers)].p_nom_opt.sum()
 
+
 def _get_p_nom_new(n: pypsa.Network, component: str, carriers: list[str]) -> float:
-    df = getattr(n,component)
+    df = getattr(n, component)
     original = df[df.carrier.isin(carriers)].p_nom.sum()
     optimial = df[df.carrier.isin(carriers)].p_nom_opt.sum()
     return optimial - original
 
-def _get_p_total(n: pypsa.Network, component: str, var: str, carriers: list[str]) -> float:
-    
+
+def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
+    df = getattr(n, component)
+    return df[df.carrier.isin(carriers)].e_nom_opt.sum()
+
+
+def _get_p_total(
+    n: pypsa.Network, component: str, var: str, carriers: list[str]
+) -> float:
     static_component = component.split("_t")[0]
-    static = getattr(n,static_component)
+    static = getattr(n, static_component)
     slicer = static[static.carrier.isin(carriers)].index
-    
-    year = n.investment_periods[0] # already checked that len == 1
-    df = getattr(n,component)[var].loc[year]
+
+    year = n.investment_periods[0]  # already checked that len == 1
+    df = getattr(n, component)[var].loc[year]
     df = df[slicer]
-    
+
     if var in ("p1", "p2"):
         assert all(df <= 0)
         df = df.mul(-1)
-    
+
     sns_weights = n.snapshot_weightings.loc[year].objective
     return df.mul(sns_weights, axis=0).sum().sum()
 
-def _get_marginal_cost(n: pypsa.Network, carriers: list[str], metric: str = "mean") -> float:
+
+def _get_marginal_cost(
+    n: pypsa.Network, carriers: list[str], metric: str = "mean"
+) -> float:
     assert metric in ("mean", "std", "min", "25%", "50%", "75%", "max")
     buses = n.buses[n.buses.carrier.isin(carriers)].index.to_list()
     return n.buses_t["marginal_price"][buses].mean(axis=1).describe().loc[metric]
 
+
 def _get_objective_cost(n: pypsa.Network) -> float:
     return n.objective
+
 
 def _extract_carriers(cars: str | None) -> list[str] | None:
     if not cars:
@@ -50,7 +65,6 @@ def _extract_carriers(cars: str | None) -> list[str] | None:
 
 
 def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
-
     res = results.copy().set_index("name")
     res["carriers"] = res.carriers.map(_extract_carriers)
 
@@ -59,7 +73,6 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
     data = []
 
     for name, row in res.iterrows():
-
         component = row["component"]
         variable = row["variable"]
         carriers = row["carriers"]
@@ -74,6 +87,8 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
             value = _get_objective_cost(n)
         elif variable == "marginal_price":
             value = _get_marginal_cost(n, carriers, metric="mean")
+        elif variable == "e_nom_opt":
+            value = _get_e_nom_opt(n, component, carriers)
         else:
             raise KeyError(f"Unrecognized argument of {variable}.")
 
@@ -90,9 +105,9 @@ if __name__ == "__main__":
         csv = snakemake.output.csv
         configure_logging(snakemake)
     else:
-        network = "results/caiso/ua/modelruns/10/network.nc"
-        results_f = "results/caiso/ua/results.csv"
-        csv = "results/caiso/ua/modelruns/10/results.csv"
+        network = "results/caiso/gsa/modelruns/10/network.nc"
+        results_f = "results/caiso/gsa/results.csv"
+        csv = "results/caiso/gsa/modelruns/10/results.csv"
         model_run = 10
 
     n = pypsa.Network(network)

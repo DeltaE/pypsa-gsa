@@ -1,0 +1,25 @@
+name,group,nice_name,component,carrier,attribute,range,unit,min_value,max_value,source,notes
+rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
+ces,ces,Clean Energy Standard,generator,portfolio,ces,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
+
+capex_ind_elec_furnace,group1,group1,link,ind-elec-furnace,occ,absolute,USD/kw,56.7,69.3,https://ens.dk/en/analyses-and-statistics/technology-data-industrial-process-heat,312.c Direct firing Electricity. Assumed +/- 10% around ref value of 0.015. Conversion of 1.05 USD per EUR
+fom_ind_elec_furnace,group1,group1,link,ind-elec-furnace,fixed_cost,absolute,USD/kw,0.396025,0.46501,https://ens.dk/en/analyses-and-statistics/technology-data-industrial-process-heat,Estimated the same as gas furnace. 
+lifetime_ind_elec_furnace,group1,group1,link,ind-elec-furnace,lifetime,absolute,years,10,15,https://ens.dk/en/analyses-and-statistics/technology-data-industrial-process-heat,312.c Direct firing Electricity
+eff_ind_elec_furnace,group1,group1,link,ind-elec-furnace,efficiency,absolute,per_unit,0.95,1,https://ens.dk/en/analyses-and-statistics/technology-data-industrial-process-heat,312.c Direct firing Electricity. Lower bound estimated
+p_nom_ind_elec_furnace,group1,group1,link,ind-elec-furnace,p_nom,percent,percent,-9.8,9.8,https://www.eia.gov/consumption/manufacturing/data/2018/pdf/Table5_6.pdf,Total fuel consumption max relative standard error for net electricity
+discount_rate_ind_elec_furnace,group2,group2,link,ind-elec-furnace,discount_rate,absolute,percent,7,13,https://www.nrel.gov/docs/fy18osti/70485.pdf,Assumed same as res/com
+
+demand_response,demand_response,Demand Response,store,demand-response,marginal_cost_storage,percent,percent,-25,25,,
+
+coal_cost,coal_cost,Coal Fuel Cost,store_t,coal,marginal_cost,percent,percent,-6.2,8,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+oil_cost,oil_cost,Oil Fuel Cost,store_t,oil,marginal_cost,percent,percent,-40,66,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+nuclear_cost,nuclear_cost,Uranium Fuel Cost,generator,nuclear,marginal_cost,percent,percent,-0.3,0.3,https://www.eia.gov/outlooks/aeo/,See notebook in repository
+
+name,group,nice_name,component,carrier,attribute,range,unit,min_value,max_value,source,notes
+capfac_onwind,capfac_wind,Capacity Factor Wind,generator_t,onwind,p_max_pu,percent,percent,-4,4,https://doi.org/10.1016/j.energy.2016.08.068,Used RMS error
+ev_policy_lgt_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-lgt,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+ev_policy_med_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-med,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+ev_policy_hvy_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-hvy,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+ev_policy_bus,ev_policy,EV Generation Limit,link,trn-elec-veh-bus,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
+
+ptc_bio,ptc_bio,PTC Bio,generator,biomass,marginal_cost,absolute,USD/mwh,-27.5,0,https://www.epa.gov/lmop/renewable-electricity-production-tax-credit-information,Max applied to all renewable sources

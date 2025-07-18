@@ -50,8 +50,6 @@ rule create_sample:
 # need of reding in the base network many times. This is a little hacky as the 'run' variable 
 # the the output should really be a wildcard to follow snakemake principals. 
 
-# due to this, we have to break this into two rules, as there is no way to access the add 
-# logic to determine the modelruns variable in the output :( 
 
 rule apply_gsa_sample_to_network:
     message: "Applying sample"
@@ -74,9 +72,9 @@ rule apply_gsa_sample_to_network:
         ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
         elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
     output:
-        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=GSA_MODELRUNS)),
+        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=get_gsa_modelruns())),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
-        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=GSA_MODELRUNS)
+        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=get_gsa_modelruns())
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
         runtime=1
@@ -110,9 +108,9 @@ rule apply_ua_sample_to_network:
         ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
         elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
     output:
-        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=UA_MODELRUNS)),
+        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=get_ua_modelruns())),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
-        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=UA_MODELRUNS)
+        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=get_ua_modelruns())
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
         runtime=1

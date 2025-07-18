@@ -2,8 +2,13 @@
 # name of base pypsa network
 scenario: 
   name: "caiso"
-  include_generated: false # to include model specific tct and co2L data
-  ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget. 
+  ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget.
+
+# Workflow configuration - which workflows to include
+workflow:
+  include_generate: true
+  include_gsa: true
+  include_ua: true 
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
@@ -19,18 +24,21 @@ metadata:
 
 # config options for data that is generated
 generated:
-  include:
-    co2L: False
-    tct: True
-  co2L_min: 40 # as percentage of 2005 level emissions
-  co2L_max: 50 # as percentage of 2005 level emissions
-  ccgtccs_max: 50 # as a percentage of max natgas capacity 
+  co2L_min: False # 40 # as percentage of 2005 level emissions
+  co2L_max: False # 50 # as percentage of 2005 level emissions
+  ccgtccs_max: 10 # as a percentage of max natgas capacity 
 
 gsa:
   parameters: config/parameters.csv 
   results: config/results_gsa.csv # results to run SA over
   replicates: 10 
-  scale: True # Scale Elementary Effects 
+  scale: True # Scale Elementary Effect
+  rankings: # get union of most impactful parameters
+    top_n: 3
+    results:
+    - marginal_cost_energy
+    - marginal_cost_elec
+    # - carbon
 
 uncertainity:
   # general scaling guidlines
