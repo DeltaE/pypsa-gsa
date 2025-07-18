@@ -17,7 +17,7 @@ def get_top_n_params(
 
     top_n = []
     for col in df.columns:
-        top_n.extend(df[col].sort_values(ascending=False).index[:num_params].to_list())
+        top_n.extend(df[col].sort_values(ascending=True).index[:num_params].to_list())
     return sorted(list(set(top_n)))
 
 
