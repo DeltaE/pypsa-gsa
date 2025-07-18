@@ -34,12 +34,12 @@ def get_ua_barplot_csvs(wildcards):
     csvs = df.name.to_list()
     return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in csvs]
 
-def get_combined_results_inputs(wildcards):
+def get_combined_results_inputs(wildcards) -> list[str]:
     """Need input function as we need to get model run numbers."""
     if wildcards.mode == "gsa":
-        modelruns = GSA_MODELRUNS
+        modelruns = get_gsa_modelruns()
     elif wildcards.mode == "ua":
-         modelruns = UA_MODELRUNS
+         modelruns = get_ua_modelruns()
     else:
         raise ValueError(f"Invalid result of {wildcards.mode} for model runs.")
 
@@ -70,7 +70,7 @@ rule extract_results:
     script:
         "../scripts/extract_results.py"
 
-rule combine_results:
+checkpoint combine_results:
     message: "Collapsing all results into single summary file"
     wildcard_constraints:
         mode="gsa|ua"
@@ -104,7 +104,7 @@ rule parse_gsa_results:
     input:
         results = "results/{scenario}/gsa/results/all.csv"
     output:
-        expand("results/{{scenario}}/gsa/results/{name}.csv", name=GSA_RESULT_FILES)
+        expand("results/{{scenario}}/gsa/results/{name}.csv", name=get_gsa_result_files())
     log: 
         "logs/parse_results/{scenario}.log"
     resources:
@@ -124,6 +124,8 @@ rule parse_gsa_results:
             parsed.to_csv(str(p), index=False)
 
 rule calculate_SA:
+    wildcard_constraints:
+        mode="^(?!all$)gsa$" # mode can not be 'all'
     message:
         "Calcualting sensitivity measures"
     params: 
@@ -146,6 +148,57 @@ rule calculate_SA:
         "results"
     script: 
         "../scripts/calculate_sa.py"
+
+rule combine_sa_results:
+    message: "Combining SA results"
+    input:
+        csvs = expand("results/{{scenario}}/gsa/SA/{mode}.csv", mode=get_gsa_result_files())
+    output:
+        csv = "results/{scenario}/gsa/SA/all.csv"
+    log: 
+        "logs/combine_sa_results/{scenario}_gsa.log"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
+        runtime=1
+    benchmark:
+        "benchmarks/combine_sa_results/{scenario}_gsa.txt"
+    group:
+        "results"
+    run:
+        import pandas as pd
+        from pathlib import Path 
+
+        dfs = []
+        for f in input.csvs:
+            name = Path(f).stem
+            df = pd.read_csv(f, index_col=0).mu_star
+            df.name = name
+            dfs.append(df)
+        df = pd.concat(dfs, axis=1).round(5).reset_index(names="param")
+        df.to_csv(output.csv, index=False)
+
+
+rule calculate_rankings:
+    message: "Calculating rankings"
+    params:
+        top_n = config["gsa"]["rankings"]["top_n"],
+        subset = config["gsa"]["rankings"]["results"]
+    input:
+        results = "results/{scenario}/gsa/SA/all.csv"
+    output:
+        rankings_f = "results/{scenario}/gsa/rankings.csv",
+        top_n_f = "results/{scenario}/gsa/rankings_top_n.csv"
+    log: 
+        "logs/calculate_rankings/{scenario}_gsa.log"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
+        runtime=1
+    benchmark:
+        "benchmarks/calculate_rankings/{scenario}_gsa.txt"
+    group:
+        "results"
+    script: 
+        "../scripts/calculate_rankings.py"
 
 rule heatmap:
     message:
@@ -200,7 +253,7 @@ rule parse_ua_results:
     input:
         results = "results/{scenario}/ua/results/all.csv"
     output:
-        expand("results/{{scenario}}/ua/results/{name}.csv", name=UA_RESULT_FILES)
+        expand("results/{{scenario}}/ua/results/{name}.csv", name=get_ua_result_files())
     log: 
         "logs/parse_results/{scenario}.log"
     resources:

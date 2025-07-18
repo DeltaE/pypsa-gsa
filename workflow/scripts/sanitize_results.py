@@ -8,12 +8,13 @@ from sanitize_params import sanitize_component_name
 from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     """Strips any leading/trailing whitespace from naming columns."""
-    
+
     df = results.copy()
     df["name"] = df.name.str.strip()
     df["component"] = df.component.str.strip()
@@ -23,6 +24,7 @@ def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     if "plots" in df.columns:
         df["plots"] = df.plots.str.strip()
     return df
+
 
 def is_valid_variables(results: pd.DataFrame) -> bool:
     """Confirm variables are valid.
@@ -66,6 +68,7 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
     else:
         return True
 
+
 def is_unique_names(results: pd.DataFrame) -> bool:
     """Checks that all result names are unique."""
 
@@ -80,8 +83,21 @@ def is_unique_names(results: pd.DataFrame) -> bool:
         return True
 
 
-if __name__ == "__main__":
+def no_nans(results: pd.DataFrame) -> bool:
+    """Checks that there are no NaNs in the result plots."""
+    df = results.copy()
+    if df.plots.isna().any():
+        nan_plots_rows = df[df.plots.isna()]
+        for _, row in nan_plots_rows.iterrows():
+            logger.error(
+                f"NaN found in plots column for {row['name']} with {row['component']} and {row['variable']}."
+            )
+        return False
+    else:
+        return True
 
+
+if __name__ == "__main__":
     if "snakemake" in globals():
         network = snakemake.input.network
         in_results = snakemake.params.results
@@ -89,15 +105,16 @@ if __name__ == "__main__":
         configure_logging(snakemake)
     else:
         network = "results/Testing/base.nc"
-        in_results = "config/results.csv"
+        in_results = "config/results_gsa.csv"
         out_results = "results/Testing/gsa/results.csv"
-    
+
     df = pd.read_csv(in_results)
-    
+
     df = sanitize_component_name(df)
     df = strip_whitespace(df)
     assert is_valid_variables(df)
     assert is_unique_names(df)
+    assert no_nans(df)
 
     n = pypsa.Network(network)
     assert is_valid_carrier(n, df)

@@ -7,7 +7,7 @@ configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, gsa, ua, generate, clean_all, clean_gsa, clean_ua, clean_generate
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate
 
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
@@ -15,72 +15,92 @@ wildcard_constraints:
 
 SCENARIO = config["scenario"]["name"]
 
-# only use groups/names, so its okay to not use sanitized values
-# Calculates GSA specific parameters
-if config["scenario"]["include_generated"]: # gets model specific params
-    generated_f = f"results/{SCENARIO}/generated/{config['gsa']['parameters']}"
-    if not Path(generated_f).exists():
-        raise ValueError("Input data must first be generated")
-    GSA_PARAMETERS = pd.read_csv(generated_f)
-else:
-    GSA_PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
 
-GSA_GROUPS = GSA_PARAMETERS.group.unique().tolist()
+###
+# GSA specific parameters
+###
 
-GSA_RESULTS = pd.read_csv(config["gsa"]["results"])
-GSA_MODELRUNS = range((len(GSA_GROUPS) + 1) * config["gsa"]["replicates"])
-GSA_RESULT_FILES = list(set(GSA_RESULTS.name.to_list()))
-plots_temp = GSA_RESULTS.plots.dropna().str.split(";").to_list()
-GSA_PLOTS = list(set(chain(*plots_temp)))
+def get_gsa_modelruns() -> range:
+    """number of gsa model runs"""
+    try:
+        gsa_params = pd.read_csv(f"results/{SCENARIO}/generated/{config['gsa']['parameters']}")
+        gsa_groups = gsa_params.group.unique().tolist()
+        return range((len(gsa_groups) + 1) * config["gsa"]["replicates"])
+    except FileNotFoundError as e:
+        print("Generate data first with 'snakemake -s Sankefile.generate'")
+        raise e
 
-# Calculates UA specific parameters
-UA_PARAMS = config["uncertainity"]["parameters"]
-UA_SAMPLING = config["uncertainity"]["sample"]
-UA_REPLICATES = config["uncertainity"]["replicates"]
-UA_RESULTS = pd.read_csv(config["uncertainity"]["results"])
-UA_RESULT_FILES = list(set(UA_RESULTS.name.to_list()))
-UA_SCATTERPLOTS = pd.read_csv(config["uncertainity"]["plots"])["plot"].to_list()
-UA_BARPLOTS = UA_RESULTS.barplot.dropna().to_list()
+def get_gsa_result_files() -> list[str]:
+    """All gsa results files"""
+    results = pd.read_csv(config["gsa"]["results"])
+    return list(set(results.name.to_list()))
 
-if UA_SAMPLING.lower() == 'lhs':
-    UA_MODELRUNS = range(UA_REPLICATES)
-elif UA_SAMPLING.lower() == 'sobol':
-    UA_MODELRUNS = range((2**UA_REPLICATES) * (len(UA_PARAMS) + 2))
-else:
-    raise ValueError(f"{UA_SAMPLING} is not a valid selection")
+def get_gsa_plots() -> list[str]:
+    """Gsa plots"""
+    results = pd.read_csv(config["gsa"]["results"])
+    plots_temp = results.plots.dropna().str.split(";").to_list()
+    return list(set(chain(*plots_temp)))
 
-include: "rules/generate.smk"
+###
+# UA specific parameters
+###
+
+def get_ua_result_files():
+    """All ua results files"""
+    results = pd.read_csv(config["uncertainity"]["results"])
+    return list(set(results.name.to_list()))
+
+def get_ua_scatterplots():
+    """UA scatterplots"""
+    return pd.read_csv(config["uncertainity"]["plots"])["plot"].to_list()
+
+def get_ua_barplots():
+    """UA barplots"""
+    results = pd.read_csv(config["uncertainity"]["results"])
+    return results.barplot.dropna().to_list()
+
+def get_ua_modelruns():
+    """Number of ua model runs"""
+    sampling = config["uncertainity"]["sample"].lower()
+    replicates = config["uncertainity"]["replicates"]
+    parameters = config["uncertainity"]["parameters"]
+    if sampling == 'lhs':
+        return range(replicates)
+    elif sampling == 'sobol':
+        return range((2**replicates) * (len(parameters) + 2))
+    else:
+        raise ValueError(f"{sampling} is not a valid selection")
+
+###
+# Additional rules
+###
+
 include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/solve.smk"
 include: "rules/results.smk"
 
-rule all:
-    shell:
-        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua', 'snakemake generate']"
-
 ###
 # Main execution
 ###
 
+rule all:
+    shell:
+        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua']"
+
 rule gsa:
     input:
-        # expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=GSA_MODELRUNS),
-        expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=GSA_RESULT_FILES),
-        expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS),
-        expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS)
+        # expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=get_gsa_modelruns()),
+        expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=get_gsa_result_files()),
+        expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
+        expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
+        expand("results/{scenario}/gsa/rankings.csv", scenario=SCENARIO)
 
 rule ua:
     input:
         # expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
-        expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=UA_SCATTERPLOTS),
-        expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=UA_BARPLOTS),
-
-# generates network sepecific TCT and CO2L constraints
-rule generate:
-    input:
-        f"results/{SCENARIO}/generated/{config['gsa']['parameters']}",
-        f"results/{SCENARIO}/generated/tct_aeo.csv",
+        expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=get_ua_scatterplots()),
+        expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=get_ua_barplots()),
 
 ###
 # Testing solve resources on hpc
