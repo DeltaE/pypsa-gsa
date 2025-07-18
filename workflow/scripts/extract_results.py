@@ -1,6 +1,7 @@
 """Extracts results to have SA run over"""
 
 import pandas as pd
+import numpy as np
 import pypsa
 from utils import configure_logging
 
@@ -23,7 +24,15 @@ def _get_p_nom_new(n: pypsa.Network, component: str, carriers: list[str]) -> flo
 
 def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
     df = getattr(n, component)
-    return df[df.carrier.isin(carriers)].e_nom_opt.sum()
+    e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
+    if e_nom_opt == np.inf:
+        assert component == "stores"
+        stores = df[df.carrier.isin(carriers)].index
+        df = getattr(n, "stores_t")["e"][stores]
+        assert all(df >= 0)
+        return df.sum().sum()
+    else:
+        return e_nom_opt
 
 
 def _get_p_total(
