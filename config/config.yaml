@@ -4,12 +4,6 @@ scenario:
   name: "caiso"
   ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget.
 
-# Workflow configuration - which workflows to include
-workflow:
-  include_generate: true
-  include_gsa: true
-  include_ua: true 
-
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
   network: "caiso/elec_s12_c4m_ec_lv1.0_4h_E-G.nc"
