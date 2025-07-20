@@ -27,19 +27,26 @@ if __name__ == "__main__":
         co2_2005_f = "resources/policy/co2_2005.csv"
         co2_gsa_f = "results/scenario/generated/co2L_gsa.csv"
 
-    n = pypsa.Network(network)
-    co2_2005 = pd.read_csv(co2_2005_f)
-    
-    emissions = filter_on_model_scope(n, co2_2005)
-    total_2005_emissions = emissions["co2_limit_mmt"].sum()
-    
-    # input values are given a percent reduction from 2005 levels
-    # so swap the min/max identifier
-    min_value = round(total_2005_emissions * (1 - float(max_value_pct) / 100), 5)
-    max_value = round(total_2005_emissions * (1 - float(min_value_pct) / 100), 5)
-    
-    note = f"{min_value_pct} to {max_value_pct} % reduction from 2005 levels"
-    
-    df = pd.DataFrame([["emission_limit", "emission_limit", "Emission Limit", "store", "co2", "co2L", "absolute", "mmt", min_value, max_value, "https://www.eia.gov/outlooks/aeo/", note]], columns=GSA_COLUMNS)
-    
+    if min_value_pct and max_value_pct:
+        # create and populate co2L constraint data
+        n = pypsa.Network(network)
+        co2_2005 = pd.read_csv(co2_2005_f)
+        
+        emissions = filter_on_model_scope(n, co2_2005)
+        total_2005_emissions = emissions["co2_limit_mmt"].sum()
+        
+        # input values are given a percent reduction from 2005 levels
+        # so swap the min/max identifier
+        min_value = round(total_2005_emissions * (1 - float(max_value_pct) / 100), 5)
+        max_value = round(total_2005_emissions * (1 - float(min_value_pct) / 100), 5)
+        
+        note = f"{min_value_pct} to {max_value_pct} % reduction from 2005 levels"
+        
+        df = pd.DataFrame([["emission_limit", "emission_limit", "Emission Limit", "store", "co2", "co2L", "absolute", "mmt", min_value, max_value, "https://www.eia.gov/outlooks/aeo/", note]], columns=GSA_COLUMNS)
+    elif min_value_pct or max_value_pct:
+        raise ValueError("min_value_pct and max_value_pct must be provided for CO2L")
+    else:
+        # create empty co2L constraint data
+        df = pd.DataFrame(columns=GSA_COLUMNS)
+
     df.to_csv(co2_gsa_f, index=False)

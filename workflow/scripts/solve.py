@@ -24,7 +24,6 @@ from utils import (
     configure_logging,
 )
 
-from constants import ISO_STATES
 
 import logging
 
@@ -139,6 +138,19 @@ def add_land_use_constraint_perfect(n):
         df_carrier = df[df.name == name]
         bus = df_carrier.bus
         n.buses.loc[bus, name] = df_carrier.p_nom_max.values
+    return n
+
+
+def add_no_coal_oil_investment_constraint(n):
+    """
+    Add constraint to prevent investment in coal and oil.
+    """
+    cars = [
+        x
+        for x in n.carriers.index
+        if any(fuel in x for fuel in ["coal", "oil", "waste"])
+    ]
+    n.links.loc[n.links.carrier.isin(cars), "p_nom_extendable"] = False
     return n
 
 
@@ -539,10 +551,10 @@ def add_ng_import_export_limits(
 
     # get limits
 
-    import_min = ng_trade.get("min_import", 1)
-    import_max = ng_trade.get("max_import", 1)
-    export_min = ng_trade.get("min_export", 1)
-    export_max = ng_trade.get("max_export", 1)
+    import_min = round(ng_trade.get("min_import", 1), 3)
+    import_max = round(ng_trade.get("max_import", 1), 3)
+    export_min = round(ng_trade.get("min_export", 1), 3)
+    export_max = round(ng_trade.get("max_export", 1), 3)
 
     # to avoid numerical issues, ensure there is a gap between min/max constraints
     if abs(import_max - import_min) < 0.0001:
@@ -915,6 +927,7 @@ def prepare_network(
     clip_p_max_pu: Optional[bool | float] = None,
     noisy_costs: Optional[bool] = None,
     foresight: Optional[str] = None,
+    no_coal_oil_investment: Optional[bool] = None,
     **kwargs,
 ):
     if clip_p_max_pu:
@@ -928,6 +941,9 @@ def prepare_network(
 
     if foresight == "perfect":
         n = add_land_use_constraint_perfect(n)
+
+    if no_coal_oil_investment:
+        n = add_no_coal_oil_investment_constraint(n)
 
     return n
 
