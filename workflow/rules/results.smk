@@ -104,7 +104,7 @@ rule parse_gsa_results:
     input:
         results = "results/{scenario}/gsa/results/all.csv"
     output:
-        expand("results/{{scenario}}/gsa/results/{name}.csv", name=get_gsa_result_files())
+        expand("results/{{scenario}}/gsa/results/{sa_result}.csv", sa_result=get_gsa_result_files())
     log: 
         "logs/parse_results/{scenario}.log"
     resources:
@@ -125,7 +125,9 @@ rule parse_gsa_results:
 
 rule calculate_SA:
     wildcard_constraints:
-        mode="^(?!all$)gsa$" # mode can not be 'all'
+        # idk why but the regex on the next line doesnt work. 
+        # sa_result="^(?!all$).*$", # sa_result can not be 'all'
+        sa_result='|'.join([re.escape(x) for x in get_gsa_result_files()])
     message:
         "Calcualting sensitivity measures"
     params: 
@@ -133,17 +135,17 @@ rule calculate_SA:
     input: 
         sample = get_sample_file,
         parameters = "results/{scenario}/gsa/parameters.csv",
-        results = "results/{scenario}/gsa/results/{mode}.csv"
+        results = "results/{scenario}/gsa/results/{sa_result}.csv"
     output: 
-        csv = "results/{scenario}/gsa/SA/{mode}.csv",
-        png = "results/{scenario}/gsa/SA/{mode}.png"
+        csv = "results/{scenario}/gsa/SA/{sa_result}.csv",
+        png = "results/{scenario}/gsa/SA/{sa_result}.png"
     log: 
-        "logs/calculate_sa/{scenario}_{mode}.log"
+        "logs/calculate_sa/{scenario}_{sa_result}.log"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
         runtime=1
     benchmark:
-        "benchmarks/calculate_sa/{scenario}_{mode}.txt"
+        "benchmarks/calculate_sa/{scenario}_{sa_result}.txt"
     group:
         "results"
     script: 
@@ -152,7 +154,7 @@ rule calculate_SA:
 rule combine_sa_results:
     message: "Combining SA results"
     input:
-        csvs = expand("results/{{scenario}}/gsa/SA/{mode}.csv", mode=get_gsa_result_files())
+        csvs = expand("results/{{scenario}}/gsa/SA/{sa_result}.csv", sa_result=get_gsa_result_files())
     output:
         csv = "results/{scenario}/gsa/SA/all.csv"
     log: 
