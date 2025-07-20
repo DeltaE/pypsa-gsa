@@ -5,6 +5,7 @@ results/*
 config/pypsa-usa/
 logs/*
 benchmarks/*
+dashboard/data/*
 
 
 # Byte-compiled / optimized / DLL files
