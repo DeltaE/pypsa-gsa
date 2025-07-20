@@ -14,7 +14,7 @@ pypsa_usa:
 metadata:
   csv: True
   yaml: False
-  networks: True # keep solved networks 
+  networks: False # keep solved networks 
 
 # config options for data that is generated
 generated:
@@ -28,11 +28,11 @@ gsa:
   replicates: 10 
   scale: True # Scale Elementary Effect
   rankings: # get union of most impactful parameters
-    top_n: 3
+    top_n: 5
     results:
     - marginal_cost_energy
     - marginal_cost_elec
-    # - carbon
+    - carbon
 
 uncertainity:
   # general scaling guidlines
