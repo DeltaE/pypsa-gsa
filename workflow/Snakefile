@@ -35,8 +35,6 @@ def get_gsa_modelruns() -> range:
         print("Generate data first with 'snakemake -s Sankefile.generate'")
         raise e
 
-GSA_RESULT_FILES = list(set(pd.read_csv(config["gsa"]["results"]).name.to_list()))
-
 def get_gsa_result_files() -> list[str]:
     """All gsa results files"""
     results = pd.read_csv(config["gsa"]["results"])
