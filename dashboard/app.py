@@ -436,7 +436,7 @@ def callback_show_hide_option_blocks(
         iso_options = visible
         gsa_options = visible
     elif active_tab == ids.UA_TAB:
-        gsa_options = visible
+        iso_options = visible
         ua_options = visible
 
     return plotting_style, iso_options, input_data_options, gsa_options, ua_options
@@ -783,6 +783,8 @@ def callback_input_data_attribute_dropdown(
 def callback_update_input_data_attribute_dropdown(
     _: str, options: list[dict[str, str]]
 ) -> str:
+    if not options:
+        return ""
     return options[0]["value"]
 
 

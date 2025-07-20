@@ -134,7 +134,49 @@ def ua_percentile_interval_slider() -> html.Div:
 
 def _filter_ua_on_result_sector(df: pd.DataFrame, result_sector: str) -> pd.DataFrame:
     """Filter UA data on result sector."""
-    return df
+
+    if result_sector == "all":
+        return df
+    if result_sector == "power":
+        valid_cars = [
+            "coal",
+            "nuclear",
+            "hydro",
+            "wind",
+            "solar",
+            "ocgt",
+            "ccgt",
+            "ccgt95ccs",
+            "other",
+            "geothermal",
+            "other",
+        ]
+    elif result_sector == "industry":
+        valid_cars = []
+    elif result_sector == "service":
+        valid_cars = [
+            "ashp",
+            "gshp",
+            "gas_furnace",
+            "elec_furnace",
+            "oil_furnace",
+            "air_con",
+        ]
+    elif result_sector == "transport":
+        valid_cars = ["lgt", "med", "hvy", "bus"]
+    else:
+        logger.error(f"No filter applied for result sector: {result_sector}")
+        return df
+
+    print(df.columns)
+
+    cols = ["run", "iso"]
+    for x in valid_cars:
+        for col in df:
+            if col.startswith(x):
+                cols.append(col)
+    print(cols)
+    return df[cols]
 
 
 def _filter_ua_on_result_type(df: pd.DataFrame, result_type: str) -> pd.DataFrame:
@@ -144,13 +186,15 @@ def _filter_ua_on_result_type(df: pd.DataFrame, result_type: str) -> pd.DataFram
     elif result_type == "marginal_costs":
         cols = [x for x in df.columns if "marginal_cost_" in x]
     elif result_type == "emissions":
-        cols = list(df.columns)
+        cols = [x for x in df.columns if any(gas in x for gas in ["co2", "ch4"])]
     elif result_type == "new_capacity":
-        cols = list(df.columns)
+        cols = [x for x in df.columns if x.endswith("_capacity_new")]
     elif result_type == "total_capacity":
-        cols = list(df.columns)
+        cols = [x for x in df.columns if x.endswith("_capacity")]
+    elif result_type == "generation":
+        cols = [x for x in df.columns if x.endswith("_generation")]
     else:
-        cols = list(df.columns)
+        cols = []
 
     if not cols:
         logger.debug(f"No columns found for result type {result_type}")

@@ -105,24 +105,6 @@ def get_ua_results_dropdown_options(
         return loaded
 
 
-def _filter_ua_results_on_type(
-    loaded: list[dict[str, str]], result_type: str
-) -> list[dict[str, str]]:
-    """Filter the UA results on type."""
-    if result_type == "marginal":
-        pass
-    elif result_type == "costs":
-        pass
-    elif result_type == "emissions":
-        pass
-    elif result_type == "capacity":
-        pass
-    elif result_type == "generation":
-        pass
-    else:
-        return loaded
-
-
 def get_continuous_color_scale_options() -> list[str]:
     """Get the continuous color scale options."""
     return sorted(pc.named_colorscales())
