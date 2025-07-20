@@ -67,7 +67,7 @@ def plot_si(si: np.array, name: str) -> tuple[plt.figure, plt.axes]:
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        result_name = snakemake.wildcards.mode
+        result_name = snakemake.wildcards.sa_result
         parameters_f = snakemake.input.parameters
         sample_f = snakemake.input.sample
         results_f = snakemake.input.results

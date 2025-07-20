@@ -15,6 +15,11 @@ wildcard_constraints:
 
 SCENARIO = config["scenario"]["name"]
 
+onstart:
+    gen_params = Path("results", SCENARIO, "generated", "config", "parameters.csv")
+    if not gen_params.exists():
+        print("Generate data first with 'snakemake -s Sankefile.generate'")
+        raise FileNotFoundError(f"Parameters file not found: {gen_params}")
 
 ###
 # GSA specific parameters
@@ -91,7 +96,7 @@ rule all:
 rule gsa:
     input:
         # expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=get_gsa_modelruns()),
-        expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=get_gsa_result_files()),
+        # expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=get_gsa_result_files()),
         expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
         expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
         expand("results/{scenario}/gsa/rankings.csv", scenario=SCENARIO)
