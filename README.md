@@ -1,6 +1,7 @@
 [![python](https://img.shields.io/badge/python-3.11|_3.12|_3.13-blue.svg)](https://github.com/DeltaE/pypsa-gsa)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Anaconda](https://img.shields.io/badge/Anaconda-%2344A833.svg?style=for-the-badge&logo=anaconda&logoColor=white)](https://github.com/mamba-org/mamba)
 [![License](https://img.shields.io/pypi/l/pypsa.svg)](LICENSE)
 
 # PyPSA-USA: Near Term Emission Targets
