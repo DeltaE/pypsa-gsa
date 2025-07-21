@@ -59,7 +59,13 @@ This section will walk through how configure the workflow. The results in this p
 
 ### Scenario
 
-...
+To run a new scenario (ie. the GSA and UP workflow), give a new scenario name in the `config/config.yaml` file. Additionally, for the scenario, you can select if CH4 is counted against the emission budget. As CH4 can lead to eaisly lead to infeasabilities if running with a CO2 limit, users have the option to track CH4, but not count it against the emission limit. 
+
+```yaml
+scenario: 
+  name: "caiso"
+  ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget. 
+```
 
 ### Network File 
 
