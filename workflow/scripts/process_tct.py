@@ -175,19 +175,33 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
 if __name__ == "__main__":
     if "snakemake" in globals():
         network = snakemake.input.network
+        include_tct = snakemake.params.include_tct
         tct_aeo_f = snakemake.output.tct_aeo
         tct_gsa_f = snakemake.output.tct_gsa
         ccs_limit = snakemake.params.ccs_limit  # as a percentage of max ccgt cap
     else:
         network = ""
+        include_tct = True
         tct_aeo_f = ""
         tct_gsa_f = ""
         ccs_limit = 50  # as a percentage of max ccgt cap
 
     n = pypsa.Network(network)
     assert len(n.investment_periods) == 1
-    tct_aeo = get_tct_data(n, ccs_limit)
-    tct_gsa = get_gsa_tct_data(n, ccs_limit)
+
+    if include_tct:
+
+        assert (
+            tct_aeo_f and tct_gsa_f
+        ), "tct_aeo_f and tct_gsa_f must be provided for TCT"
+
+        tct_aeo = get_tct_data(n, ccs_limit)
+        tct_gsa = get_gsa_tct_data(n, ccs_limit)
+
+    else:
+        logger.info("No TCT constraint data generated")
+        tct_aeo = pd.DataFrame(columns=TCT_COLUMNS)
+        tct_gsa = pd.DataFrame(columns=GSA_COLUMNS)
 
     tct_aeo.to_csv(tct_aeo_f, index=False)
     tct_gsa.to_csv(tct_gsa_f, index=False)
