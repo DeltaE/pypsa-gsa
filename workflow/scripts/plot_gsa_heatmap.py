@@ -34,15 +34,15 @@ if __name__ == "__main__":
         results_f = snakemake.input.results
     else:
         csvs = [
-            "results/Testing/gsa/SA/objective_cost.csv",
-            "results/Testing/gsa/SA/marginal_cost_energy.csv",
-            "results/Testing/gsa/SA/marginal_cost_elec.csv",
-            "results/Testing/gsa/SA/marginal_cost_carbon.csv",
+            "results/caiso/gsa/SA/objective_cost.csv",
+            "results/caiso/gsa/SA/marginal_cost_energy.csv",
+            "results/caiso/gsa/SA/marginal_cost_elec.csv",
+            "results/caiso/gsa/SA/marginal_cost_carbon.csv",
         ]
         heatmap = "results/Testing/gsa/heatmaps/summary.png"
         group = ""
-        parameters_f = "results/gsa/Testing/parameters.csv"
-        results_f = "results/gsa/Testing/results.csv"
+        parameters_f = "results/caiso/gsa/parameters.csv"
+        results_f = "results/caiso/gsa/results.csv"
 
     dfs = []
 

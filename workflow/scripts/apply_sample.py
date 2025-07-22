@@ -260,9 +260,9 @@ def _apply_static_sample(
     if slicer.empty:
         logger.debug(f"No {car} found in {c}")
         return {
-            "ref": 1,
-            "scaled": 1,
-            "difference": 0,
+            "ref": np.nan,
+            "scaled": value,
+            "difference": np.nan,
         }
     if absolute:
         # get metadata
@@ -817,21 +817,21 @@ if __name__ == "__main__":
         elec_trade_f = snakemake.input.elec_trade_f
         configure_logging(snakemake)
     else:
-        param_file = "results/caiso/gsa/parameters.csv"
-        sample_file = "results/caiso/gsa/sample.csv"
+        param_file = "results/caiso2/gsa/parameters.csv"
+        sample_file = "results/caiso2/gsa/sample.csv"
         set_values_file = ""
-        base_network_file = "results/caiso/base.nc"
-        root_dir = Path("results/caiso/gsa/modelruns/")
+        base_network_file = "results/caiso2/base.nc"
+        root_dir = Path("results/caiso2/gsa/modelruns/")
         meta_yaml = False
         meta_csv = True
-        scaled_sample_file = "results/caiso/gsa/scaled_sample.csv"
-        pop_f = "results/caiso/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"
-        ng_international_f = "results/caiso/constraints/ng_international.csv"
-        rps_f = "results/caiso/constraints/rps.csv"
-        ces_f = "results/caiso/constraints/ces.csv"
-        ev_policy_f = "results/caiso/constraints/ev_policy.csv"
-        elec_trade_f = "results/caiso/constraints/import_export_flows.csv"
+        scaled_sample_file = "results/caiso2/gsa/scaled_sample.csv"
+        pop_f = "results/caiso2/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso2/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso2/constraints/ng_international.csv"
+        rps_f = "results/caiso2/constraints/rps.csv"
+        ces_f = "results/caiso2/constraints/ces.csv"
+        ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
+        elec_trade_f = "results/caiso2/constraints/import_export_flows.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)

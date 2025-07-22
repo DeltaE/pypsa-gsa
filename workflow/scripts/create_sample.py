@@ -48,8 +48,8 @@ if __name__ == "__main__":
     else:
         param_file = "results/caiso/gsa/parameters.csv"
         replicates = 10
-        sample_file = "sample.csv"
-        method = "sobol"
+        sample_file = "results/caiso/gsa/sample.csv"
+        method = "morris"
 
     parameters = pd.read_csv(param_file)
 

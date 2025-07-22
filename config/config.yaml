@@ -18,9 +18,13 @@ metadata:
 
 # config options for data that is generated
 generated:
-  co2L_min: False # 40 # as percentage of 2005 level emissions
-  co2L_max: False # 50 # as percentage of 2005 level emissions
-  ccgtccs_max: 10 # as a percentage of max natgas capacity 
+  include:
+    tct: True
+    co2L: False
+  limits:
+    co2L_min: 40 # as percentage of 2005 level emissions
+    co2L_max: 50 # as percentage of 2005 level emissions
+    ccgtccs_max: 10 # as a percentage of max natgas capacity 
 
 gsa:
   parameters: config/parameters.csv 
