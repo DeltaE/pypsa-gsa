@@ -499,6 +499,13 @@ def is_attr_t_pct(params: pd.DataFrame) -> bool:
     else:
         return True
 
+def round_max_min(params: pd.DataFrame, round_to: int = 5) -> pd.DataFrame:
+    """Rounds max and min values to given decimal places."""
+    
+    df = params.copy()
+    df["min_value"] = df["min_value"].round(round_to)
+    df["max_value"] = df["max_value"].round(round_to)
+    return df
 
 if __name__ == "__main__":
 
@@ -507,8 +514,8 @@ if __name__ == "__main__":
         out_params = snakemake.output.parameters
         configure_logging(snakemake)
     else:
-        in_params = "config/parameters.csv"
-        out_params = "results/Test/parameters.csv"
+        in_params = "results/caiso/generated/config/parameters.csv"
+        out_params = "results/caiso/gsa/parameters.csv"
     
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
     
@@ -543,6 +550,8 @@ if __name__ == "__main__":
     assert is_attr_t_pct(df), "time dependent values must be realitive"
     assert is_valid_gshp(df), "too many groups for gshp constraint"
     assert is_valid_demand_response(df), "demand_response must be percent"
+    
+    df = round_max_min(df, 5)
 
     df.to_csv(out_params, index=False)
     

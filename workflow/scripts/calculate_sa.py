@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,13 +77,13 @@ if __name__ == "__main__":
         png = snakemake.output.png
         configure_logging(snakemake)
     else:
-        result_name = "com_ashp_capacity"
-        parameters_f = "results/gsa/Testing/parameters.csv"
-        sample_f = "results/gsa/Testing/sample_scaled.csv"
-        results_f = "results/gsa/Testing/results/marginal_cost_carbon.csv"
+        result_name = "carbon"
+        parameters_f = "results/caiso/gsa/parameters.csv"
+        sample_f = "results/caiso/gsa/sample_scaled.csv"
+        results_f = "results/caiso/gsa/results/carbon.csv"
         scaled = True
-        csv = "results/gsa/Testing/SA/marginal_cost_carbon.csv"
-        png = "results/gsa/Testing/SA/marginal_cost_carbon.png"
+        csv = "results/caiso/gsa/SA/carbon.csv"
+        png = "results/caiso/gsa/SA/carbon.png"
 
     params = pd.read_csv(parameters_f)
     X = pd.read_csv(sample_f).to_numpy()

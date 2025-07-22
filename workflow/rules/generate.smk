@@ -3,7 +3,8 @@
 rule generate_tct_data:
     message: "Generating TCT data based on the AEO"
     params:
-        ccs_limit = config["generated"]["ccgtccs_max"]
+        include_tct = config["generated"]["include"].get("tct", {}),
+        ccs_limit = config["generated"]["limits"]["ccgtccs_max"]
     input:
         network = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
@@ -35,8 +36,9 @@ rule retrieve_co2L_data:
 rule generate_co2L_data:
     message: "Generating CO2L data based on user inputs"
     params:
-        min_value = config["generated"]["co2L_min"],
-        max_value = config["generated"]["co2L_max"],
+        include_co2L = config["generated"]["include"].get("co2L", {}),
+        min_value = config["generated"]["limits"]["co2L_min"],
+        max_value = config["generated"]["limits"]["co2L_max"],
     input:
         network =  f"config/pypsa-usa/{config['pypsa_usa']['network']}",
         co2_2005 = "resources/emissions/co2_2005.csv",

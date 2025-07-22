@@ -120,7 +120,9 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     sa_cars = df.carrier.unique()
     n_cars = n.carriers.index.to_list()
     # for aggregating constraints and ng leaks
-    n_cars.extend(["portfolio", "leakage_upstream", "leakage_downstream", "elec_trade"])
+    n_cars.extend(
+        ["portfolio", "leakage_upstream", "leakage_downstream", "elec_trade", "gwp"]
+    )
 
     errors = []
 
@@ -260,9 +262,9 @@ def _apply_static_sample(
     if slicer.empty:
         logger.debug(f"No {car} found in {c}")
         return {
-            "ref": 1,
-            "scaled": 1,
-            "difference": 0,
+            "ref": np.nan,
+            "scaled": value,
+            "difference": np.nan,
         }
     if absolute:
         # get metadata
@@ -390,9 +392,17 @@ def _cache_attr(
 
     Returns updated cache and sample metadata
     """
-    if car not in cache:
-        cache[car] = {"component": c}
-    cache[car][attr] = value
+    # just a hack to reduce the number of model runs needed
+    if attr == "gwp":
+        for car in ["leakage_upstream", "leakage_downstream"]:
+            if car not in cache:
+                cache[car] = {"component": c}
+            cache[car][attr] = value
+    else:
+        if car not in cache:
+            cache[car] = {"component": c}
+        cache[car][attr] = value
+
     sampled = {
         "ref": np.nan,
         "scaled": value,  # already absolute
@@ -817,21 +827,21 @@ if __name__ == "__main__":
         elec_trade_f = snakemake.input.elec_trade_f
         configure_logging(snakemake)
     else:
-        param_file = "results/caiso/gsa/parameters.csv"
-        sample_file = "results/caiso/gsa/sample.csv"
+        param_file = "results/caiso3/gsa/parameters.csv"
+        sample_file = "results/caiso3/gsa/sample.csv"
         set_values_file = ""
-        base_network_file = "results/caiso/base.nc"
-        root_dir = Path("results/caiso/gsa/modelruns/")
+        base_network_file = "results/caiso3/base.nc"
+        root_dir = Path("results/caiso3/gsa/modelruns/")
         meta_yaml = False
         meta_csv = True
-        scaled_sample_file = "results/caiso/gsa/scaled_sample.csv"
-        pop_f = "results/caiso/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"
-        ng_international_f = "results/caiso/constraints/ng_international.csv"
-        rps_f = "results/caiso/constraints/rps.csv"
-        ces_f = "results/caiso/constraints/ces.csv"
-        ev_policy_f = "results/caiso/constraints/ev_policy.csv"
-        elec_trade_f = "results/caiso/constraints/import_export_flows.csv"
+        scaled_sample_file = "results/caiso3/gsa/scaled_sample.csv"
+        pop_f = "results/caiso3/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso3/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso3/constraints/ng_international.csv"
+        rps_f = "results/caiso3/constraints/rps.csv"
+        ces_f = "results/caiso3/constraints/ces.csv"
+        ev_policy_f = "results/caiso3/constraints/ev_policy.csv"
+        elec_trade_f = "results/caiso3/constraints/import_export_flows.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)

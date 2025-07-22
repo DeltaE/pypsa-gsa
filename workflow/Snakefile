@@ -7,7 +7,7 @@ configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate, test_gsa, test_ua
 
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
@@ -20,6 +20,8 @@ onstart:
     if not gen_params.exists():
         print("Generate data first with 'snakemake -s Sankefile.generate'")
         raise FileNotFoundError(f"Parameters file not found: {gen_params}")
+    else:
+        print(f"Parameters file found: {gen_params}")
 
 ###
 # GSA specific parameters
