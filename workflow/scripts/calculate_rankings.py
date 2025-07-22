@@ -1,7 +1,10 @@
 """Prints out the union of the most impactful parameters."""
 
-from pathlib import Path
 import pandas as pd
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_top_n_params(
@@ -23,6 +26,11 @@ def get_top_n_params(
 
 def rank_params(df: pd.DataFrame) -> pd.DataFrame:
     """Rank the parameters."""
+    na_columns = df.columns[df.isna().any()]
+    if not na_columns.empty:
+        logger.error(f"nans exist in the following columns: {na_columns}")
+        raise ValueError(f"nans exist in the following columns: {na_columns}")
+
     df = df.dropna(axis=1)
     return df.rank(ascending=False, method="dense").astype(int)
 

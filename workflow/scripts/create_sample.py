@@ -7,6 +7,7 @@ from utils import configure_logging
 
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,9 +47,9 @@ if __name__ == "__main__":
         sample_file = snakemake.output.sample_file
         configure_logging(snakemake)
     else:
-        param_file = "results/caiso/gsa/parameters.csv"
+        param_file = "results/caiso3/gsa/parameters.csv"
         replicates = 10
-        sample_file = "results/caiso/gsa/sample.csv"
+        sample_file = "results/caiso3/gsa/sample.csv"
         method = "morris"
 
     parameters = pd.read_csv(param_file)
