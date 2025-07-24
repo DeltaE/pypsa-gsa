@@ -18,7 +18,7 @@ ROUND_TO = 5
 PARAM_ATTRIBUTE_NICE_NAMES = {
     "co2L": "Constraints",
     "discount_rate": "Discount Rate",
-    "e_min_pu": "Natural Gas", # only one e_min_pu
+    "e_min_pu": "Natural Gas",  # only one e_min_pu
     "efficiency": "Efficiency",
     "efficiency_store": "Efficiency",
     "ev_policy": "Constraints",
@@ -39,6 +39,9 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "p_set": "Loads",
     "tct": "Capacity Limits",
     "vmt_per_year": "Lifetime",
+    "rps": "Constraints",
+    "ces": "Constraints",
+    "elec_trade": "Constraints",
 }
 
 PWR_CARRIERS = [
@@ -186,6 +189,16 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             return "Transmission"
         elif carrier == "co2":
             return "Carbon"
+        elif carrier.startswith("leakage_"):
+            return "Carbon"
+        elif carrier.startswith("gwp"):
+            return "Carbon"
+        elif carrier == "emission_limit":
+            return "Carbon"
+        elif carrier == "portfolio":
+            return "Power"
+        elif carrier in ["imports", "exports"]:
+            return "Power"
         else:
             raise ValueError(f"Invalid carrier: {carrier}")
 
@@ -194,6 +207,14 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
     params["sector"] = params.carrier.map(_assign_sector)
     fuel_cost_mask = params.component == "stores_t"
     params.loc[fuel_cost_mask, "sector"] = "Primary Fuel"
+
+    missing = params[(params.attribute.isna()) | (params.attribute_nice_name.isna())]
+    if not missing.empty:
+        logger.error(
+            f"Missing attribute and/or attribute_nice_name: {missing.name.unique()}"
+        )
+        raise ValueError("Missing attribute amd/or attribute_nice_name")
+
     return params
 
 
@@ -201,9 +222,9 @@ def assign_parameter_nice_names(root: Path, params: pd.DataFrame) -> pd.DataFram
     """Assigns manually mapped nice names for plotting.
 
     For plotting, we want to show costs of tech seperate seperate, but nice_names
-    groups them together for Morris.
+    groups them together for Morris. So this needs to be manually provided.
     """
-    nice_names_f = Path(root, "dashboard", "data", "parameter_nice_names.csv")
+    nice_names_f = Path(root, "dashboard", "data", "nice_names.csv")
     nice_names = pd.read_csv(nice_names_f).set_index("name").to_dict()["nice_name"]
 
     params["group_nice_name"] = params.nice_name
