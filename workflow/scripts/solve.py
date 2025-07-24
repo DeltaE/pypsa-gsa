@@ -154,6 +154,41 @@ def add_no_coal_oil_investment_constraint(n):
     return n
 
 
+def no_economic_retirement_constraint(n):
+    """
+    Turns off economic retirement for power generator assets.
+
+    This can be configured in the main pypsa_usa workflow. Its done here though as it
+    allows faster testing of economic retirement.
+    """
+
+    # very hacky, but I know this wont change for my project
+    pwr_cars = [
+        "nuclear",
+        "oil",
+        "OCGT",
+        "CCGT",
+        "CCGT-95CCS",
+        "coal",
+        "geothermal",
+        "biomass",
+        "waste",
+        "onwind",
+        "offwind_floating",
+        "solar",
+        "hydro",
+        "4hr_battery_storage",
+        "8hr_battery_storage",
+    ]
+
+    links = n.links[
+        (n.links.index.str.endswith(" existing")) & (n.links.carrier.isin(pwr_cars))
+    ]
+    n.links.loc[links.index, "p_nom_extendable"] = False
+    n.links.loc[links.index, "capital_cost"] = 0 # not actually needed, just for sanity :) 
+    return n
+
+
 def add_technology_capacity_target_constraints(
     n: pypsa.Network, data: pd.DataFrame, sample: pd.DataFrame
 ):
@@ -928,6 +963,7 @@ def prepare_network(
     noisy_costs: Optional[bool] = None,
     foresight: Optional[str] = None,
     no_coal_oil_investment: Optional[bool] = None,
+    no_economic_retirement: Optional[bool] = None,
     **kwargs,
 ):
     if clip_p_max_pu:
@@ -944,6 +980,9 @@ def prepare_network(
 
     if no_coal_oil_investment:
         n = add_no_coal_oil_investment_constraint(n)
+
+    if no_economic_retirement:
+        n = no_economic_retirement_constraint(n)
 
     return n
 
