@@ -1076,6 +1076,7 @@ if __name__ == "__main__":
         solver_name = snakemake.params.solver
         solver_opts = snakemake.params.solver_opts
         solving_opts = snakemake.params.solving_opts
+        model_opts = snakemake.params.model_opts
         solving_log = snakemake.log.solver
         out_network = snakemake.output.network
         pop_f = snakemake.input.pop_layout_f
@@ -1092,6 +1093,7 @@ if __name__ == "__main__":
         in_network = "results/caiso/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
+        model_opts = {}
         solving_log = ""
         out_network = ""
         pop_f = "results/caiso/constraints/pop_layout.csv"
@@ -1114,6 +1116,10 @@ if __name__ == "__main__":
 
     # for land use constraint
     solving_opts["foresight"] = "perfect"
+    
+    # different from pypsa-usa
+    solving_opts["no_economic_retirement"] = False if model_opts["economic_retirement"] else True
+    solving_opts["no_coal_oil_investment"] = False if model_opts["coal_oil_investment"] else True
 
     np.random.seed(solving_opts.get("seed", 123))
 
