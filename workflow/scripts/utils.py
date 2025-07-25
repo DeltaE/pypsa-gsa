@@ -195,7 +195,6 @@ def get_rps_eligible(
         return pd.DataFrame(), pd.DataFrame()
 
     carriers = [carrier.strip() for carrier in rps_carrier.split(",")]
-    carriers.append("load")
 
     # Filter region generators
     region_gens = n.generators[n.generators.bus.isin(region_buses.index)]
@@ -233,22 +232,75 @@ def get_rps_demand_gsa(
     return n.loads_t.p_set.loc[planning_horizon, load_buses.index].sum().sum()
 
 
-def get_rps_demand_actual(
-    n: pypsa.Network, planning_horizon: int, region_buses: pd.DataFrame
+def get_rps_demand_supplyside(
+    n: pypsa.Network,
+    planning_horizon: int,
+    region_buses: pd.DataFrame,
+    region_gens: pd.DataFrame,
+):
+    """LHS of constrint. Returns linopy sum.
+
+    Gets delievered end use demand. NOTE!! THIS HAS INTERACTIONS WITH THE IMPORT/EXPORT
+    """
+
+    gens_demand = get_rps_generation(n, planning_horizon, region_gens)
+
+    # power level buses
+    pwr_buses = n.buses[
+        (n.buses.carrier == "AC") & (n.buses.index.isin(region_buses.index))
+    ]
+
+    link_carriers = ("OCGT", "CCGT", "CCGT-95CCS", "coal", "oil", "waste", "other")
+
+    links = n.links[
+        (n.links.bus1.isin(pwr_buses.index)) & (n.links.carrier.isin(link_carriers))
+    ]
+
+    # multiply by efficiency to get delievered energy
+    links_demand = (
+        n.model["Link-p"]
+        .sel(period=planning_horizon, Link=links.index)
+        .mul(links.efficiency)
+        .sum()
+    )
+
+    return gens_demand + links_demand
+
+
+def get_rps_demand_demandside(
+    n: pypsa.Network,
+    planning_horizon: int,
+    region_buses: pd.DataFrame,
 ):
     """LHS of constrint. Returns linopy sum.
 
     This is the sum of outflowing electricity from power sector links.
     """
+
     # power level buses
     pwr_buses = n.buses[
         (n.buses.carrier == "AC") & (n.buses.index.isin(region_buses.index))
     ]
-    # links delievering power within the region; removes any transmission links
+
+    # links delievering power within the region
+    # removes transmission links, imports/exports, and demand response
     pwr_links = n.links[
-        (n.links.bus0.isin(pwr_buses.index)) & ~(n.links.bus1.isin(pwr_buses.index))
+        (n.links.bus0.isin(pwr_buses.index))
+        & ~(n.links.bus1.isin(pwr_buses.index))
+        & (n.links.carrier.str.startswith(("com", "res", "ind", "trn")))
     ]
-    region_demand = n.model["Link-p"].sel(period=planning_horizon, Link=pwr_links.index)
+
+    # if a link has a time varrying efficiency, approximate the efficiency as the average
+    effs = n.links_t["efficiency"].mean().round(3)  # for heat pumps
+    pwr_links.loc[effs.index, "efficiency"] = effs
+
+    # multiply by efficiency to get delievered energy
+    region_demand = (
+        n.model["Link-p"]
+        .sel(period=planning_horizon, Link=pwr_links.index)
+        .mul(pwr_links.efficiency)
+        .sum()
+    )
 
     return region_demand.sum()
 
