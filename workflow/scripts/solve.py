@@ -24,7 +24,6 @@ from utils import (
     get_urban_rural_fraction,
     configure_logging,
 )
-from constants import REC_TRADING_ZONE_MAPPER
 
 import logging
 
