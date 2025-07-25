@@ -24,7 +24,7 @@ from utils import (
     get_urban_rural_fraction,
     configure_logging,
 )
-
+from constants import REC_TRADING_ZONE_MAPPER
 
 import logging
 
@@ -404,38 +404,57 @@ def add_RPS_constraints(
 
     portfolio_standards = concat_rps_standards(n, rps)
 
-    # Iterate through constraints
-    for _, constraint_row in portfolio_standards.iterrows():
-        region_buses, region_gens = get_rps_eligible(
-            n, constraint_row.region, constraint_row.carrier
+    mapper = n.buses.groupby("reeds_state")["rec_trading_zone"].first().to_dict()
+    portfolio_standards["rec_trading_zone"] = portfolio_standards.region.map(
+        mapper
+    ).fillna(portfolio_standards.region)
+
+    for rec_trading_zone in portfolio_standards.rec_trading_zone.unique():
+        portfolio_standards_zone = portfolio_standards[
+            portfolio_standards.rec_trading_zone == rec_trading_zone
+        ]
+
+        demands = []  # linear expressions for each demand
+        generation = []  # linear expressions for each generation
+
+        for _, constraint_row in portfolio_standards_zone.iterrows():
+            region_buses, region_gens = get_rps_eligible(
+                n, constraint_row.region, constraint_row.carrier
+            )
+
+            if region_buses.empty:
+                continue
+
+            if not region_gens.empty:
+                region_demand = get_rps_demand_supplyside(
+                    n, constraint_row.planning_horizon, region_buses, region_gens
+                )
+                # region_demand = get_rps_demand_demandside(
+                #     n, constraint_row.planning_horizon, region_buses
+                # )
+
+                # pct is really a decimal value, not a percentage
+                demands.append(constraint_row.pct * region_demand * sample)
+
+                region_gen = get_rps_generation(
+                    n, constraint_row.planning_horizon, region_gens
+                )
+                generation.append(region_gen)
+
+        demand = sum(demands)
+        generation = sum(generation)
+
+        lhs = generation - demand
+        rhs = 0
+
+        # Add constraint
+        n.model.add_constraints(
+            lhs >= rhs,
+            name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
         )
-
-        if region_buses.empty:
-            continue
-
-        if not region_gens.empty:
-            region_demand = get_rps_demand_supplyside(
-                n, constraint_row.planning_horizon, region_buses, region_gens
-            )
-            # region_demand = get_rps_demand_demandside(
-            #     n, constraint_row.planning_horizon, region_buses
-            # )
-            region_gen = get_rps_generation(
-                n, constraint_row.planning_horizon, region_gens
-            )
-
-            # pct is really a decimal value, not a percentage
-            lhs = region_gen - constraint_row.pct * region_demand * sample
-            rhs = 0
-
-            # Add constraint
-            n.model.add_constraints(
-                lhs >= rhs,
-                name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
-            )
-            logger.info(
-                f"Added {constraint_row.region} {policy_name} for {constraint_row.planning_horizon}.",
-            )
+        logger.info(
+            f"Added {rec_trading_zone} {policy_name} for {constraint_row.planning_horizon}.",
+        )
 
 
 def add_sector_co2_constraints(
