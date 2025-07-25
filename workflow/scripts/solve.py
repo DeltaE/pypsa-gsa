@@ -14,7 +14,8 @@ from utils import (
     get_existing_lv,
     get_network_iso,
     get_region_buses,
-    get_rps_demand_actual,
+    get_rps_demand_supplyside,
+    get_rps_demand_demandside,
     get_rps_eligible,
     get_rps_generation,
     concat_rps_standards,
@@ -185,7 +186,9 @@ def no_economic_retirement_constraint(n):
         (n.links.index.str.endswith(" existing")) & (n.links.carrier.isin(pwr_cars))
     ]
     n.links.loc[links.index, "p_nom_extendable"] = False
-    n.links.loc[links.index, "capital_cost"] = 0 # not actually needed, just for sanity :) 
+    n.links.loc[links.index, "capital_cost"] = (
+        0  # not actually needed, just for sanity :)
+    )
     return n
 
 
@@ -391,6 +394,9 @@ def add_RPS_constraints(
 ):
     """
     Add Renewable Portfolio Standards constraint to the network.
+
+    This is applied at a **supply level**, not a demand level. Else we need to account for
+    imports/exports and sector links (ie. heatpumps, ect).
     """
 
     if rps.empty:
@@ -408,13 +414,17 @@ def add_RPS_constraints(
             continue
 
         if not region_gens.empty:
-            region_demand = get_rps_demand_actual(
-                n, constraint_row.planning_horizon, region_buses
+            region_demand = get_rps_demand_supplyside(
+                n, constraint_row.planning_horizon, region_buses, region_gens
             )
+            # region_demand = get_rps_demand_demandside(
+            #     n, constraint_row.planning_horizon, region_buses
+            # )
             region_gen = get_rps_generation(
                 n, constraint_row.planning_horizon, region_gens
             )
 
+            # pct is really a decimal value, not a percentage
             lhs = region_gen - constraint_row.pct * region_demand * sample
             rhs = 0
 
@@ -424,7 +434,7 @@ def add_RPS_constraints(
                 name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
             )
             logger.info(
-                f"Added RPS {constraint_row.region} for {constraint_row.planning_horizon}.",
+                f"Added {constraint_row.region} {policy_name} for {constraint_row.planning_horizon}.",
             )
 
 
@@ -742,6 +752,45 @@ def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
                 raise ValueError(f"Invalid flow direction for {to_iso} in {month}")
 
 
+def add_lolp_constraint(n):
+    """Adds a loss of load probability constraint.
+
+    This constraint restricts the amount of load shedding that can occur.
+    """
+
+    generators = n.generators[n.generators.carrier == "load"]
+
+    if generators.empty:
+        logger.warning(
+            "No load shedding generators found for loss of load probability constraint"
+        )
+        return
+
+    assert len(generators.bus.unique()) == len(generators), (
+        "Multiple generators at the same bus"
+    )
+
+    loads = n.loads[
+        n.loads.carrier.str.endswith("elec")
+    ]  # llop only to electrical loads
+
+    for generator in generators.index:
+        bus = n.generators.at[generator, "bus"]
+        loads_at_bus = loads[loads.country == bus].index
+        load = n.loads_t["p_set"].loc[:, loads_at_bus].sum().sum()
+
+        # LLOP of 0.1 day per year = 0.000274
+        # https://en.wikipedia.org/wiki/Loss_of_load
+        rhs = round(load * 0.000274, 6)
+
+        lhs = n.model["Generator-p"].loc[:, generator].sum()
+
+        n.model.add_constraints(
+            lhs <= rhs,
+            name=f"llop-{bus}",
+        )
+
+
 def add_transmission_limit(n, factor):
     """Set volume transmission limits expansion."""
 
@@ -950,6 +999,8 @@ def extra_functionality(n, sns):
         add_cooling_heat_pump_constraints(n)
     if "elec_trade" in opts:
         add_elec_trade_constraints(n, opts["elec_trade"]["flows"])
+    if "lolp" in opts:
+        add_lolp_constraint(n)
 
 
 ###
@@ -1093,7 +1144,10 @@ if __name__ == "__main__":
         in_network = "results/caiso/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
-        model_opts = {}
+        model_opts = {
+            "economic_retirement": False,
+            "coal_oil_investment": False,
+        }
         solving_log = ""
         out_network = ""
         pop_f = "results/caiso/constraints/pop_layout.csv"
@@ -1116,10 +1170,14 @@ if __name__ == "__main__":
 
     # for land use constraint
     solving_opts["foresight"] = "perfect"
-    
+
     # different from pypsa-usa
-    solving_opts["no_economic_retirement"] = False if model_opts["economic_retirement"] else True
-    solving_opts["no_coal_oil_investment"] = False if model_opts["coal_oil_investment"] else True
+    solving_opts["no_economic_retirement"] = (
+        False if model_opts["economic_retirement"] else True
+    )
+    solving_opts["no_coal_oil_investment"] = (
+        False if model_opts["coal_oil_investment"] else True
+    )
 
     np.random.seed(solving_opts.get("seed", 123))
 
@@ -1206,6 +1264,11 @@ if __name__ == "__main__":
     ###
     # CES generation target
     ###
+    """Dont include ces as it may not have enforcement mechanisms
+    https://eta-publications.lbl.gov/sites/default/files/lbnl_rps_ces_status_report_2024_edition.pdf
+    """
+
+    """
     extra_fn["ces"] = {}
     extra_fn["ces"]["data"] = pd.read_csv(ces_f)
     ces_sample = constraints[constraints.attribute == "ces"].round(5)
@@ -1216,6 +1279,7 @@ if __name__ == "__main__":
         raise ValueError("Too many samples for ces")
     else:
         extra_fn["ces"]["sample"] = 1
+    """
 
     ###
     # TCT Constraint
@@ -1272,6 +1336,11 @@ if __name__ == "__main__":
     # Heat Pump cooling constraint
     ###
     extra_fn["hp_cooling"] = True
+
+    ###
+    # Loss of Load Probability Constraint
+    ###
+    extra_fn["lolp"] = True
 
     n = solve_network(
         n,

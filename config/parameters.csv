@@ -325,14 +325,13 @@ oil_cost,oil_cost,Oil Fuel Cost,store_t,oil,marginal_cost,percent,percent,-40,66
 lpg_cost,lpg_cost,LPG Fuel Cost,store_t,lpg,marginal_cost,percent,percent,-28.5,59.6,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 nuclear_cost,nuclear_cost,Uranium Fuel Cost,generator,nuclear,marginal_cost,percent,percent,-0.3,0.3,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 demand_response,demand_response,Demand Response,store,demand_response,marginal_cost_storage,absolute,USD/mwh,123.8,144.2,https://www.eia.gov/outlooks/aeo/,min/max of 2030 electrical price to all consumers
-load_shedding,load_shedding,Load Shedding,generator,load,marginal_cost,absolute,USD/mwh,90666,825400,https://www.osti.gov/servlets/purl/1172643,Table ES-1. Min/max average of over all timr frames
+load_shedding,load_shedding,Load Shedding,generator,load,marginal_cost,absolute,USD/mwh,90666,825400,https://www.osti.gov/servlets/purl/1172643,Table ES-1. Min/max average of over all time frames
 transmission_expansion,transmission_expansion,Transmission Expansion,link,AC,lv,absolute,per_unit,0,0.064,https://www.nrel.gov/grid/national-transmission-planning-study.html,Growth from 2025 to 2030 in AC scenario (6.4%)
 transmission_itl,transmission_itl,Transmission Flows,link,AC,p_nom,percent,percent,-1,1,https://arxiv.org/abs/2308.03612,Assumed as no uncertainity given
 ev_policy_lgt_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-lgt,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_med_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-med,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_hvy_duty,ev_policy,EV Generation Limit,link,trn-elec-veh-hvy,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
 ev_policy_bus,ev_policy,EV Generation Limit,link,trn-elec-veh-bus,ev_policy,absolute,percent,0,10,https://www.nrel.gov/docs/fy18osti/71500.pdf,Assumed +/- on the high scenario case (Fig. 6.3) as no range given
-rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
-ces,ces,Clean Energy Standard,generator,portfolio,ces,absolute,per_unit,0.78,1.22,https://github.com/PyPSA/pypsa-usa/blob/master/workflow/repo_data/config/policy_constraints/reeds/rps_fraction.csv,Average of 2030 (+/- 22%)
+rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0,1,https://emp.lbl.gov/projects/renewables-portfolio/,Full Policy to no policy
 elec_trade_flow,elec_trade_flow,Electricity Trade Volume,link,portfolio,elec_trade,absolute,per_unit,0.95,1.05,https://catalystcoop-pudl.readthedocs.io/en/latest/data_sources/eia930.html,+/- 5% Assumed by looking at historical interchange data
 elec_import_price,elec_import_price,Electricity Import Price,link_t,imports,marginal_cost,percent,percent,-18,18,https://www.eia.gov/electricity/wholesale/#history,Average diviation from 2015-2024 annual weighted spot price
