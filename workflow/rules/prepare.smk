@@ -3,7 +3,7 @@ rule copy_network:
     input:
         n = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
-        n = temp("results/{scenario}/copy.nc")
+        n = "results/{scenario}/copy.nc"
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -11,6 +11,7 @@ rule copy_network:
         "prepare_data"
     benchmark:
         "benchmarks/copy_network/{scenario}.txt"
+    shadow: "minimal" # remove copy network after use
     shell:
         "cp {input.n} {output.n}"
 

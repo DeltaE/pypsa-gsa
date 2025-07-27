@@ -85,7 +85,10 @@ class CapitalCostCache:
         annuity = calculate_annuity(self.lifetime, self.discount_rate)
 
         assert self.vmt_per_year
-        capex = ((self.occ / self.vmt_per_year) + self.fixed_cost) * annuity
+        # convert from $ to $/kvmt
+        capex = (
+            (self.occ / (self.vmt_per_year * self.lifetime)) + self.fixed_cost
+        ) * annuity
 
         return round(capex, 5)
 
@@ -340,7 +343,8 @@ def _apply_cached_capex(
 ) -> dict[str, float]:
     try:
         cache = CapitalCostCache(**data)
-        capex = cache.calculate_capex()
+        transport = True if car.startswith("trn") else False
+        capex = cache.calculate_capex(transport=transport)
     except ValueError as ex:
         logger.error(f"Capital cost error with {car}")
         raise ValueError(ex)
@@ -827,21 +831,21 @@ if __name__ == "__main__":
         elec_trade_f = snakemake.input.elec_trade_f
         configure_logging(snakemake)
     else:
-        param_file = "results/caiso3/gsa/parameters.csv"
-        sample_file = "results/caiso3/gsa/sample.csv"
+        param_file = "results/caiso/gsa/parameters.csv"
+        sample_file = "results/caiso/gsa/sample.csv"
         set_values_file = ""
-        base_network_file = "results/caiso3/base.nc"
-        root_dir = Path("results/caiso3/gsa/modelruns/")
+        base_network_file = "results/caiso/base.nc"
+        root_dir = Path("results/caiso/gsa/modelruns/")
         meta_yaml = False
         meta_csv = True
-        scaled_sample_file = "results/caiso3/gsa/scaled_sample.csv"
-        pop_f = "results/caiso3/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/caiso3/constraints/ng_domestic.csv"
-        ng_international_f = "results/caiso3/constraints/ng_international.csv"
-        rps_f = "results/caiso3/constraints/rps.csv"
-        ces_f = "results/caiso3/constraints/ces.csv"
-        ev_policy_f = "results/caiso3/constraints/ev_policy.csv"
-        elec_trade_f = "results/caiso3/constraints/import_export_flows.csv"
+        scaled_sample_file = "results/caiso/gsa/scaled_sample.csv"
+        pop_f = "results/caiso/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"
+        ng_international_f = "results/caiso/constraints/ng_international.csv"
+        rps_f = "results/caiso/constraints/rps.csv"
+        ces_f = "results/caiso/constraints/ces.csv"
+        ev_policy_f = "results/caiso/constraints/ev_policy.csv"
+        elec_trade_f = "results/caiso/constraints/import_export_flows.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)

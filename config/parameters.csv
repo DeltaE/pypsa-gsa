@@ -102,8 +102,8 @@ eff_res_lpg_water_heater,eff_lpg_water_heater,Efficiency Service Oil Water Heate
 eff_com_elec_water_heater,eff_elec_water_heater,Efficiency Service Electric Water Heater,link,com-total-water-elec,efficiency,absolute,per_unit,0.95,0.99,https://www.eia.gov/analysis/studies/buildings/equipcosts/,pg 151. 
 eff_res_elec_water_heater,eff_elec_water_heater,Efficiency Service Electric Water Heater,link,res-total-water-elec,efficiency,absolute,per_unit,0.88,0.93,https://www.eia.gov/analysis/studies/buildings/equipcosts/,pg 62. UEF is assumed to be per-unit efficiency
 eff_trn_elec_lgt,eff_trn_elec,Efficiency Electric Vehicles,link,trn-elec-veh-lgt,efficiency,absolute,mpge,97,169,https://data.nrel.gov/submissions/93,Table 6. min/max of filtered on 2015-2035 and BEV200
-eff_trn_elec_med,eff_trn_elec,Efficiency Electric Vehicles,link,trn-elec-veh-med,efficiency,absolute,mpge,56.92,100.69,https://data.nrel.gov/submissions/93,Table 7. min/max of filtered on 2015-2035 and BEV200
-eff_trn_elec_hvy,eff_trn_elec,Efficiency Electric Vehicles,link,trn-elec-veh-hvy,efficiency,absolute,mpge,9.93,15.7,https://data.nrel.gov/submissions/93,Table 10. min/max of filtered on 2017-2040 and Medium Range
+eff_trn_elec_med,eff_trn_elec,Efficiency Electric Vehicles,link,trn-elec-veh-med,efficiency,absolute,mpge,16.17,23.8,https://data.nrel.gov/submissions/93,Table 10. min/max of filtered on 2017-2040 and Medium Range
+eff_trn_elec_hvy,eff_trn_elec,Efficiency Electric Vehicles,link,trn-elec-veh-hvy,efficiency,absolute,mpge,5.33,7.6,https://data.nrel.gov/submissions/93,Table 10. min/max of filtered on 2017-2040 and Heavy Range
 eff_trn_elec_bus,eff_trn_elec,Efficiency Electric Vehicles,link,trn-elec-veh-bus,efficiency,absolute,mpge,16.05,21.44,https://data.nrel.gov/submissions/93,Table 12. min/max of filtered on 2016-2035 and BEV
 eff_trn_lpg_lgt,eff_trn_lpg,Efficiency Lpg Vehicles,link,trn-lpg-veh-lgt,efficiency,absolute,mpge,25.9,49.42,https://data.nrel.gov/submissions/93,Table 6. min/max of filtered on 2015-2035 and ICEV
 eff_trn_lpg_med,eff_trn_lpg,Efficiency Lpg Vehicles,link,trn-lpg-veh-med,efficiency,absolute,mpge,16.35,39.19,https://data.nrel.gov/submissions/93,Table 7. min/max of filtered on 2015-2035 and ICEV
@@ -137,7 +137,7 @@ capex_geothermal,capex_pwr_geo,CAPEX Geothermal,generator,geothermal,occ,absolut
 fom_geothermal,fom_pwr_geo,FOM Geothermal,generator,geothermal,fixed_cost,absolute,USD/kw,111.5,121.2,https://atb.nrel.gov/,Geothermal-HydroFlash. Min/max of 2022 to 2035.
 wacc_geothermal,wacc_pwr_geo,Discount Rate Geothermal,generator,geothermal,discount_rate,absolute,percent,4.48,5.15,https://atb.nrel.gov/,Geothermal. Min/max of 2022 to 2035.
 lifetime_geothermal,lifetime_pwr_geo,Lifetime Geothermal,generator,geothermal,lifetime,absolute,years,20,30,https://atb.nrel.gov/electricity/2024/definitions,Technical lifetimes from ATB and REeDS
-eff_geothermal,eff_pwr_geo,Efficiency Geothermal,generator,geothermal,efficiency,absolute,percent,95.7,98.7,https://www.sciencedirect.com/science/article/pii/S0375650513001120,Table 1
+eff_geothermal,eff_pwr_geo,Efficiency Geothermal,generator,geothermal,efficiency,absolute,per_unit,0.12,0.21,https://www.sciencedirect.com/science/article/pii/S0375650513001120,Avergage of 12 up to max of 21
 capfac_geothermal,capfac_pwr_geo,Capacity Factor Geothermal,generator,geothermal,p_max_pu,absolute,per_unit,0.9,1,https://www.nrel.gov/docs/fy11osti/48595.pdf ,Table 8. AEO
 capex_waste,capex_pwr_fossil,CAPEX Fossil Power,generator,waste,occ,absolute,USD/kw,2866,3201,https://atb.nrel.gov/electricity/2024/definitions,Assumed same as Coal
 fom_waste,fom_pwr_fossil,FOM Fossil Power,generator,waste,fixed_cost,absolute,USD/kw,78.7,86.5,https://atb.nrel.gov/electricity/2024/definitions,Assumed same as coal
