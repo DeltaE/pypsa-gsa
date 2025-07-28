@@ -15,7 +15,6 @@ from components.utils import (
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
     get_plotly_plotting_themes,
-    get_ua_results_dropdown_options,
 )
 import components.ids as ids
 from components.gsa import (
@@ -80,7 +79,6 @@ ISO_SHAPE = gpd.read_file("data/iso.geojson")
 root = Path(__file__).parent
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(root)
-UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
 
 ########
 # layout
