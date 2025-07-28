@@ -373,7 +373,6 @@ def get_ua_scatter_plot(
         scatter_fig.update_traces(marker_symbol="x")
 
         for trace in scatter_fig.data:
-            print(trace)
             trace.yaxis = "y2"
             fig.add_trace(trace)
 
@@ -411,6 +410,10 @@ def get_ua_barchart(
     result_type = kwargs.get("result_type", None)
     ylabel = get_y_label(df_melted, result_type)
 
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
+
     # Calculate mean and std for each result category
     stats_df = (
         df_melted.groupby("result")
@@ -436,6 +439,46 @@ def get_ua_barchart(
         xaxis=dict(tickangle=45),
         template=color_theme,
     )
+
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        stats_df_stores = (
+            df_stores.groupby("result")
+            .agg(value=("value", "mean"), std=("value", "std"))
+            .reset_index()
+        )
+
+        bar_fig = px.bar(
+            stats_df_stores,
+            x="result",
+            y="value",
+            error_y="std",
+            labels=dict(result="", value=y_label_store),
+            opacity=DEFAULT_OPACITY,
+        )
+
+        # vertical line to separate MWh from MW data
+        fig.add_vline(
+            x=len(stats_df) - 0.5,  # Position before the stores data
+            line_dash="solid",
+            line_color="black",
+            line_width=2,
+            opacity=0.8,
+        )
+
+        for trace in bar_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
     return fig
 
@@ -565,6 +608,10 @@ def get_ua_violin_plot(
     result_type = kwargs.get("result_type", None)
     ylabel = get_y_label(df_melted, result_type)
 
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
+
     fig = px.violin(
         df_melted,
         x="result",
@@ -581,6 +628,39 @@ def get_ua_violin_plot(
         legend=DEFAULT_LEGEND,
         template=color_theme,
     )
+
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        violin_fig = px.violin(
+            df_stores,
+            x="result",
+            y="value",
+            labels=dict(result="", value=y_label_store),
+        )
+
+        # vertical line to separate MWh from MW data
+        fig.add_vline(
+            x=len(df_melted["result"].unique())
+            - 0.5,  # Position before the stores data
+            line_dash="solid",
+            line_color="black",
+            line_width=2,
+            opacity=0.8,
+        )
+
+        for trace in violin_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
     return fig
 
@@ -605,6 +685,10 @@ def get_ua_box_whisker(
     result_type = kwargs.get("result_type", None)
     ylabel = get_y_label(df_melted, result_type)
 
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
+
     fig = px.box(
         df_melted,
         x="result",
@@ -620,5 +704,38 @@ def get_ua_box_whisker(
         xaxis=dict(tickangle=45),
         template=color_theme,
     )
+
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        box_fig = px.box(
+            df_stores,
+            x="result",
+            y="value",
+            labels=dict(result="", value=y_label_store),
+        )
+
+        # vertical line to separate MWh from MW data
+        fig.add_vline(
+            x=len(df_melted["result"].unique())
+            - 0.5,  # Position before the stores data
+            line_dash="solid",
+            line_color="black",
+            line_width=2,
+            opacity=0.8,
+        )
+
+        for trace in box_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
     return fig
