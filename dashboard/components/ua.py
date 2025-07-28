@@ -528,35 +528,46 @@ def get_ua_histogram(
         fig.update_layout(
             yaxis=dict(title="Count"),
             yaxis2=dict(
-                title="Probability Density",
+                # title="Probability Density",
                 overlaying="y",
                 side="right",
                 showgrid=False,
+                showticklabels=False,
             ),
         )
 
         # Add PDF overlay
-        kde = gaussian_kde(result_data["value"].dropna())
-        x_range = np.linspace(
-            result_data["value"].min(), result_data["value"].max(), 100
-        )
-        y_range = kde(x_range)
+        values = result_data["value"].dropna()
 
-        # Verify that the KDE integrates to approximately 1
-        dx = x_range[1] - x_range[0]
-        area = np.sum(y_range * dx)
-        logger.debug(f"KDE area under curve with dx={dx} is: {area:.6f}")
+        # Check if we have enough data and variance for KDE
+        # this will not be the case if all values are the same for all model runs
+        if len(values) > 1 and values.var() > 1e-10:
+            try:
+                kde = gaussian_kde(values)
+                x_range = np.linspace(
+                    result_data["value"].min(), result_data["value"].max(), 100
+                )
+                y_range = kde(x_range)
 
-        fig.add_trace(
-            go.Scatter(
-                x=x_range,
-                y=y_range,
-                name="PDF",
-                line=dict(width=2),
-                showlegend=True,
-                yaxis="y2",
-            )
-        )
+                # Verify that the KDE integrates to approximately 1
+                dx = x_range[1] - x_range[0]
+                area = np.sum(y_range * dx)
+                logger.debug(f"KDE area under curve with dx={dx} is: {area:.6f}")
+
+                fig.add_trace(
+                    go.Scatter(
+                        x=x_range,
+                        y=y_range,
+                        name="PDF",
+                        line=dict(width=2),
+                        showlegend=True,
+                        yaxis="y2",
+                    )
+                )
+            except (np.linalg.LinAlgError, ValueError) as e:
+                logger.warning(f"Could not compute KDE for {result_type}: {e}")
+        else:
+            logger.debug(f"Insufficient variance in data for KDE in {result_type}")
 
         fig.update_layout(
             height=fig_height,
