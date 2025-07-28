@@ -72,10 +72,10 @@ air_con_capacity,Air Conditioner,links,res-total-air-con;com-total-air-con,p_nom
 air_con_capacity_new,Air Conditioner,links,res-total-air-con;com-total-air-con,p_nom_new,MW,service_new
 gas_water_heater_capacity,Gas Water Heater,stores,res-total-water-gas;com-total-water-gas,e_nom_opt,MWh,service_opt
 gas_water_heater_capacity_new,Gas Water Heater,stores,res-total-water-gas;com-total-water-gas,e_nom_opt,MWh,service_new
-oil_water_heater_capacity,Gas Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_opt
-oil_water_heater_capacity_new,Gas Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_new
-elec_water_heater_capacity,Gas Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_opt
-elec_water_heater_capacity_new,Gas Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_new
+oil_water_heater_capacity,Oil Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_opt
+oil_water_heater_capacity_new,Oil Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_new
+elec_water_heater_capacity,Electric Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_opt
+elec_water_heater_capacity_new,Electric Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_new
 hp_generation,Heat Pump,links_t,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p1,MWh,srvice_gen
 ashp_generation,Air Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p1,MWh,srvice_gen
 gshp_generation,Ground Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p1,MWh,srvice_gen
@@ -84,8 +84,8 @@ elec_furnace_generation,Electric Furnace,links_t,res-total-space-elec-furnace;co
 oil_furnace_generation,Oil Furnace,links_t,res-total-space-oil-furnace;com-total-space-oil-furnace,p1,MWh,srvice_gen
 air_con_generation,Air Conditioner,links_t,res-total-air-con;com-total-air-con,p1,MWh,srvice_gen
 gas_water_heater_generation,Gas Water Heater,links_t,res-total-water-gas;com-total-water-gas,p1,MWh,service_gen
-oil_water_heater_generation,Gas Water Heater,links_t,res-total-water-oil;com-total-water-oil,p1,MWh,service_gen
-elec_water_heater_generation,Gas Water Heater,links_t,res-total-water-elec;com-total-water-elec,p1,MWh,service_gen
+oil_water_heater_generation,Oil Water Heater,links_t,res-total-water-oil;com-total-water-oil,p1,MWh,service_gen
+elec_water_heater_generation,Electric Water Heater,links_t,res-total-water-elec;com-total-water-elec,p1,MWh,service_gen
 ev_lgt_capacity,Light Duty EV,links,trn-elec-veh-lgt,p_nom_opt,kVMT,trn_opt
 ev_lgt_capacity_new,Light Duty EV,links,trn-elec-veh-lgt,p_nom_new,kVMT,trn_new
 lpg_lgt_capacity,Light Duty LPG,links,trn-lpg-veh-lgt,p_nom_opt,kVMT,trn_opt
