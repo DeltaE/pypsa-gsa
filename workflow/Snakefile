@@ -1,6 +1,7 @@
 import pandas as pd
 from itertools import chain
 import sys
+import os
 from pathlib import Path
 
 configfile: "config/config.yaml"
@@ -22,6 +23,45 @@ onstart:
         raise FileNotFoundError(f"Parameters file not found: {gen_params}")
     else:
         print(f"Parameters file found: {gen_params}")
+
+# manually cleanup temporary networks
+# see the following issues on why temp() doesnt work with checkpoints
+# https://github.com/snakemake/snakemake/issues/2982
+onsuccess:
+
+    # copy network for circular dependency issue
+    copy_nc = Path("results", SCENARIO, "copy.nc")
+    if copy_nc.exists():    
+        shell(f"rm {copy_nc}")
+
+    # networks to remove 
+    networks = ["n"]
+    if not config["metadata"]["networks"]:
+        networks.append("network")
+
+    # pre-solve GSA networks
+    gsa_networks = Path("results", SCENARIO, "gsa", "modelruns")
+    if gsa_networks.exists():
+        for run in gsa_networks.iterdir():
+            for network in networks:
+                n = Path(run, f"{network}.nc")
+                # try/except faster than checking if file exists
+                try:
+                    os.remove(n)
+                except FileNotFoundError:
+                    pass
+        
+    # pre-solve UA networks
+    ua_networks = Path("results", SCENARIO, "ua", "modelruns")
+    if ua_networks.exists():
+        for run in ua_networks.iterdir():
+            for network in networks:
+                n = Path(run, f"{network}.nc")
+                # try/except faster than checking if file exists
+                try:
+                    os.remove(n)
+                except FileNotFoundError:
+                    pass
 
 ###
 # GSA specific parameters

@@ -187,7 +187,7 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             return "Natural Gas"
         elif carrier == "AC":
             return "Transmission"
-        elif carrier == "co2":
+        elif carrier in ["co2", "ch4"]:
             return "Carbon"
         elif carrier.startswith("leakage_"):
             return "Carbon"
@@ -224,7 +224,7 @@ def assign_parameter_nice_names(root: Path, params: pd.DataFrame) -> pd.DataFram
     For plotting, we want to show costs of tech seperate seperate, but nice_names
     groups them together for Morris. So this needs to be manually provided.
     """
-    nice_names_f = Path(root, "dashboard", "data", "locked", "parameter_nice_names.csv")
+    nice_names_f = Path(root, "dashboard", "data", "locked", "nice_names.csv")
     nice_names = pd.read_csv(nice_names_f).set_index("name").to_dict()["nice_name"]
 
     params["group_nice_name"] = params.nice_name

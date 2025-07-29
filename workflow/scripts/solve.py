@@ -110,8 +110,8 @@ def add_land_use_constraint_perfect(n):
             > p_nom_max.groupby(level=[0, 1]).min()
         )
         if check.sum():
-            logger.debug(
-                f"summed p_min_pu values at node larger than technical potential {check[check].index}",
+            raise ValueError(
+                f"p_min_pu values at node larger than technical potential {check[check].index}"
             )
 
     grouper = [n.generators.carrier, n.generators.bus]

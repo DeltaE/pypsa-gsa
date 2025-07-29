@@ -3,7 +3,7 @@ rule copy_network:
     input:
         n = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
-        n = "results/{scenario}/copy.nc"
+        n = temp("results/{scenario}/copy.nc")
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -11,7 +11,6 @@ rule copy_network:
         "prepare_data"
     benchmark:
         "benchmarks/copy_network/{scenario}.txt"
-    shadow: "minimal" # remove copy network after use
     shell:
         "cp {input.n} {output.n}"
 
@@ -212,7 +211,7 @@ rule process_interchange_data:
 rule add_import_export_to_network:
     message: "Adding import/export to network"
     input:
-        network = "results/{scenario}/copy.nc", # base network will include imports/exports
+        network = "results/{scenario}/copy.nc", # use copy to avoid cyclic dependency
         capacities_f = "results/{scenario}/constraints/import_export_capacity.csv",
         elec_costs_f = "results/{scenario}/constraints/import_export_costs.csv"
     output:

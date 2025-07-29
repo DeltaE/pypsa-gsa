@@ -51,7 +51,7 @@ def _default_gsa_results_value() -> list[str]:
     defaults = [
         x["value"]
         for x in GSA_RESULT_OPTIONS
-        if any(y in x["value"] for y in ["_energy_", "_carbon"])
+        if any(y in x["value"] for y in ["_energy_", "carbon_"])
     ]
     if not defaults:
         return GSA_RESULT_OPTIONS[0]["value"]

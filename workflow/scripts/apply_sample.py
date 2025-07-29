@@ -501,6 +501,24 @@ def _get_ev_generation_limit(
     return dem.loc[investment_period].sum().sum() * ratio / eff
 
 
+def _get_landuse_limit(n: pypsa.Network) -> float:
+    """Gets landuse limit."""
+    return float(
+        n.generators[
+            n.generators.carrier.isin(["solar", "onwind", "offwind_floating"])
+            & ~n.generators.index.str.contains("existing")
+        ].p_nom_max.sum()
+    )
+    
+def apply_land_use_limit(n: pypsa.Network, sample: float) -> None:
+    """Applies land use limit to the network."""
+    gens = n.generators[
+        n.generators.carrier.isin(["solar", "onwind", "offwind_floating"])
+        & ~n.generators.index.str.contains("existing")
+    ].index
+    n.generators.loc[gens, "p_nom_max"] *= sample
+
+
 def _get_constraint_sample(
     n: pypsa.Network, c: str, car: str, attr: str, sample: float, **kwargs
 ) -> tuple[dict[str, float], dict[str, float]]:
@@ -581,6 +599,13 @@ def _get_constraint_sample(
         if elec_trade.empty:
             raise ValueError("No elec trade data provided.")
         ref = _get_elec_trade_limit(n, elec_trade)
+        scaled = ref * sample
+    elif attr == "landuse":
+        landuse = kwargs.get("landuse", pd.DataFrame())
+        if landuse.empty:
+            raise ValueError("No landuse data provided.")
+        ref = _get_landuse_limit(n, landuse)
+        apply_land_use_limit(n, sample) # this only modifies the p_nom_max
         scaled = ref * sample
     else:
         raise ValueError(f"Bad control flow for get_constraint_sample: {attr}")
@@ -754,63 +779,6 @@ def apply_load_shedding(n: pypsa.Network) -> None:
         p_nom_extendable=True,
     )
 
-    ###
-    # This applies at LPG transport level
-    ###
-
-    # buses1 = n.links[
-    #     (n.links.carrier.str.startswith("trn-"))
-    #     & (n.links.carrier.str.endswith("-veh"))
-    #     & (n.links.carrier.str.contains("-lpg-"))
-    # ].bus1.to_list()
-
-    # buses2 = n.links[
-    #     (n.links.carrier.str.startswith("trn-"))
-    #     & (n.links.carrier.str.endswith(("-air", "-rail", "-boat")))
-    # ].bus1.to_list()
-
-    # buses_i = buses1 + buses2
-
-    # n.madd(
-    #     "Generator",
-    #     buses_i,
-    #     " load",
-    #     bus=buses_i,
-    #     carrier="load",
-    #     marginal_cost=shed_cost,
-    #     p_nom=0,
-    #     capital_cost=0,
-    #     p_nom_extendable=True,
-    # )
-
-
-def apply_carbon_shedding(n: pypsa.Network, value: float = 999999) -> None:
-    """Marginal Abatement Cost Curves
-
-    (Table 10.9)
-    https://www.ipcc.ch/site/assets/uploads/2018/03/Chapter-10-Mitigation-Potential-and-Costs-1.pdf
-    """
-
-    # CARRIER CAN NOT END WITH '-co2' AS EMISSION LIMIT CONSTRAINT FILTERS BY THIS
-    n.add("Carrier", "co2_shed", color="#dd2e23", nice_name="CO2 shedding")
-
-    # Upper bound estimate from table 10.9 for 2030 USA
-    shed_cost = 100  # $ / T CO2eq
-
-    buses_i = n.buses[n.buses.carrier == "co2"].index
-
-    n.madd(
-        "Store",
-        buses_i,
-        " co2_shed",
-        bus=buses_i,
-        carrier="co2_shed",
-        marginal_cost=shed_cost,
-        e_nom=0,  # T
-        capital_cost=0,
-        e_nom_extendable=True,
-    )
-
 
 if __name__ == "__main__":
     if "snakemake" in globals():
@@ -852,7 +820,6 @@ if __name__ == "__main__":
     base_n = pypsa.Network(base_network_file)
 
     apply_load_shedding(base_n)
-    # apply_carbon_shedding(base_n) # same same as load shedding w/ different cost
 
     # check carrier here as it requires reading in network
     assert is_valid_carrier(base_n, params)

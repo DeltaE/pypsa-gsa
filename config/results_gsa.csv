@@ -18,4 +18,6 @@ marginal_cost_energy_trn,Transport Energy Cost,buses_t,trn-elec-veh;trn-lpg-veh,
 marginal_cost_elec,System Electricity Cost,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,system_marginal_price;electric_marginal_price;summary,$/MWh
 marginal_cost_energy,System Energy Cost,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,system_marginal_price;energy_marginal_price;summary,$/MWh
 load_shedding,Load Shedding Capacpity,generator,load,p_nom_opt,load_shed,MW
-carbon,Total Carbon Emissions,store,co2,e_nom_opt,carbon,T
+carbon_co2,Emissions (CO2),store,co2,e_nom_opt,carbon,T
+carbon_ch4,Emissions (CH4 as CO2e),store,ch4,e_nom_opt,carbon,T
+carbon_total,Emissions Total (CO2 + CH4 as CO2e),store,co2;ch4,e_nom_opt,carbon,T

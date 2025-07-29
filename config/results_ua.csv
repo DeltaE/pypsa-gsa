@@ -21,6 +21,10 @@ carbon,Carbon Emissions,store,co2,e_nom_opt,tCO2,
 load_shedding,Load Shedding,generators,load,p_nom_opt,MW,
 solar_capacity,Solar,generators,solar,p_nom_opt,MW,pwr_opt
 solar_capacity_new,Solar,generators,solar,p_nom_new,MW,pwr_new
+onwind_capacity,Onshore Wind,generators,onwind,p_nom_opt,MW,pwr_opt
+onwind_capacity_new,Onshore Wind,generators,onwind,p_nom_new,MW,pwr_new
+offwind_capacity,Offshore Wind,generators,offwind_floating,p_nom_opt,MW,pwr_opt
+offwind_capacity_new,Offshore Wind,generators,offwind_floating,p_nom_new,MW,pwr_new
 wind_capacity,Wind,generators,onwind;offwind_floating,p_nom_opt,MW,pwr_opt
 wind_capacity_new,Wind,generators,onwind;offwind_floating,p_nom_new,MW,pwr_new
 gas_capacity,Gas,links,OCGT;CCGT;CCGT-95CCS,p_nom_opt,MW,pwr_opt
@@ -44,6 +48,8 @@ geothermal_capacity_new,Geothermal,generators,geothermal,p_nom_new,MW,pwr_new
 vre_capacity,VRE,generators,solar;onwind;offwind_floating,p_nom_opt,MW,
 vre_capacity_new,VRE,generators,solar;onwind;offwind_floating,p_nom_new,MW,
 solar_generation,Solar,generators_t,solar,p,MWh,pwr_gen
+onwind_generation,Onshore Wind,generators_t,onwind,p,MWh,pwr_gen
+offwind_generation,Offshore Wind,generators_t,offwind_floating,p,MWh,pwr_gen
 wind_generation,Wind,generators_t,onwind;offwind_floating,p,MWh,pwr_gen
 gas_generation,Gas,links_t,OCGT;CCGT;CCGT-95CCS,p1,MWh,pwr_gen
 ocgt_generation,OCGT,links,OCGT,p1,MW,pwr_gen
