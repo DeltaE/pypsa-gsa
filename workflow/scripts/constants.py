@@ -72,7 +72,16 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "gwp",
         "elec_trade",  # constraint
     ],
-    "generators": ["tct", "discount_rate", "fixed_cost", "occ", "itc", "rps", "ces"],
+    "generators": [
+        "tct",
+        "discount_rate",
+        "fixed_cost",
+        "occ",
+        "itc",
+        "rps",
+        "ces",
+        "landuse",
+    ],
     "stores": ["co2L"],
     "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
     "lines": [],
