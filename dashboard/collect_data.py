@@ -187,7 +187,7 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             return "Natural Gas"
         elif carrier == "AC":
             return "Transmission"
-        elif carrier == "co2":
+        elif carrier in ["co2", "ch4"]:
             return "Carbon"
         elif carrier.startswith("leakage_"):
             return "Carbon"
