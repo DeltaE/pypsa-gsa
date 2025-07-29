@@ -10,6 +10,7 @@ from .utils import (
     DEFAULT_PLOTLY_THEME,
     get_ua_params_dropdown_options,
     get_ua_results_dropdown_options,
+    get_ua_sectors_dropdown_options,
 )
 from . import ids as ids
 from .utils import _unflatten_dropdown_options
@@ -27,9 +28,11 @@ root = Path(__file__).parent.parent
 
 UA_PARM_OPTIONS = get_ua_params_dropdown_options(root)
 UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
+UA_SECTOR_OPTIONS = get_ua_sectors_dropdown_options(root)
 
 SECTOR_DROPDOWN_OPTIONS = [
     {"label": "All", "value": "all"},
+    {"label": "System", "value": "system"},
     {"label": "Power", "value": "power"},
     {"label": "Industry", "value": "industry"},
     {"label": "Service", "value": "service"},
@@ -60,13 +63,42 @@ DEFAULT_OPACITY = 0.7
 DEFAULT_Y_LABEL = {
     "costs": "Cost ($)",
     "marginal_costs": "Marginal Costs ($/MWh)",
-    "emissions": "Emissions (MtCO2)",
-    "new_capacity": "New Capacity (GW)",
-    "total_capacity": "Total Capacity (GW)",
+    "emissions": "Emissions (TCO2e)",
+    "new_capacity": "New Capacity (MW)",
+    "total_capacity": "Total Capacity (MW)",
     "new_capacity_trn": "New Capacity (kVMT)",
     "total_capacity_trn": "Total Capacity (kVMT)",
     "generation": "Generation (MWh)",
+    "generation_trn": "Generation (kVMT)",
 }
+
+
+def get_y_label(df: str, result_type: str) -> str:
+    """Get y label for UA scatter plot.
+
+    This is SUUUUUUUPER hacky, but I dont have access the know what sector
+    the data is in. And this just needs to get done! :|
+    """
+    results = df.result.unique()
+
+    try:
+        # transport sector
+        if any([x.endswith(" EV") for x in results]):
+            return DEFAULT_Y_LABEL[result_type + "_trn"]
+        else:
+            return DEFAULT_Y_LABEL[result_type]
+    except KeyError:
+        return "Value"
+
+
+def get_stores_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Extracts out stores that will have different units.
+
+    This is ALSO SUUUUUUUPER hacky, but this just NEEDS to get done! :|
+    """
+    return df[
+        (df.result.str.contains("Water Heater")) | (df.result.str.contains("Battery"))
+    ]
 
 
 def ua_options_block() -> html.Div:
@@ -135,64 +167,45 @@ def ua_percentile_interval_slider() -> html.Div:
 def _filter_ua_on_result_sector(df: pd.DataFrame, result_sector: str) -> pd.DataFrame:
     """Filter UA data on result sector."""
 
+    sector_mapper = UA_SECTOR_OPTIONS.copy()
+    sector = result_sector.capitalize()
+
     if result_sector == "all":
         return df
-    if result_sector == "power":
-        valid_cars = [
-            "coal",
-            "nuclear",
-            "hydro",
-            "wind",
-            "solar",
-            "ocgt",
-            "ccgt",
-            "ccgt95ccs",
-            "other",
-            "geothermal",
-            "other",
-        ]
-    elif result_sector == "industry":
-        valid_cars = []
-    elif result_sector == "service":
-        valid_cars = [
-            "ashp",
-            "gshp",
-            "gas_furnace",
-            "elec_furnace",
-            "oil_furnace",
-            "air_con",
-        ]
-    elif result_sector == "transport":
-        valid_cars = ["lgt", "med", "hvy", "bus"]
-    else:
-        logger.error(f"No filter applied for result sector: {result_sector}")
-        return df
 
-    print(df.columns)
+    assert sector in ["System", "Power", "Industry", "Service", "Transport"], (
+        f"Invalid sector: {result_sector}"
+    )
 
-    cols = ["run", "iso"]
-    for x in valid_cars:
-        for col in df:
-            if col.startswith(x):
-                cols.append(col)
-    print(cols)
-    return df[cols]
+    results = ["run", "iso"]
+    for result in sector_mapper:
+        if result["label"] == sector:
+            results.append(result["value"])
+    # results = [x["value"] for x in sector_mapper if x["label"] == sector]
+    try:
+        return df[results]
+    except KeyError:
+        cols = [x for x in results if x in df]
+        missing_cols = [x for x in results if x not in cols]
+        logger.error(f"No data of {missing_cols} for {sector}")
+        return df[cols]
 
 
 def _filter_ua_on_result_type(df: pd.DataFrame, result_type: str) -> pd.DataFrame:
     """Filter UA data on result type."""
+
     if result_type == "costs":
         cols = [x for x in df.columns if "objective_" in x]
     elif result_type == "marginal_costs":
         cols = [x for x in df.columns if "marginal_cost_" in x]
     elif result_type == "emissions":
-        cols = [x for x in df.columns if any(gas in x for gas in ["co2", "ch4"])]
+        cols = [x for x in df.columns if any(gas in x for gas in ["carbon"])]
     elif result_type == "new_capacity":
         cols = [x for x in df.columns if x.endswith("_capacity_new")]
     elif result_type == "total_capacity":
         cols = [x for x in df.columns if x.endswith("_capacity")]
     elif result_type == "generation":
-        cols = [x for x in df.columns if x.endswith("_generation")]
+        cols = [x for x in df.columns if x.endswith(("_generation", "_gen"))]
     else:
         cols = []
 
@@ -276,8 +289,6 @@ def get_ua_data_table(
 
     df = _read_serialized_ua_data(data)
 
-    logger.debug(f"UA data table: {df}")
-
     if nice_names:
         df = _apply_nice_names(df)
 
@@ -320,8 +331,12 @@ def get_ua_scatter_plot(
     df_melted = df_melted.dropna(subset=["value"])
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
-    ylabel = kwargs.get("result_type", None)
-    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
+    result_type = kwargs.get("result_type", None)
+    ylabel = get_y_label(df_melted, result_type)
+
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
 
     fig = px.scatter(
         df_melted,
@@ -340,6 +355,35 @@ def get_ua_scatter_plot(
         legend=DEFAULT_LEGEND,
         template=color_theme,
     )
+
+    # SUUUUPER hacky way to account for stores being in different units
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        scatter_fig = px.scatter(
+            df_stores,
+            x="run",
+            y="value",
+            color="result",
+            labels=dict(run="Run Number", value=y_label_store, result="Result Type"),
+            color_discrete_sequence=px.colors.qualitative.Set2,
+        )
+
+        # so the stores are clearly different
+        scatter_fig.update_traces(marker_symbol="x")
+
+        for trace in scatter_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
     return fig
 
@@ -363,8 +407,12 @@ def get_ua_barchart(
     df_melted = df_melted.dropna(subset=["value"])
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
-    ylabel = kwargs.get("result_type", None)
-    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
+    result_type = kwargs.get("result_type", None)
+    ylabel = get_y_label(df_melted, result_type)
+
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
 
     # Calculate mean and std for each result category
     stats_df = (
@@ -392,6 +440,46 @@ def get_ua_barchart(
         template=color_theme,
     )
 
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        stats_df_stores = (
+            df_stores.groupby("result")
+            .agg(value=("value", "mean"), std=("value", "std"))
+            .reset_index()
+        )
+
+        bar_fig = px.bar(
+            stats_df_stores,
+            x="result",
+            y="value",
+            error_y="std",
+            labels=dict(result="", value=y_label_store),
+            opacity=DEFAULT_OPACITY,
+        )
+
+        # vertical line to separate MWh from MW data
+        fig.add_vline(
+            x=len(stats_df) - 0.5,  # Position before the stores data
+            line_dash="solid",
+            line_color="black",
+            line_width=2,
+            opacity=0.8,
+        )
+
+        for trace in bar_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
+
     return fig
 
 
@@ -415,7 +503,6 @@ def get_ua_histogram(
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
     ylabel = kwargs.get("result_type", None)
-    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
 
     result_types = df_melted["result"].unique()
     logger.debug(f"Historgram result types: {result_types}")
@@ -441,35 +528,46 @@ def get_ua_histogram(
         fig.update_layout(
             yaxis=dict(title="Count"),
             yaxis2=dict(
-                title="Probability Density",
+                # title="Probability Density",
                 overlaying="y",
                 side="right",
                 showgrid=False,
+                showticklabels=False,
             ),
         )
 
         # Add PDF overlay
-        kde = gaussian_kde(result_data["value"].dropna())
-        x_range = np.linspace(
-            result_data["value"].min(), result_data["value"].max(), 100
-        )
-        y_range = kde(x_range)
+        values = result_data["value"].dropna()
 
-        # Verify that the KDE integrates to approximately 1
-        dx = x_range[1] - x_range[0]
-        area = np.sum(y_range * dx)
-        logger.debug(f"KDE area under curve with dx={dx} is: {area:.6f}")
+        # Check if we have enough data and variance for KDE
+        # this will not be the case if all values are the same for all model runs
+        if len(values) > 1 and values.var() > 1e-10:
+            try:
+                kde = gaussian_kde(values)
+                x_range = np.linspace(
+                    result_data["value"].min(), result_data["value"].max(), 100
+                )
+                y_range = kde(x_range)
 
-        fig.add_trace(
-            go.Scatter(
-                x=x_range,
-                y=y_range,
-                name="PDF",
-                line=dict(width=2),
-                showlegend=True,
-                yaxis="y2",
-            )
-        )
+                # Verify that the KDE integrates to approximately 1
+                dx = x_range[1] - x_range[0]
+                area = np.sum(y_range * dx)
+                logger.debug(f"KDE area under curve with dx={dx} is: {area:.6f}")
+
+                fig.add_trace(
+                    go.Scatter(
+                        x=x_range,
+                        y=y_range,
+                        name="PDF",
+                        line=dict(width=2),
+                        showlegend=True,
+                        yaxis="y2",
+                    )
+                )
+            except (np.linalg.LinAlgError, ValueError) as e:
+                logger.warning(f"Could not compute KDE for {result_type}: {e}")
+        else:
+            logger.debug(f"Insufficient variance in data for KDE in {result_type}")
 
         fig.update_layout(
             height=fig_height,
@@ -518,8 +616,12 @@ def get_ua_violin_plot(
     df_melted = _melt_results(df)
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
-    ylabel = kwargs.get("result_type", None)
-    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
+    result_type = kwargs.get("result_type", None)
+    ylabel = get_y_label(df_melted, result_type)
+
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
 
     fig = px.violin(
         df_melted,
@@ -537,6 +639,39 @@ def get_ua_violin_plot(
         legend=DEFAULT_LEGEND,
         template=color_theme,
     )
+
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        violin_fig = px.violin(
+            df_stores,
+            x="result",
+            y="value",
+            labels=dict(result="", value=y_label_store),
+        )
+
+        # vertical line to separate MWh from MW data
+        fig.add_vline(
+            x=len(df_melted["result"].unique())
+            - 0.5,  # Position before the stores data
+            line_dash="solid",
+            line_color="black",
+            line_width=2,
+            opacity=0.8,
+        )
+
+        for trace in violin_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
     return fig
 
@@ -558,8 +693,12 @@ def get_ua_box_whisker(
     df_melted = _melt_results(df)
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
-    ylabel = kwargs.get("result_type", None)
-    ylabel = DEFAULT_Y_LABEL[ylabel] if ylabel else "Value"
+    result_type = kwargs.get("result_type", None)
+    ylabel = get_y_label(df_melted, result_type)
+
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
 
     fig = px.box(
         df_melted,
@@ -576,5 +715,38 @@ def get_ua_box_whisker(
         xaxis=dict(tickangle=45),
         template=color_theme,
     )
+
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        box_fig = px.box(
+            df_stores,
+            x="result",
+            y="value",
+            labels=dict(result="", value=y_label_store),
+        )
+
+        # vertical line to separate MWh from MW data
+        fig.add_vline(
+            x=len(df_melted["result"].unique())
+            - 0.5,  # Position before the stores data
+            line_dash="solid",
+            line_color="black",
+            line_width=2,
+            opacity=0.8,
+        )
+
+        for trace in box_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
     return fig

@@ -43,15 +43,18 @@ geothermal_capacity,Geothermal,generators,geothermal,p_nom_opt,MW,pwr_opt
 geothermal_capacity_new,Geothermal,generators,geothermal,p_nom_new,MW,pwr_new
 vre_capacity,VRE,generators,solar;onwind;offwind_floating,p_nom_opt,MW,
 vre_capacity_new,VRE,generators,solar;onwind;offwind_floating,p_nom_new,MW,
-solar_gen,Solar,generators_t,solar,p,MWh,pwr_gen
-wind_gen,Wind,generators_t,onwind;offwind_floating,p,MWh,pwr_gen
-gas_gen,Gas,links_t,OCGT;CCGT;CCGT-95CCS,p1,MWh,pwr_gen
-hydro_gen,Hydro,generators_t,hydro,p,MWh,pwr_gen
-coal_gen,Coal,links_t,coal,p1,MWh,pwr_gen
-nuclear_gen,Nuclear,generators_t,nuclear,p,MWh,pwr_gen
-other_gen,Other,generators_t,biomass;waste,p,MWh,pwr_gen
-geothermal_gen,Geothermal,generators_t,geothermal,p,MWh,pwr_gen
-vre_gen,VRE,generators_t,solar;onwind;offwind_floating,p,MWh,pwr_gen
+solar_generation,Solar,generators_t,solar,p,MWh,pwr_gen
+wind_generation,Wind,generators_t,onwind;offwind_floating,p,MWh,pwr_gen
+gas_generation,Gas,links_t,OCGT;CCGT;CCGT-95CCS,p1,MWh,pwr_gen
+ocgt_generation,OCGT,links,OCGT,p1,MW,pwr_gen
+ccgt_generation,CCGT,links,CCGT,p1,MW,pwr_gen
+ccgt95ccs_generation,CCGT-95CCS,links,CCGT-95CCS,p1,MW,pwr_gen
+hydro_generation,Hydro,generators_t,hydro,p,MWh,pwr_gen
+coal_generation,Coal,links_t,coal,p1,MWh,pwr_gen
+nuclear_generation,Nuclear,generators_t,nuclear,p,MWh,pwr_gen
+other_generation,Other,generators_t,biomass;waste,p,MWh,pwr_gen
+geothermal_generation,Geothermal,generators_t,geothermal,p,MWh,pwr_gen
+vre_generation,VRE,generators_t,solar;onwind;offwind_floating,p,MWh,pwr_gen
 hp_capacity,Heat Pump,links,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_opt,MW,service_opt
 hp_capacity_new,Heat Pump,links,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_new,MW,service_new
 ashp_capacity,Air Source Heat Pump,links,com-total-ashp;res-total-ashp,p_nom_opt,MW,service_opt
@@ -68,23 +71,20 @@ air_con_capacity,Air Conditioner,links,res-total-air-con;com-total-air-con,p_nom
 air_con_capacity_new,Air Conditioner,links,res-total-air-con;com-total-air-con,p_nom_new,MW,service_new
 gas_water_heater_capacity,Gas Water Heater,stores,res-total-water-gas;com-total-water-gas,e_nom_opt,MWh,service_opt
 gas_water_heater_capacity_new,Gas Water Heater,stores,res-total-water-gas;com-total-water-gas,e_nom_opt,MWh,service_new
-oil_water_heater_capacity,Gas Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_opt
-oil_water_heater_capacity_new,Gas Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_new
-elec_water_heater_capacity,Gas Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_opt
-elec_water_heater_capacity_new,Gas Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_new
-hp_gen_heat,Heat Pump Heating,links_t,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p1,MWh,srvice_gen
-hp_gen_cool,Heat Pump Cooling,links_t,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p2,MWh,srvice_gen
-ashp_gen_heat,Air Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p1,MWh,srvice_gen
-ashp_gen_cool,Air Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p2,MWh,srvice_gen
-gshp_gen_heat,Ground Source Heat Pump,links_t,com-total-gshp;res-total-gshp,p1,MWh,srvice_gen
-gshp_gen_cool,Ground Source Heat Pump,links_t,com-total-gshp;res-total-gshp,p2,MWh,srvice_gen
-gas_furnace_gen,Gas Furnace,links_t,res-total-space-gas-furnace;com-total-space-gas-furnace,p1,MWh,srvice_gen
-elec_furnace_gen,Electric Furnace,links_t,res-total-space-elec-furnace;com-total-space-elec-furnace,p1,MWh,srvice_gen
-oil_furnace_gen,Oil Furnace,links_t,res-total-space-oil-furnace;com-total-space-oil-furnace,p1,MWh,srvice_gen
-air_con_gen,Air Conditioner,links_t,res-total-air-con;com-total-air-con,p1,MWh,srvice_gen
-gas_water_heater_gen,Gas Water Heater,links_t,res-total-water-gas;com-total-water-gas,p1,MWh,service_gen
-oil_water_heater_gen,Gas Water Heater,links_t,res-total-water-oil;com-total-water-oil,p1,MWh,service_gen
-elec_water_heater_gen,Gas Water Heater,links_t,res-total-water-elec;com-total-water-elec,p1,MWh,service_gen
+oil_water_heater_capacity,Oil Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_opt
+oil_water_heater_capacity_new,Oil Water Heater,stores,res-total-water-oil;com-total-water-oil,e_nom_opt,MWh,service_new
+elec_water_heater_capacity,Electric Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_opt
+elec_water_heater_capacity_new,Electric Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,service_new
+hp_generation,Heat Pump,links_t,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p1,MWh,srvice_gen
+ashp_generation,Air Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p1,MWh,srvice_gen
+gshp_generation,Ground Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p1,MWh,srvice_gen
+gas_furnace_generation,Gas Furnace,links_t,res-total-space-gas-furnace;com-total-space-gas-furnace,p1,MWh,srvice_gen
+elec_furnace_generation,Electric Furnace,links_t,res-total-space-elec-furnace;com-total-space-elec-furnace,p1,MWh,srvice_gen
+oil_furnace_generation,Oil Furnace,links_t,res-total-space-oil-furnace;com-total-space-oil-furnace,p1,MWh,srvice_gen
+air_con_generation,Air Conditioner,links_t,res-total-air-con;com-total-air-con,p1,MWh,srvice_gen
+gas_water_heater_generation,Gas Water Heater,links_t,res-total-water-gas;com-total-water-gas,p1,MWh,service_gen
+oil_water_heater_generation,Oil Water Heater,links_t,res-total-water-oil;com-total-water-oil,p1,MWh,service_gen
+elec_water_heater_generation,Electric Water Heater,links_t,res-total-water-elec;com-total-water-elec,p1,MWh,service_gen
 ev_lgt_capacity,Light Duty EV,links,trn-elec-veh-lgt,p_nom_opt,kVMT,trn_opt
 ev_lgt_capacity_new,Light Duty EV,links,trn-elec-veh-lgt,p_nom_new,kVMT,trn_new
 lpg_lgt_capacity,Light Duty LPG,links,trn-lpg-veh-lgt,p_nom_opt,kVMT,trn_opt

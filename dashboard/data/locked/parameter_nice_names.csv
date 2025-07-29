@@ -1,0 +1,347 @@
+name,nice_name
+capex_com_gas_furnace,Commercial Gas Furnace
+capex_res_gas_furnace,Residential Gas Furnace
+capex_com_lpg_furnace,Commercial Oil Furnace
+capex_res_lpg_furnace,Residential Oil Furnace
+capex_com_elec_furnace,Commercial Electric Furnace
+capex_res_elec_furnace,Residential Electric Furnace
+capex_com_ashp,Commercial ASHP
+capex_res_ashp,Residential ASHP
+capex_com_gshp,Commercial GSHP
+capex_res_gshp,Residential GSHP
+capex_com_aircon,Commercial Air Conditioner
+capex_res_aircon,Residential Air Conditioner
+capex_com_gas_water_heater,Commercial Gas Water Heater
+capex_res_gas_water_heater,Residential Gas Water Heater
+capex_com_lpg_water_heater,Commercial Oil Water Heater
+capex_res_lpg_water_heater,Residential Oil Water Heater
+capex_com_elec_water_heater,Commercial Electric Water Heater
+capex_res_elec_water_heater,Residential Electric Water Heater
+capex_trn_elec_lgt,Light Duty EV
+capex_trn_elec_med,Medium Duty EV
+capex_trn_elec_hvy,Heavy Duty EV
+capex_trn_elec_bus,Bus EV
+capex_trn_lpg_lgt,Light Duty ICE
+capex_trn_lpg_med,Medium Duty ICE
+capex_trn_lpg_hvy,Heavy Duty ICE
+capex_trn_lpg_bus,Bus ICE
+fom_com_gas_furnace,Commercial Gas Furnace
+fom_res_gas_furnace,Residential Gas Furnace
+fom_com_lpg_furnace,Commercial Oil Furnace
+fom_res_lpg_furnace,Residential Oil Furnace
+fom_com_elec_furnace,Commercial Electric Furnace
+fom_res_elec_furnace,Residential Electric Furnace
+fom_com_ashp,Commercial ASHP
+fom_res_ashp,Residential ASHP
+fom_com_gshp,Commercial GSHP
+fom_res_gshp,Residential GSHP
+fom_com_aircon,Commercial Air Conditioner
+fom_res_aircon,Residential Air Conditioner
+fom_com_gas_water_heater,Commercial Gas Water Heater
+fom_res_gas_water_heater,Residential Gas Water Heater
+fom_com_lpg_water_heater,Commercial Oil Water Heater
+fom_res_lpg_water_heater,Residential Oil Water Heater
+fom_com_elec_water_heater,Commercial Electric Water Heater
+fom_res_elec_water_heater,Residential Electric Water Heater
+fom_trn_elec_lgt,Light Duty EV
+fom_trn_elec_med,Medium Duty EV
+fom_trn_elec_hvy,Heavy Duty EV
+fom_trn_elec_bus,Bus EV
+fom_trn_lpg_lgt,Light Duty ICE
+fom_trn_lpg_med,Medium Duty ICE
+fom_trn_lpg_hvy,Heavy Duty ICE
+fom_trn_lpg_bus,Bus ICE
+lifetime_com_gas_furnace,Commercial Gas Furnace
+lifetime_res_gas_furnace,Residential Gas Furnace
+lifetime_com_lpg_furnace,Commercial Oil Furnace
+lifetime_res_lpg_furnace,Residential Oil Furnace
+lifetime_com_elec_furnace,Commercial Electric Furnace
+lifetime_res_elec_furnace,Residential Electric Furnace
+lifetime_com_ashp,Commercial ASHP
+lifetime_res_ashp,Residential ASHP
+lifetime_com_gshp,Commercial GSHP
+lifetime_res_gshp,Residential GSHP
+lifetime_com_aircon,Commercial Air Conditioner
+lifetime_res_aircon,Residential Air Conditioner
+lifetime_com_gas_water_heater,Commercial Gas Water Heater
+lifetime_res_gas_water_heater,Residential Gas Water Heater
+lifetime_com_lpg_water_heater,Commercial Oil Water Heater
+lifetime_res_lpg_water_heater,Residential Oil Water Heater
+lifetime_com_elec_water_heater,Commercial Electric Water Heater
+lifetime_res_elec_water_heater,Residential Electric Water Heater
+lifetime_trn_elec_lgt,Light Duty EV
+lifetime_trn_elec_med,Medium Duty EV
+lifetime_trn_elec_hvy,Heavy Duty EV
+lifetime_trn_elec_bus,Bus EV
+lifetime_trn_lpg_lgt,Light Duty ICE
+lifetime_trn_lpg_med,Medium Duty ICE
+lifetime_trn_lpg_hvy,Heavy Duty ICE
+lifetime_trn_lpg_bus,Bus ICE
+lifetime_vmt_trn_elec_lgt,Light Duty EV
+lifetime_vmt_trn_elec_med,Medium Duty EV
+lifetime_vmt_trn_elec_hvy,Heavy Duty EV
+lifetime_vmt_trn_elec_bus,Bus EV
+lifetime_vmt_trn_lpg_lgt,Light Duty ICE
+lifetime_vmt_trn_lpg_med,Medium Duty ICE
+lifetime_vmt_trn_lpg_hvy,Heavy Duty ICE
+lifetime_vmt_trn_lpg_bus,Bus ICE
+eff_com_gas_furnace,Commercial Gas Furnace
+eff_res_gas_furnace,Residential Gas Furnace
+eff_com_lpg_furnace,Commercial Oil Furnace
+eff_res_lpg_furnace,Residential Oil Furnace
+eff_com_ashp,Commercial ASHP
+eff_res_ashp,Residential ASHP
+eff_com_gshp,Commercial GSHP
+eff_res_gshp,Residential GSHP
+eff_com_aircon,Commercial Air Conditioner
+eff_res_aircon,Residential Air Conditioner
+eff_com_gas_water_heater,Commercial Gas Water Heater
+eff_res_gas_water_heater,Residential Gas Water Heater
+eff_com_lpg_water_heater,Commercial Oil Water Heater
+eff_res_lpg_water_heater,Residential Oil Water Heater
+eff_com_elec_water_heater,Commercial Electric Water Heater
+eff_res_elec_water_heater,Residential Electric Water Heater
+eff_trn_elec_lgt,Light Duty EV
+eff_trn_elec_med,Medium Duty EV
+eff_trn_elec_hvy,Heavy Duty EV
+eff_trn_elec_bus,Bus EV
+eff_trn_lpg_lgt,Light Duty ICE
+eff_trn_lpg_med,Medium Duty ICE
+eff_trn_lpg_hvy,Heavy Duty ICE
+eff_trn_lpg_bus,Bus ICE
+capex_ind_gas_furnace,Gas Furnace
+capex_ind_coal_furnace,Coal Furnace
+capex_ind_heat_pump,Heat Pump
+fom_ind_gas_furnace,Gas Furnace
+fom_ind_coal_furnace,Coal Furnace
+fom_ind_heat_pump,Heat Pump
+lifetime_ind_gas_furnace,Gas Furnace
+lifetime_ind_coal_furnace,Coal Furnace
+lifetime_ind_heat_pump,Heat Pump
+eff_ind_gas_furnace,Gas Furnace
+eff_ind_coal_furnace,Coal Furnace
+eff_ind_heat_pump,Heat Pump
+capex_coal,Coal
+fom_coal,Coal
+wacc_coal,Coal
+lifetime_coal,Coal
+eff_coal,Coal
+capfac_coal,Coal
+capex_oil,Oil
+fom_oil,Oil
+wacc_oil,Oil
+lifetime_oil,Oil
+eff_oil,Oil
+capfac_oil,Oil
+capex_geothermal,Geothermal
+fom_geothermal,Geothermal
+wacc_geothermal,Geothermal
+lifetime_geothermal,Geothermal
+eff_geothermal,Geothermal
+capfac_geothermal,Geothermal
+capex_waste,Waste
+fom_waste,Waste
+wacc_waste,Waste
+lifetime_waste,Waste
+eff_waste,Waste
+capfac_waste,Waste
+capex_ocgt,OCGT
+fom_ocgt,OCGT
+wacc_ocgt,OCGT
+lifetime_ocgt,OCGT
+eff_ocgt,OCGT
+capfac_ocgt,OCGT
+capex_ccgt,CCGT
+fom_ccgt,CCGT
+wacc_ccgt,CCGT
+lifetime_ccgt,CCGT
+eff_ccgt,CCGT
+capfac_ccgt,CCGT
+capex_ccgt95ccs,CCGT-CCS
+fom_ccgt95ccs,CCGT-CCS
+wacc_ccgt95ccs,CCGT-CCS
+lifetime_ccgt95ccs,CCGT-CCS
+eff_ccgt95ccs,CCGT-CCS
+capfac_ccgt95ccs,CCGT-CCS
+capex_nuclear,Nuclear
+fom_nuclear,Nuclear
+wacc_nuclear,Nuclear
+lifetime_nuclear,Nuclear
+eff_nuclear,Nuclear
+capfac_nuclear,Nuclear
+capex_biomass,Biomass
+fom_biomass,Biomass
+wacc_biomass,Biomass
+lifetime_biomass,Biomass
+eff_biomass,Biomass
+capfac_biomass,Biomass
+capex_hydro,Hydro
+fom_hydro,Hydro
+wacc_hydro,Hydro
+lifetime_hydro,Hydro
+eff_hydro,Hydro
+capfac_hydro,Hydro
+capex_solar,Solar
+fom_solar,Solar
+wacc_solar,Solar
+lifetime_solar,Solar
+eff_solar,Solar
+capfac_solar,Solar
+capex_onwind,Onshore Wind
+fom_onwind,Onshore Wind
+wacc_onwind,Onshore Wind
+lifetime_onwind,Onshore Wind
+eff_onwind,Onshore Wind
+capfac_onwind,Onshore Wind
+capex_offwind_floating,Offshore Wind
+fom_offwind_floating,Offshore Wind
+wacc_offwind_floating,Offshore Wind
+lifetime_offwind_floating,Offshore Wind
+eff_offwind_floating,Offshore Wind
+capfac_offwind_floating,Offshore Wind
+capex_4hr_battery,Battery (4hr)
+fom_4hr_battery,Battery (4hr)
+wacc_4hr_battery,Battery (4hr)
+lifetime_4hr_battery,Battery (4hr)
+eff_4hr_battery,Battery (4hr)
+capfac_4hr_battery,Battery (4hr)
+capex_8hr_battery,Battery (8hr)
+fom_8hr_battery,Battery (8hr)
+wacc_8hr_battery,Battery (8hr)
+lifetime_8hr_battery,Battery (8hr)
+eff_8hr_battery,Battery (8hr)
+capfac_8hr_battery,Battery (8hr)
+p_nom_com_gas_furnace,Commercial Gas Furnace
+p_nom_res_gas_furnace,Residential Gas Furnace
+p_nom_com_elec_furnace,Commercial Oil Furnace
+p_nom_res_elec_furnace,Residential Oil Furnace
+p_nom_com_lpg_furnace,Commercial Electric Furnace
+p_nom_res_lpg_furnace,Residential Electric Furnace
+p_nom_com_ashp,Commercial ASHP
+p_nom_res_ashp,Residential ASHP
+p_nom_com_gshp,Commercial GSHP
+p_nom_res_gshp,Residential GSHP
+p_nom_com_aircon,Commercial Air Conditioner
+p_nom_res_aircon,Residential Air Conditioner
+p_nom_com_gas_water_heater,Commercial Gas Water Heater
+p_nom_res_gas_water_heater,Residential Gas Water Heater
+p_nom_com_lpg_water_heater,Commercial Oil Water Heater
+p_nom_res_lpg_water_heater,Residential Oil Water Heater
+p_nom_com_elec_water_heater,Commercial Electric Water Heater
+p_nom_res_elec_water_heater,Residential Electric Water Heater
+p_nom_ind_gas_furnace,Industrial Gas Furnace
+p_nom_ind_coal_furnace,Industrial Coal Furnace
+p_nom_ind_heat_pump,Industrial Heat Pump
+p_nom_trn_elec_lgt,Light Duty EV
+p_nom_trn_elec_med,Medium Duty EV
+p_nom_trn_elec_hvy,Heavy Duty EV
+p_nom_trn_elec_bus,Bus EV
+p_nom_trn_lpg_lgt,Light Duty ICE
+p_nom_trn_lpg_med,Medium Duty ICE
+p_nom_trn_lpg_hvy,Heavy Duty ICE
+p_nom_trn_lpg_bus,Bus ICE
+ng_imports,Import Volume
+ng_exports,Export Volume
+ng_pipeline_efficiency,Pipeline Efficiency
+ng_pipeline_dom_p_nom,Domestic Pipeline Capacity
+ng_pipeline_int_p_nom,International Pipeline Capacity
+ng_processing_p_nom,Processing Capacity
+ng_leakage_upstream,Upstream Leakage
+ng_leakage_downstream,Downstream Leakage
+gwp,Global Warming Potential
+ng_marginal_cost_import,Import Cost
+ng_marginal_cost_export,Export Cost
+ng_linepack,Linepack Capacity
+ng_storage_limits,Underground Storage Capacity
+res_electrical_demand,Residential Electrical
+res_space_heat_demand,Residential Space Heat
+res_water_heat_deamand,Residential Water Heat
+res_cooling_demand,Residential Space Cooling
+com_electrical_demand,Commercial Electrical
+com_cooling_demand,Commercial Space Heat
+com_space_heat_demand,Commercial Water Heat
+com_water_heat_deamand,Commercial Space Cooling
+ind_electrical_demand,Industrial Electrical
+ind_heat_demand,Industrial Heating
+trn_veh_lgt_demand,Light Duty
+trn_veh_med_demand,Medium Duty
+trn_veh_hvy_demand,Heavy Duty
+trn_veh_bus_demand,Bus
+trn_ship_boat_demand,Domestic Shipping
+trn_rail_psg_demand,Passenger Rail
+trn_rail_ship_demand,Freight Rail
+trn_air_psg_demand,Passenger Air Travel
+ptc_solar,Solar
+ptc_onwind,Onshore Wind
+ptc_offwind,Offshore Wind
+ptc_geo,Geothermal
+ptc_hydro,Hydro
+itc_solar,Solar
+itc_onwind,Onshore Wind
+itc_offwind,Offshore Wind
+itc_geo,Geothermal
+itc_bio,Biomass
+itc_hydro,Hydro
+itc_4hrbat,Battery (4hr)
+itc_8hrbat,Battery (8hr)
+itc_nuclear,Nuclear
+discount_rate_res_gas_furnace,Residential Gas Furnace
+discount_rate_res_lpg_furnace,Residential Oil Furnace
+discount_rate_res_elec_furnace,Residential Electric Furnace
+discount_rate_res_ashp,Residential ASHP
+discount_rate_res_gshp,Residential GSHP
+discount_rate_res_aircon,Residential Air Conditioner
+discount_rate_res_gas_water_heater,Residential Gas Water Heater
+discount_rate_res_lpg_water_heater,Residential Oil Water Heater
+discount_rate_res_elec_water_heater,Residential Electric Water Heater
+discount_rate_com_gas_furnace,Commercial Gas Furnace
+discount_rate_com_lpg_furnace,Commercial Oil Furnace
+discount_rate_com_elec_furnace,Commercial Electric Furnace
+discount_rate_com_ashp,Commercial ASHP
+discount_rate_com_gshp,Commercial GSHP
+discount_rate_com_aircon,Commercial Air Conditioner
+discount_rate_com_gas_water_heater,Commercial Gas Water Heater
+discount_rate_com_lpg_water_heater,Commercial Oil Water Heater
+discount_rate_com_elec_water_heater,Commercial Electric Water Heater
+discount_rate_ind_gas_furnace,Industrial Gas Furnace
+discount_rate_ind_coal_furnace,Industrial Coal Furnace
+discount_rate_ind_heat_pump,Industrial Heat Pump
+discount_rate_trn_elec_lgt,Light Duty EV
+discount_rate_trn_elec_med,Medium Duty EV
+discount_rate_trn_elec_hvy,Heavy Duty EV
+discount_rate_trn_elec_bus,Bus EV
+discount_rate_trn_lpg_lgt,Light Duty ICE
+discount_rate_trn_lpg_med,Medium Duty ICE
+discount_rate_trn_lpg_hvy,Heavy Duty ICE
+discount_rate_trn_lpg_bus,Bus ICE
+eff_trn_ship_boat,Domestic Shipping
+eff_trn_rail_psg,Passenger Rail
+eff_trn_rail_ship,Freight Rail
+eff_trn_air_psg,Passenger Air
+res_gshp_limit,GSHP Capacity
+com_gshp_limit,GSHP Capacity
+coal_cost,Coal Fuel Cost
+oil_cost,Oil Fuel Cost
+lpg_cost,LPG Fuel Cost
+nuclear_cost,Uranium Fuel Cost
+demand_response,Demand Response
+load_shedding,Load Shedding
+transmission_expansion,Transmission Expansion
+transmission_itl,Transmission Flows
+ev_policy_lgt_duty,Light Duty EV
+ev_policy_med_duty,Medium Duty EV
+ev_policy_hvy_duty,Heavy Duty EV
+ev_policy_bus,Bus EV
+rps,Renewable Portfolio Standard
+ces,Clean Energy Standard
+elec_trade_flow,Electricity Trade Volume
+elec_import_price,Electricity Import Price
+tct_biomass,Biomass
+tct_geothermal,Geothermal
+tct_nuclear,Nuclear
+tct_wind,Wind
+tct_solar,Solar
+tct_hydro,Hydro
+tct_ccgt,CCGT
+tct_ccgt_ccs,CCGT-CCS
+tct_ocgt,OCGT

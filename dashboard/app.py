@@ -15,7 +15,6 @@ from components.utils import (
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
     get_plotly_plotting_themes,
-    get_ua_results_dropdown_options,
 )
 import components.ids as ids
 from components.gsa import (
@@ -72,15 +71,14 @@ CONTENT_WIDTH = int(12 - SIDEBAR_WIDTH)
 
 OPTIONS_BLOCK_CLASS = "py-1"
 
-RAW_GSA = pd.read_csv("data/sa.csv")
-RAW_UA = pd.read_csv("data/ua_runs.csv")
-RAW_PARAMS = pd.read_csv("data/parameters.csv")
-ISO_SHAPE = gpd.read_file("data/iso.geojson")
+RAW_GSA = pd.read_csv("data/system/sa.csv")
+RAW_UA = pd.read_csv("data/system/ua_runs.csv")
+RAW_PARAMS = pd.read_csv("data/system/parameters.csv")
+ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
 
 root = Path(__file__).parent
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(root)
-UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
 
 ########
 # layout
