@@ -2,7 +2,11 @@
 # name of base pypsa network
 scenario: 
   name: "caiso"
-  ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget.
+
+model_options:
+  ch4: false # if true, ch4 counts against emission budget. Else, ch4 tracked, but not counted against budget.
+  coal_oil_investment: false # if true, coal and oil investment is allowed.
+  economic_retirement: false # if true, allow system to recoup costs by retiring assets
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
@@ -14,7 +18,7 @@ pypsa_usa:
 metadata:
   csv: True
   yaml: False
-  networks: False # keep solved networks 
+  networks: False
 
 # config options for data that is generated
 generated:
@@ -36,7 +40,7 @@ gsa:
     results:
     - marginal_cost_energy
     - marginal_cost_elec
-    - carbon
+    - carbon_total
 
 uncertainity:
   # general scaling guidlines
@@ -45,19 +49,18 @@ uncertainity:
   # lhs -> N = r -> N ~ > 10d
   sample: lhs # (lhs|sobol)
   replicates: 600
-  parameters: # **index names** from parameters csv to include in sample
-  - capex_com_elec_water_heater
-  - capex_res_elec_water_heater
-  - eff_trn_lpg_lgt
-  - trn_veh_lgt_demand
-  - eff_trn_lpg_hvy
+  parameters: # naems or groups 
+  - capex_elec_water_heater
+  - capex_gas_water_heater
+  - eff_gas_water_heater
+  - eff_trn_lpg
+  - elec_import_price
+  - ind_electrical_demand
+  - ind_heat_demand
+  - ng_imports
+  - rps
   - trn_veh_hvy_demand
-  - capex_ocgt
-  - capex_ccgt
-  - capex_ccgt95ccs
-  - emission_limit
-  - lpg_cost
-  - ng_leakage
+  - trn_veh_lgt_demand
   results: config/results_ua.csv # results to extract from ua
   plots: config/plots_ua.csv
 
