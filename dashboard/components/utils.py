@@ -62,7 +62,7 @@ def get_gsa_params_dropdown_options(
     root: str, flatten: bool = True
 ) -> list[dict[str, str]]:
     """Get the GSA parameters dropdown options."""
-    with open(Path(root, "data", "sa_params.json"), "r") as f:
+    with open(Path(root, "data", "system", "sa_params.json"), "r") as f:
         loaded = json.load(f)
     if flatten:
         return _convert_to_dropdown_options(loaded)
@@ -74,7 +74,7 @@ def get_ua_params_dropdown_options(
     root: str, flatten: bool = True
 ) -> list[dict[str, str]]:
     """Get the UA parameters dropdown options."""
-    with open(Path(root, "data", "ua_params.json"), "r") as f:
+    with open(Path(root, "data", "system", "ua_params.json"), "r") as f:
         loaded = json.load(f)
     if flatten:
         return _convert_to_dropdown_options(loaded)
@@ -86,7 +86,7 @@ def get_gsa_results_dropdown_options(
     root: str, flatten: bool = True
 ) -> list[dict[str, str]]:
     """Get the GSA results dropdown options."""
-    with open(Path(root, "data", "sa_results.json"), "r") as f:
+    with open(Path(root, "data", "system", "sa_results.json"), "r") as f:
         loaded = json.load(f)
     if flatten:
         return _convert_to_dropdown_options(loaded)
@@ -98,7 +98,7 @@ def get_ua_results_dropdown_options(
     root: str, flatten: bool = True
 ) -> list[dict[str, str]]:
     """Get the UA results dropdown options."""
-    with open(Path(root, "data", "ua_results.json"), "r") as f:
+    with open(Path(root, "data", "system", "ua_results.json"), "r") as f:
         loaded = json.load(f)
     if flatten:
         return _convert_to_dropdown_options(loaded)
@@ -110,7 +110,7 @@ def get_ua_sectors_dropdown_options(
     root: str, flatten: bool = True
 ) -> list[dict[str, str]]:
     """Get the UA sectors dropdown options."""
-    with open(Path(root, "data", "ua_sectors.json"), "r") as f:
+    with open(Path(root, "data", "locked", "ua_sectors.json"), "r") as f:
         loaded = json.load(f)
     # can not use _convert_to_dropdown_options because the values can be lists
     options = []

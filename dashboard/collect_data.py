@@ -18,7 +18,7 @@ ROUND_TO = 5
 PARAM_ATTRIBUTE_NICE_NAMES = {
     "co2L": "Constraints",
     "discount_rate": "Discount Rate",
-    "e_min_pu": "Natural Gas", # only one e_min_pu
+    "e_min_pu": "Natural Gas",  # only one e_min_pu
     "efficiency": "Efficiency",
     "efficiency_store": "Efficiency",
     "ev_policy": "Constraints",
@@ -186,6 +186,14 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             return "Transmission"
         elif carrier == "co2":
             return "Carbon"
+        elif "leakage" in carrier:
+            return "Natural Gas"
+        elif carrier == "gwp":
+            return "Natural Gas"
+        elif carrier == "portfolio":
+            return "System"
+        elif (carrier == "imports") | (carrier == "exports"):
+            return "Power"
         else:
             raise ValueError(f"Invalid carrier: {carrier}")
 
@@ -203,7 +211,7 @@ def assign_parameter_nice_names(root: Path, params: pd.DataFrame) -> pd.DataFram
     For plotting, we want to show costs of tech seperate seperate, but nice_names
     groups them together for Morris.
     """
-    nice_names_f = Path(root, "dashboard", "data", "parameter_nice_names.csv")
+    nice_names_f = Path(root, "dashboard", "data", "locked", "parameter_nice_names.csv")
     nice_names = pd.read_csv(nice_names_f).set_index("name").to_dict()["nice_name"]
 
     params["group_nice_name"] = params.nice_name
@@ -225,41 +233,72 @@ if __name__ == "__main__":
     # sensitivity measures
 
     dfs = []
+    empty = True
     for iso in ISOS:
         iso_data = Path(root, "results", iso, "gsa", "SA")
-        if not iso_data.exists():
-            logger.warning(f"No gsa sa data for '{iso}'")
-            dfs.append(get_empty_sa())
+        filtered_data = Path(root, "dashboard", "data", "iso", iso, "sa.csv")
+
+        if not filtered_data.parent.exists():
+            filtered_data.parent.mkdir(parents=True, exist_ok=True)
+
+        if filtered_data.exists():
+            sa = pd.read_csv(filtered_data, index_col=[0, 1])
+            empty = sa.empty  # do not overwirte if already exists
+        elif not iso_data.exists():
+            logger.warning(f"No gsa model run data for '{iso}'")
+            sa = get_empty_sa()
         else:
             sa_names = get_result_names(root, iso, "gsa")
-            df = collect_sa(root, iso, sa_names.keys())
-            dfs.append(df)
+            sa = collect_sa(root, iso, sa_names.keys())
+
+        if empty:
+            sa.to_csv(filtered_data, index=True)
+        dfs.append(sa)
 
     if not dfs:
         logger.error("No data found.")
-        raise ValueError("No ISO data found.")
+        raise ValueError("No GSA data found.")
 
-    sa = pd.concat(dfs, axis=0)
-    sa.to_csv(Path(root, "dashboard", "data", "sa.csv"), index=True)
+    df = pd.concat(dfs, axis=0)
+    df.to_csv(Path(root, "dashboard", "data", "system", "sa.csv"), index=True)
 
     # model run results ua
 
     dfs = []
+    empty = True
     for iso in ISOS:
         iso_data = Path(root, "results", iso, "ua", "results")
-        if not iso_data.exists():
+        filtered_data = Path(root, "dashboard", "data", "iso", iso, "ua_runs.csv")
+
+        if not filtered_data.parent.exists():
+            filtered_data.parent.mkdir(parents=True, exist_ok=True)
+
+        if filtered_data.exists():
+            ua = pd.read_csv(filtered_data, index_col=[0, 1])
+            empty = ua.empty
+
+        elif not iso_data.exists():
             logger.warning(f"No ua model run data for '{iso}'")
-            dfs.append(get_empty_run())
+            ua = get_empty_run()
+
         else:
             result_names = get_result_names(root, iso, "ua")
-            df = collect_runs(root, iso, "ua", result_names.keys())
-            dfs.append(df)
+            ua = collect_runs(root, iso, "ua", result_names.keys())
+
+        if empty:
+            ua.to_csv(filtered_data, index=True)
+
+        ua.to_csv(
+            Path(root, "dashboard", "data", "iso", iso, "ua_runs.csv"), index=True
+        )
+        dfs.append(ua)
+
     if not dfs:
         logger.error("No data found.")
-        raise ValueError("No ISO data found.")
+        raise ValueError("No UA Run data found.")
 
-    sa = pd.concat(dfs, axis=0)
-    sa.to_csv(Path(root, "dashboard", "data", "ua_runs.csv"), index=True)
+    df = pd.concat(dfs, axis=0)
+    df.to_csv(Path(root, "dashboard", "data", "system", "ua_runs.csv"), index=True)
 
     # model parameters
 
@@ -303,7 +342,9 @@ if __name__ == "__main__":
             "notes",
         ]
     ]
-    params.to_csv(Path(root, "dashboard", "data", "parameters.csv"), index=False)
+    params.to_csv(
+        Path(root, "dashboard", "data", "system", "parameters.csv"), index=False
+    )
 
     # get nice names
 
@@ -317,24 +358,59 @@ if __name__ == "__main__":
         else:
             continue
 
-    with open(Path(root, "dashboard", "data", "sa_params.json"), "w") as f:
+    with open(Path(root, "dashboard", "data", "system", "sa_params.json"), "w") as f:
         json.dump(sa_params, f, indent=4)
 
-    with open(Path(root, "dashboard", "data", "sa_results.json"), "w") as f:
+    with open(Path(root, "dashboard", "data", "system", "sa_results.json"), "w") as f:
         json.dump(sa_results, f, indent=4)
 
+    # ua results will not change, only the input parameters
     for iso in ISOS:
         try:
-            ua_params = get_param_names(root, iso, "ua")
             ua_results = get_result_names(root, iso, "ua")
+            break
         except FileNotFoundError:
             logger.debug(f"No ua nice names for {iso}.")
             pass
-        else:
+
+    with open(Path(root, "dashboard", "data", "system", "ua_results.json"), "w") as f:
+        json.dump(ua_results, f, indent=4)
+
+    all_params = []
+    for iso in ISOS:
+        try:
+            ua_params = get_param_names(root, iso, "ua")
+            all_params.append(ua_params)
+        except FileNotFoundError:
+            logger.debug(f"No ua nice names for {iso}.")
             continue
 
-    with open(Path(root, "dashboard", "data", "ua_params.json"), "w") as f:
-        json.dump(ua_params, f, indent=4)
+        with open(
+            Path(root, "dashboard", "data", "iso", iso, "ua_params.json"), "w"
+        ) as f:
+            json.dump(ua_params, f, indent=4)
 
-    with open(Path(root, "dashboard", "data", "ua_results.json"), "w") as f:
-        json.dump(ua_results, f, indent=4)
+    combined_params = {}
+    for params in all_params:
+        for param in params:
+            if param not in combined_params:
+                combined_params[param] = params[param]
+
+    with open(Path(root, "dashboard", "data", "system", "ua_params.json"), "w") as f:
+        json.dump(combined_params, f, indent=4)
+
+    # get the sample data
+    for iso in ISOS:
+        iso_data = Path(root, "results", iso, "ua", "sample_scaled.csv")
+        if not iso_data.exists():
+            logger.warning(f"No sample data for '{iso}'")
+            continue
+        else:
+            sample_data = pd.read_csv(iso_data)
+            sample_data["run"] = sample_data.index
+            sample_data["iso"] = iso
+            sample_data = sample_data.set_index(["run", "iso"])
+            sample_data.to_csv(
+                Path(root, "dashboard", "data", "iso", iso, "sample_data.csv"),
+                index=True,
+            )
