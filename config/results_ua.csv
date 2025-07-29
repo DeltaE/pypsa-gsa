@@ -17,8 +17,7 @@ marginal_cost_space_cool_com,Commercial Space Cool Cost,buses_t,com-total-cool,m
 marginal_cost_energy_com,Commercial Energy Cost,buses_t,com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool,marginal_price,$/MWh
 marginal_cost_elec_trn,Transport Electricity Cost,buses_t,trn-elec-veh,marginal_price,$/MWh
 marginal_cost_energy_trn,Transport Energy Cost,buses_t,trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh
-marginal_cost_elec,System Electricity Cost,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,$/MWh
-marginal_cost_energy,System Energy Cost,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,system_marginal_price;energy_marginal_price;summary,$/MWh
+carbon,Carbon Emissions,store,co2,e_nom_opt,tCO2,
 load_shedding,Load Shedding,generators,load,p_nom_opt,MW,
 solar_capacity,Solar,generators,solar,p_nom_opt,MW,pwr_opt
 solar_capacity_new,Solar,generators,solar,p_nom_new,MW,pwr_new
@@ -110,12 +109,12 @@ ev_hvy_generation,Heavy Duty EV,links_t,trn-elec-veh-hvy,p1,kVMT,trn_gen
 lpg_hvy_generation,Heavy Duty LPG,links_t,trn-lpg-veh-hvy,p1,kVMT,trn_gen
 ev_bus_generation,Bus EV,links_t,trn-elec-veh-bus,p1,kVMT,trn_gen
 lpg_bus_generation,Bus LPG,links_t,trn-lpg-veh-bus,p1,kVMT,trn_gen
-ind_gas_furnace_generation,Gas Furnace,links,ind-gas-furnace,p_nom_opt,MW,ind_gen
-ind_coal_furnace_generation,Coal Furnace,links,ind-coal-furnace,p_nom_opt,MW,ind_gen
-ind_heat_pump_generation,Heat Pump,links,ind-heat-pump, ,MW,ind_gen
-ind_gas_furnace_generation_new,Gas Furnace,links,ind-gas-furnace,p_nom_new,MW,ind_gen
-ind_coal_furnace_generation_new,Coal Furnace,links,ind-coal-furnace,p_nom_new,MW,ind_gen
-ind_heat_pump_generation_new,Heat Pump,links,ind-heat-pump,p_nom_new,MW,ind_gen
+ind_gas_furnace_capacity,Gas Furnace,links,ind-gas-furnace,p_nom_opt,MW,ind_gen
+ind_coal_furnace_capacity,Coal Furnace,links,ind-coal-furnace,p_nom_opt,MW,ind_gen
+ind_heat_pump_capacity,Heat Pump,links,ind-heat-pump,p_nom_opt,MW,ind_gen
+ind_gas_furnace_capacity_new,Gas Furnace,links,ind-gas-furnace,p_nom_new,MW,ind_gen
+ind_coal_furnace_capacity_new,Coal Furnace,links,ind-coal-furnace,p_nom_new,MW,ind_gen
+ind_heat_pump_capacity_new,Heat Pump,links,ind-heat-pump,p_nom_new,MW,ind_gen
 ind_gas_furnace_generation,Gas Furnace,links_t,ind-gas-furnace,p1,MWh,ind_gen
 ind_coal_furnace_generation,Coal Furnace,links_t,ind-coal-furnace,p1,MWh,ind_gen
 ind_heat_pump_generation,Heat Pump,links_t,ind-heat-pump,p1,MWh,ind_gen

@@ -14,7 +14,8 @@ from utils import (
     get_existing_lv,
     get_network_iso,
     get_region_buses,
-    get_rps_demand_actual,
+    get_rps_demand_supplyside,
+    get_rps_demand_demandside,
     get_rps_eligible,
     get_rps_generation,
     concat_rps_standards,
@@ -23,7 +24,6 @@ from utils import (
     get_urban_rural_fraction,
     configure_logging,
 )
-
 
 import logging
 
@@ -151,6 +151,43 @@ def add_no_coal_oil_investment_constraint(n):
         if any(fuel in x for fuel in ["coal", "oil", "waste"])
     ]
     n.links.loc[n.links.carrier.isin(cars), "p_nom_extendable"] = False
+    return n
+
+
+def no_economic_retirement_constraint(n):
+    """
+    Turns off economic retirement for power generator assets.
+
+    This can be configured in the main pypsa_usa workflow. Its done here though as it
+    allows faster testing of economic retirement.
+    """
+
+    # very hacky, but I know this wont change for my project
+    pwr_cars = [
+        "nuclear",
+        "oil",
+        "OCGT",
+        "CCGT",
+        "CCGT-95CCS",
+        "coal",
+        "geothermal",
+        "biomass",
+        "waste",
+        "onwind",
+        "offwind_floating",
+        "solar",
+        "hydro",
+        "4hr_battery_storage",
+        "8hr_battery_storage",
+    ]
+
+    links = n.links[
+        (n.links.index.str.endswith(" existing")) & (n.links.carrier.isin(pwr_cars))
+    ]
+    n.links.loc[links.index, "p_nom_extendable"] = False
+    n.links.loc[links.index, "capital_cost"] = (
+        0  # not actually needed, just for sanity :)
+    )
     return n
 
 
@@ -356,6 +393,9 @@ def add_RPS_constraints(
 ):
     """
     Add Renewable Portfolio Standards constraint to the network.
+
+    This is applied at a **supply level**, not a demand level. Else we need to account for
+    imports/exports and sector links (ie. heatpumps, ect).
     """
 
     if rps.empty:
@@ -363,34 +403,57 @@ def add_RPS_constraints(
 
     portfolio_standards = concat_rps_standards(n, rps)
 
-    # Iterate through constraints
-    for _, constraint_row in portfolio_standards.iterrows():
-        region_buses, region_gens = get_rps_eligible(
-            n, constraint_row.region, constraint_row.carrier
+    mapper = n.buses.groupby("reeds_state")["rec_trading_zone"].first().to_dict()
+    portfolio_standards["rec_trading_zone"] = portfolio_standards.region.map(
+        mapper
+    ).fillna(portfolio_standards.region)
+
+    for rec_trading_zone in portfolio_standards.rec_trading_zone.unique():
+        portfolio_standards_zone = portfolio_standards[
+            portfolio_standards.rec_trading_zone == rec_trading_zone
+        ]
+
+        demands = []  # linear expressions for each demand
+        generation = []  # linear expressions for each generation
+
+        for _, constraint_row in portfolio_standards_zone.iterrows():
+            region_buses, region_gens = get_rps_eligible(
+                n, constraint_row.region, constraint_row.carrier
+            )
+
+            if region_buses.empty:
+                continue
+
+            if not region_gens.empty:
+                region_demand = get_rps_demand_supplyside(
+                    n, constraint_row.planning_horizon, region_buses, region_gens
+                )
+                # region_demand = get_rps_demand_demandside(
+                #     n, constraint_row.planning_horizon, region_buses
+                # )
+
+                # pct is really a decimal value, not a percentage
+                demands.append(constraint_row.pct * region_demand * sample)
+
+                region_gen = get_rps_generation(
+                    n, constraint_row.planning_horizon, region_gens
+                )
+                generation.append(region_gen)
+
+        demand = sum(demands)
+        generation = sum(generation)
+
+        lhs = generation - demand
+        rhs = 0
+
+        # Add constraint
+        n.model.add_constraints(
+            lhs >= rhs,
+            name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
         )
-
-        if region_buses.empty:
-            continue
-
-        if not region_gens.empty:
-            region_demand = get_rps_demand_actual(
-                n, constraint_row.planning_horizon, region_buses
-            )
-            region_gen = get_rps_generation(
-                n, constraint_row.planning_horizon, region_gens
-            )
-
-            lhs = region_gen - constraint_row.pct * region_demand * sample
-            rhs = 0
-
-            # Add constraint
-            n.model.add_constraints(
-                lhs >= rhs,
-                name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
-            )
-            logger.info(
-                f"Added RPS {constraint_row.region} for {constraint_row.planning_horizon}.",
-            )
+        logger.info(
+            f"Added {rec_trading_zone} {policy_name} for {constraint_row.planning_horizon}.",
+        )
 
 
 def add_sector_co2_constraints(
@@ -707,6 +770,45 @@ def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
                 raise ValueError(f"Invalid flow direction for {to_iso} in {month}")
 
 
+def add_lolp_constraint(n):
+    """Adds a loss of load probability constraint.
+
+    This constraint restricts the amount of load shedding that can occur.
+    """
+
+    generators = n.generators[n.generators.carrier == "load"]
+
+    if generators.empty:
+        logger.warning(
+            "No load shedding generators found for loss of load probability constraint"
+        )
+        return
+
+    assert len(generators.bus.unique()) == len(generators), (
+        "Multiple generators at the same bus"
+    )
+
+    loads = n.loads[
+        n.loads.carrier.str.endswith("elec")
+    ]  # llop only to electrical loads
+
+    for generator in generators.index:
+        bus = n.generators.at[generator, "bus"]
+        loads_at_bus = loads[loads.country == bus].index
+        load = n.loads_t["p_set"].loc[:, loads_at_bus].sum().sum()
+
+        # LLOP of 0.1 day per year = 0.000274
+        # https://en.wikipedia.org/wiki/Loss_of_load
+        rhs = round(load * 0.000274, 6)
+
+        lhs = n.model["Generator-p"].loc[:, generator].sum()
+
+        n.model.add_constraints(
+            lhs <= rhs,
+            name=f"llop-{bus}",
+        )
+
+
 def add_transmission_limit(n, factor):
     """Set volume transmission limits expansion."""
 
@@ -915,6 +1017,8 @@ def extra_functionality(n, sns):
         add_cooling_heat_pump_constraints(n)
     if "elec_trade" in opts:
         add_elec_trade_constraints(n, opts["elec_trade"]["flows"])
+    if "lolp" in opts:
+        add_lolp_constraint(n)
 
 
 ###
@@ -928,6 +1032,7 @@ def prepare_network(
     noisy_costs: Optional[bool] = None,
     foresight: Optional[str] = None,
     no_coal_oil_investment: Optional[bool] = None,
+    no_economic_retirement: Optional[bool] = None,
     **kwargs,
 ):
     if clip_p_max_pu:
@@ -944,6 +1049,9 @@ def prepare_network(
 
     if no_coal_oil_investment:
         n = add_no_coal_oil_investment_constraint(n)
+
+    if no_economic_retirement:
+        n = no_economic_retirement_constraint(n)
 
     return n
 
@@ -1037,6 +1145,7 @@ if __name__ == "__main__":
         solver_name = snakemake.params.solver
         solver_opts = snakemake.params.solver_opts
         solving_opts = snakemake.params.solving_opts
+        model_opts = snakemake.params.model_opts
         solving_log = snakemake.log.solver
         out_network = snakemake.output.network
         pop_f = snakemake.input.pop_layout_f
@@ -1053,6 +1162,10 @@ if __name__ == "__main__":
         in_network = "results/caiso/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
+        model_opts = {
+            "economic_retirement": False,
+            "coal_oil_investment": False,
+        }
         solving_log = ""
         out_network = ""
         pop_f = "results/caiso/constraints/pop_layout.csv"
@@ -1075,6 +1188,14 @@ if __name__ == "__main__":
 
     # for land use constraint
     solving_opts["foresight"] = "perfect"
+
+    # different from pypsa-usa
+    solving_opts["no_economic_retirement"] = (
+        False if model_opts["economic_retirement"] else True
+    )
+    solving_opts["no_coal_oil_investment"] = (
+        False if model_opts["coal_oil_investment"] else True
+    )
 
     np.random.seed(solving_opts.get("seed", 123))
 
@@ -1161,6 +1282,11 @@ if __name__ == "__main__":
     ###
     # CES generation target
     ###
+    """Dont include ces as it may not have enforcement mechanisms
+    https://eta-publications.lbl.gov/sites/default/files/lbnl_rps_ces_status_report_2024_edition.pdf
+    """
+
+    """
     extra_fn["ces"] = {}
     extra_fn["ces"]["data"] = pd.read_csv(ces_f)
     ces_sample = constraints[constraints.attribute == "ces"].round(5)
@@ -1171,6 +1297,7 @@ if __name__ == "__main__":
         raise ValueError("Too many samples for ces")
     else:
         extra_fn["ces"]["sample"] = 1
+    """
 
     ###
     # TCT Constraint
@@ -1227,6 +1354,11 @@ if __name__ == "__main__":
     # Heat Pump cooling constraint
     ###
     extra_fn["hp_cooling"] = True
+
+    ###
+    # Loss of Load Probability Constraint
+    ###
+    extra_fn["lolp"] = True
 
     n = solve_network(
         n,

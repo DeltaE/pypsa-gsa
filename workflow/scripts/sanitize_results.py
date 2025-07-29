@@ -21,7 +21,7 @@ def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     df["carriers"] = df.carriers.str.strip()
     df["variable"] = df.variable.str.strip()
     df["unit"] = df.unit.str.strip()
-    if "plots" in df.columns:
+    if "plots" in df.columns: # only needed for gsa
         df["plots"] = df.plots.str.strip()
     return df
 
@@ -114,7 +114,8 @@ if __name__ == "__main__":
     df = strip_whitespace(df)
     assert is_valid_variables(df)
     assert is_unique_names(df)
-    assert no_nans(df)
+    if "plots" in df.columns: # only needed for gsa
+        assert no_nans(df)
 
     n = pypsa.Network(network)
     assert is_valid_carrier(n, df)
