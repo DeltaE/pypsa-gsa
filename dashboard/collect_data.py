@@ -377,18 +377,6 @@ if __name__ == "__main__":
     with open(Path(root, "dashboard", "data", "system", "sa_results.json"), "w") as f:
         json.dump(sa_results, f, indent=4)
 
-    # ua results will not change, only the input parameters
-    for iso in ISOS:
-        try:
-            ua_results = get_result_names(root, iso, "ua")
-            break
-        except FileNotFoundError:
-            logger.debug(f"No ua nice names for {iso}.")
-            pass
-
-    with open(Path(root, "dashboard", "data", "system", "ua_results.json"), "w") as f:
-        json.dump(ua_results, f, indent=4)
-
     all_params = []
     for iso in ISOS:
         try:

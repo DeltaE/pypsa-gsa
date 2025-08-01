@@ -3,11 +3,8 @@
 from pathlib import Path
 from dash import dcc, html, dash_table
 
-from .utils import (
-    get_iso_dropdown_options,
-    get_ua_results_dropdown_options,
-    SECTOR_DROPDOWN_OPTIONS_NO_ALL,
-)
+from .utils import get_iso_dropdown_options
+from .data import SECTOR_DROPDOWN_OPTIONS_NO_ALL
 from . import ids as ids
 from .styles import BUTTON_STYLE, DATA_TABLE_STYLE
 import dash_bootstrap_components as dbc
@@ -19,10 +16,6 @@ import plotly.express as px
 import logging
 
 logger = logging.getLogger(__name__)
-
-root = Path(__file__).parent.parent
-
-RESULT_OPTIONS = get_ua_results_dropdown_options(root)  # ua gives same results
 
 
 def cr_options_block() -> html.Div:

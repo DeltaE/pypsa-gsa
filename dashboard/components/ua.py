@@ -5,11 +5,15 @@ from dash import dcc, html, dash_table
 import pandas as pd
 from pathlib import Path
 
+from .data import (
+    UA_RESULT_OPTIONS,
+    SECTOR_DROPDOWN_OPTIONS,
+    RESULT_TYPE_DROPDOWN_OPTIONS,
+)
+
 from .styles import DATA_TABLE_STYLE
 from .utils import (
     DEFAULT_PLOTLY_THEME,
-    get_ua_params_dropdown_options,
-    get_ua_results_dropdown_options,
     get_ua_sectors_dropdown_options,
 )
 from . import ids as ids
@@ -23,38 +27,6 @@ from scipy.stats import gaussian_kde
 import logging
 
 logger = logging.getLogger(__name__)
-
-root = Path(__file__).parent.parent
-
-UA_PARM_OPTIONS = get_ua_params_dropdown_options(root)
-UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
-UA_SECTOR_OPTIONS = get_ua_sectors_dropdown_options(root)
-
-SECTOR_DROPDOWN_OPTIONS = [
-    {"label": "All", "value": "all"},
-    {"label": "System", "value": "system"},
-    {"label": "Power", "value": "power"},
-    {"label": "Industry", "value": "industry"},
-    {"label": "Service", "value": "service"},
-    {"label": "Transportation", "value": "transport"},
-]
-SECTOR_DROPDOWN_OPTIONS_ALL = [
-    {"label": "All", "value": "all"},
-]
-SECTOR_DROPDOWN_OPTIONS_IDV = [
-    {"label": "Power", "value": "power"},
-    {"label": "Industry", "value": "industry"},
-    {"label": "Service", "value": "service"},
-    {"label": "Transportation", "value": "transport"},
-]
-RESULT_TYPE_DROPDOWN_OPTIONS = [
-    {"label": "Costs", "value": "costs"},
-    {"label": "Marginal Costs", "value": "marginal_costs"},
-    {"label": "Emissions", "value": "emissions"},
-    {"label": "New Capacity", "value": "new_capacity"},
-    {"label": "Total Capacity", "value": "total_capacity"},
-    {"label": "Generation", "value": "generation"},
-]
 
 DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
 DEFAULT_HEIGHT = 600
@@ -164,18 +136,15 @@ def ua_percentile_interval_slider() -> html.Div:
     )
 
 
-def _filter_ua_on_result_sector(df: pd.DataFrame, result_sector: str) -> pd.DataFrame:
+def _filter_ua_on_result_sector(
+    df: pd.DataFrame, sector: str, metadata: dict
+) -> pd.DataFrame:
     """Filter UA data on result sector."""
 
-    sector_mapper = UA_SECTOR_OPTIONS.copy()
-    sector = result_sector.capitalize()
+    sector_mapper = get_ua_sectors_dropdown_options(metadata)
 
-    if result_sector == "all":
+    if sector == "all":
         return df
-
-    assert sector in ["System", "Power", "Industry", "Service", "Transport"], (
-        f"Invalid sector: {result_sector}"
-    )
 
     results = ["run", "iso"]
     for result in sector_mapper:
@@ -253,8 +222,8 @@ def _read_serialized_ua_data(data: dict[str, Any]) -> pd.DataFrame:
 
 
 def _apply_nice_names(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply nice names to UA data table."""
-    logger.debug("Applying nice names to UA data table")
+    """Apply nice names."""
+    logger.debug("Applying nice names")
     ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
     return df.rename(columns=ua_results)
 
@@ -265,10 +234,10 @@ def _melt_results(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def filter_ua_on_result_sector_and_type(
-    df: pd.DataFrame, result_sector: str, result_type: str
+    df: pd.DataFrame, result_sector: str, result_type: str, metadata: dict
 ) -> pd.DataFrame:
     """Filter UA data on result sector and type."""
-    filtered_on_sector = _filter_ua_on_result_sector(df, result_sector)
+    filtered_on_sector = _filter_ua_on_result_sector(df, result_sector, metadata)
     filtered_on_sector_and_type = _filter_ua_on_result_type(
         filtered_on_sector, result_type
     )
