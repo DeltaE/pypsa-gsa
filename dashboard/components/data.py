@@ -9,7 +9,6 @@ from .utils import (
     get_metadata,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
-    get_ua_params_dropdown_options,
     get_ua_results_dropdown_options,
     get_cr_params_dropdown_options,
     ISOS,
@@ -26,35 +25,26 @@ ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(METADATA)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(METADATA, list(RAW_GSA))
 
-# UA_PARAM_OPTIONS = get_ua_params_dropdown_options(METADATA)
+# UA_PARAM_OPTIONS = get_ua_params_dropdown_options(METADATA) # need iso
 UA_RESULT_OPTIONS = get_ua_results_dropdown_options(METADATA)
 
 CR_PARAM_OPTIONS = {iso: get_cr_params_dropdown_options(root, iso) for iso in ISOS}
 
 SECTOR_DROPDOWN_OPTIONS = [
-    {"label": "All", "value": "all"},
-    {"label": "System", "value": "system"},
-    {"label": "Power", "value": "power"},
-    {"label": "Industry", "value": "industry"},
-    {"label": "Service", "value": "service"},
-    {"label": "Transportation", "value": "transport"},
+    {"label": y, "value": x} for x, y in METADATA["nice_names"]["sector"].items()
 ]
 SECTOR_DROPDOWN_OPTIONS_NO_ALL = [
-    {"label": "System", "value": "system"},
-    {"label": "Power", "value": "power"},
-    {"label": "Industry", "value": "industry"},
-    {"label": "Service", "value": "service"},
-    {"label": "Transportation", "value": "transport"},
+    x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] != "all"
 ]
 SECTOR_DROPDOWN_OPTIONS_ALL = [
-    {"label": "All", "value": "all"},
+    x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] == "all"
 ]
 SECTOR_DROPDOWN_OPTIONS_IDV = [
-    {"label": "Power", "value": "power"},
-    {"label": "Industry", "value": "industry"},
-    {"label": "Service", "value": "service"},
-    {"label": "Transportation", "value": "transport"},
+    x
+    for x in SECTOR_DROPDOWN_OPTIONS
+    if x["value"] in ["power", "industry", "service", "transport"]
 ]
+
 RESULT_TYPE_DROPDOWN_OPTIONS = [
     {"label": "Costs", "value": "costs"},
     {"label": "Marginal Costs", "value": "marginal_costs"},
