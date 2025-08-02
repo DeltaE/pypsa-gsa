@@ -46,6 +46,20 @@ DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right"
 DEFAULT_HEIGHT = 600
 DEFAULT_OPACITY = 0.7
 
+DEFAULT_Y_LABEL = {
+    "cost": "Cost ($)",
+    "marginal_cost": "Marginal Costs ($/MWh)",
+    "emissions": "Emissions (TCO2e)",
+    "new_capacity": "New Capacity (MW)",
+    "total_capacity": "Total Capacity (MW)",
+    "new_capacity_trn": "New Capacity (kVMT)",
+    "total_capacity_trn": "Total Capacity (kVMT)",
+    "generation": "Generation (MWh)",
+    "generation_trn": "Generation (kVMT)",
+    "other": "Other",
+}
+
+
 def _convert_to_dropdown_options(options: dict[str, str]) -> list[dict[str, str]]:
     """Convert a dictionary to a list of dropdown options, sorted alphabetically by label."""
     options_list = [{"label": v, "value": k} for k, v in options.items()]
@@ -130,17 +144,23 @@ def get_ua_results_dropdown_options(metadata: dict) -> list[dict[str, str]]:
     return options
 
 
-def get_ua_sectors_dropdown_options(metadata: dict = None) -> list[dict[str, str]]:
+def get_ua_param_sector_mapper(metadata: dict = None) -> list[dict[str, str]]:
     """Get the UA sectors dropdown options."""
-
-    nice_names = metadata["nice_names"]["sector"]
 
     options = []
     for value, data in metadata["results"].items():
-        options.append({"label": nice_names[data["sector"]], "value": value})
+        options.append({"label": data["sector"], "value": value})
         if "sector2" in data:
-            options.append({"label": nice_names[data["sector2"]], "value": value})
+            options.append({"label": data["sector2"], "value": value})
 
+    return options
+
+
+def get_ua_param_result_mapper(metadata: dict = None) -> list[dict[str, str]]:
+    """Get the UA parameter result mapper."""
+    options = []
+    for value, data in metadata["results"].items():
+        options.append({"label": data["result"], "value": value})
     return options
 
 

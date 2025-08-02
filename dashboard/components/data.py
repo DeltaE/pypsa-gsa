@@ -49,10 +49,5 @@ SECTOR_DROPDOWN_OPTIONS_IDV = [
 ]
 
 RESULT_TYPE_DROPDOWN_OPTIONS = [
-    {"label": "Costs", "value": "costs"},
-    {"label": "Marginal Costs", "value": "marginal_costs"},
-    {"label": "Emissions", "value": "emissions"},
-    {"label": "New Capacity", "value": "new_capacity"},
-    {"label": "Total Capacity", "value": "total_capacity"},
-    {"label": "Generation", "value": "generation"},
+    {"label": y, "value": x} for x, y in METADATA["nice_names"]["results"].items()
 ]

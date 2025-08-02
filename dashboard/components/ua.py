@@ -16,7 +16,9 @@ from .utils import (
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
     DEFAULT_OPACITY,
-    get_ua_sectors_dropdown_options,
+    DEFAULT_Y_LABEL,
+    get_ua_param_result_mapper,
+    get_ua_param_sector_mapper,
 )
 from . import ids as ids
 from .utils import _unflatten_dropdown_options
@@ -29,18 +31,6 @@ from scipy.stats import gaussian_kde
 import logging
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_Y_LABEL = {
-    "costs": "Cost ($)",
-    "marginal_costs": "Marginal Costs ($/MWh)",
-    "emissions": "Emissions (TCO2e)",
-    "new_capacity": "New Capacity (MW)",
-    "total_capacity": "Total Capacity (MW)",
-    "new_capacity_trn": "New Capacity (kVMT)",
-    "total_capacity_trn": "Total Capacity (kVMT)",
-    "generation": "Generation (MWh)",
-    "generation_trn": "Generation (kVMT)",
-}
 
 
 def get_y_label(df: str, result_type: str) -> str:
@@ -139,14 +129,14 @@ def _filter_ua_on_result_sector(
 ) -> pd.DataFrame:
     """Filter UA data on result sector."""
 
-    sector_mapper = get_ua_sectors_dropdown_options(metadata)
-
     if sector == "all":
         return df
 
+    sector_mapper = get_ua_param_sector_mapper(metadata)
+
     results = ["run", "iso"]
     for result in sector_mapper:
-        if result["label"].lower() == sector:  # lower cause of data definition issue
+        if result["label"] == sector:
             results.append(result["value"])
     # results = [x["value"] for x in sector_mapper if x["label"] == sector]
 
@@ -154,29 +144,20 @@ def _filter_ua_on_result_sector(
     return df[cols]
 
 
-def _filter_ua_on_result_type(df: pd.DataFrame, result_type: str) -> pd.DataFrame:
+def _filter_ua_on_result_type(
+    df: pd.DataFrame, result_type: str, metadata: dict
+) -> pd.DataFrame:
     """Filter UA data on result type."""
 
-    if result_type == "costs":
-        cols = [x for x in df.columns if "objective_" in x]
-    elif result_type == "marginal_costs":
-        cols = [x for x in df.columns if "marginal_cost_" in x]
-    elif result_type == "emissions":
-        cols = [x for x in df.columns if any(gas in x for gas in ["carbon"])]
-    elif result_type == "new_capacity":
-        cols = [x for x in df.columns if x.endswith("_capacity_new")]
-    elif result_type == "total_capacity":
-        cols = [x for x in df.columns if x.endswith("_capacity")]
-    elif result_type == "generation":
-        cols = [x for x in df.columns if x.endswith(("_generation", "_gen"))]
-    else:
-        cols = []
+    result_mapper = get_ua_param_result_mapper(metadata)
+
+    cols = list(set([x["value"] for x in result_mapper if x["label"] == result_type]))
 
     if not cols:
         logger.debug(f"No columns found for result type {result_type}")
         return pd.DataFrame(index=df.index)
     else:
-        return df.set_index("run")[cols].reset_index()
+        return df.set_index("run")[[x for x in cols if x in df]].reset_index()
 
 
 def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
@@ -233,7 +214,7 @@ def filter_ua_on_result_sector_and_type(
     """Filter UA data on result sector and type."""
     filtered_on_sector = _filter_ua_on_result_sector(df, result_sector, metadata)
     filtered_on_sector_and_type = _filter_ua_on_result_type(
-        filtered_on_sector, result_type
+        filtered_on_sector, result_type, metadata
     )
     return filtered_on_sector_and_type
 

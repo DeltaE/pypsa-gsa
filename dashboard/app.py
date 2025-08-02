@@ -388,11 +388,7 @@ def render_tab_content(
         elif plotting_type == "scatter":
             view = dcc.Graph(
                 id=ids.UA_SCATTER,
-                figure=get_cr_scatter_plot(
-                    cr_data,
-                    template=color,
-                    marginal=None
-                ),
+                figure=get_cr_scatter_plot(cr_data, template=color, marginal=None),
             )
         elif plotting_type == "scatter-box":
             view = dcc.Graph(
@@ -1062,9 +1058,9 @@ def callback_update_ua_results_sector_dropdown_options(
     result_type: str,
 ) -> list[dict[str, str]]:
     logger.debug(f"Updating UA sector dropdown options for: {result_type}")
-    if result_type == "costs":
+    if result_type == "cost":
         options = SECTOR_DROPDOWN_OPTIONS_ALL
-    elif result_type == "marginal_costs":
+    elif result_type == "marginal_cost":
         options = SECTOR_DROPDOWN_OPTIONS
     elif result_type == "emissions":
         options = SECTOR_DROPDOWN_OPTIONS_ALL
@@ -1182,7 +1178,7 @@ def callback_update_cr_parameter_dropdown_options(iso: str) -> list[dict[str, st
     ],
 )
 def callback_update_cr_data(
-    iso: str, parameter: str, result: str
+    iso: str, parameter: str, results: list[str]
 ) -> list[dict[str, Any]]:
     """Update CR parameter dropdown value based on ISO."""
     if not iso:
@@ -1192,10 +1188,11 @@ def callback_update_cr_data(
     if parameter not in df.columns:
         logger.error(f"Parameter {parameter} not in CR data for {iso}")
         return {}
-    if result not in df.columns:
-        logger.error(f"Result {result} not in CR data for {iso}")
-        return {}
-    return df[[parameter, result]].to_dict(orient="records")
+    for result in results:
+        if result not in df.columns:
+            logger.error(f"Result {result} not in CR data for {iso}")
+            return {}
+    return df[[parameter] + results].to_dict(orient="records")
 
 
 # Run the server
