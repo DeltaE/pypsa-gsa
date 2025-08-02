@@ -20,7 +20,7 @@ from components.data import (
     CR_PARAM_OPTIONS,
     CR_DATA,
 )
-
+import components.ids as ids
 from components.utils import (
     DEFAULT_PLOTLY_THEME,
     get_continuous_color_scale_options,
@@ -31,7 +31,6 @@ from components.utils import (
     DEFAULT_DISCRETE_COLOR_SCALE,
     get_plotly_plotting_themes,
 )
-import components.ids as ids
 from components.gsa import (
     GSA_RB_OPTIONS,
     filter_gsa_data,
@@ -60,7 +59,11 @@ from components.input_data import (
     get_inputs_data_table,
     input_data_options_block,
 )
-from components.cr import cr_options_block, get_cr_data_table
+from components.cr import (
+    cr_options_block,
+    get_cr_data_table,
+    get_cr_scatter_plot,
+)
 
 import logging
 
@@ -354,7 +357,6 @@ def render_tab_content(
                     ua_run_data,
                     template=color,
                     result_type=ua_result_type,
-                    metadata=METADATA,
                 ),
             )
         elif plotting_type == "scatter":
@@ -364,7 +366,6 @@ def render_tab_content(
                     ua_run_data,
                     template=color,
                     result_type=ua_result_type,
-                    metadata=METADATA,
                 ),
             )
         elif plotting_type == "histogram":
@@ -384,6 +385,51 @@ def render_tab_content(
     elif active_tab == ids.CR_TAB:
         if plotting_type == "data_table":
             view = get_cr_data_table(cr_data)
+        elif plotting_type == "scatter":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal=None
+                ),
+            )
+        elif plotting_type == "scatter-box":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="box",
+                ),
+            )
+        elif plotting_type == "scatter-histogram":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="histogram",
+                ),
+            )
+        elif plotting_type == "scatter-rug":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="rug",
+                ),
+            )
+        elif plotting_type == "scatter-violin":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="violin",
+                ),
+            )
         else:
             return html.Div([dbc.Alert("Custom Result", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
@@ -437,10 +483,13 @@ def update_plotting_type_dropdown_options(
         return (
             [
                 {"label": "Data Table", "value": "data_table"},
-                {"label": "Histogram", "value": "histogram"},
-                {"label": "Scatter Plot", "value": "scatter"},
+                {"label": "Scatter", "value": "scatter"},
+                {"label": "Scatter (Box)", "value": "scatter-box"},
+                {"label": "Scatter (Histogram)", "value": "scatter-histogram"},
+                {"label": "Scatter (Rug)", "value": "scatter-rug"},
+                {"label": "Scatter (Violin)", "value": "scatter-violin"},
             ],
-            "data_table",
+            "scatter",
         )
     else:
         logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")

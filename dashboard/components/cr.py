@@ -3,16 +3,23 @@
 from pathlib import Path
 from typing import Any
 from dash import dcc, html, dash_table
+import numpy as np
 
-from .utils import get_iso_dropdown_options
+from .utils import (
+    DEFAULT_OPACITY,
+    DEFAULT_PLOTLY_THEME,
+    DEFAULT_HEIGHT,
+    DEFAULT_LEGEND,
+    get_iso_dropdown_options,
+)
 from .data import SECTOR_DROPDOWN_OPTIONS_NO_ALL, METADATA
 from . import ids as ids
 from .styles import DATA_TABLE_STYLE
-import dash_bootstrap_components as dbc
+from scipy.stats import gaussian_kde
 
 import pandas as pd
-import plotly
 import plotly.express as px
+import plotly.graph_objects as go
 
 import logging
 
@@ -85,6 +92,7 @@ def cr_result_dropdown() -> html.Div:
             dcc.Dropdown(
                 id=ids.CR_RESULT_DROPDOWN,
                 value="",
+                multi=False,
             ),
         ],
     )
@@ -169,3 +177,68 @@ def get_cr_data_table(
         columns=columns,
         **DATA_TABLE_STYLE,
     )
+
+
+def get_cr_scatter_plot(
+    data: dict[str, Any], nice_names: bool = True, marginal: str = None, **kwargs
+) -> go.Figure:
+    """UA scatter plot component."""
+
+    if not data:
+        logger.debug("No CR scatter plot data found")
+        return px.scatter(
+            pd.DataFrame(columns=["param", "result"]), x="param", y="result"
+        )
+
+    df = _read_serialized_cr_data(data)
+
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+
+    xlabel = {}
+    ylabel = {}
+    for col in df.columns:
+        try:
+            xlabel["nice_name"] = METADATA["parameters"][col]["label"]
+            xlabel["name"] = col
+            xlabel["unit"] = METADATA["parameters"][col]["unit"]
+            continue
+        except KeyError:
+            logger.debug(f"{col} not in parameters")
+        try:
+            label_name = "label2" if "label2" in METADATA["results"][col] else "label"
+            ylabel["nice_name"] = METADATA["results"][col][label_name]
+            ylabel["name"] = col
+            ylabel["unit"] = METADATA["results"][col]["unit"]
+            continue
+        except KeyError:
+            logger.info(f"No nice name for for value {col} in results")
+        logger.error(f"No metadata found for {col}")
+        return px.scatter(
+            pd.DataFrame(columns=["param", "result"]), x="param", y="result"
+        )
+
+    mapper = {xlabel["name"]: xlabel["nice_name"], ylabel["name"]: ylabel["nice_name"]}
+    if nice_names:
+        df = df.rename(columns=mapper)
+
+    x_name = xlabel["nice_name"] if nice_names else xlabel["name"]
+    y_name = ylabel["nice_name"] if nice_names else ylabel["name"]
+
+    fig = px.scatter(
+        df,
+        x=x_name,
+        y=y_name,
+        marginal_y=marginal,
+    )
+
+    fig.update_layout(
+        title="",
+        xaxis_title=f"{x_name} ({xlabel['unit']})",
+        yaxis_title=f"{y_name} ({ylabel['unit']})",
+        height=DEFAULT_HEIGHT,
+        showlegend=True,
+        legend=DEFAULT_LEGEND,
+        template=color_theme,
+    )
+
+    return fig

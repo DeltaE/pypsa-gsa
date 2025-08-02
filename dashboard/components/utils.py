@@ -42,7 +42,9 @@ ISO_STATES = {
 DEFAULT_CONTINOUS_COLOR_SCALE = "pubu"
 DEFAULT_DISCRETE_COLOR_SCALE = "Set3"
 DEFAULT_PLOTLY_THEME = "plotly"
-
+DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+DEFAULT_HEIGHT = 600
+DEFAULT_OPACITY = 0.7
 
 def _convert_to_dropdown_options(options: dict[str, str]) -> list[dict[str, str]]:
     """Convert a dictionary to a list of dropdown options, sorted alphabetically by label."""

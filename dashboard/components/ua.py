@@ -3,7 +3,6 @@
 from typing import Any
 from dash import dcc, html, dash_table
 import pandas as pd
-from pathlib import Path
 
 from .data import (
     UA_RESULT_OPTIONS,
@@ -14,6 +13,9 @@ from .data import (
 from .styles import DATA_TABLE_STYLE
 from .utils import (
     DEFAULT_PLOTLY_THEME,
+    DEFAULT_HEIGHT,
+    DEFAULT_LEGEND,
+    DEFAULT_OPACITY,
     get_ua_sectors_dropdown_options,
 )
 from . import ids as ids
@@ -27,10 +29,6 @@ from scipy.stats import gaussian_kde
 import logging
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-DEFAULT_HEIGHT = 600
-DEFAULT_OPACITY = 0.7
 
 DEFAULT_Y_LABEL = {
     "costs": "Cost ($)",
