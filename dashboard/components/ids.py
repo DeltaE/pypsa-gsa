@@ -69,6 +69,8 @@ GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
 UA_ISO_DATA = "ua-iso-data"  # filtered by ISO
 UA_RUN_DATA = "ua-run-data"  # filtered by result
 
+CR_DATA = "cr-data" # dict of dfs
+
 INPUTS_DATA = "inputs-data"
 INPUTS_DATA_BY_ATTRIBUTE = "inputs-data-by-attribute"
 INPUTS_DATA_BY_ATTRIBUTE_CARRIER = "inputs-data-by-attribute-carrier"
@@ -78,6 +80,7 @@ UA_DATA_TABLE = "ua-data-table"
 GSA_NORMED_DATA_TABLE = "gsa-normed-data-table"
 GSA_RUNS_DATA_TABLE = "gsa-runs-data-table"
 INPUTS_DATA_TABLE = "inputs-data-table"
+CR_DATA_TABLE = "cr-data-table"
 
 # input data plots
 INPUT_DATA_BAR_CHART = "input-data-bar-chart"
@@ -89,9 +92,12 @@ GSA_MAP = "gsa-map"
 GSA_DATA_TABLE = "gsa-data-table"
 
 # ua plots
-UA_DATA_TABLE = "ua-data-table"
 UA_BAR_CHART = "ua-bar-chart"
 UA_SCATTER = "ua-scatter"
 UA_VIOLIN = "ua-violin"
 UA_HISTOGRAM = "ua-histogram"
 UA_BOX_WHISKER = "ua-box-whisker"
+
+# custom result plots
+CR_SCATTER = "cr-scatter"
+CR_HISTOGRAM = "cr-histogram"

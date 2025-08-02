@@ -148,16 +148,12 @@ def _filter_ua_on_result_sector(
 
     results = ["run", "iso"]
     for result in sector_mapper:
-        if result["label"] == sector:
+        if result["label"].lower() == sector:  # lower cause of data definition issue
             results.append(result["value"])
     # results = [x["value"] for x in sector_mapper if x["label"] == sector]
-    try:
-        return df[results]
-    except KeyError:
-        cols = [x for x in results if x in df]
-        missing_cols = [x for x in results if x not in cols]
-        logger.error(f"No data of {missing_cols} for {sector}")
-        return df[cols]
+
+    cols = [x for x in results if x in df]
+    return df[cols]
 
 
 def _filter_ua_on_result_type(df: pd.DataFrame, result_type: str) -> pd.DataFrame:

@@ -6,6 +6,7 @@ import pandas as pd
 import geopandas as gpd
 
 from .utils import (
+    get_cr_data_by_iso,
     get_metadata,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
@@ -29,6 +30,8 @@ GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(METADATA, list(RAW_GSA))
 UA_RESULT_OPTIONS = get_ua_results_dropdown_options(METADATA)
 
 CR_PARAM_OPTIONS = {iso: get_cr_params_dropdown_options(root, iso) for iso in ISOS}
+
+CR_DATA = {iso: get_cr_data_by_iso(root, iso) for iso in ISOS}
 
 SECTOR_DROPDOWN_OPTIONS = [
     {"label": y, "value": x} for x, y in METADATA["nice_names"]["sector"].items()

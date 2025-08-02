@@ -2,11 +2,12 @@
     "nice_names": 
         {
         "sector": {
-            "system": "system",
-            "power": "power",
-            "industry": "industry",
-            "service": "service",
-            "transport": "transport"
+            "all": "All",
+            "system": "System",
+            "power": "Power",
+            "industry": "Industry",
+            "service": "Service",
+            "transport": "Transport"
         },
         "results": {
             "cost": "Cost",

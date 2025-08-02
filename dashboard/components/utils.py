@@ -194,6 +194,47 @@ def get_cr_results_dropdown_options(
         return data
 
 
+def get_cr_data_by_iso(root: Path, iso: str) -> pd.DataFrame:
+    """Get CR data by ISO."""
+    results = _get_cr_run_results(root, iso)
+    samples = _get_cr_run_samples(root, iso)
+    return pd.merge(results, samples, left_index=True, right_index=True)
+
+
+def _get_cr_run_results(root: Path, iso: str) -> pd.DataFrame:
+    """Get CR run results."""
+    results_f = Path(root, "data", "iso", iso, "ua_runs.csv")
+    if not results_f.exists():
+        logger.error(f"No result data for {iso}: {results_f}")
+        return pd.DataFrame()
+    df = pd.read_csv(results_f, index_col=0)
+    return df.round(2).drop(columns=["iso"])
+
+
+def _get_cr_run_samples(root: Path, iso: str) -> list[str]:
+    """Get CR run samples."""
+    names_f = Path(root, "data", "iso", iso, "ua_params.json")
+    samples_f = Path(root, "data", "iso", iso, "sample_data.csv")
+
+    if not names_f.exists():
+        logger.error(f"No Custom Result names for {iso}: {names_f}")
+        return pd.DataFrame()
+    with open(names_f, "r") as f:
+        names = json.load(f)
+
+    if not samples_f.exists():
+        logger.error(f"No Custom Result sample for {iso}: {samples_f}")
+        return pd.DataFrame()
+    sample = pd.read_csv(samples_f, index_col="run").drop(columns=["iso"])
+
+    if not all(x in sample.columns for x in names):
+        missing = [x for x in names if x not in sample.columns]
+        logger.error(f"Missing result from {iso}: {missing}")
+        return pd.DataFrame()
+
+    return sample[list(names)]
+
+
 def get_continuous_color_scale_options() -> list[str]:
     """Get the continuous color scale options."""
     return sorted(pc.named_colorscales())

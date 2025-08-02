@@ -18,6 +18,7 @@ from components.data import (
     SECTOR_DROPDOWN_OPTIONS_ALL,
     SECTOR_DROPDOWN_OPTIONS_IDV,
     CR_PARAM_OPTIONS,
+    CR_DATA,
 )
 
 from components.utils import (
@@ -59,7 +60,7 @@ from components.input_data import (
     get_inputs_data_table,
     input_data_options_block,
 )
-from components.cr import cr_options_block
+from components.cr import cr_options_block, get_cr_data_table
 
 import logging
 
@@ -265,6 +266,7 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_MAP_DATA),
                 dcc.Store(id=ids.UA_ISO_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
+                dcc.Store(id=ids.CR_DATA),
                 dcc.Store(id=ids.INPUTS_DATA),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER),
@@ -289,6 +291,7 @@ app.layout = html.Div(
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_RUN_DATA, "data"),
+        Input(ids.CR_DATA, "data"),
         Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
@@ -301,6 +304,7 @@ def render_tab_content(
     gsa_bar_data: list[dict[str, Any]] | None,
     gsa_map_data: list[dict[str, Any]] | None,
     ua_run_data: list[dict[str, Any]] | None,
+    cr_data: list[dict[str, Any]] | None,
     inputs_data: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
@@ -378,9 +382,13 @@ def render_tab_content(
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.CR_TAB:
-        return html.Div([dbc.Alert("Custom Result", color="info")])
-    else:
-        return html.Div([dbc.Alert("No active tab selected", color="info")])
+        if plotting_type == "data_table":
+            view = get_cr_data_table(cr_data)
+        else:
+            return html.Div([dbc.Alert("Custom Result", color="info")])
+        return html.Div([dbc.Card([dbc.CardBody([view])])])
+    logger.error(f"No active tab selected: {active_tab}")
+    return html.Div([dbc.Alert("No active tab selected", color="info")])
 
 
 @app.callback(
@@ -797,6 +805,8 @@ def callback_update_color_options(
             return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
         else:
             return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+    elif active_tab == ids.CR_TAB:
+        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     else:
         return "", []
 
@@ -1112,6 +1122,31 @@ def callback_update_cr_parameter_dropdown_options(iso: str) -> list[dict[str, st
         return {}
     logger.info(f"CR data: ISO: {iso}")
     return CR_PARAM_OPTIONS[iso]
+
+
+@app.callback(
+    Output(ids.CR_DATA, "data"),
+    [
+        Input(ids.CR_ISO_DROPDOWN, "value"),
+        Input(ids.CR_PARAMETER_DROPDOWN, "value"),
+        Input(ids.CR_RESULT_DROPDOWN, "value"),
+    ],
+)
+def callback_update_cr_data(
+    iso: str, parameter: str, result: str
+) -> list[dict[str, Any]]:
+    """Update CR parameter dropdown value based on ISO."""
+    if not iso:
+        logger.error("ISO not provided")
+        return {}
+    df = CR_DATA[iso]
+    if parameter not in df.columns:
+        logger.error(f"Parameter {parameter} not in CR data for {iso}")
+        return {}
+    if result not in df.columns:
+        logger.error(f"Result {result} not in CR data for {iso}")
+        return {}
+    return df[[parameter, result]].to_dict(orient="records")
 
 
 # Run the server
