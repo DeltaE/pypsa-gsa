@@ -6,17 +6,31 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import geopandas as gpd
 
+from components.data import (
+    METADATA,
+    RAW_GSA,
+    RAW_UA,
+    RAW_PARAMS,
+    ISO_SHAPE,
+    GSA_PARM_OPTIONS,
+    GSA_RESULT_OPTIONS,
+    SECTOR_DROPDOWN_OPTIONS,
+    SECTOR_DROPDOWN_OPTIONS_ALL,
+    SECTOR_DROPDOWN_OPTIONS_IDV,
+    CR_PARAM_OPTIONS,
+    CR_DATA,
+)
+import components.ids as ids
 from components.utils import (
     DEFAULT_PLOTLY_THEME,
     get_continuous_color_scale_options,
+    get_cr_result_types_dropdown_options,
+    get_cr_results_dropdown_options,
     get_discrete_color_scale_options,
-    get_gsa_params_dropdown_options,
-    get_gsa_results_dropdown_options,
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
     get_plotly_plotting_themes,
 )
-import components.ids as ids
 from components.gsa import (
     GSA_RB_OPTIONS,
     filter_gsa_data,
@@ -30,9 +44,6 @@ from components.gsa import (
 )
 from components.shared import iso_options_block, plotting_options_block
 from components.ua import (
-    SECTOR_DROPDOWN_OPTIONS_ALL,
-    SECTOR_DROPDOWN_OPTIONS_IDV,
-    SECTOR_DROPDOWN_OPTIONS,
     filter_ua_on_result_sector_and_type,
     get_ua_box_whisker,
     get_ua_data_table,
@@ -47,6 +58,11 @@ from components.input_data import (
     get_input_data_barchart,
     get_inputs_data_table,
     input_data_options_block,
+)
+from components.cr import (
+    cr_options_block,
+    get_cr_data_table,
+    get_cr_scatter_plot,
 )
 
 import logging
@@ -71,14 +87,6 @@ CONTENT_WIDTH = int(12 - SIDEBAR_WIDTH)
 
 OPTIONS_BLOCK_CLASS = "py-1"
 
-RAW_GSA = pd.read_csv("data/system/sa.csv")
-RAW_UA = pd.read_csv("data/system/ua_runs.csv")
-RAW_PARAMS = pd.read_csv("data/system/parameters.csv")
-ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
-
-root = Path(__file__).parent
-GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
-GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(root)
 
 ########
 # layout
@@ -200,6 +208,25 @@ app.layout = html.Div(
                                     id=ids.UA_OPTIONS_BLOCK,
                                     className=OPTIONS_BLOCK_CLASS,
                                 ),
+                                html.Div(
+                                    [
+                                        dbc.Card(
+                                            [
+                                                dbc.CardBody(
+                                                    [
+                                                        html.H4(
+                                                            "Custom Result Options",
+                                                            className="card-title",
+                                                        ),
+                                                        cr_options_block(),
+                                                    ]
+                                                ),
+                                            ]
+                                        ),
+                                    ],
+                                    id=ids.CR_OPTIONS_BLOCK,
+                                    className=OPTIONS_BLOCK_CLASS,
+                                ),
                             ],
                             md=SIDEBAR_WIDTH,
                         ),
@@ -218,6 +245,10 @@ app.layout = html.Div(
                                         dbc.Tab(
                                             label="Uncertainty Analysis",
                                             tab_id=ids.UA_TAB,
+                                        ),
+                                        dbc.Tab(
+                                            label="Custom Result",
+                                            tab_id=ids.CR_TAB,
                                         ),
                                     ],
                                     id=ids.TABS,
@@ -238,6 +269,7 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_MAP_DATA),
                 dcc.Store(id=ids.UA_ISO_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
+                dcc.Store(id=ids.CR_DATA),
                 dcc.Store(id=ids.INPUTS_DATA),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER),
@@ -262,11 +294,13 @@ app.layout = html.Div(
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_RUN_DATA, "data"),
+        Input(ids.CR_DATA, "data"),
         Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
     State(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+    State(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
 )
 def render_tab_content(
     active_tab: str,
@@ -274,10 +308,12 @@ def render_tab_content(
     gsa_bar_data: list[dict[str, Any]] | None,
     gsa_map_data: list[dict[str, Any]] | None,
     ua_run_data: list[dict[str, Any]] | None,
+    cr_data: list[dict[str, Any]] | None,
     inputs_data: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
     ua_result_type: str,
+    cr_result_type: str,
 ) -> html.Div:
     logger.debug(f"Rendering tab content for: {active_tab}")
     if active_tab == ids.DATA_TAB:
@@ -320,14 +356,18 @@ def render_tab_content(
             view = dcc.Graph(
                 id=ids.UA_VIOLIN,
                 figure=get_ua_violin_plot(
-                    ua_run_data, template=color, result_type=ua_result_type
+                    ua_run_data,
+                    template=color,
+                    result_type=ua_result_type,
                 ),
             )
         elif plotting_type == "scatter":
             view = dcc.Graph(
                 id=ids.UA_SCATTER,
                 figure=get_ua_scatter_plot(
-                    ua_run_data, template=color, result_type=ua_result_type
+                    ua_run_data,
+                    template=color,
+                    result_type=ua_result_type,
                 ),
             )
         elif plotting_type == "histogram":
@@ -344,8 +384,61 @@ def render_tab_content(
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
-    else:
-        return html.Div([dbc.Alert("No active tab selected", color="info")])
+    elif active_tab == ids.CR_TAB:
+        if plotting_type == "data_table":
+            view = get_cr_data_table(cr_data)
+        elif plotting_type == "scatter":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data, template=color, marginal=None, result_type=cr_result_type
+                ),
+            )
+        elif plotting_type == "scatter-box":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="box",
+                    result_type=cr_result_type,
+                ),
+            )
+        elif plotting_type == "scatter-histogram":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="histogram",
+                    result_type=cr_result_type,
+                ),
+            )
+        elif plotting_type == "scatter-rug":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="rug",
+                    result_type=cr_result_type,
+                ),
+            )
+        elif plotting_type == "scatter-violin":
+            view = dcc.Graph(
+                id=ids.UA_SCATTER,
+                figure=get_cr_scatter_plot(
+                    cr_data,
+                    template=color,
+                    marginal="violin",
+                    result_type=cr_result_type,
+                ),
+            )
+        else:
+            return html.Div([dbc.Alert("Custom Result", color="info")])
+        return html.Div([dbc.Card([dbc.CardBody([view])])])
+    logger.error(f"No active tab selected: {active_tab}")
+    return html.Div([dbc.Alert("No active tab selected", color="info")])
 
 
 @app.callback(
@@ -390,6 +483,18 @@ def update_plotting_type_dropdown_options(
             ],
             "heatmap",
         )
+    elif active_tab == ids.CR_TAB:
+        return (
+            [
+                {"label": "Data Table", "value": "data_table"},
+                {"label": "Scatter", "value": "scatter"},
+                {"label": "Scatter (Box)", "value": "scatter-box"},
+                {"label": "Scatter (Histogram)", "value": "scatter-histogram"},
+                {"label": "Scatter (Rug)", "value": "scatter-rug"},
+                {"label": "Scatter (Violin)", "value": "scatter-violin"},
+            ],
+            "scatter",
+        )
     else:
         logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")
         return ([{"label": "Data Table", "value": "data_table"}], "data_table")
@@ -407,6 +512,7 @@ def update_plotting_type_dropdown_options(
         Output(ids.INPUT_DATA_OPTIONS_BLOCK, "style"),
         Output(ids.GSA_OPTIONS_BLOCK, "style"),
         Output(ids.UA_OPTIONS_BLOCK, "style"),
+        Output(ids.CR_OPTIONS_BLOCK, "style"),
     ],
     Input(ids.TABS, "active_tab"),
 )
@@ -424,6 +530,7 @@ def callback_show_hide_option_blocks(
     input_data_options = hidden
     gsa_options = hidden
     ua_options = hidden
+    cr_options = hidden
 
     plotting_style = visible
 
@@ -436,8 +543,17 @@ def callback_show_hide_option_blocks(
     elif active_tab == ids.UA_TAB:
         iso_options = visible
         ua_options = visible
+    elif active_tab == ids.CR_TAB:
+        cr_options = visible
 
-    return plotting_style, iso_options, input_data_options, gsa_options, ua_options
+    return (
+        plotting_style,
+        iso_options,
+        input_data_options,
+        gsa_options,
+        ua_options,
+        cr_options,
+    )
 
 
 ###################################
@@ -708,7 +824,7 @@ def callback_filter_ua_on_result_sector_and_type(
     interval: list[int],
 ) -> list[dict[str, Any]]:
     df = pd.DataFrame(data)
-    df = filter_ua_on_result_sector_and_type(df, result_sector, result_type)
+    df = filter_ua_on_result_sector_and_type(df, result_sector, result_type, METADATA)
     df = remove_ua_outliers(df, interval)
     return df.to_dict("records")
 
@@ -742,6 +858,8 @@ def callback_update_color_options(
             return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
         else:
             return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+    elif active_tab == ids.CR_TAB:
+        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     else:
         return "", []
 
@@ -948,9 +1066,9 @@ def callback_update_ua_results_sector_dropdown_options(
     result_type: str,
 ) -> list[dict[str, str]]:
     logger.debug(f"Updating UA sector dropdown options for: {result_type}")
-    if result_type == "costs":
+    if result_type == "cost":
         options = SECTOR_DROPDOWN_OPTIONS_ALL
-    elif result_type == "marginal_costs":
+    elif result_type == "marginal_cost":
         options = SECTOR_DROPDOWN_OPTIONS
     elif result_type == "emissions":
         options = SECTOR_DROPDOWN_OPTIONS_ALL
@@ -964,6 +1082,142 @@ def callback_update_ua_results_sector_dropdown_options(
         logger.debug(f"Invalid result type for UA sector dropdown: {result_type}")
         options = SECTOR_DROPDOWN_OPTIONS_ALL
     return options, options[0]["value"]
+
+
+########################
+# Custom Result Callbacks
+########################
+
+
+@app.callback(
+    Output(ids.CR_PARAMETER_DROPDOWN, "disabled"),
+    Input(ids.CR_ISO_DROPDOWN, "value"),
+)
+def callback_enable_cr_parameter_dropdown(iso_value: str) -> bool:
+    """Enable CR parameter dropdown only when ISO dropdown has a value."""
+    return not bool(iso_value)
+
+
+@app.callback(
+    Output(ids.CR_INTERVAL_SLIDER, "disabled"),
+    [
+        Input(ids.CR_PARAMETER_DROPDOWN, "value"),
+        Input(ids.CR_RESULT_DROPDOWN, "value"),
+    ],
+)
+def callback_enable_cr_interval_slider(
+    parameter_value: str, result_value: list[str]
+) -> bool:
+    """Enable CR interval slider only when both parameter and result dropdowns have values."""
+    return not (bool(parameter_value) and bool(result_value))
+
+
+@app.callback(
+    Output(ids.CR_RESULT_TYPE_DROPDOWN, "disabled"),
+    Input(ids.CR_SECTOR_DROPDOWN, "value"),
+)
+def callback_enable_cr_result_type_dropdown(sector_value: str) -> bool:
+    """Enable CR result type dropdown only when sector dropdown has a value."""
+    return not bool(sector_value)
+
+
+@app.callback(
+    Output(ids.CR_RESULT_DROPDOWN, "disabled"),
+    [
+        Input(ids.CR_SECTOR_DROPDOWN, "value"),
+        Input(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
+    ],
+)
+def callback_enable_cr_result_dropdown(
+    sector_value: str, result_type_value: str
+) -> bool:
+    """Enable CR result dropdown only when both sector and result type dropdowns have values."""
+    return not (bool(sector_value) and bool(result_type_value))
+
+
+@app.callback(
+    Output(ids.CR_RESULT_TYPE_DROPDOWN, "options"),
+    Input(ids.CR_SECTOR_DROPDOWN, "value"),
+)
+def callback_update_cr_result_type_dropdown_options(
+    sector: str,
+) -> list[dict[str, str]]:
+    """Filter result options based on sector."""
+
+    if sector not in ["system", "power", "industry", "service", "transport"]:
+        logger.error(f"Invalid sector: {sector}")
+        return {}
+
+    return get_cr_result_types_dropdown_options(METADATA, sector)
+
+
+@app.callback(
+    Output(ids.CR_RESULT_DROPDOWN, "options"),
+    Input(ids.CR_SECTOR_DROPDOWN, "value"),
+    Input(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
+)
+def callback_update_cr_result_dropdown_options(
+    sector: str, result_type: str
+) -> list[dict[str, str]]:
+    """Filter result options based on sector."""
+
+    if not sector or not result_type:
+        return {}
+
+    return get_cr_results_dropdown_options(METADATA, sector, result_type)
+
+
+@app.callback(
+    Output(ids.CR_PARAMETER_DROPDOWN, "options"),
+    Input(ids.CR_ISO_DROPDOWN, "value"),
+)
+def callback_update_cr_parameter_dropdown_options(iso: str) -> list[dict[str, str]]:
+    """Update CR parameter dropdown options based on ISO."""
+    if not iso:
+        return {}
+    logger.info(f"CR data: ISO: {iso}")
+    return CR_PARAM_OPTIONS[iso]
+
+
+@app.callback(
+    Output(ids.CR_DATA, "data"),
+    [
+        Input(ids.CR_ISO_DROPDOWN, "value"),
+        Input(ids.CR_PARAMETER_DROPDOWN, "value"),
+        Input(ids.CR_RESULT_DROPDOWN, "value"),
+        Input(ids.CR_INTERVAL_SLIDER, "value"),
+    ],
+)
+def callback_update_cr_data(
+    iso: str, parameter: str, results: list[str], interval: list[int]
+) -> list[dict[str, Any]]:
+    """Update CR parameter dropdown value based on ISO."""
+    if not iso:
+        logger.debug("ISO not provided")
+        return {}
+    if not results:
+        logger.debug("Results not provided")
+        return {}
+    if not parameter:
+        logger.debug("Parameter not provided")
+        return {}
+
+    df = CR_DATA[iso]
+    cols = []
+    if parameter not in df.columns:
+        logger.error(f"Parameter {parameter} not in CR data for {iso}")
+        return {}
+    cols.append(parameter)
+    for result in results:
+        if result not in df.columns:
+            logger.error(f"Result {result} not in CR data for {iso}")
+        else:
+            cols.append(result)
+
+    filtered = df[cols]
+    filtered = remove_ua_outliers(filtered, interval) # ua is same as cr
+
+    return filtered.to_dict(orient="records")
 
 
 # Run the server

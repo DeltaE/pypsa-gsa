@@ -3,14 +3,23 @@
 from typing import Any
 from dash import dcc, html, dash_table
 import pandas as pd
-from pathlib import Path
+
+from .data import (
+    UA_RESULT_OPTIONS,
+    SECTOR_DROPDOWN_OPTIONS,
+    RESULT_TYPE_DROPDOWN_OPTIONS,
+)
 
 from .styles import DATA_TABLE_STYLE
 from .utils import (
     DEFAULT_PLOTLY_THEME,
-    get_ua_params_dropdown_options,
-    get_ua_results_dropdown_options,
-    get_ua_sectors_dropdown_options,
+    DEFAULT_HEIGHT,
+    DEFAULT_LEGEND,
+    DEFAULT_OPACITY,
+    DEFAULT_Y_LABEL,
+    get_ua_param_result_mapper,
+    get_ua_param_sector_mapper,
+    get_y_label,
 )
 from . import ids as ids
 from .utils import _unflatten_dropdown_options
@@ -23,72 +32,6 @@ from scipy.stats import gaussian_kde
 import logging
 
 logger = logging.getLogger(__name__)
-
-root = Path(__file__).parent.parent
-
-UA_PARM_OPTIONS = get_ua_params_dropdown_options(root)
-UA_RESULT_OPTIONS = get_ua_results_dropdown_options(root)
-UA_SECTOR_OPTIONS = get_ua_sectors_dropdown_options(root)
-
-SECTOR_DROPDOWN_OPTIONS = [
-    {"label": "All", "value": "all"},
-    {"label": "System", "value": "system"},
-    {"label": "Power", "value": "power"},
-    {"label": "Industry", "value": "industry"},
-    {"label": "Service", "value": "service"},
-    {"label": "Transportation", "value": "transport"},
-]
-SECTOR_DROPDOWN_OPTIONS_ALL = [
-    {"label": "All", "value": "all"},
-]
-SECTOR_DROPDOWN_OPTIONS_IDV = [
-    {"label": "Power", "value": "power"},
-    {"label": "Industry", "value": "industry"},
-    {"label": "Service", "value": "service"},
-    {"label": "Transportation", "value": "transport"},
-]
-RESULT_TYPE_DROPDOWN_OPTIONS = [
-    {"label": "Costs", "value": "costs"},
-    {"label": "Marginal Costs", "value": "marginal_costs"},
-    {"label": "Emissions", "value": "emissions"},
-    {"label": "New Capacity", "value": "new_capacity"},
-    {"label": "Total Capacity", "value": "total_capacity"},
-    {"label": "Generation", "value": "generation"},
-]
-
-DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-DEFAULT_HEIGHT = 600
-DEFAULT_OPACITY = 0.7
-
-DEFAULT_Y_LABEL = {
-    "costs": "Cost ($)",
-    "marginal_costs": "Marginal Costs ($/MWh)",
-    "emissions": "Emissions (TCO2e)",
-    "new_capacity": "New Capacity (MW)",
-    "total_capacity": "Total Capacity (MW)",
-    "new_capacity_trn": "New Capacity (kVMT)",
-    "total_capacity_trn": "Total Capacity (kVMT)",
-    "generation": "Generation (MWh)",
-    "generation_trn": "Generation (kVMT)",
-}
-
-
-def get_y_label(df: str, result_type: str) -> str:
-    """Get y label for UA scatter plot.
-
-    This is SUUUUUUUPER hacky, but I dont have access the know what sector
-    the data is in. And this just needs to get done! :|
-    """
-    results = df.result.unique()
-
-    try:
-        # transport sector
-        if any([x.endswith(" EV") for x in results]):
-            return DEFAULT_Y_LABEL[result_type + "_trn"]
-        else:
-            return DEFAULT_Y_LABEL[result_type]
-    except KeyError:
-        return "Value"
 
 
 def get_stores_df(df: pd.DataFrame) -> pd.DataFrame:
@@ -164,56 +107,40 @@ def ua_percentile_interval_slider() -> html.Div:
     )
 
 
-def _filter_ua_on_result_sector(df: pd.DataFrame, result_sector: str) -> pd.DataFrame:
+def _filter_ua_on_result_sector(
+    df: pd.DataFrame, sector: str, metadata: dict
+) -> pd.DataFrame:
     """Filter UA data on result sector."""
 
-    sector_mapper = UA_SECTOR_OPTIONS.copy()
-    sector = result_sector.capitalize()
-
-    if result_sector == "all":
+    if sector == "all":
         return df
 
-    assert sector in ["System", "Power", "Industry", "Service", "Transport"], (
-        f"Invalid sector: {result_sector}"
-    )
+    sector_mapper = get_ua_param_sector_mapper(metadata)
 
     results = ["run", "iso"]
     for result in sector_mapper:
         if result["label"] == sector:
             results.append(result["value"])
     # results = [x["value"] for x in sector_mapper if x["label"] == sector]
-    try:
-        return df[results]
-    except KeyError:
-        cols = [x for x in results if x in df]
-        missing_cols = [x for x in results if x not in cols]
-        logger.error(f"No data of {missing_cols} for {sector}")
-        return df[cols]
+
+    cols = [x for x in results if x in df]
+    return df[cols]
 
 
-def _filter_ua_on_result_type(df: pd.DataFrame, result_type: str) -> pd.DataFrame:
+def _filter_ua_on_result_type(
+    df: pd.DataFrame, result_type: str, metadata: dict
+) -> pd.DataFrame:
     """Filter UA data on result type."""
 
-    if result_type == "costs":
-        cols = [x for x in df.columns if "objective_" in x]
-    elif result_type == "marginal_costs":
-        cols = [x for x in df.columns if "marginal_cost_" in x]
-    elif result_type == "emissions":
-        cols = [x for x in df.columns if any(gas in x for gas in ["carbon"])]
-    elif result_type == "new_capacity":
-        cols = [x for x in df.columns if x.endswith("_capacity_new")]
-    elif result_type == "total_capacity":
-        cols = [x for x in df.columns if x.endswith("_capacity")]
-    elif result_type == "generation":
-        cols = [x for x in df.columns if x.endswith(("_generation", "_gen"))]
-    else:
-        cols = []
+    result_mapper = get_ua_param_result_mapper(metadata)
+
+    cols = list(set([x["value"] for x in result_mapper if x["label"] == result_type]))
 
     if not cols:
         logger.debug(f"No columns found for result type {result_type}")
         return pd.DataFrame(index=df.index)
     else:
-        return df.set_index("run")[cols].reset_index()
+        return df.set_index("run")[[x for x in cols if x in df]].reset_index()
 
 
 def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
@@ -234,9 +161,9 @@ def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
         else:
             lower_bound = df[col].quantile(interval_low)
             upper_bound = df[col].quantile(interval_high)
-            logger.debug(
-                f"Removing UA outliers from {col} with interval {interval_low} and {interval_high}"
-            )
+            # logger.debug(
+            #     f"Removing UA outliers from {col} with interval {interval_low} and {interval_high}"
+            # )
             df_out[col] = df[col].where(
                 (df[col] >= lower_bound) & (df[col] <= upper_bound)
             )
@@ -253,8 +180,8 @@ def _read_serialized_ua_data(data: dict[str, Any]) -> pd.DataFrame:
 
 
 def _apply_nice_names(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply nice names to UA data table."""
-    logger.debug("Applying nice names to UA data table")
+    """Apply nice names."""
+    logger.debug("Applying nice names")
     ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
     return df.rename(columns=ua_results)
 
@@ -265,12 +192,12 @@ def _melt_results(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def filter_ua_on_result_sector_and_type(
-    df: pd.DataFrame, result_sector: str, result_type: str
+    df: pd.DataFrame, result_sector: str, result_type: str, metadata: dict
 ) -> pd.DataFrame:
     """Filter UA data on result sector and type."""
-    filtered_on_sector = _filter_ua_on_result_sector(df, result_sector)
+    filtered_on_sector = _filter_ua_on_result_sector(df, result_sector, metadata)
     filtered_on_sector_and_type = _filter_ua_on_result_type(
-        filtered_on_sector, result_type
+        filtered_on_sector, result_type, metadata
     )
     return filtered_on_sector_and_type
 

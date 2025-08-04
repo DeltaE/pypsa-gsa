@@ -10,6 +10,7 @@ from .utils import (
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
 )
+from .data import GSA_RESULT_OPTIONS, GSA_PARM_OPTIONS
 from . import ids as ids
 from .styles import BUTTON_STYLE, DATA_TABLE_STYLE
 import dash_bootstrap_components as dbc
@@ -23,26 +24,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-root = Path(__file__).parent.parent
-
-GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(root)
-GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(root)
-
 GSA_RB_OPTIONS = [
     {"label": html.Span("Name", className="ms-2"), "value": "name", "disabled": False},
     {"label": html.Span("Rank", className="ms-2"), "value": "rank", "disabled": False},
 ]
 
 
-def _default_gsa_params_value() -> list[str]:
+def _default_gsa_params_value(options: list[dict[str, str]]) -> list[str]:
     """Default value for the GSA parameters dropdown."""
     defaults = [
         x["value"]
-        for x in GSA_PARM_OPTIONS
+        for x in options
         if x["value"].endswith(("_electrical_demand", "_veh_lgt_demand"))
     ]
     if not defaults:
-        return GSA_PARM_OPTIONS[0]["value"]
+        return options[0]["value"]
     return defaults
 
 
@@ -137,7 +133,7 @@ def gsa_params_dropdown() -> html.Div:
             dcc.Dropdown(
                 id=ids.GSA_PARAM_DROPDOWN,
                 options=GSA_PARM_OPTIONS,
-                value=_default_gsa_params_value(),
+                value=_default_gsa_params_value(GSA_PARM_OPTIONS),
                 multi=True,
             ),
             html.Div(
@@ -404,7 +400,9 @@ def normalize_mu_star_data(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_gsa_barchart(
-    normed_data: dict[str, Any], nice_names: bool = True, **kwargs: Any
+    normed_data: dict[str, Any],
+    nice_names: bool = True,
+    **kwargs: Any,
 ) -> plotly.graph_objects.Figure:
     """GSA barchart component."""
     if not normed_data:

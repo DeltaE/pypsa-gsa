@@ -218,20 +218,6 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
     return params
 
 
-def assign_parameter_nice_names(root: Path, params: pd.DataFrame) -> pd.DataFrame:
-    """Assigns manually mapped nice names for plotting.
-
-    For plotting, we want to show costs of tech seperate seperate, but nice_names
-    groups them together for Morris. So this needs to be manually provided.
-    """
-    nice_names_f = Path(root, "dashboard", "data", "locked", "nice_names.csv")
-    nice_names = pd.read_csv(nice_names_f).set_index("name").to_dict()["nice_name"]
-
-    params["group_nice_name"] = params.nice_name
-    params["nice_name"] = params.name.map(nice_names).fillna(params.name)
-    return params
-
-
 def correct_params(params: pd.DataFrame) -> pd.DataFrame:
     """Corrects the parameters dataframe for plotting.
 
@@ -333,7 +319,6 @@ if __name__ == "__main__":
 
     params = pd.concat(dfs, axis=0)
     params = assign_parameter_filters(params)
-    params = assign_parameter_nice_names(root, params)
     params = correct_params(params)
     params = params[
         [
@@ -360,34 +345,6 @@ if __name__ == "__main__":
     )
 
     # get nice names
-
-    for iso in ISOS:
-        try:
-            sa_params = get_param_names(root, iso, "gsa")
-            sa_results = get_result_names(root, iso, "gsa")
-        except FileNotFoundError:
-            logger.debug(f"No gsa nice names for {iso}.")
-            pass
-        else:
-            continue
-
-    with open(Path(root, "dashboard", "data", "system", "sa_params.json"), "w") as f:
-        json.dump(sa_params, f, indent=4)
-
-    with open(Path(root, "dashboard", "data", "system", "sa_results.json"), "w") as f:
-        json.dump(sa_results, f, indent=4)
-
-    # ua results will not change, only the input parameters
-    for iso in ISOS:
-        try:
-            ua_results = get_result_names(root, iso, "ua")
-            break
-        except FileNotFoundError:
-            logger.debug(f"No ua nice names for {iso}.")
-            pass
-
-    with open(Path(root, "dashboard", "data", "system", "ua_results.json"), "w") as f:
-        json.dump(ua_results, f, indent=4)
 
     all_params = []
     for iso in ISOS:

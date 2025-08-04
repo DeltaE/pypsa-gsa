@@ -1,0 +1,3775 @@
+{
+    "nice_names": 
+        {
+        "sector": {
+            "all": "All",
+            "system": "System",
+            "power": "Power",
+            "industry": "Industry",
+            "service": "Service",
+            "transport": "Transport"
+        },
+        "results": {
+            "cost": "Cost",
+            "marginal_cost": "Marginal Cost",
+            "emissions": "Emissions",
+            "generation": "Generation",
+            "total_capacity": "Total Capacity",
+            "new_capacity": "New Capacity"
+        },
+        "parameter": {
+            "eff": "Efficiency",
+            "capex": "CAPEX",
+            "fom": "FOM",
+            "lifetime": "Lifetime",
+            "efficiency": "Efficiency",
+            "wacc":"Weighted Average Cost of Capital",
+            "capfac": "Capacity Factor",
+            "trade": "Trade",
+            "p_nom": "Existing Capacity",
+            "marginal_cost": "Marginal Cost",
+            "tct": "Capacity Limits",
+            "discount_rate": "Discount Rate",
+            "demand": "Demand",
+            "ptc": "Production Tax Credit",
+            "itc": "Investment Tax Credit",
+            "dr": "Demand Response",
+            "fuel": "Fuel"
+        }
+    }
+    ,
+    "results": 
+        {
+            "objective_cost": {
+                "label": "Objective Cost",
+                "sector": "system",
+                "result": "cost",
+                "visible": true,
+                "unit": "USD"
+            },
+            "marginal_cost_elec": {
+                "label": "Marginal Cost (Electricity)",
+                "label2": "System Electricity Cost",
+                "sector": "system",
+                "sector2": "power",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_energy": {
+                "label": "Marginal Cost (Energy)",
+                "label2": "System Energy Cost",
+                "sector": "system",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_elec_ind": {
+                "label": "Marginal Cost (Electricity)",
+                "label2": "Industrial Electricity Cost",
+                "sector": "industry",
+                "sector2": "power",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_heat_ind": {
+                "label": "Marginal Cost (Heat)",
+                "label2": "Industrial Heating Cost",
+                "sector": "industry",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_energy_ind": {
+                "label": "Marginal Cost (Energy)",
+                "label2": "Industrial Energy Cost",
+                "sector": "industry",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_elec_res": {
+                "label": "Marginal Cost (Electricity)",
+                "label2": "Residential Electricity Cost",
+                "sector": "service",
+                "sector2": "power",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_space_heat_res": {
+                "label": "Marginal Cost (Space Heat)",
+                "label2": "Residential Space Heat Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_water_heat_res": {
+                "label": "Marginal Cost (Water Heat)",
+                "label2": "Residential Water Heat Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_space_cool_res": {
+                "label": "Marginal Cost (Space Cool)",
+                "label2": "Residential Space Cool Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_energy_res": {
+                "label": "Marginal Cost (Energy)",
+                "label2": "Residential Energy Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_elec_com": {
+                "label": "Marginal Cost (Electricity)",
+                "label2": "Commercial Electricity Cost",
+                "sector": "service",
+                "sector2": "power",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_space_heat_com": {
+                "label": "Marginal Cost (Space Heat)",
+                "label2": "Commercial Space Heat Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_water_heat_com": {
+                "label": "Marginal Cost (Water Heat)",
+                "label2": "Commercial Water Heat Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_space_cool_com": {
+                "label": "Marginal Cost (Space Cool)",
+                "label2": "Commercial Space Cool Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_energy_com": {
+                "label": "Marginal Cost (Energy)",
+                "label2": "Commercial Energy Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_elec_trn": {
+                "label": "Marginal Cost (Electricity)",
+                "label2": "Transport Electricity Cost",
+                "sector": "transport",
+                "sector2": "power",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_energy_trn": {
+                "label": "Marginal Cost (Energy)",
+                "label2": "Transport Energy Cost",
+                "sector": "transport",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "USD/MWh"
+            },
+            "carbon_co2": {
+                "label": "CO2",
+                "label2": "Carbon Emissions",
+                "sector": "system",
+                "result": "emissions",
+                "visible": true,
+                "unit": "T CO2e"
+            },
+            "carbon_ch4": {
+                "label": "CH4",
+                "label2": "Methane Emissions",
+                "sector": "system",
+                "result": "emissions",
+                "visible": true,
+                "unit": "T CO2e"
+            },
+            "carbon_total": {
+                "label": "Total",
+                "label2": "Total Carbon Emissions",
+                "sector": "system",
+                "result": "emissions",
+                "visible": true,
+                "unit": "T CO2e"
+            },
+            "load_shedding": {
+                "label": "Load Shedding",
+                "sector": "system",
+                "result": "other",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "solar_capacity": {
+                "label": "Solar",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "solar_capacity_new": {
+                "label": "Solar",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "onwind_capacity": {
+                "label": "Onshore Wind",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "onwind_capacity_new": {
+                "label": "Onshore Wind",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "offwind_capacity": {
+                "label": "Offshore Wind",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "offwind_capacity_new": {
+                "label": "Offshore Wind",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "wind_capacity": {
+                "label": "Wind",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "wind_capacity_new": {
+                "label": "Wind",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "gas_capacity": {
+                "label": "Gas",
+                "sector": "system",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "gas_capacity_new": {
+                "label": "Gas",
+                "sector": "system",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ocgt_capacity": {
+                "label": "Open-Cycle Gas Turbine",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ocgt_capacity_new": {
+                "label": "Open-Cycle Gas Turbine",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ccgt95ccs_capacity": {
+                "label": "Combined Cycle Gas Turbine (95% CCS)",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ccgt95ccs_capacity_new": {
+                "label": "Combined Cycle Gas Turbine (95% CCS)",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "hydro_capacity": {
+                "label": "Hydro",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "hydro_capacity_new": {
+                "label": "Hydro",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "coal_capacity": {
+                "label": "Coal",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "coal_capacity_new": {
+                "label": "Coal",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "nuclear_capacity": {
+                "label": "Nuclear",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "nuclear_capacity_new": {
+                "label": "Nuclear",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "other_capacity": {
+                "label": "Other",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "other_capacity_new": {
+                "label": "Other",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "geothermal_capacity": {
+                "label": "Geothermal",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "geothermal_capacity_new": {
+                "label": "Geothermal",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "vre_capacity": {
+                "label": "Variable Renewable Energy",
+                "sector": "system",
+                "result": "total_capacity",
+                "visible": false,
+                "unit": "MW"
+            },
+            "vre_capacity_new": {   
+                "label": "Variable Renewable Energy",
+                "sector": "system",
+                "result": "new_capacity",
+                "visible": false,
+                "unit": "MW"
+            },
+            "solar_generation": {
+                "label": "Solar",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "wind_generation": {
+                "label": "Wind",
+                "sector": "power",
+                "result": "generation",
+                "visible": false,
+                "unit": "MWh"
+            },
+            "onwind_generation": {
+                "label": "Onshore Wind",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "offwind_generation": {
+                "label": "Offshore Wind",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "gas_generation": {
+                "label": "Gas",
+                "sector": "system",
+                "result": "generation",
+                "visible": false,
+                "unit": "MWh"
+            },
+            "hydro_generation": {
+                "label": "Hydro",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "coal_generation": {
+                "label": "Coal",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "nuclear_generation": {
+                "label": "Nuclear",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "other_generation": {
+                "label": "Other",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "geothermal_generation": {
+                "label": "Geothermal",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "ocgt_generation": {
+                "label": "Open-Cycle Gas Turbine",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "ccgt_generation": {
+                "label": "Combined Cycle Gas Turbine",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "ccgt95ccs_generation": {
+                "label": "Combined Cycle Gas Turbine (95% CCS)",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "vre_generation": {
+                "label": "Variable Renewable Energy",
+                "sector": "system",
+                "result": "generation",
+                "visible": false,
+                "unit": "MWh"
+            },
+            "hp_capacity": {
+                "label": "Heat Pump",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": false,
+                "unit": "MW"
+            },
+            "hp_capacity_new": {
+                "label": "Heat Pump",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": false,
+                "unit": "MW"
+            },
+            "ashp_capacity": {
+                "label": "Air Source Heat Pump",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "gshp_capacity": {
+                "label": "Ground Source Heat Pump",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "gshp_capacity_new": {
+                "label": "Ground Source Heat Pump",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "air_con_capacity": {
+                "label": "Air Conditioner",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "air_con_capacity_new": {
+                "label": "Air Conditioner",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "gas_furnace_capacity": {
+                "label": "Gas Furnace",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },  
+            "gas_furnace_capacity_new": {
+                "label": "Gas Furnace",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "gas_water_heater_capacity": {
+                "label": "Gas Water Heater",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "gas_water_heater_capacity_new": {
+                "label": "Gas Water Heater",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "oil_water_heater_capacity": {
+                "label": "Oil Water Heater",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "oil_water_heater_capacity_new": {
+                "label": "Oil Water Heater",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "elec_water_heater_capacity": {
+                "label": "Electric Water Heater",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "elec_water_heater_capacity_new": {
+                "label": "Electric Water Heater",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "hp_gen_heat": {
+                "label": "Heat Pump Heating",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "hp_gen_cool": {
+                "label": "Heat Pump Cooling",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "gas_furnace_gen": {
+                "label": "Gas Furnace",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "oil_furnace_gen": {
+                "label": "Oil Furnace",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "elec_furnace_gen": {
+                "label": "Electric Furnace",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "air_con_gen": {
+                "label": "Air Conditioner",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "gas_water_heater_gen": {
+                "label": "Gas Water Heater",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "oil_water_heater_gen": {
+                "label": "Oil Water Heater",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "elec_water_heater_gen": {
+                "label": "Electric Water Heater",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "ev_lgt_capacity": {
+                "label": "Light Duty EV",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_lgt_capacity_new": {
+                "label": "Light Duty EV",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_lgt_capacity": {
+                "label": "Light Duty LPG",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_med_capacity": {
+                "label": "Medium Duty EV",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_med_capacity_new": {
+                "label": "Medium Duty EV",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_hvy_capacity": {
+                "label": "Heavy Duty EV",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_hvy_capacity_new": {
+                "label": "Heavy Duty EV",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_bus_capacity": {
+                "label": "Bus EV",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_bus_capacity_new": {
+                "label": "Bus EV",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_lgt_generation": {
+                "label": "Light Duty EV",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_lgt_generation": {
+                "label": "Light Duty LPG",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_med_generation": {
+                "label": "Medium Duty LPG",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_bus_generation": {
+                "label": "Bus EV",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_bus_generation": {
+                "label": "Bus LPG",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ind_gas_furnace_capacity": {
+                "label": "Gas Furnace",
+                "sector": "industry",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ind_coal_furnace_capacity": {
+                "label": "Coal Furnace",
+                "sector": "industry",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ind_heat_pump_capacity": {
+                "label": "Heat Pump",
+                "sector": "industry",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },  
+            "ind_heat_pump_capacity_new": {
+                "label": "Heat Pump",
+                "sector": "industry",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ind_gas_furnace_generation": {
+                "label": "Gas Furnace",
+                "sector": "industry",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "ind_coal_furnace_generation": {
+                "label": "Coal Furnace",
+                "sector": "industry",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "ind_heat_pump_generation": {
+                "label": "Heat Pump",
+                "sector": "industry",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            }
+        }
+    ,
+    "parameters": 
+        {
+            "capex_com_gas_furnace": {
+              "label": "Commercial Gas Furnace",
+              "label2": "Com. Gas Furnace CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_res_gas_furnace": {
+              "label": "Residential Gas Furnace",
+              "label2": "Res. Gas Furnace CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_com_lpg_furnace": {
+              "label": "Commercial Oil Furnace",
+              "label2": "Com. Oil Furnace CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_res_lpg_furnace": {
+              "label": "Residential Oil Furnace",
+              "label2": "Res. Oil Furnace CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_com_elec_furnace": {
+              "label": "Commercial Electric Furnace",
+              "label2": "Com. Elec Furnace CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_res_elec_furnace": {
+              "label": "Residential Electric Furnace",
+              "label2": "Res. Elec Furnace CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_com_ashp": {
+              "label": "Commercial ASHP",
+              "label2": "Com. ASHP CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_res_ashp": {
+              "label": "Residential ASHP",
+              "label2": "Res. ASHP CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_com_gshp": {
+              "label": "Commercial GSHP",
+              "label2": "Com. GSHP CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_res_gshp": {
+              "label": "Residential GSHP",
+              "label2": "Res. GSHP CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_com_aircon": {
+              "label": "Commercial Air Conditioner",
+              "label2": "Com. Air Conditioner CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_res_aircon": {
+              "label": "Residential Air Conditioner",
+              "label2": "Res. Air Conditioner CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_com_gas_water_heater": {
+              "label": "Commercial Gas Water Heater",
+              "label2": "Com. Gas Water Heater CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "capex_res_gas_water_heater": {
+              "label": "Residential Gas Water Heater",
+              "label2": "Res. Gas Water Heater CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "capex_com_lpg_water_heater": {
+              "label": "Commercial Oil Water Heater",
+              "label2": "Com. Oil Water Heater CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "capex_res_lpg_water_heater": {
+              "label": "Residential Oil Water Heater",
+              "label2": "Res. Oil Water Heater CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "capex_com_elec_water_heater": {
+              "label": "Commercial Electric Water Heater",
+              "label2": "Com. Elec Water Heater CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "capex_res_elec_water_heater": {
+              "label": "Residential Electric Water Heater",
+              "label2": "Res. Elec Water Heater CAPEX",
+              "sector": "service",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "capex_trn_elec_lgt": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "capex_trn_elec_med": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "capex_trn_elec_hvy": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "capex_trn_elec_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "capex_trn_lpg_lgt": {
+              "label": "Light Duty ICE",
+              "label2": "Light Duty ICE CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "capex_trn_lpg_med": {
+              "label": "Medium Duty ICE",
+              "label2": "Medium Duty ICE CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "capex_trn_lpg_hvy": {
+              "label": "Heavy Duty ICE",
+              "label2": "Heavy Duty ICE CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "capex_trn_lpg_bus": {
+              "label": "Bus ICE",
+              "label2": "Bus ICE CAPEX",
+              "sector": "transport",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd"
+            },
+            "fom_com_gas_furnace": {
+              "label": "Commercial Gas Furnace",
+              "label2": "Com. Gas Furnace FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_res_gas_furnace": {
+              "label": "Residential Gas Furnace",
+              "label2": "Res. Gas Furnace FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_com_lpg_furnace": {
+              "label": "Commercial Oil Furnace",
+              "label2": "Com. Oil Furnace FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_res_lpg_furnace": {
+              "label": "Residential Oil Furnace",
+              "label2": "Res. Oil Furnace FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_com_elec_furnace": {
+              "label": "Commercial Electric Furnace",
+              "label2": "Com. Elec Furnace FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_res_elec_furnace": {
+              "label": "Residential Electric Furnace",
+              "label2": "Res. Elec Furnace FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_com_ashp": {
+              "label": "Commercial ASHP",
+              "label2": "Com. ASHP FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_res_ashp": {
+              "label": "Residential ASHP",
+              "label2": "Res. ASHP FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_com_gshp": {
+              "label": "Commercial GSHP",
+              "label2": "Com. GSHP FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_res_gshp": {
+              "label": "Residential GSHP",
+              "label2": "Res. GSHP FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_com_aircon": {
+              "label": "Commercial Air Conditioner",
+              "label2": "Com. Air Conditioner FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_res_aircon": {
+              "label": "Residential Air Conditioner",
+              "label2": "Res. Air Conditioner FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_com_gas_water_heater": {
+              "label": "Commercial Gas Water Heater",
+              "label2": "Com. Gas Water Heater FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "fom_res_gas_water_heater": {
+              "label": "Residential Gas Water Heater",
+              "label2": "Res. Gas Water Heater FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "fom_com_lpg_water_heater": {
+              "label": "Commercial Oil Water Heater",
+              "label2": "Com. Oil Water Heater FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "fom_res_lpg_water_heater": {
+              "label": "Residential Oil Water Heater",
+              "label2": "Res. Oil Water Heater FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "fom_com_elec_water_heater": {
+              "label": "Commercial Electric Water Heater",
+              "label2": "Com. Elec Water Heater FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "fom_res_elec_water_heater": {
+              "label": "Residential Electric Water Heater",
+              "label2": "Res. Elec Water Heater FOM",
+              "sector": "service",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "fom_trn_elec_lgt": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "fom_trn_elec_med": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "fom_trn_elec_hvy": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "fom_trn_elec_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "fom_trn_lpg_lgt": {
+              "label": "Light Duty ICE",
+              "label2": "Light Duty ICE FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "fom_trn_lpg_med": {
+              "label": "Medium Duty ICE",
+              "label2": "Medium Duty ICE FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "fom_trn_lpg_hvy": {
+              "label": "Heavy Duty ICE",
+              "label2": "Heavy Duty ICE FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "fom_trn_lpg_bus": {
+              "label": "Bus ICE",
+              "label2": "Bus ICE FOM",
+              "sector": "transport",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/kvmt"
+            },
+            "lifetime_com_gas_furnace": {
+              "label": "Commercial Gas Furnace",
+              "label2": "Com. Gas Furnace Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_gas_furnace": {
+              "label": "Residential Gas Furnace",
+              "label2": "Res. Gas Furnace Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_lpg_furnace": {
+              "label": "Commercial Oil Furnace",
+              "label2": "Com. Oil Furnace Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_lpg_furnace": {
+              "label": "Residential Oil Furnace",
+              "label2": "Res. Oil Furnace Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_elec_furnace": {
+              "label": "Commercial Electric Furnace",
+              "label2": "Com. Elec Furnace Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_elec_furnace": {
+              "label": "Residential Electric Furnace",
+              "label2": "Res. Elec Furnace Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_ashp": {
+              "label": "Commercial ASHP",
+              "label2": "Com. ASHP Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_ashp": {
+              "label": "Residential ASHP",
+              "label2": "Res. ASHP Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_gshp": {
+              "label": "Commercial GSHP",
+              "label2": "Com. GSHP Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_gshp": {
+              "label": "Residential GSHP",
+              "label2": "Res. GSHP Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_aircon": {
+              "label": "Commercial Air Conditioner",
+              "label2": "Com. Air Conditioner Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_aircon": {
+              "label": "Residential Air Conditioner",
+              "label2": "Res. Air Conditioner Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_gas_water_heater": {
+              "label": "Commercial Gas Water Heater",
+              "label2": "Com. Gas Water Heater Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_gas_water_heater": {
+              "label": "Residential Gas Water Heater",
+              "label2": "Res. Gas Water Heater Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_lpg_water_heater": {
+              "label": "Commercial Oil Water Heater",
+              "label2": "Com. Oil Water Heater Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_lpg_water_heater": {
+              "label": "Residential Oil Water Heater",
+              "label2": "Res. Oil Water Heater Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_com_elec_water_heater": {
+              "label": "Commercial Electric Water Heater",
+              "label2": "Com. Elec Water Heater Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_res_elec_water_heater": {
+              "label": "Residential Electric Water Heater",
+              "label2": "Res. Elec Water Heater Lifetime",
+              "sector": "service",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_elec_lgt": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_elec_med": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_elec_hvy": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_elec_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_lpg_lgt": {
+              "label": "Light Duty ICE",
+              "label2": "Light Duty ICE Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_lpg_med": {
+              "label": "Medium Duty ICE",
+              "label2": "Medium Duty ICE Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_lpg_hvy": {
+              "label": "Heavy Duty ICE",
+              "label2": "Heavy Duty ICE Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_trn_lpg_bus": {
+              "label": "Bus ICE",
+              "label2": "Bus ICE Lifetime",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_vmt_trn_elec_lgt": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "lifetime_vmt_trn_elec_med": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "lifetime_vmt_trn_elec_hvy": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "lifetime_vmt_trn_elec_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "lifetime_vmt_trn_lpg_lgt": {
+              "label": "Light Duty ICE",
+              "label2": "Light Duty ICE Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "lifetime_vmt_trn_lpg_med": {
+              "label": "Medium Duty ICE",
+              "label2": "Medium Duty ICE Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "lifetime_vmt_trn_lpg_hvy": {
+              "label": "Heavy Duty ICE",
+              "label2": "Heavy Duty ICE Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "lifetime_vmt_trn_lpg_bus": {
+              "label": "Bus ICE",
+              "label2": "Bus ICE Milage",
+              "sector": "transport",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "kvmt/year"
+            },
+            "eff_com_gas_furnace": {
+              "label": "Commercial Gas Furnace",
+              "label2": "Com. Gas Furnace Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_res_gas_furnace": {
+              "label": "Residential Gas Furnace",
+              "label2": "Res. Gas Furnace Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_com_lpg_furnace": {
+              "label": "Commercial Oil Furnace",
+              "label2": "Com. Oil Furnace Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_res_lpg_furnace": {
+              "label": "Residential Oil Furnace",
+              "label2": "Res. Oil Furnace Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_com_ashp": {
+              "label": "Commercial ASHP",
+              "label2": "Com. ASHP Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "eff_res_ashp": {
+              "label": "Residential ASHP",
+              "label2": "Res. ASHP Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "eff_com_gshp": {
+              "label": "Commercial GSHP",
+              "label2": "Com. GSHP Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "eff_res_gshp": {
+              "label": "Residential GSHP",
+              "label2": "Res. GSHP Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "eff_com_aircon": {
+              "label": "Commercial Air Conditioner",
+              "label2": "Com. Air Conditioner Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_res_aircon": {
+              "label": "Residential Air Conditioner",
+              "label2": "Res. Air Conditioner Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_com_gas_water_heater": {
+              "label": "Commercial Gas Water Heater",
+              "label2": "Com. Gas Water Heater Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_res_gas_water_heater": {
+              "label": "Residential Gas Water Heater",
+              "label2": "Res. Gas Water Heater Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_com_lpg_water_heater": {
+              "label": "Commercial Oil Water Heater",
+              "label2": "Com. Oil Water Heater Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_res_lpg_water_heater": {
+              "label": "Residential Oil Water Heater",
+              "label2": "Res. Oil Water Heater Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_com_elec_water_heater": {
+              "label": "Commercial Electric Water Heater",
+              "label2": "Com. Elec Water Heater Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_res_elec_water_heater": {
+              "label": "Residential Electric Water Heater",
+              "label2": "Res. Elec Water Heater Efficiency",
+              "sector": "service",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_trn_elec_lgt": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "eff_trn_elec_med": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "eff_trn_elec_hvy": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "eff_trn_elec_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "eff_trn_lpg_lgt": {
+              "label": "Light Duty ICE",
+              "label2": "Light Duty ICE Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "eff_trn_lpg_med": {
+              "label": "Medium Duty ICE",
+              "label2": "Medium Duty ICE Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "eff_trn_lpg_hvy": {
+              "label": "Heavy Duty ICE",
+              "label2": "Heavy Duty ICE Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "eff_trn_lpg_bus": {
+              "label": "Bus ICE",
+              "label2": "Bus ICE Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "kvmt/mwh"
+            },
+            "capex_ind_gas_furnace": {
+              "label": "Gas Furnace",
+              "label2": "Ind. Gas Furnace CAPEX",
+              "sector": "industry",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_ind_coal_furnace": {
+              "label": "Coal Furnace",
+              "label2": "Ind. Coal Furnace CAPEX",
+              "sector": "industry",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "capex_ind_heat_pump": {
+              "label": "Heat Pump",
+              "label2": "Ind. Heat Pump CAPEX",
+              "sector": "industry",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_ind_gas_furnace": {
+              "label": "Gas Furnace",
+              "label2": "Ind. Gas Furnace FOM",
+              "sector": "industry",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_ind_coal_furnace": {
+              "label": "Coal Furnace",
+              "label2": "Ind. Coal Furnace FOM",
+              "sector": "industry",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_ind_heat_pump": {
+              "label": "Heat Pump",
+              "label2": "Ind. Heat Pump FOM",
+              "sector": "industry",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "lifetime_ind_gas_furnace": {
+              "label": "Gas Furnace",
+              "label2": "Ind. Gas Furnace Lifetime",
+              "sector": "industry",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_ind_coal_furnace": {
+              "label": "Coal Furnace",
+              "label2": "Ind. Coal Furnace Lifetime",
+              "sector": "industry",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "lifetime_ind_heat_pump": {
+              "label": "Heat Pump",
+              "label2": "Ind. Heat Pump Lifetime",
+              "sector": "industry",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_ind_gas_furnace": {
+              "label": "Gas Furnace",
+              "label2": "Ind. Gas Furnace Efficiency",
+              "sector": "industry",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_ind_coal_furnace": {
+              "label": "Coal Furnace",
+              "label2": "Ind. Coal Furnace Efficiency",
+              "sector": "industry",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_ind_heat_pump": {
+              "label": "Heat Pump",
+              "label2": "Ind. Heat Pump Efficiency",
+              "sector": "industry",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "capex_coal": {
+              "label": "Coal",
+              "label2": "Coal CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_coal": {
+              "label": "Coal",
+              "label2": "Coal FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_coal": {
+              "label": "Coal",
+              "label2": "Coal WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_coal": {
+              "label": "Coal",
+              "label2": "Coal Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_coal": {
+              "label": "Coal",
+              "label2": "Coal Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_coal": {
+              "label": "Coal",
+              "label2": "Coal Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_oil": {
+              "label": "Oil",
+              "label2": "Oil CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_oil": {
+              "label": "Oil",
+              "label2": "Oil FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_oil": {
+              "label": "Oil",
+              "label2": "Oil WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_oil": {
+              "label": "Oil",
+              "label2": "Oil Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_oil": {
+              "label": "Oil",
+              "label2": "Oil Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_oil": {
+              "label": "Oil",
+              "label2": "Oil Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_geothermal": {
+              "label": "Geothermal",
+              "label2": "Geothermal CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_geothermal": {
+              "label": "Geothermal",
+              "label2": "Geothermal FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_geothermal": {
+              "label": "Geothermal",
+              "label2": "Geothermal WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_geothermal": {
+              "label": "Geothermal",
+              "label2": "Geothermal Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_geothermal": {
+              "label": "Geothermal",
+              "label2": "Geothermal Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_geothermal": {
+              "label": "Geothermal",
+              "label2": "Geothermal Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_waste": {
+              "label": "Waste",
+              "label2": "Waste CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_waste": {
+              "label": "Waste",
+              "label2": "Waste FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_waste": {
+              "label": "Waste",
+              "label2": "Waste WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_waste": {
+              "label": "Waste",
+              "label2": "Waste Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_waste": {
+              "label": "Waste",
+              "label2": "Waste Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_waste": {
+              "label": "Waste",
+              "label2": "Waste Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_ocgt": {
+              "label": "OCGT",
+              "label2": "OCGT CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_ocgt": {
+              "label": "OCGT",
+              "label2": "OCGT FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_ocgt": {
+              "label": "OCGT",
+              "label2": "OCGT WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_ocgt": {
+              "label": "OCGT",
+              "label2": "OCGT Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_ocgt": {
+              "label": "OCGT",
+              "label2": "OCGT Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_ocgt": {
+              "label": "OCGT",
+              "label2": "OCGT Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_ccgt": {
+              "label": "CCGT",
+              "label2": "CCGT CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_ccgt": {
+              "label": "CCGT",
+              "label2": "CCGT FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_ccgt": {
+              "label": "CCGT",
+              "label2": "CCGT WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_ccgt": {
+              "label": "CCGT",
+              "label2": "CCGT Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_ccgt": {
+              "label": "CCGT",
+              "label2": "CCGT Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_ccgt": {
+              "label": "CCGT",
+              "label2": "CCGT Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_ccgt95ccs": {
+              "label": "CCGT-CCS",
+              "label2": "CCGT-CCS CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_ccgt95ccs": {
+              "label": "CCGT-CCS",
+              "label2": "CCGT-CCS FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_ccgt95ccs": {
+              "label": "CCGT-CCS",
+              "label2": "CCGT-CCS WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_ccgt95ccs": {
+              "label": "CCGT-CCS",
+              "label2": "CCGT-CCS Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_ccgt95ccs": {
+              "label": "CCGT-CCS",
+              "label2": "CCGT-CCS Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_ccgt95ccs": {
+              "label": "CCGT-CCS",
+              "label2": "CCGT-CCS Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_biomass": {
+              "label": "Biomass",
+              "label2": "Biomass CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_biomass": {
+              "label": "Biomass",
+              "label2": "Biomass FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_biomass": {
+              "label": "Biomass",
+              "label2": "Biomass WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_biomass": {
+              "label": "Biomass",
+              "label2": "Biomass Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_biomass": {
+              "label": "Biomass",
+              "label2": "Biomass Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_biomass": {
+              "label": "Biomass",
+              "label2": "Biomass Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "percent"
+            },
+            "capex_solar": {
+              "label": "Solar",
+              "label2": "Solar CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_solar": {
+              "label": "Solar",
+              "label2": "Solar FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_solar": {
+              "label": "Solar",
+              "label2": "Solar WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_solar": {
+              "label": "Solar",
+              "label2": "Solar Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_solar": {
+              "label": "Solar",
+              "label2": "Solar Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_solar": {
+              "label": "Solar",
+              "label2": "Solar Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "percent"
+            },
+            "capex_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "percent"
+            },
+            "capex_offwind_floating": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_offwind_floating": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_offwind_floating": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_offwind_floating": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_offwind_floating": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_offwind_floating": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "percent"
+            },
+            "capex_4hr_battery": {
+              "label": "Battery (4hr)",
+              "label2": "Battery (4hr) CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_4hr_battery": {
+              "label": "Battery (4hr)",
+              "label2": "Battery (4hr) FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_4hr_battery": {
+              "label": "Battery (4hr)",
+              "label2": "Battery (4hr) WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_4hr_battery": {
+              "label": "Battery (4hr)",
+              "label2": "Battery (4hr) Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_4hr_battery": {
+              "label": "Battery (4hr)",
+              "label2": "Battery (4hr) Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_4hr_battery": {
+              "label": "Battery (4hr)",
+              "label2": "Battery (4hr) Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capex_8hr_battery": {
+              "label": "Battery (8hr)",
+              "label2": "Battery (8hr) CAPEX",
+              "sector": "power",
+              "param": "capex",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "fom_8hr_battery": {
+              "label": "Battery (8hr)",
+              "label2": "Battery (8hr) FOM",
+              "sector": "power",
+              "param": "fom",
+              "visible": true,
+              "unit": "usd/mw"
+            },
+            "wacc_8hr_battery": {
+              "label": "Battery (8hr)",
+              "label2": "Battery (8hr) WACC",
+              "sector": "power",
+              "param": "wacc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "lifetime_8hr_battery": {
+              "label": "Battery (8hr)",
+              "label2": "Battery (8hr) Lifetime",
+              "sector": "power",
+              "param": "lifetime",
+              "visible": true,
+              "unit": "years"
+            },
+            "eff_8hr_battery": {
+              "label": "Battery (8hr)",
+              "label2": "Battery (8hr) Efficiency",
+              "sector": "power",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "capfac_8hr_battery": {
+              "label": "Battery (8hr)",
+              "label2": "Battery (8hr) Capacity Factor",
+              "sector": "power",
+              "param": "capfac",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "p_nom_com_gas_furnace": {
+              "label": "Commercial Gas Furnace",
+              "label2": "Com. Gas Furnace Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_gas_furnace": {
+              "label": "Residential Gas Furnace",
+              "label2": "Res. Gas Furnace Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_elec_furnace": {
+              "label": "Commercial Oil Furnace",
+              "label2": "Com. Oil Furnace Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_elec_furnace": {
+              "label": "Residential Oil Furnace",
+              "label2": "Res. Oil Furnace Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_lpg_furnace": {
+              "label": "Commercial Electric Furnace",
+              "label2": "Com. Elec Furnace Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_lpg_furnace": {
+              "label": "Residential Electric Furnace",
+              "label2": "Res. Elec Furnace Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_ashp": {
+              "label": "Commercial ASHP",
+              "label2": "Com. ASHP Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_ashp": {
+              "label": "Residential ASHP",
+              "label2": "Res. ASHP Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_gshp": {
+              "label": "Commercial GSHP",
+              "label2": "Com. GSHP Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_gshp": {
+              "label": "Residential GSHP",
+              "label2": "Res. GSHP Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_aircon": {
+              "label": "Commercial Air Conditioner",
+              "label2": "Com. Air Conditioner Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_aircon": {
+              "label": "Residential Air Conditioner",
+              "label2": "Res. Air Conditioner Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_gas_water_heater": {
+              "label": "Commercial Gas Water Heater",
+              "label2": "Com. Gas Water Heater Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_gas_water_heater": {
+              "label": "Residential Gas Water Heater",
+              "label2": "Res. Gas Water Heater Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_lpg_water_heater": {
+              "label": "Commercial Oil Water Heater",
+              "label2": "Com. Oil Water Heater Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_lpg_water_heater": {
+              "label": "Residential Oil Water Heater",
+              "label2": "Res. Oil Water Heater Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_com_elec_water_heater": {
+              "label": "Commercial Electric Water Heater",
+              "label2": "Com. Elec Water Heater Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_res_elec_water_heater": {
+              "label": "Residential Electric Water Heater",
+              "label2": "Res. Elec Water Heater Stock",
+              "sector": "service",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_ind_gas_furnace": {
+              "label": "Industrial Gas Furnace",
+              "label2": "Ind. Gas Furnace Stock",
+              "sector": "industry",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_ind_coal_furnace": {
+              "label": "Industrial Coal Furnace",
+              "label2": "Ind. Coal Furnace Stock",
+              "sector": "industry",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_ind_heat_pump": {
+              "label": "Industrial Heat Pump",
+              "label2": "Ind. Heat Pump Stock",
+              "sector": "industry",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_elec_lgt": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_elec_med": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_elec_hvy": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_elec_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_lpg_lgt": {
+              "label": "Light Duty ICE",
+              "label2": "Light Duty ICE Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_lpg_med": {
+              "label": "Medium Duty ICE",
+              "label2": "Medium Duty ICE Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_lpg_hvy": {
+              "label": "Heavy Duty ICE",
+              "label2": "Heavy Duty ICE Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "p_nom_trn_lpg_bus": {
+              "label": "Bus ICE",
+              "label2": "Bus ICE Stock",
+              "sector": "transport",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ng_imports": {
+              "label": "Import Volume",
+              "label2": "Nat Gas Import Volume",
+              "sector": "Natural Gas",
+              "param": "trade",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ng_exports": {
+              "label": "Export Volume",
+              "label2": "Nat Gas Export Volume",
+              "sector": "Natural Gas",
+              "param": "trade",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ng_pipeline_efficiency": {
+              "label": "Pipeline Efficiency",
+              "label2": "Nat Gas Pipeline Efficiency",
+              "sector": "Natural Gas",
+              "param": "eff",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ng_pipeline_dom_p_nom": {
+              "label": "Domestic Pipeline Capacity",
+              "label2": "Nat Gas Domestic Pipeline Capacity",
+              "sector": "Natural Gas",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ng_pipeline_int_p_nom": {
+              "label": "International Pipeline Capacity",
+              "label2": "Nat Gas International Pipeline Capacity",
+              "sector": "Natural Gas",
+              "param": "p_nom",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ng_processing_p_nom": {
+              "label": "Processing Capacity",
+              "label2": "Nat Gas Processing Capacity",
+              "sector": "Natural Gas",
+              "param": "ng",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ng_leakage_upstream": {
+              "label": "Upstream Leakage",
+              "label2": "Upstream Methane Leakage",
+              "sector": "Carbon",
+              "param": "ng",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ng_leakage_downstream": {
+              "label": "Downstream Leakage",
+              "label2": "Downstream Methane Leakage",
+              "sector": "Carbon",
+              "param": "ng",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "gwp": {
+              "label": "Global Warming Potential",
+              "sector": "Carbon",
+              "param": "gwp",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ng_marginal_cost_import": {
+              "label": "Import Cost",
+              "label2": "Nat Gas Import Cost",
+              "sector": "Natural Gas",
+              "param": "ng",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ng_marginal_cost_export": {
+              "label": "Export Cost",
+              "label2": "Nat Gas Export Cost",
+              "sector": "Natural Gas",
+              "param": "ng",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ng_linepack": {
+              "label": "Linepack Capacity",
+              "label2": "Nat Gas Linepack Capacity",
+              "sector": "Natural Gas",
+              "param": "ng",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ng_storage_limits": {
+              "label": "Underground Storage Capacity",
+              "label2": "Nat Gas Underground Storage Capacity",
+              "sector": "Natural Gas",
+              "param": "ng",
+              "visible": true,
+              "unit": "percent"
+            },
+            "res_electrical_demand": {
+              "label": "Residential Electrical",
+              "label2": "Res. Electrical Demand",
+              "sector": "service",
+              "param": "res",
+              "visible": true,
+              "unit": "percent"
+            },
+            "res_space_heat_demand": {
+              "label": "Residential Space Heat",
+              "label2": "Res. Space Heat Demand",
+              "sector": "service",
+              "param": "res",
+              "visible": true,
+              "unit": "percent"
+            },
+            "res_water_heat_deamand": {
+              "label": "Residential Water Heat",
+              "label2": "Res. Water Heat Demand",
+              "sector": "service",
+              "param": "res",
+              "visible": true,
+              "unit": "percent"
+            },
+            "res_cooling_demand": {
+              "label": "Residential Space Cooling",
+              "label2": "Res. Space Cooling Demand",
+              "sector": "service",
+              "param": "res",
+              "visible": true,
+              "unit": "percent"
+            },
+            "com_electrical_demand": {
+              "label": "Commercial Electrical",
+              "label2": "Com. Electrical Demand",
+              "sector": "service",
+              "param": "com",
+              "visible": true,
+              "unit": "percent"
+            },
+            "com_cooling_demand": {
+              "label": "Commercial Space Heat",
+              "label2": "Com. Space Heat Demand",
+              "sector": "service",
+              "param": "com",
+              "visible": true,
+              "unit": "percent"
+            },
+            "com_space_heat_demand": {
+              "label": "Commercial Water Heat",
+              "label2": "Com. Water Heat Demand",
+              "sector": "service",
+              "param": "com",
+              "visible": true,
+              "unit": "percent"
+            },
+            "com_water_heat_deamand": {
+              "label": "Commercial Space Cooling",
+              "label2": "Com. Space Cooling Demand",
+              "sector": "service",
+              "param": "com",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ind_electrical_demand": {
+              "label": "Industrial Electrical",
+              "label2": "Ind. Electrical Demand",
+              "sector": "industry",
+              "param": "ind",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ind_heat_demand": {
+              "label": "Industrial Heating",
+              "label2": "Ind. Heating Demand",
+              "sector": "industry",
+              "param": "ind",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_veh_lgt_demand": {
+              "label": "Light Duty",
+              "label2": "Light Duty Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_veh_med_demand": {
+              "label": "Medium Duty",
+              "label2": "Medium Duty Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_veh_hvy_demand": {
+              "label": "Heavy Duty",
+              "label2": "Heavy Duty Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_veh_bus_demand": {
+              "label": "Bus",
+              "label2": "Bus Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_ship_boat_demand": {
+              "label": "Domestic Shipping",
+              "label2": "Domestic Shipping Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_rail_psg_demand": {
+              "label": "Passenger Rail",
+              "label2": "Passenger Rail Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_rail_ship_demand": {
+              "label": "Freight Rail",
+              "label2": "Freight Rail Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "trn_air_psg_demand": {
+              "label": "Passenger Air Travel",
+              "label2": "Passenger Air Travel Demand",
+              "sector": "transport",
+              "param": "trn",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ptc_solar": {
+              "label": "Solar",
+              "label2": "Solar Prod. Tax Credit",
+              "sector": "power",
+              "param": "ptc",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "ptc_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind Prod. Tax Credit",
+              "sector": "power",
+              "param": "ptc",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "ptc_offwind": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind Prod. Tax Credit",
+              "sector": "power",
+              "param": "ptc",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "ptc_geo": {
+              "label": "Geothermal",
+              "label2": "Geothermal Prod. Tax Credit",
+              "sector": "power",
+              "param": "ptc",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "ptc_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro Prod. Tax Credit",
+              "sector": "power",
+              "param": "ptc",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "itc_solar": {
+              "label": "Solar",
+              "label2": "Solar Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_onwind": {
+              "label": "Onshore Wind",
+              "label2": "Onshore Wind Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_offwind": {
+              "label": "Offshore Wind",
+              "label2": "Offshore Wind Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_geo": {
+              "label": "Geothermal",
+              "label2": "Geothermal Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_bio": {
+              "label": "Biomass",
+              "label2": "Biomass Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_4hrbat": {
+              "label": "Battery (4hr)",
+              "label2": "Battery (4hr) Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_8hrbat": {
+              "label": "Battery (8hr)",
+              "label2": "Battery (8hr) Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "itc_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear Investment Tax Credit",
+              "sector": "power",
+              "param": "itc",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_gas_furnace": {
+              "label": "Residential Gas Furnace",
+              "label2": "Res. Gas Furnace Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_lpg_furnace": {
+              "label": "Residential Oil Furnace",
+              "label2": "Res. Oil Furnace Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_elec_furnace": {
+              "label": "Residential Electric Furnace",
+              "label2": "Res. Elec Furnace Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_ashp": {
+              "label": "Residential ASHP",
+              "label2": "Res. ASHP Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_gshp": {
+              "label": "Residential GSHP",
+              "label2": "Res. GSHP Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_aircon": {
+              "label": "Residential Air Conditioner",
+              "label2": "Res. Air Conditioner Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_gas_water_heater": {
+              "label": "Residential Gas Water Heater",
+              "label2": "Res. Gas Water Heater Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_lpg_water_heater": {
+              "label": "Residential Oil Water Heater",
+              "label2": "Res. Oil Water Heater Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_res_elec_water_heater": {
+              "label": "Residential Electric Water Heater",
+              "label2": "Res. Elec Water Heater Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_gas_furnace": {
+              "label": "Commercial Gas Furnace",
+              "label2": "Com. Gas Furnace Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_lpg_furnace": {
+              "label": "Commercial Oil Furnace",
+              "label2": "Com. Oil Furnace Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_elec_furnace": {
+              "label": "Commercial Electric Furnace",
+              "label2": "Com. Elec Furnace Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_ashp": {
+              "label": "Commercial ASHP",
+              "label2": "Com. ASHP Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_gshp": {
+              "label": "Commercial GSHP",
+              "label2": "Com. GSHP Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_aircon": {
+              "label": "Commercial Air Conditioner",
+              "label2": "Com. Air Conditioner Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_gas_water_heater": {
+              "label": "Commercial Gas Water Heater",
+              "label2": "Com. Gas Water Heater Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_lpg_water_heater": {
+              "label": "Commercial Oil Water Heater",
+              "label2": "Com. Oil Water Heater Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_com_elec_water_heater": {
+              "label": "Commercial Electric Water Heater",
+              "label2": "Com. Elec Water Heater Discount Rate",
+              "sector": "service",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_ind_gas_furnace": {
+              "label": "Industrial Gas Furnace",
+              "label2": "Ind. Gas Furnace Discount Rate",
+              "sector": "industry",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_ind_coal_furnace": {
+              "label": "Industrial Coal Furnace",
+              "label2": "Ind. Coal Furnace Discount Rate",
+              "sector": "industry",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_ind_heat_pump": {
+              "label": "Industrial Heat Pump",
+              "label2": "Ind. Heat Pump Discount Rate",
+              "sector": "industry",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_elec_lgt": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_elec_med": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_elec_hvy": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_elec_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_lpg_lgt": {
+              "label": "Light Duty ICE",
+              "label2": "Light Duty ICE Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_lpg_med": {
+              "label": "Medium Duty ICE",
+              "label2": "Medium Duty ICE Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_lpg_hvy": {
+              "label": "Heavy Duty ICE",
+              "label2": "Heavy Duty ICE Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "discount_rate_trn_lpg_bus": {
+              "label": "Bus ICE",
+              "label2": "Bus ICE Discount Rate",
+              "sector": "transport",
+              "param": "discount_rate",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "eff_trn_ship_boat": {
+              "label": "Domestic Shipping",
+              "label2": "Domestic Shipping Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "eff_trn_rail_psg": {
+              "label": "Passenger Rail",
+              "label2": "Passenger Rail Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "eff_trn_rail_ship": {
+              "label": "Freight Rail",
+              "label2": "Freight Rail Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "eff_trn_air_psg": {
+              "label": "Passenger Air",
+              "label2": "Passenger Air Efficiency",
+              "sector": "transport",
+              "param": "eff",
+              "visible": true,
+              "unit": "percent"
+            },
+            "res_gshp_limit": {
+              "label": "GSHP Capacity",
+              "label2": "Res. GSHP Capacity",
+              "sector": "service",
+              "param": "res",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "com_gshp_limit": {
+              "label": "GSHP Capacity",
+              "label2": "Com. GSHP Capacity",
+              "sector": "service",
+              "param": "com",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "coal_cost": {
+              "label": "Coal Fuel Cost",
+              "sector": "Primary Fuel",
+              "param": "fuel",
+              "visible": true,
+              "unit": "percent"
+            },
+            "oil_cost": {
+              "label": "Oil Fuel Cost",
+              "sector": "Primary Fuel",
+              "param": "fuel",
+              "visible": true,
+              "unit": "percent"
+            },
+            "lpg_cost": {
+              "label": "LPG Fuel Cost",
+              "sector": "Primary Fuel",
+              "param": "fuel",
+              "visible": true,
+              "unit": "percent"
+            },
+            "nuclear_cost": {
+              "label": "Uranium Fuel Cost",
+              "sector": "Primary Fuel",
+              "param": "fuel",
+              "visible": true,
+              "unit": "percent"
+            },
+            "demand_response": {
+              "label": "Demand Response",
+              "sector": "Demand Response",
+              "param": "dr",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "load_shedding": {
+              "label": "Load Shedding",
+              "sector": "Demand Response",
+              "param": "dr",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "transmission_expansion": {
+              "label": "Transmission Expansion",
+              "sector": "Transmission",
+              "param": "transmission",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "transmission_itl": {
+              "label": "Transmission Flows",
+              "label2": "Transmission Capacity",
+              "sector": "Transmission",
+              "param": "transmission",
+              "visible": true,
+              "unit": "percent"
+            },
+            "ev_policy_lgt_duty": {
+              "label": "Light Duty EV",
+              "label2": "Light Duty EV Policy",
+              "sector": "transport",
+              "param": "ev",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ev_policy_med_duty": {
+              "label": "Medium Duty EV",
+              "label2": "Medium Duty EV Policy",
+              "sector": "transport",
+              "param": "ev",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ev_policy_hvy_duty": {
+              "label": "Heavy Duty EV",
+              "label2": "Heavy Duty EV Policy",
+              "sector": "transport",
+              "param": "ev",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ev_policy_bus": {
+              "label": "Bus EV",
+              "label2": "Bus EV Policy",
+              "sector": "transport",
+              "param": "ev",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "rps": {
+              "label": "Renewable Portfolio Standard",
+              "sector": "power",
+              "param": "rps",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "ces": {
+              "label": "Clean Energy Standard",
+              "sector": "power",
+              "param": "ces",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "elec_trade_flow": {
+              "label": "Electricity Trade Volume",
+              "sector": "power",
+              "param": "trade",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "elec_import_price": {
+              "label": "Electricity Import Price",
+              "sector": "power",
+              "param": "marginal_cost",
+              "visible": true,
+              "unit": "percent"
+            },
+            "elec_export_price": {
+              "label": "Electricity Export Price",
+              "sector": "power",
+              "param": "marginal_cost",
+              "visible": true,
+              "unit": "percent"
+            },
+            "tct_biomass": {
+              "label": "Biomass",
+              "label2": "Biomass Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_geothermal": {
+              "label": "Geothermal",
+              "label2": "Geothermal Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_nuclear": {
+              "label": "Nuclear",
+              "label2": "Nuclear Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_wind": {
+              "label": "Wind",
+              "label2": "Wind Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_solar": {
+              "label": "Solar",
+              "label2": "Solar Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_hydro": {
+              "label": "Hydro",
+              "label2": "Hydro Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_ccgt": {
+              "label": "Combined Cycle Gas Turbine",
+              "label2": "CCGT Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_ccgt_ccs": {
+              "label": "Combined Cycle Gas Turbine (95% CCS)",
+              "label2": "CCGT (95% CCS) Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            },
+            "tct_ocgt": {
+              "label": "Open-Cycle Gas Turbine",
+              "label2": "OCGT Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "per_unit"
+            }
+          }
+    ,
+    "groups": {
+        "capex_gas_furnace": {"label": "CAPEX Service Gas Furnace"},
+        "capex_lpg_furnace": {"label": "CAPEX Service Oil Furnace"} ,
+        "capex_elec_furnace": {"label": "CAPEX Service Electric Furnace"},
+        "capex_ashp": {"label": "CAPEX Service ASHP"},
+        "capex_gshp": {"label": "CAPEX Service GSHP"},
+        "capex_aircon": {"label": "CAPEX Service Air Conditioner"},
+        "capex_gas_water_heater": {"label": "CAPEX Service Gas Water Heater"},
+        "capex_lpg_water_heater": {"label": "CAPEX Service Oil Water Heater"},
+        "capex_elec_water_heater": {"label": "CAPEX Service Electric Water Heater"},
+        "capex_trn_elec": {"label": "CAPEX Electric Vehicles"},
+        "capex_trn_lpg": {"label": "CAPEX Lpg Vehicles"},
+        "fom_gas_furnace": {"label": "FOM Service Gas Furnace"},
+        "fom_lpg_furnace": {"label": "FOM Service Oil Furnace"},
+        "fom_elec_furnace": {"label": "FOM Service Electric Furnace"},
+        "fom_ashp": {"label": "FOM Service ASHP"},
+        "fom_gshp": {"label": "FOM Service GSHP"},
+        "fom_aircon": {"label": "FOM Service Air Conditioner"},
+        "fom_gas_water_heater": {"label": "FOM Service Gas Water Heater"},
+        "fom_lpg_water_heater": {"label": "FOM Service Oil Water Heater"},
+        "fom_elec_water_heater": {"label": "FOM Service Electric Water Heater"},
+        "fom_trn_elec": {"label": "FOM Electric Vehicles"},
+        "fom_trn_lpg": {"label": "FOM Lpg Vehicles"},
+        "lifetime_gas_furnace": {"label": "Lifetime Service Gas Furnace"},
+        "lifetime_lpg_furnace": {"label": "Lifetime Service Oil Furnace"},
+        "lifetime_elec_furnace": {"label": "Lifetime Service Electric Furnace"},
+        "lifetime_ashp": {"label": "Lifetime Service ASHP"},
+        "lifetime_gshp": {"label": "Lifetime Service GSHP"},
+        "lifetime_aircon": {"label": "Lifetime Service Air Conditioner"},
+        "lifetime_gas_water_heater": {"label": "Lifetime Service Gas Water Heater"},
+        "lifetime_lpg_water_heater": {"label": "Lifetime Service Oil Water Heater"},
+        "lifetime_elec_water_heater": {"label": "Lifetime Service Electric Water Heater"},
+        "lifetime_trn_elec": {"label": "Lifetime Electric Vehicles"},
+        "lifetime_trn_lpg": {"label": "Lifetime Lpg Vehicles"},
+        "vmt_trn_lgt": {"label": "Yearly VMT Light Duty Vehicles"},
+        "vmt_trn_med": {"label": "Yearly VMT Med Duty Vehicles"},
+        "vmt_trn_hvy": {"label": "Yearly VMT Heavy Duty Vehicles"},
+        "vmt_trn_bus": {"label": "Yearly VMT Bus Vehicles"},
+        "eff_gas_furnace": {"label": "Efficiency Service Gas Furnace"},
+        "eff_lpg_furnace": {"label": "Efficiency Service Oil Furnace"},
+        "cop_ashp": {"label": "COP Service ASHP"},
+        "cop_gshp": {"label": "COP Service GSHP"},
+        "eff_aircon": {"label": "Efficiency Service Air Conditioner"},
+        "eff_gas_water_heater": {"label": "Efficiency Service Gas Water Heater"},
+        "eff_lpg_water_heater": {"label": "Efficiency Service Oil Water Heater"},
+        "eff_elec_water_heater": {"label": "Efficiency Service Electric Water Heater"},
+        "eff_trn_elec": {"label": "Efficiency Electric Vehicles"},
+        "eff_trn_lpg": {"label": "Efficiency Lpg Vehicles"},
+        "capex_ind_gas_furnace": {"label": "CAPEX Industrial Gas Furnace"},
+        "capex_ind_coal_furnace": {"label": "CAPEX Industrial Coal Furnace"},
+        "capex_ind_heat_pump": {"label": "CAPEX Industrial Heat Pump"},
+        "fom_ind_gas_furnace": {"label": "FOM Industrial Gas Furnace"},
+        "fom_ind_coal_furnace": {"label": "FOM Industrial Coal Furnace"},
+        "fom_ind_heat_pump": {"label": "FOM Industrial Heat Pump"},
+        "lifetime_ind_gas_furnace": {"label": "Lifetime Industrial Gas Furnace"},
+        "lifetime_ind_coal_furnace": {"label": "Lifetime Industrial Coal Furnace"},
+        "lifetime_ind_heat_pump": {"label": "Lifetime Industrial Heat Pump"},
+        "eff_ind_gas_furnace": {"label": "Efficiency Industrial Gas Furnace"},
+        "eff_ind_coal_furnace": {"label": "Efficiency Industrial Coal Furnace"},
+        "eff_ind_heat_pump": {"label": "Efficiency Industrial Heat Pump"},
+        "capex_pwr_fossil": {"label": "CAPEX Fossil Power"},
+        "fom_pwr_fossil": {"label": "FOM Fossil Power"},
+        "wacc_pwr_fossil": {"label": "Discount Rate Fossil Power"},
+        "lifetime_pwr_fossil": {"label": "Lifetime Fossil Power"},
+        "eff_pwr_fossil": {"label": "Efficiency Fossil Power"},
+        "capfac_pwr_fossil": {"label": "Capacity Factor Fossil Power"},
+        "capex_pwr_geo": {"label": "CAPEX Geothermal"},
+        "fom_pwr_geo": {"label": "FOM Geothermal"},
+        "wacc_pwr_geo": {"label": "Discount Rate Geothermal"},
+        "lifetime_pwr_geo": {"label": "Lifetime Geothermal"},
+        "eff_pwr_geo": {"label": "Efficiency Geothermal"},
+        "capfac_pwr_geo": {"label": "Capacity Factor Geothermal"},
+        "capex_pwr_natgas": {"label": "CAPEX Nat Gas Power"},
+        "fom_pwr_natgas": {"label": "FOM Nat Gas Power"},
+        "wacc_pwr_natgas": {"label": "Discount Rate Nat Gas Power"},
+        "lifetime_pwr_natgas": {"label": "Lifetime Nat Gas Power"},
+        "eff_pwr_natgas": {"label": "Efficiency Nat Gas Power"},
+        "capfac_pwr_natgas": {"label": "Capacity Factor Nat Gas Power"},
+        "capex_pwr_clean": {"label": "CAPEX Clean Power"},
+        "fom_pwr_clean": {"label": "FOM Clean Power"},
+        "wacc_pwr_clean": {"label": "Discount Rate Clean Power"},
+        "lifetime_pwr_clean": {"label": "Lifetime Clean Power"},
+        "eff_pwr_clean": {"label": "Efficiency Clean Power"},
+        "capfac_pwr_clean": {"label": "Capacity Factor Clean Power"},
+        "capex_solar": {"label": "CAPEX Solar"},
+        "fom_solar": {"label": "FOM Solar"},
+        "wacc_solar": {"label": "Discount Rate Solar"},
+        "lifetime_solar": {"label": "Lifetime Solar"},
+        "eff_solar": {"label": "Efficiency Solar"},
+        "capfac_solar": {"label": "Capacity Factor Solar"},
+        "capex_wind": {"label": "CAPEX Wind"},
+        "fom_wind": {"label": "FOM Wind"},
+        "wacc_wind": {"label": "Discount Rate Wind"},
+        "lifetime_wind": {"label": "Lifetime Wind"},
+        "eff_wind": {"label": "Efficiency Wind"},
+        "capfac_wind": {"label": "Capacity Factor Wind"},
+        "capex_battery": {"label": "CAPEX Battery"},
+        "fom_battery": {"label": "FOM Battery"},
+        "wacc_battery": {"label": "Discount Rate Battery"},
+        "lifetime_battery": {"label": "Lifetime Battery"},
+        "eff_battery": {"label": "Efficiency Battery"},
+        "capfac_battery": {"label": "Capacity Factor Battery"},
+        "p_nom_gas_furnace": {"label": "Stock Service Gas Furnace"},
+        "p_nom_elec_furnace": {"label": "Stock Service Oil Furnace"},
+        "p_nom_lpg_furnace": {"label": "Stock Service Electric Furnace"},
+        "p_nom_ashp": {"label": "Stock Service ASHP"},
+        "p_nom_gshp": {"label": "Stock Service GSHP"},
+        "p_nom_aircon": {"label": "Stock Service Air Conditioner"},
+        "p_nom_gas_water_heater": {"label": "Stock Service Gas Water Heater"},
+        "p_nom_lpg_water_heater": {"label": "Stock Service Oil Water Heater"},
+        "p_nom_elec_water_heater": {"label": "Stock Service Electric Water Heater"},
+        "p_nom_ind_gas_furnace": {"label": "Stock Industrial Gas Furnace"},
+        "p_nom_ind_coal_furnace": {"label": "Stock Industrial Coal Furnace"},
+        "p_nom_ind_heat_pump": {"label": "Stock Industrial Heat Pump"},
+        "p_nom_trn_elec": {"label": "Stock Electric Vehicles"},
+        "p_nom_trn_lpg": {"label": "Stock LPG Vehicles"},
+        "ng_imports": {"label": "Nat Gas Imports"},
+        "ng_exports": {"label": "Nat Gas Exports"},
+        "ng_pipeline_efficiency": {"label": "Nat Gas Pipeline Efficiency"},
+        "ng_pipeline_p_nom": {"label": "Nat Gas Pipeline Capacity"},
+        "ng_processing_p_nom": {"label": "Nat Gas Processing Capacity"},
+        "ng_leakage_upstream": {"label": "Nat Gas Leakage Upstream"},
+        "ng_leakage_downstream": {"label": "Nat Gas Leakage Downstream"},
+        "gwp": {"label": "Global Warming Potential"},
+        "ng_marginal_cost_import": {"label": "Nat Gas Import Cost"},
+        "ng_marginal_cost_export": {"label": "Nat Gas Export Cost"},
+        "ng_linepack": {"label": "Nat Gas Linepack Capacity"},
+        "ng_storage_limits": {"label": "Nat Gas Underground Storage"},
+        "res_electrical_demand": {"label": "Residential Electrical Demand"},
+        "res_space_heat_demand": {"label": "Residential Space Heat Demand"},
+        "res_water_heat_deamand": {"label": "Residential Water Heat Demand"},
+        "res_cooling_demand": {"label": "Residential Space Cooling Demand"},
+        "com_electrical_demand": {"label": "Commercial Electrical Demand"},
+        "com_cooling_demand": {"label": "Commercial Space Heat Demand"},
+        "com_space_heat_demand": {"label": "Commercial Water Heat Demand"},
+        "com_water_heat_deamand": {"label": "Commercial Space Cooling Demand"},
+        "ind_electrical_demand": {"label": "Industrial Electrical Demand"},
+        "ind_heat_demand": {"label": "Industrial Heating Demand"},
+        "trn_veh_lgt_demand": {"label": "Light-Duty Vehicle Demand"},
+        "trn_veh_med_demand": {"label": "Med-Duty Vehicle Demand"},
+        "trn_veh_hvy_demand": {"label": "Heavy-Duty Vehicle Demand"},
+        "trn_veh_bus_demand": {"label": "Bus Vehicle Demand"},
+        "trn_ship_boat_demand": {"label": "Domestic Shipping Demand"},
+        "trn_rail_psg_demand": {"label": "Passenger Rail Demand"},
+        "trn_rail_ship_demand": {"label": "Freight Rail Demand"},
+        "trn_air_psg_demand": {"label": "Passenger Air Travel Demand"},
+        "ptc_solar": {"label": "PTC Solar"},
+        "ptc_wind": {"label": "PTC Wind"},
+        "ptc_geo": {"label": "PTC Geo"},
+        "ptc_hydro": {"label": "PTC Hydro"},
+        "itc_solar": {"label": "ITC Solar"},
+        "itc_wind": {"label": "ITC Wind"},
+        "itc_geo": {"label": "ITC Geo"},
+        "itc_bio": {"label": "ITC Bio"},
+        "itc_hydro": {"label": "ITC Hydro"},
+        "itc_battery": {"label": "ITC Battery"},
+        "itc_nuclear": {"label": "ITC Nuclear"},
+        "res_discount_rate": {"label": "Residenital Discount Rate"},
+        "com_discount_rate": {"label": "Commercial Discount Rate"},
+        "ind_discount_rate": {"label": "Industrial Discount Rate"},
+        "trn_discount_rate": {"label": "Transport Discount Rate"},
+        "eff_trn_ship_boat": {"label": "Efficiency Domestic Shipping"},
+        "eff_trn_rail_psg": {"label": "Efficiency Passenger Rail"},
+        "eff_trn_rail_ship": {"label": "Efficiency Freight Rail"},
+        "eff_trn_air_psg": {"label": "Efficiency Passenger Air"},
+        "gshp_limit": {"label": "GSHP Capacity"},
+        "coal_cost": {"label": "Coal Fuel Cost"},
+        "oil_cost": {"label": "Oil Fuel Cost"},
+        "lpg_cost": {"label": "LPG Fuel Cost"},
+        "nuclear_cost": {"label": "Uranium Fuel Cost"},
+        "demand_response": {"label": "Demand Response"},
+        "load_shedding": {"label": "Load Shedding"},
+        "transmission_expansion": {"label": "Transmission Expansion"},
+        "transmission_itl": {"label": "Transmission Flows"},
+        "ev_policy": {"label": "EV Generation Limit"},
+        "rps": {"label": "Renewable Portfolio Standard"},
+        "elec_trade_flow": {"label": "Electricity Trade Volume"},
+        "elec_import_price": {"label": "Electricity Import Price"},
+        "tct_biomass": {"label": "Biomass Max Capacity"},
+        "tct_geothermal": {"label": "Geothermal Max Capacity"},
+        "tct_nuclear": {"label": "Nuclear Max Capacity"},
+        "tct_wind": {"label": "Wind Max Capacity"},
+        "tct_solar": {"label": "Solar Max Capacity"},
+        "tct_hydro": {"label": "Hydro Max Capacity"},
+        "tct_ccgt": {"label": "Ccgt Max Capacity"},
+        "tct_ccgt_ccs": {"label": "Ccgt-95CCS Max Capacity"},
+        "tct_ocgt": {"label": "Ocgt Max Capacity"}
+    }
+        
+}

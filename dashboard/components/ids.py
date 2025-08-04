@@ -9,6 +9,7 @@ TAB_CONTENT = "tab-content"
 DATA_TAB = "data-tab"
 SA_TAB = "sa-tab"
 UA_TAB = "ua-tab"
+CR_TAB = "cr-tab"
 
 # dropdowns
 ISO_DROPDOWN = "iso-dropdown"
@@ -18,6 +19,12 @@ UA_PARAM_DROPDOWN = "ua-param-dropdown"
 UA_RESULTS_DROPDOWN = "ua-results-dropdown"
 UA_RESULTS_TYPE_DROPDOWN = "ua-results-type-dropdown"
 UA_RESULTS_SECTOR_DROPDOWN = "ua-results-sector-dropdown"
+CR_SECTOR_DROPDOWN = "cr-sector-dropdown"
+CR_ISO_DROPDOWN = "cr-iso-dropdown"
+CR_PARAMETER_DROPDOWN = "cr-parameter-dropdown"
+CR_RESULT_DROPDOWN = "cr-result-dropdown"
+CR_RESULT_TYPE_DROPDOWN = "cr-result-type-dropdown"
+CR_INTERVAL_SLIDER = "cr-interval-slider"
 COLOR_DROPDOWN = "color-scale-dropdown"
 PLOTTING_TYPE_DROPDOWN = "plotting-type-dropdown"
 INPUT_DATA_ATTRIBUTE_DROPDOWN = "inputs-attribute-dropdown"
@@ -49,6 +56,7 @@ GSA_PARAMS_RESULTS_COLLAPSE = "gsa-params-results-collapse"
 GSA_PARAMS_SLIDER_COLLAPSE = "gsa-range-slider-collapse"
 UA_OPTIONS_BLOCK = "ua-options-block"
 INPUT_DATA_OPTIONS_BLOCK = "input-data-options-block"
+CR_OPTIONS_BLOCK = "cr-options-block"
 
 # gsa stores
 GSA_ISO_DATA = "gsa-iso-data"  # other stores use this
@@ -61,6 +69,8 @@ GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
 UA_ISO_DATA = "ua-iso-data"  # filtered by ISO
 UA_RUN_DATA = "ua-run-data"  # filtered by result
 
+CR_DATA = "cr-data" # dict of dfs
+
 INPUTS_DATA = "inputs-data"
 INPUTS_DATA_BY_ATTRIBUTE = "inputs-data-by-attribute"
 INPUTS_DATA_BY_ATTRIBUTE_CARRIER = "inputs-data-by-attribute-carrier"
@@ -70,6 +80,7 @@ UA_DATA_TABLE = "ua-data-table"
 GSA_NORMED_DATA_TABLE = "gsa-normed-data-table"
 GSA_RUNS_DATA_TABLE = "gsa-runs-data-table"
 INPUTS_DATA_TABLE = "inputs-data-table"
+CR_DATA_TABLE = "cr-data-table"
 
 # input data plots
 INPUT_DATA_BAR_CHART = "input-data-bar-chart"
@@ -81,9 +92,12 @@ GSA_MAP = "gsa-map"
 GSA_DATA_TABLE = "gsa-data-table"
 
 # ua plots
-UA_DATA_TABLE = "ua-data-table"
 UA_BAR_CHART = "ua-bar-chart"
 UA_SCATTER = "ua-scatter"
 UA_VIOLIN = "ua-violin"
 UA_HISTOGRAM = "ua-histogram"
 UA_BOX_WHISKER = "ua-box-whisker"
+
+# custom result plots
+CR_SCATTER = "cr-scatter"
+CR_HISTOGRAM = "cr-histogram"
