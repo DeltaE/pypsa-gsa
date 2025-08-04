@@ -1204,6 +1204,7 @@ def callback_update_cr_data(
 
     df = CR_DATA[iso]
     cols = []
+    print(df.columns)
     if parameter not in df.columns:
         logger.error(f"Parameter {parameter} not in CR data for {iso}")
         return {}
@@ -1215,7 +1216,7 @@ def callback_update_cr_data(
             cols.append(result)
 
     filtered = df[cols]
-    filtered = remove_ua_outliers(filtered, interval) # ua is same as cr
+    filtered = remove_ua_outliers(filtered, interval)  # ua is same as cr
 
     return filtered.to_dict(orient="records")
 

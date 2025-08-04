@@ -1,5 +1,6 @@
 """Independent script to collect result data into a database."""
 
+from typing import Any
 import pandas as pd
 from pathlib import Path
 import json
@@ -228,7 +229,46 @@ def correct_params(params: pd.DataFrame) -> pd.DataFrame:
     return params
 
 
+def get_ur_params_expanded(
+    ua_params: dict[str, str], params: pd.DataFrame
+) -> dict[str, str]:
+    """Expands the CR parameters to be index names, rather than group names."""
+    cr_params = {}
+    for group, _ in ua_params.items():
+        temp = params[params.group == group]
+        for row in temp.itertuples():
+            cr_params[row.name] = row.nice_name
+    return cr_params
+
+
+def check_metadata(
+    metadata: dict[str, Any], params: pd.DataFrame, results: pd.DataFrame
+) -> None:
+    """Checks that the metadata exists for all params/results."""
+    for param in params.name.unique():
+        if param not in metadata["parameters"]:
+            raise ValueError(f"Parameter {param} not found in metadata parameters.")
+    for group in params.group.unique():
+        if group not in metadata["groups"]:
+            raise ValueError(f"Group {group} not found in metadata groups.")
+    for result in results.name.unique():
+        if result not in metadata["results"]:
+            raise ValueError(f"Result {result} not found in metadata results.")
+
+
 if __name__ == "__main__":
+    # ensure metadata exists for all params/results
+    metadata = json.load(
+        open(Path(root, "dashboard", "data", "locked", "metadata.json"))
+    )
+    for iso in ISOS:
+        try:
+            params = pd.read_csv(Path(root, "results", iso, "gsa", "parameters.csv"))
+            results = pd.read_csv(Path(root, "results", iso, "ua", "results.csv"))
+            check_metadata(metadata, params, results)
+        except FileNotFoundError:
+            continue
+
     # sensitivity measures
 
     dfs = []
@@ -325,7 +365,7 @@ if __name__ == "__main__":
             "name",
             "nice_name",
             "group",
-            "group_nice_name",
+            # "group_nice_name",
             "iso",
             "component",
             "carrier",
@@ -355,10 +395,12 @@ if __name__ == "__main__":
             logger.debug(f"No ua nice names for {iso}.")
             continue
 
+        ua_params_expanded = get_ur_params_expanded(ua_params, params)
+
         with open(
             Path(root, "dashboard", "data", "iso", iso, "ua_params.json"), "w"
         ) as f:
-            json.dump(ua_params, f, indent=4)
+            json.dump(ua_params_expanded, f, indent=4)
 
     combined_params = {}
     for params in all_params:
