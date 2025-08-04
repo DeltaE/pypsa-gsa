@@ -84,6 +84,22 @@ def get_iso_dropdown_options() -> list[dict[str, str]]:
     """Get the ISO dropdown options."""
     return _convert_to_dropdown_options(ISOS)
 
+def get_y_label(df: str, result_type: str) -> str:
+    """Get y label for UA scatter plot.
+
+    This is SUUUUUUUPER hacky, but I dont have access the know what sector
+    the data is in. And this just needs to get done! :|
+    """
+    results = df.result.unique()
+
+    try:
+        # transport sector
+        if any([x.endswith(" EV") for x in results]):
+            return DEFAULT_Y_LABEL[result_type + "_trn"]
+        else:
+            return DEFAULT_Y_LABEL[result_type]
+    except KeyError:
+        return "Value"
 
 def get_gsa_params_dropdown_options(metadata: dict) -> list[dict[str, str]]:
     """Get the GSA parameters dropdown options."""

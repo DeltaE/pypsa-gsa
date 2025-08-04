@@ -300,6 +300,7 @@ app.layout = html.Div(
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
     State(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+    State(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
 )
 def render_tab_content(
     active_tab: str,
@@ -312,6 +313,7 @@ def render_tab_content(
     plotting_type: str,
     color: str,
     ua_result_type: str,
+    cr_result_type: str,
 ) -> html.Div:
     logger.debug(f"Rendering tab content for: {active_tab}")
     if active_tab == ids.DATA_TAB:
@@ -388,7 +390,9 @@ def render_tab_content(
         elif plotting_type == "scatter":
             view = dcc.Graph(
                 id=ids.UA_SCATTER,
-                figure=get_cr_scatter_plot(cr_data, template=color, marginal=None),
+                figure=get_cr_scatter_plot(
+                    cr_data, template=color, marginal=None, result_type=cr_result_type
+                ),
             )
         elif plotting_type == "scatter-box":
             view = dcc.Graph(
@@ -397,6 +401,7 @@ def render_tab_content(
                     cr_data,
                     template=color,
                     marginal="box",
+                    result_type=cr_result_type,
                 ),
             )
         elif plotting_type == "scatter-histogram":
@@ -406,6 +411,7 @@ def render_tab_content(
                     cr_data,
                     template=color,
                     marginal="histogram",
+                    result_type=cr_result_type,
                 ),
             )
         elif plotting_type == "scatter-rug":
@@ -415,6 +421,7 @@ def render_tab_content(
                     cr_data,
                     template=color,
                     marginal="rug",
+                    result_type=cr_result_type,
                 ),
             )
         elif plotting_type == "scatter-violin":
@@ -424,6 +431,7 @@ def render_tab_content(
                     cr_data,
                     template=color,
                     marginal="violin",
+                    result_type=cr_result_type,
                 ),
             )
         else:
@@ -1097,7 +1105,9 @@ def callback_enable_cr_parameter_dropdown(iso_value: str) -> bool:
         Input(ids.CR_RESULT_DROPDOWN, "value"),
     ],
 )
-def callback_enable_cr_interval_slider(parameter_value: str, result_value: str) -> bool:
+def callback_enable_cr_interval_slider(
+    parameter_value: str, result_value: list[str]
+) -> bool:
     """Enable CR interval slider only when both parameter and result dropdowns have values."""
     return not (bool(parameter_value) and bool(result_value))
 
@@ -1175,24 +1185,39 @@ def callback_update_cr_parameter_dropdown_options(iso: str) -> list[dict[str, st
         Input(ids.CR_ISO_DROPDOWN, "value"),
         Input(ids.CR_PARAMETER_DROPDOWN, "value"),
         Input(ids.CR_RESULT_DROPDOWN, "value"),
+        Input(ids.CR_INTERVAL_SLIDER, "value"),
     ],
 )
 def callback_update_cr_data(
-    iso: str, parameter: str, results: list[str]
+    iso: str, parameter: str, results: list[str], interval: list[int]
 ) -> list[dict[str, Any]]:
     """Update CR parameter dropdown value based on ISO."""
     if not iso:
-        logger.error("ISO not provided")
+        logger.debug("ISO not provided")
         return {}
+    if not results:
+        logger.debug("Results not provided")
+        return {}
+    if not parameter:
+        logger.debug("Parameter not provided")
+        return {}
+
     df = CR_DATA[iso]
+    cols = []
     if parameter not in df.columns:
         logger.error(f"Parameter {parameter} not in CR data for {iso}")
         return {}
+    cols.append(parameter)
     for result in results:
         if result not in df.columns:
             logger.error(f"Result {result} not in CR data for {iso}")
-            return {}
-    return df[[parameter] + results].to_dict(orient="records")
+        else:
+            cols.append(result)
+
+    filtered = df[cols]
+    filtered = remove_ua_outliers(filtered, interval) # ua is same as cr
+
+    return filtered.to_dict(orient="records")
 
 
 # Run the server

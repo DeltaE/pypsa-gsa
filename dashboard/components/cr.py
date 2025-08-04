@@ -1,21 +1,18 @@
 """Custom Result."""
 
-from pathlib import Path
 from typing import Any
 from dash import dcc, html, dash_table
-import numpy as np
 
 from .utils import (
-    DEFAULT_OPACITY,
     DEFAULT_PLOTLY_THEME,
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
     get_iso_dropdown_options,
+    get_y_label,
 )
 from .data import SECTOR_DROPDOWN_OPTIONS_NO_ALL, METADATA
 from . import ids as ids
 from .styles import DATA_TABLE_STYLE
-from scipy.stats import gaussian_kde
 
 import pandas as pd
 import plotly.express as px
@@ -92,7 +89,7 @@ def cr_result_dropdown() -> html.Div:
             dcc.Dropdown(
                 id=ids.CR_RESULT_DROPDOWN,
                 value="",
-                multi=False,
+                multi=True,
             ),
         ],
     )
@@ -192,52 +189,58 @@ def get_cr_scatter_plot(
 
     df = _read_serialized_cr_data(data)
 
-    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
-
-    xlabel = {}
-    ylabel = {}
     for col in df.columns:
-        try:
-            xlabel["nice_name"] = METADATA["parameters"][col]["label"]
-            xlabel["name"] = col
-            xlabel["unit"] = METADATA["parameters"][col]["unit"]
-            continue
-        except KeyError:
-            logger.debug(f"{col} not in parameters")
-        try:
-            label_name = "label2" if "label2" in METADATA["results"][col] else "label"
-            ylabel["nice_name"] = METADATA["results"][col][label_name]
-            ylabel["name"] = col
-            ylabel["unit"] = METADATA["results"][col]["unit"]
-            continue
-        except KeyError:
-            logger.info(f"No nice name for for value {col} in results")
-        logger.error(f"No metadata found for {col}")
-        return px.scatter(
-            pd.DataFrame(columns=["param", "result"]), x="param", y="result"
+        if col in METADATA["parameters"]:
+            id_var = col
+            id_var_nice_name = METADATA["parameters"][col]["label"]
+            id_var_unit = METADATA["parameters"][col]["unit"]
+            break  # only one xlabel
+
+    df_melted = df.melt(id_vars=[id_var], var_name="result", value_name="value")
+
+    ylabels = {}
+    for result in df_melted.result:
+        ylabels[result] = {}
+        if result in METADATA["results"]:
+            label_name = (
+                "label2" if "label2" in METADATA["results"][result] else "label"
+            )
+            ylabels[result]["nice_name"] = METADATA["results"][result][label_name]
+            ylabels[result]["name"] = result
+            ylabels[result]["unit"] = METADATA["results"][result]["unit"]
+        else:
+            ylabels[result]["nice_name"] = result
+            ylabels[result]["name"] = result
+            ylabels[result]["unit"] = ""
+
+    if nice_names:
+        df_melted = df_melted.rename(columns={id_var: id_var_nice_name})
+        df_melted["result"] = df_melted.result.map(
+            {x: y["nice_name"] for x, y in ylabels.items()}
         )
 
-    mapper = {xlabel["name"]: xlabel["nice_name"], ylabel["name"]: ylabel["nice_name"]}
-    if nice_names:
-        df = df.rename(columns=mapper)
+    x_name = id_var_nice_name if nice_names else id_var
 
-    x_name = xlabel["nice_name"] if nice_names else xlabel["name"]
-    y_name = ylabel["nice_name"] if nice_names else ylabel["name"]
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+    result_type = kwargs.get("result_type", None)
+    ylabel = get_y_label(df_melted, result_type)
 
     fig = px.scatter(
-        df,
+        df_melted,
         x=x_name,
-        y=y_name,
+        y="value",
         marginal_y=marginal,
+        color="result",
     )
 
     fig.update_layout(
         title="",
-        xaxis_title=f"{x_name} ({xlabel['unit']})",
-        yaxis_title=f"{y_name} ({ylabel['unit']})",
+        xaxis_title=f"{x_name} ({id_var_unit})",
+        yaxis_title=ylabel,
         height=DEFAULT_HEIGHT,
         showlegend=True,
         legend=DEFAULT_LEGEND,
+        legend_title_text="",
         template=color_theme,
     )
 
