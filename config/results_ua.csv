@@ -52,9 +52,9 @@ onwind_generation,Onshore Wind,generators_t,onwind,p,MWh,pwr_gen
 offwind_generation,Offshore Wind,generators_t,offwind_floating,p,MWh,pwr_gen
 wind_generation,Wind,generators_t,onwind;offwind_floating,p,MWh,pwr_gen
 gas_generation,Gas,links_t,OCGT;CCGT;CCGT-95CCS,p1,MWh,pwr_gen
-ocgt_generation,OCGT,links,OCGT,p1,MW,pwr_gen
-ccgt_generation,CCGT,links,CCGT,p1,MW,pwr_gen
-ccgt95ccs_generation,CCGT-95CCS,links,CCGT-95CCS,p1,MW,pwr_gen
+ocgt_generation,OCGT,links,OCGT,p1,MWh,pwr_gen
+ccgt_generation,CCGT,links,CCGT,p1,MWh,pwr_gen
+ccgt95ccs_generation,CCGT-95CCS,links,CCGT-95CCS,p1,MWh,pwr_gen
 hydro_generation,Hydro,generators_t,hydro,p,MWh,pwr_gen
 coal_generation,Coal,links_t,coal,p1,MWh,pwr_gen
 nuclear_generation,Nuclear,generators_t,nuclear,p,MWh,pwr_gen
