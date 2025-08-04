@@ -143,6 +143,16 @@ def _apply_nice_names(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=mapper)
 
 
+def get_stores_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Extracts out stores that will have different units.
+
+    This is ALSO SUUUUUUUPER hacky, but this just NEEDS to get done! :|
+    """
+    return df[
+        (df.result.str.contains("water_heat")) | (df.result.str.contains("battery"))
+    ]
+
+
 def get_cr_data_table(
     data: dict[str, Any], nice_names: bool = True
 ) -> dash_table.DataTable:
@@ -213,6 +223,11 @@ def get_cr_scatter_plot(
             ylabels[result]["name"] = result
             ylabels[result]["unit"] = ""
 
+    df_stores = get_stores_df(df_melted)
+    if not df_stores.empty:
+        logger.debug("Found stores in CR data")
+        df_melted = df_melted[~df_melted.result.isin(df_stores.result)].copy()
+
     if nice_names:
         df_melted = df_melted.rename(columns={id_var: id_var_nice_name})
         df_melted["result"] = df_melted.result.map(
@@ -243,5 +258,40 @@ def get_cr_scatter_plot(
         legend_title_text="",
         template=color_theme,
     )
+
+    # SUUUUPER hacky way to account for stores being in different units
+    if not df_stores.empty:
+        y_label_store = ylabel.replace("(MW)", "(MWh)")
+
+        if nice_names:
+            df_stores = df_stores.rename(columns={id_var: id_var_nice_name})
+            df_stores["result"] = df_stores.result.map(
+                {x: y["nice_name"] for x, y in ylabels.items()}
+            )
+
+        scatter_fig = px.scatter(
+            df_stores,
+            x=x_name,
+            y="value",
+            color="result",
+            marginal_y=marginal,
+            color_discrete_sequence=px.colors.qualitative.Set2,
+        )
+
+        # so the stores are clearly different
+        scatter_fig.update_traces(marker_symbol="x")
+
+        for trace in scatter_fig.data:
+            trace.yaxis = "y2"
+            fig.add_trace(trace)
+
+        fig.update_layout(
+            yaxis2=dict(
+                title=y_label_store,
+                overlaying="y",
+                side="right",
+                showgrid=False,
+            ),
+        )
 
     return fig

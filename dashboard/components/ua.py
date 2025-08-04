@@ -161,9 +161,9 @@ def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
         else:
             lower_bound = df[col].quantile(interval_low)
             upper_bound = df[col].quantile(interval_high)
-            logger.debug(
-                f"Removing UA outliers from {col} with interval {interval_low} and {interval_high}"
-            )
+            # logger.debug(
+            #     f"Removing UA outliers from {col} with interval {interval_low} and {interval_high}"
+            # )
             df_out[col] = df[col].where(
                 (df[col] >= lower_bound) & (df[col] <= upper_bound)
             )
