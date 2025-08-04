@@ -188,6 +188,14 @@
                 "visible": true,
                 "unit": "USD/MWh"
             },
+            "carbon": {
+                "label": "CO2",
+                "label2": "Carbon Emissions",
+                "sector": "system",
+                "result": "emissions",
+                "visible": true,
+                "unit": "T CO2e"
+            },
             "carbon_co2": {
                 "label": "CO2",
                 "label2": "Carbon Emissions",
@@ -298,6 +306,20 @@
             },
             "ocgt_capacity_new": {
                 "label": "Open-Cycle Gas Turbine",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ccgt_capacity": {
+                "label": "Combined Cycle Gas Turbine",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ccgt_capacity_new": {
+                "label": "Combined Cycle Gas Turbine",
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
@@ -520,6 +542,13 @@
                 "visible": true,
                 "unit": "MW"
             },
+            "ashp_capacity_new": {
+                "label": "Air Source Heat Pump",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
             "gshp_capacity": {
                 "label": "Ground Source Heat Pump",
                 "sector": "service",
@@ -557,6 +586,34 @@
             },  
             "gas_furnace_capacity_new": {
                 "label": "Gas Furnace",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "elec_furnace_capacity": {
+                "label": "Electric Furnace",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },  
+            "elec_furnace_capacity_new": {
+                "label": "Electric Furnace",
+                "sector": "service",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "oil_furnace_capacity": {
+                "label": "Oil Furnace",
+                "sector": "service",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },  
+            "oil_furnace_capacity_new": {
+                "label": "Oil Furnace",
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
@@ -618,49 +675,70 @@
                 "visible": true,
                 "unit": "MWh"
             },
-            "gas_furnace_gen": {
+            "hp_generation": {
+                "label": "Heat Pump",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "ashp_generation": {
+                "label": "Air Source Heat Pump",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "gshp_generation": {
+                "label": "Ground Source Heat Pump",
+                "sector": "service",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "gas_furnace_generation": {
                 "label": "Gas Furnace",
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
                 "unit": "MWh"
             },
-            "oil_furnace_gen": {
+            "oil_furnace_generation": {
                 "label": "Oil Furnace",
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
                 "unit": "MWh"
             },
-            "elec_furnace_gen": {
+            "elec_furnace_generation": {
                 "label": "Electric Furnace",
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
                 "unit": "MWh"
             },
-            "air_con_gen": {
+            "air_con_generation": {
                 "label": "Air Conditioner",
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
                 "unit": "MWh"
             },
-            "gas_water_heater_gen": {
+            "gas_water_heater_generation": {
                 "label": "Gas Water Heater",
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
                 "unit": "MWh"
             },
-            "oil_water_heater_gen": {
+            "oil_water_heater_generation": {
                 "label": "Oil Water Heater",
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
                 "unit": "MWh"
             },
-            "elec_water_heater_gen": {
+            "elec_water_heater_generation": {
                 "label": "Electric Water Heater",
                 "sector": "service",
                 "result": "generation",
@@ -688,6 +766,13 @@
                 "visible": true,
                 "unit": "kVMT"
             },
+            "lpg_lgt_capacity_new": {
+                "label": "Light Duty LPG",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
             "ev_med_capacity": {
                 "label": "Medium Duty EV",
                 "sector": "transport",
@@ -697,6 +782,20 @@
             },
             "ev_med_capacity_new": {
                 "label": "Medium Duty EV",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_med_capacity": {
+                "label": "Medium Duty LPG",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_med_capacity_new": {
+                "label": "Medium Duty LPG",
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
@@ -716,6 +815,20 @@
                 "visible": true,
                 "unit": "kVMT"
             },
+            "lpg_hvy_capacity": {
+                "label": "Heavy Duty LPG",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_hvy_capacity_new": {
+                "label": "Heavy Duty LPG",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
             "ev_bus_capacity": {
                 "label": "Bus EV",
                 "sector": "transport",
@@ -725,6 +838,20 @@
             },
             "ev_bus_capacity_new": {
                 "label": "Bus EV",
+                "sector": "transport",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_bus_capacity": {
+                "label": "Bus LPG",
+                "sector": "transport",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_bus_capacity_new": {
+                "label": "Bus LPG",
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
@@ -744,8 +871,29 @@
                 "visible": true,
                 "unit": "kVMT"
             },
+            "ev_med_generation": {
+                "label": "Medium Duty EV",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
             "lpg_med_generation": {
                 "label": "Medium Duty LPG",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "ev_hvy_generation": {
+                "label": "Heavy Duty EV",
+                "sector": "transport",
+                "result": "generation",
+                "visible": true,
+                "unit": "kVMT"
+            },
+            "lpg_hvy_generation": {
+                "label": "Heavy Duty LPG",
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
@@ -772,10 +920,24 @@
                 "visible": true,
                 "unit": "MW"
             },
+            "ind_gas_furnace_capacity_new": {
+                "label": "Gas Furnace",
+                "sector": "industry",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
             "ind_coal_furnace_capacity": {
                 "label": "Coal Furnace",
                 "sector": "industry",
                 "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "ind_coal_furnace_capacity_new": {
+                "label": "Coal Furnace",
+                "sector": "industry",
+                "result": "new_capacity",
                 "visible": true,
                 "unit": "MW"
             },
