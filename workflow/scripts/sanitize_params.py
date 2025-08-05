@@ -14,6 +14,7 @@ from constants import (
 from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 ###
@@ -21,9 +22,7 @@ logger = logging.getLogger(__name__)
 ###
 
 
-def is_valid_attributes(
-    params: pd.DataFrame, n: pypsa.Network | None = None
-) -> bool:
+def is_valid_attributes(params: pd.DataFrame, n: pypsa.Network | None = None) -> bool:
     """Confirm attributes are valid.
 
     Assumes component names are valid.
@@ -56,7 +55,7 @@ def is_valid_attributes(
             valid = attr in VALID_LOAD_T_ATTRS
         else:
             raise ValueError(f"Component {c} not valid")
-        
+
         if not valid:
             try:
                 valid = attr in ADDITIONAL_VALID_ATTRIBUTES[c]
@@ -83,9 +82,7 @@ def is_valid_attributes(
     VALID_STORAGEUNIT_T_ATTRS = list(n.pnl("StorageUnit").keys())
 
     df = params.copy()
-    df.apply(
-        lambda row: _check_attribute(row["component"], row["attribute"]), axis=1
-    )
+    df.apply(lambda row: _check_attribute(row["component"], row["attribute"]), axis=1)
     return True
 
 
@@ -122,7 +119,7 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "buses"
             case "bus_t" | "buses_t":
                 return "buses_t"
-            case "system" | "network": # results processing
+            case "system" | "network":  # results processing
                 return "system"
             case _:
                 raise KeyError(c)
@@ -136,31 +133,43 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
 # Sanitize units
 ###
 
+
 def correct_usd(params: pd.DataFrame) -> pd.DataFrame:
     """Ensures all 'usd' references are lowercase"""
-    
+
     df = params.copy()
     df["unit"] = df["unit"].str.replace("USD", "usd")
     return df
+
 
 def correct_water_heater_units(params: pd.DataFrame) -> pd.DataFrame:
     """Takes same assumptions from PyPSA-USA
 
     USD/gal -> USD/MWh (water storage)
       assume cp = 4.186 kJ/kg/C
+
+      1. Get USD/kg water
       (USD / gal) * (1 gal / 3.75 liter) * (1L / 1 kg H2O) = 0.267 USD / kg water
-      (0.267 USD / kg) * (1 / 4.186 kJ/kg/C) * (1 / 1C) = 0.0637 USD / kJ
-      (0.0637 USD / kJ) * (1000 kJ / 1 MJ) * (3600sec / 1hr) = 229335 USD / MWh
+
+      2. Get energy stored per kg of deltaT (Assume deltaT of 50degC)
+      E_per_kg = cp * deltaT = 4.186 kJ/kg/C * 50C = 209.3 kJ/kg
+
+      3. Get USD/MWh
+      (0.267 USD / kg) * (1 / 209.3 kJ/kg) * (1000 kJ / 1 MJ) * (3600sec / 1hr) = 12275.68 USD / MWh
+
+      general formula:
+      (USD / gal) * 4586.68 = (gal/MWh)
+
     """
     df = params.copy()
     df.loc[
         ((df.unit == "usd/gal") & (df.carrier.str.startswith(("res", "com")))),
         "min_value",
-    ] *= 229335
+    ] *= 4586
     df.loc[
         ((df.unit == "usd/gal") & (df.carrier.str.startswith(("res", "com")))),
         "max_value",
-    ] *= 229335
+    ] *= 4586
     df.loc[
         ((df.unit == "usd/gal") & (df.carrier.str.startswith(("res", "com")))), "unit"
     ] = "usd/mwh"
@@ -214,12 +223,14 @@ def correct_mpge_units(params: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
 def correct_miles(params: pd.DataFrame) -> pd.DataFrame:
     """Ensures all miles are labeled as 'vmt'."""
-    
+
     df = params.copy()
     df["unit"] = df["unit"].str.replace("miles", "vmt")
     return df
+
 
 def correct_vmt_units(params: pd.DataFrame) -> pd.DataFrame:
     """Convert vmt units to kvmt."""
@@ -234,6 +245,7 @@ def correct_vmt_units(params: pd.DataFrame) -> pd.DataFrame:
     df.unit = df.unit.str.replace("vmt", "kvmt")
 
     return df
+
 
 def correct_mmbtu_units(params: pd.DataFrame) -> pd.DataFrame:
     """Converts MMBTU to MWh"""
@@ -295,9 +307,10 @@ def correct_percent_units(params: pd.DataFrame) -> pd.DataFrame:
     df.loc[(df.range == "absolute") & (df.unit == "percent"), "unit"] = "per_unit"
     return df
 
+
 def strip_whitespace(params: pd.DataFrame) -> pd.DataFrame:
     """Strips any leading/trailing whitespace from naming columns."""
-    
+
     df = params.copy()
     df["name"] = df.name.str.strip()
     df["group"] = df.group.str.strip()
@@ -305,6 +318,7 @@ def strip_whitespace(params: pd.DataFrame) -> pd.DataFrame:
     df["component"] = df.component.str.strip()
     df["attribute"] = df.attribute.str.strip()
     return df
+
 
 ###
 # Input checks
@@ -329,7 +343,11 @@ def is_valid_fom_units(params: pd.DataFrame) -> bool:
 
     df = params.copy()
 
-    fom = df[df.attribute == "fixed_cost"].set_index("carrier")["unit"].to_frame(name="fom")
+    fom = (
+        df[df.attribute == "fixed_cost"]
+        .set_index("carrier")["unit"]
+        .to_frame(name="fom")
+    )
     occ = df[df.attribute == "occ"].set_index("carrier")["unit"].to_frame(name="occ")
 
     units = occ.join(fom)
@@ -356,8 +374,11 @@ def is_valid_range(params: pd.DataFrame) -> bool:
         return True
     else:
         error = df[~df["range"].isin(VALID_RANGES)]
-        logger.error(f"{error.name.to_list()} do not have valid ranges of {VALID_RANGES}")
+        logger.error(
+            f"{error.name.to_list()} do not have valid ranges of {VALID_RANGES}"
+        )
         return False
+
 
 def is_valid_units(params: pd.DataFrame) -> bool:
     """Ensures converted units are valid."""
@@ -370,34 +391,37 @@ def is_valid_units(params: pd.DataFrame) -> bool:
         error = df[~df["unit"].isin(VALID_UNITS)]
         logger.error(f"{error.name.to_list()} do not have valid units of {VALID_UNITS}")
         return False
-    
+
+
 def no_empty_values(params: pd.DataFrame) -> bool:
     """Ensures all required columns have data."""
-    
+
     df = params.copy()
-    
+
     req_cols = [x for x in df.columns if x not in ("source", "notes")]
-    
+
     for col in req_cols:
         if any(df[col].isna()):
             error = df[df[col].isna()]
             logger.error(f"{error.name.to_list()} in {col} column do not have values")
             return False
-    
+
     return True
-    
+
+
 def is_valid_nice_name(params: pd.DataFrame) -> bool:
     """Ensures all group and nice_names are consistent."""
-    
+
     df = params.copy()
-    
+
     for group in df.group.unique():
         temp = df[df.group == group]
         if len(temp.nice_name.unique()) != 1:
             logger.error(f"Inconsistent nice_names for group {group}")
             return False
     return True
-    
+
+
 def is_valid_capital_costs(params: pd.DataFrame) -> bool:
     """Capital costs are an intermediate calculation."""
 
@@ -414,6 +438,7 @@ def is_valid_capital_costs(params: pd.DataFrame) -> bool:
 
     return True
 
+
 def is_no_duplicates(params: pd.DataFrame) -> bool:
     """No duplicate parameter names"""
 
@@ -426,6 +451,7 @@ def is_no_duplicates(params: pd.DataFrame) -> bool:
         return False
     else:
         return True
+
 
 def is_constraints_abs(params: pd.DataFrame) -> bool:
     """Constraints must be in absolute terms."""
@@ -440,6 +466,7 @@ def is_constraints_abs(params: pd.DataFrame) -> bool:
         return False
     else:
         return True
+
 
 def is_valid_gshp(params: pd.DataFrame) -> bool:
     """GSHP capacity constraint for res/com MUST be in the same group."""
@@ -466,7 +493,7 @@ def is_valid_gshp(params: pd.DataFrame) -> bool:
 
 def is_valid_demand_response(params: pd.DataFrame) -> bool:
     """As demand response sample needs to be modified for forward/backwards shifting."""
-    
+
     df = params.copy()
 
     df = df[df.carrier == "demand_response"]
@@ -485,6 +512,7 @@ def is_valid_demand_response(params: pd.DataFrame) -> bool:
     else:
         return True
 
+
 def is_attr_t_pct(params: pd.DataFrame) -> bool:
     """Time dependent values must be realitive"""
 
@@ -499,16 +527,17 @@ def is_attr_t_pct(params: pd.DataFrame) -> bool:
     else:
         return True
 
+
 def round_max_min(params: pd.DataFrame, round_to: int = 5) -> pd.DataFrame:
     """Rounds max and min values to given decimal places."""
-    
+
     df = params.copy()
     df["min_value"] = df["min_value"].round(round_to)
     df["max_value"] = df["max_value"].round(round_to)
     return df
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     if "snakemake" in globals():
         in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
@@ -516,14 +545,14 @@ if __name__ == "__main__":
     else:
         in_params = "results/caiso/generated/config/parameters.csv"
         out_params = "results/caiso/gsa/parameters.csv"
-    
+
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
-    
-    # top level sanitize 
+
+    # top level sanitize
     df = sanitize_component_name(df)
     df = strip_whitespace(df)
 
-    # units 
+    # units
     df = correct_usd(df)
     df = correct_miles(df)
     df = correct_kw_units(df)
@@ -535,8 +564,7 @@ if __name__ == "__main__":
     df = correct_water_heater_units(df)
     df = correct_vmt_units(df)
 
-    
-    # validation of data 
+    # validation of data
     # note, does not check carrier
     assert no_empty_values(df), "empty values exist"
     assert is_valid_attributes(df), "invalid attributes"
@@ -550,8 +578,7 @@ if __name__ == "__main__":
     assert is_attr_t_pct(df), "time dependent values must be realitive"
     assert is_valid_gshp(df), "too many groups for gshp constraint"
     assert is_valid_demand_response(df), "demand_response must be percent"
-    
+
     df = round_max_min(df, 5)
 
     df.to_csv(out_params, index=False)
-    

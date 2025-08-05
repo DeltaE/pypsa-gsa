@@ -1,10 +1,10 @@
-from pathlib import Path
+"""Main app interface."""
+
 from typing import Any
 import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
 import pandas as pd
-import geopandas as gpd
 
 from components.data import (
     METADATA,
