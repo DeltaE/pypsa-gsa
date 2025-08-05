@@ -15,7 +15,7 @@ def get_top_n_params(
     df = raw.copy()[results]
 
     if df.empty:
-        print("No top_n parameters found for GSA")
+        logger.error("No top_n parameters found for GSA")
         return []
 
     top_n = []

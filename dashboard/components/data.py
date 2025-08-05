@@ -20,7 +20,13 @@ METADATA = get_metadata(root)
 
 RAW_GSA = pd.read_csv("data/system/sa.csv")
 RAW_UA = pd.read_csv("data/system/ua_runs.csv")
+
 RAW_PARAMS = pd.read_csv("data/system/parameters.csv")
+param_nice_names = {x: y["label"] for x, y in METADATA["parameters"].items()}
+RAW_PARAMS["nice_name"] = RAW_PARAMS.name.map(
+    lambda x: param_nice_names[x] if x in param_nice_names else x
+)
+
 ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
 
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(METADATA)

@@ -2,22 +2,9 @@ name,nice_name,component,carriers,variable,unit,barplot
 objective_cost,Objective Cost,system,,cost,$,
 marginal_cost_elec,System Electricity Cost,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,$/MWh,
 marginal_cost_energy,System Energy Cost,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh,
-marginal_cost_elec_ind,Industrial Electricity Cost,buses_t,ind-elec,marginal_price,$/MWh
-marginal_cost_heat_ind,Industrial Heating Cost,buses_t,ind-heat,marginal_price,$/MWh
-marginal_cost_energy_ind,Industrial Energy Cost,buses_t,ind-elec;ind-heat,marginal_price,$/MWh
-marginal_cost_elec_res,Residential Electricity Cost,buses_t,res-total-elec,marginal_price,$/MWh
-marginal_cost_space_heat_res,Residential Space Heat Cost,buses_t,res-total-space-heat,marginal_price,$/MWh
-marginal_cost_water_heat_res,Residential Water Heat Cost,buses_t,res-total-water-heat,marginal_price,$/MWh
-marginal_cost_space_cool_res,Residential Space Cool Cost,buses_t,res-total-cool,marginal_price,$/MWh
-marginal_cost_energy_res,Residential Energy Cost,buses_t,res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool,marginal_price,$/MWh
-marginal_cost_elec_com,Commercial Electricity Cost,buses_t,com-total-elec,marginal_price,$/MWh
-marginal_cost_space_heat_com,Commercial Space Heat Cost,buses_t,com-total-space-heat,marginal_price,$/MWh
-marginal_cost_water_heat_com,Commercial Water Heat Cost,buses_t,com-total-water-heat,marginal_price,$/MWh
-marginal_cost_space_cool_com,Commercial Space Cool Cost,buses_t,com-total-cool,marginal_price,$/MWh
-marginal_cost_energy_com,Commercial Energy Cost,buses_t,com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool,marginal_price,$/MWh
-marginal_cost_elec_trn,Transport Electricity Cost,buses_t,trn-elec-veh,marginal_price,$/MWh
-marginal_cost_energy_trn,Transport Energy Cost,buses_t,trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh
-carbon,Carbon Emissions,store,co2,e_nom_opt,tCO2,
+carbon_co2,Emissions (CO2),store,co2,e_nom_opt,carbon,TCO2e
+carbon_ch4,Emissions (CH4 as CO2e),store,ch4,e_nom_opt,carbon,TCO2e
+carbon_total,Emissions Total (CO2 + CH4 as CO2e),store,co2;ch4,e_nom_opt,carbon,TCO2e
 load_shedding,Load Shedding,generators,load,p_nom_opt,MW,
 solar_capacity,Solar,generators,solar,p_nom_opt,MW,pwr_opt
 solar_capacity_new,Solar,generators,solar,p_nom_new,MW,pwr_new

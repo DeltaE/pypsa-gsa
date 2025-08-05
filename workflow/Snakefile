@@ -85,7 +85,7 @@ def get_gsa_result_files() -> list[str]:
 def get_gsa_plots() -> list[str]:
     """Gsa plots"""
     results = pd.read_csv(config["gsa"]["results"])
-    plots_temp = results.plots.dropna().str.split(";").to_list()
+    plots_temp = results.gsa_plot.dropna().str.split(";").to_list()
     return list(set(chain(*plots_temp)))
 
 ###
@@ -104,7 +104,7 @@ def get_ua_scatterplots():
 def get_ua_barplots():
     """UA barplots"""
     results = pd.read_csv(config["uncertainity"]["results"])
-    return results.barplot.dropna().to_list()
+    return results.ua_plot.dropna().to_list()
 
 def get_ua_modelruns():
     """Number of ua model runs"""
@@ -137,15 +137,12 @@ rule all:
 
 rule gsa:
     input:
-        # expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=get_gsa_modelruns()),
-        # expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=get_gsa_result_files()),
         expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
         expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
         expand("results/{scenario}/gsa/rankings.csv", scenario=SCENARIO)
 
 rule ua:
     input:
-        # expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
         expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=get_ua_scatterplots()),
         expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=get_ua_barplots()),
 
