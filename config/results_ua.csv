@@ -17,7 +17,9 @@ marginal_cost_space_cool_com,Commercial Space Cool Cost,buses_t,com-total-cool,m
 marginal_cost_energy_com,Commercial Energy Cost,buses_t,com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool,marginal_price,$/MWh
 marginal_cost_elec_trn,Transport Electricity Cost,buses_t,trn-elec-veh,marginal_price,$/MWh
 marginal_cost_energy_trn,Transport Energy Cost,buses_t,trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh
-carbon,Carbon Emissions,store,co2,e_nom_opt,tCO2,
+carbon_co2,Emissions (CO2),store,co2,e_nom_opt,carbon,TCO2e
+carbon_ch4,Emissions (CH4 as CO2e),store,ch4,e_nom_opt,carbon,TCO2e
+carbon_total,Emissions Total (CO2 + CH4 as CO2e),store,co2;ch4,e_nom_opt,carbon,TCO2e
 load_shedding,Load Shedding,generators,load,p_nom_opt,MW,
 solar_capacity,Solar,generators,solar,p_nom_opt,MW,pwr_opt
 solar_capacity_new,Solar,generators,solar,p_nom_new,MW,pwr_new
