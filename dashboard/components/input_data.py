@@ -136,8 +136,6 @@ def get_input_data_barchart(data: dict[str, Any], **kwargs: Any) -> dcc.Graph:
         )
 
     df = _read_serialized_data(data)
-    print(df.columns)
-    print(df)
 
     if len(df.sector.unique()) > 1 or len(df.attribute.unique()) > 1:
         logger.debug("More filtering required for barchart")

@@ -230,14 +230,19 @@ def correct_params(params: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_ur_params_expanded(
-    ua_params: dict[str, str], params: pd.DataFrame
+    ua_params: dict[str, str], params: pd.DataFrame, metadata: dict[str, Any]
 ) -> dict[str, str]:
     """Expands the CR parameters to be index names, rather than group names."""
     cr_params = {}
     for group, _ in ua_params.items():
         temp = params[params.group == group]
         for row in temp.itertuples():
-            cr_params[row.name] = row.nice_name
+            label = (
+                metadata["parameters"][row.name]["label"]
+                if row.name in metadata["parameters"]
+                else row.nice_name
+            )
+            cr_params[row.name] = label
     return cr_params
 
 
@@ -395,7 +400,7 @@ if __name__ == "__main__":
             logger.debug(f"No ua nice names for {iso}.")
             continue
 
-        ua_params_expanded = get_ur_params_expanded(ua_params, params)
+        ua_params_expanded = get_ur_params_expanded(ua_params, params, metadata)
 
         with open(
             Path(root, "dashboard", "data", "iso", iso, "ua_params.json"), "w"

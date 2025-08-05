@@ -1204,7 +1204,6 @@ def callback_update_cr_data(
 
     df = CR_DATA[iso]
     cols = []
-    print(df.columns)
     if parameter not in df.columns:
         logger.error(f"Parameter {parameter} not in CR data for {iso}")
         return {}

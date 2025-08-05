@@ -1128,5 +1128,5 @@ class _StateEmissions(DataExtractor):
 
 if __name__ == "__main__":
     api = ""
-    df = FuelCosts("lpg", 2040, api, "reference").get_data(pivot=True)
-    print(df)
+    # df = FuelCosts("lpg", 2040, api, "reference").get_data(pivot=True)
+    # print(df)
