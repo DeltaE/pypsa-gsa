@@ -32,7 +32,7 @@ generated:
 
 gsa:
   parameters: config/parameters.csv 
-  results: config/results_gsa.csv # results to run SA over
+  results: config/results.csv # results to run SA over
   replicates: 10 
   scale: True # Scale Elementary Effect
   rankings: # get union of most impactful parameters
@@ -53,15 +53,15 @@ uncertainity:
   - capex_elec_water_heater
   - capex_gas_water_heater
   - eff_gas_water_heater
-  - eff_trn_lpg
   - elec_import_price
+  - gwp
   - ind_electrical_demand
   - ind_heat_demand
   - ng_imports
+  - ng_leakage_downstream
+  - ng_leakage_upstream
   - rps
-  - trn_veh_hvy_demand
-  - trn_veh_lgt_demand
-  results: config/results_ua.csv # results to extract from ua
+  results: config/results.csv # results to extract from ua
   plots: config/plots_ua.csv
 
 # Choose a solver
