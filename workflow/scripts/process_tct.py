@@ -1,5 +1,6 @@
 """Generates Total Capacity Tartget (TCT) data based on AEO projections."""
 
+import math
 import pandas as pd
 import pypsa
 from constants import GSA_COLUMNS
@@ -93,13 +94,13 @@ def get_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFra
         if ref_growth < 100:
             ref_cap = cap + 0.1
         else:
-            ref_cap = round(cap * ref_growth / 100, 5)
+            ref_cap = math.ceil(cap * ref_growth / 100)
 
         tct = [f"tct_{name}", planning_year, "all", ",".join(cars), "", ref_cap]
         data.append(tct)
 
         if name == "ccgt":
-            ccs_cap = round(ref_cap * ccs_limit / 100, 5)
+            ccs_cap = math.ceil(ref_cap * ccs_limit / 100)
             tct = [f"tct_{name}_ccs", planning_year, "all", "CCGT-95CCS", "", ccs_cap]
             data.append(tct)
 
@@ -124,8 +125,8 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
             min_value = cap * GROWTHS[name]["ref_growth"] / 100
             max_value = cap * GROWTHS[name]["max_growth"] / 100
 
-        min_value = round(min_value / cap, 5)
-        max_value = round(max_value / cap, 5)
+        min_value = float(math.ceil(min_value / cap))
+        max_value = float(math.ceil(max_value / cap))
 
         if abs(min_value - max_value) < 0.0001:
             logger.info(f"No limits created for {name}")
@@ -148,8 +149,8 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
         data.append(gsa)
 
         if name == "ccgt":
-            min_value = round(min_value * ccs_limit / 100, 5)
-            max_value = round(max_value * ccs_limit / 100, 5)
+            min_value = float(math.ceil(min_value * ccs_limit / 100))
+            max_value = float(math.ceil(max_value * ccs_limit / 100))
             gsa = [
                 f"tct_{name}_ccs",
                 f"tct_{name}_ccs",
@@ -190,10 +191,9 @@ if __name__ == "__main__":
     assert len(n.investment_periods) == 1
 
     if include_tct:
-
-        assert (
-            tct_aeo_f and tct_gsa_f
-        ), "tct_aeo_f and tct_gsa_f must be provided for TCT"
+        assert tct_aeo_f and tct_gsa_f, (
+            "tct_aeo_f and tct_gsa_f must be provided for TCT"
+        )
 
         tct_aeo = get_tct_data(n, ccs_limit)
         tct_gsa = get_gsa_tct_data(n, ccs_limit)
