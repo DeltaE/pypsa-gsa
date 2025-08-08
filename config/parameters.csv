@@ -336,3 +336,4 @@ rps,rps,Renewable Portfolio Standard,generator,portfolio,rps,absolute,per_unit,0
 elec_trade_flow,elec_trade_flow,Electricity Trade Volume,link,portfolio,elec_trade,absolute,per_unit,0.95,1.05,https://catalystcoop-pudl.readthedocs.io/en/latest/data_sources/eia930.html,+/- 5% Assumed by looking at historical interchange data
 elec_import_price,elec_import_price,Electricity Import Price,link_t,imports,marginal_cost,percent,percent,-18,18,https://www.eia.gov/electricity/wholesale/#history,Average diviation from 2015-2024 annual weighted spot price
 elec_export_price,elec_export_price,Electricity Export Price,link_t,exports,marginal_cost,percent,percent,-18,18,https://www.eia.gov/electricity/wholesale/#history,Average diviation from 2015-2024 annual weighted spot price
+landuse,landuse,Land Use,generator,portfolio,landuse,absolute,per_unit,0.98,1.02,https://atlite.readthedocs.io/en/latest/examples/landuse-availability.html,Assumed to match capfac of wind/solar
