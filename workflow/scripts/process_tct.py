@@ -94,13 +94,13 @@ def get_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFra
         if ref_growth < 100:
             ref_cap = cap + 0.1
         else:
-            ref_cap = math.ceil(cap * ref_growth / 100)
+            ref_cap = float(math.ceil(cap * ref_growth / 100))
 
         tct = [f"tct_{name}", planning_year, "all", ",".join(cars), "", ref_cap]
         data.append(tct)
 
         if name == "ccgt":
-            ccs_cap = math.ceil(ref_cap * ccs_limit / 100)
+            ccs_cap = float(math.ceil(ref_cap * ccs_limit / 100))
             tct = [f"tct_{name}_ccs", planning_year, "all", "CCGT-95CCS", "", ccs_cap]
             data.append(tct)
 
