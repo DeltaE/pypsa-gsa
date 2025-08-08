@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     dfs = []
 
-    results = pd.read_csv(results_f, index_col=0)
+    results = pd.read_csv(results_f, index_col=0).dropna(subset=["gsa_plot"]).copy()
     results = results[results.gsa_plot.str.contains(group)]
     r_nice_name = results.nice_name.to_dict()
 

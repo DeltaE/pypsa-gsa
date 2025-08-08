@@ -12,8 +12,7 @@ def get_sample_file(wildcards):
 
 def get_gsa_plotting_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="gsa").output[0]
-    df = pd.read_csv(csv)
-    df["gsa_plot"] = df.gsa_plot.fillna("")
+    df = pd.read_csv(csv).dropna(subset=["gsa_plot"]).copy()
     df = df[df.gsa_plot.str.contains(wildcards.plot)]
     results = df.name.to_list()
 
@@ -29,7 +28,7 @@ def get_ua_scatterplot_csvs(wildcards):
 
 def get_ua_barplot_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="ua").output[0]
-    df = pd.read_csv(csv)
+    df = pd.read_csv(csv).dropna(subset=["barplot"]).copy()
     df = df[df.barplot == wildcards.plot]
     assert not df.empty
     csvs = df.name.to_list()

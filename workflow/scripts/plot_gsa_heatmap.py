@@ -4,15 +4,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 FONTSIZE = 22
 
 
 def plot_heatmap(df: pd.DataFrame) -> tuple[plt.figure, plt.axes]:
-    fig, ax = plt.subplots(1, figsize=(12,12))
+    fig, ax = plt.subplots(1, figsize=(12, 12))
     sns.heatmap(df, cmap="crest", ax=ax, cbar_kws={"label": "Scaled EE"})
-    
+
     labels = ax.get_xticklabels()
     ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=FONTSIZE)
     ax.tick_params(axis="y", labelsize=FONTSIZE, rotation=0)
@@ -22,8 +23,9 @@ def plot_heatmap(df: pd.DataFrame) -> tuple[plt.figure, plt.axes]:
     ax.figure.axes[-1].yaxis.label.set_size(FONTSIZE)
 
     fig.tight_layout()
-    
+
     return fig, ax
+
 
 if __name__ == "__main__":
     if "snakemake" in globals():
@@ -46,7 +48,7 @@ if __name__ == "__main__":
 
     dfs = []
 
-    results = pd.read_csv(results_f, index_col=0)
+    results = pd.read_csv(results_f, index_col=0).dropna(subset=["gsa_plot"]).copy()
     results = results[results.gsa_plot.str.contains(group)]
     r_nice_name = results.nice_name.to_dict()
 
@@ -62,5 +64,5 @@ if __name__ == "__main__":
     df.index = df.index.map(p_nice_name)
 
     fig, ax = plot_heatmap(df)
-    
+
     fig.savefig(heatmap)
