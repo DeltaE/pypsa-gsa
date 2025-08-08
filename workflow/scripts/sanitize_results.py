@@ -21,8 +21,7 @@ def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     df["carriers"] = df.carriers.str.strip()
     df["variable"] = df.variable.str.strip()
     df["unit"] = df.unit.str.strip()
-    if "plots" in df.columns: # only needed for gsa
-        df["plots"] = df.plots.str.strip()
+    df["gsa_plot"] = df.gsa_plot.str.strip()
     return df
 
 
@@ -86,8 +85,8 @@ def is_unique_names(results: pd.DataFrame) -> bool:
 def no_nans(results: pd.DataFrame) -> bool:
     """Checks that there are no NaNs in the result plots."""
     df = results.copy()
-    if df.plots.isna().any():
-        nan_plots_rows = df[df.plots.isna()]
+    if df.gsa_plot.isna().any():
+        nan_plots_rows = df[df.gsa_plot.isna()]
         for _, row in nan_plots_rows.iterrows():
             logger.error(
                 f"NaN found in plots column for {row['name']} with {row['component']} and {row['variable']}."

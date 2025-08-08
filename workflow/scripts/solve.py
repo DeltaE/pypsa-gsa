@@ -618,7 +618,6 @@ def add_ng_import_export_limits(
     import_max = round(ng_trade.get("max_import", 1), 3)
     export_min = round(ng_trade.get("min_export", 1), 3)
     export_max = round(ng_trade.get("max_export", 1), 3)
-
     # to avoid numerical issues, ensure there is a gap between min/max constraints
     if abs(import_max - import_min) < 0.0001:
         import_min -= 0.01
@@ -1159,7 +1158,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso/gsa/modelruns/0/n.nc"
+        in_network = "results/caiso/gsa/modelruns/1678/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
@@ -1176,7 +1175,7 @@ if __name__ == "__main__":
         tct_f = "results/caiso/constraints/tct.csv"
         ev_policy_f = "results/caiso/constraints/ev_policy.csv"
         import_export_flows_f = "results/caiso/constraints/import_export_flows.csv"
-        constraints_meta = "results/caiso/gsa/modelruns/0/constraints.csv"
+        constraints_meta = "results/caiso/gsa/modelruns/1678/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1230,23 +1229,41 @@ if __name__ == "__main__":
     imports = constraints[constraints.attribute == "nat_gas_import"].round(5)
     exports = constraints[constraints.attribute == "nat_gas_export"].round(5)
 
+    # to avoid infeasibilities, we always set one limit to 1
+
     if len(imports) == 1:
-        extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
-        extra_fn["ng_trade"]["max_import"] = imports.value.values[0]
+        value = imports.value.values[0]
+        if value < 1:
+            extra_fn["ng_trade"]["min_import"] = value
+            extra_fn["ng_trade"]["max_import"] = 1
+        elif value > 1:
+            extra_fn["ng_trade"]["min_import"] = 1
+            extra_fn["ng_trade"]["max_import"] = value
+        else:
+            extra_fn["ng_trade"]["min_import"] = 0.99
+            extra_fn["ng_trade"]["max_import"] = 1.01
     elif len(imports) > 1:
         raise ValueError("Too many samples for ng_gas_import")
     else:
-        extra_fn["ng_trade"]["min_import"] = 1
-        extra_fn["ng_trade"]["max_import"] = 1
+        extra_fn["ng_trade"]["min_import"] = 0.99
+        extra_fn["ng_trade"]["max_import"] = 1.01
 
     if len(exports) == 1:
-        extra_fn["ng_trade"]["min_export"] = exports.value.values[0]
-        extra_fn["ng_trade"]["max_export"] = exports.value.values[0]
+        value = exports.value.values[0]
+        if value < 1:
+            extra_fn["ng_trade"]["min_export"] = value
+            extra_fn["ng_trade"]["max_export"] = 1
+        elif value > 1:
+            extra_fn["ng_trade"]["min_export"] = 1
+            extra_fn["ng_trade"]["max_export"] = value
+        else:
+            extra_fn["ng_trade"]["min_export"] = 0.99
+            extra_fn["ng_trade"]["max_export"] = 1.01
     elif len(exports) > 1:
         raise ValueError("Too many samples for ng_gas_export")
     else:
-        extra_fn["ng_trade"]["min_export"] = 1
-        extra_fn["ng_trade"]["max_export"] = 1
+        extra_fn["ng_trade"]["min_export"] = 1 - 0.01
+        extra_fn["ng_trade"]["max_export"] = 1 + 0.01
 
     ###
     # GSHP capacity constrinats
@@ -1332,7 +1349,7 @@ if __name__ == "__main__":
     elif len(co2_sample) > 1:
         raise ValueError("Too many samples for co2L")
     else:
-        logger.debug("No CO2 Limits provided")
+        logger.info("No CO2 Limits provided")
         extra_fn.pop("co2L")
 
     ###
