@@ -49,8 +49,8 @@ solving:
       crossover: 0          # do not use crossover
       BarHomogeneous: 1     # Use homogeneous barrier if standard does not converge
       BarConvTol: 1.e-5
-      FeasibilityTol: 1.e-4
-      OptimalityTol: 1.e-4
+      FeasibilityTol: 1.e-3
+      OptimalityTol: 1.e-3
       ObjScale: -0.5
       threads: 8
       Seed: 123

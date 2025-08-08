@@ -13,7 +13,8 @@ def get_sample_file(wildcards):
 def get_gsa_plotting_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="gsa").output[0]
     df = pd.read_csv(csv)
-    df = df[df.plots.str.contains(wildcards.plot)]
+    df["gsa_plot"] = df.gsa_plot.fillna("")
+    df = df[df.gsa_plot.str.contains(wildcards.plot)]
     results = df.name.to_list()
 
     return [f"results/{wildcards.scenario}/gsa/SA/{x}.csv" for x in results]
