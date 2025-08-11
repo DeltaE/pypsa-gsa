@@ -1,5 +1,6 @@
 """Utility functions for the dashboard."""
 
+from typing import Any
 import pandas as pd
 from pathlib import Path
 import json
@@ -46,10 +47,27 @@ DEFAULT_LEGEND = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right"
 DEFAULT_HEIGHT = 600
 DEFAULT_OPACITY = 0.7
 
+DEFAULT_2005_EMISSION_LIMIT = dict(
+    line_dash="dash",
+    line_color="red",
+    line_width=2,
+    annotation_text="2005 Emissions",
+    annotation_position="top left",
+    annotation_font_color="red",
+)
+
+DEFAULT_2030_EMISSION_LIMIT = dict(
+    line_dash="dot",
+    line_color="green",
+    line_width=2,
+    annotation_text="2030 Emission Target",
+    annotation_position="bottom left",
+    annotation_font_color="green",
+)
 DEFAULT_Y_LABEL = {
     "cost": "Cost ($)",
     "marginal_cost": "Marginal Costs ($/MWh)",
-    "emissions": "Emissions (TCO2e)",
+    "emissions": "Emissions (MMT CO2e)",
     "new_capacity": "New Capacity (MW)",
     "total_capacity": "Total Capacity (MW)",
     "new_capacity_trn": "New Capacity (kVMT)",
@@ -80,9 +98,17 @@ def get_metadata(root: str) -> dict[str, str]:
     return loaded
 
 
+def get_emissions(root: str) -> dict[str, dict[str, float]]:
+    """Get the emissions."""
+    with open(Path(root, "data", "locked", "emissions.json"), "r") as f:
+        loaded = json.load(f)
+    return {x: loaded[x] for x in loaded.keys() if x in ISO_STATES}
+
+
 def get_iso_dropdown_options() -> list[dict[str, str]]:
     """Get the ISO dropdown options."""
     return _convert_to_dropdown_options(ISOS)
+
 
 def get_y_label(df: str, result_type: str) -> str:
     """Get y label for UA scatter plot.
@@ -100,6 +126,7 @@ def get_y_label(df: str, result_type: str) -> str:
             return DEFAULT_Y_LABEL[result_type]
     except KeyError:
         return "Value"
+
 
 def get_gsa_params_dropdown_options(metadata: dict) -> list[dict[str, str]]:
     """Get the GSA parameters dropdown options."""
@@ -146,7 +173,7 @@ def get_gsa_results_dropdown_options(
         else:
             options.append({"label": result, "value": result})
 
-    return options
+    return sorted(options, key=lambda x: x["label"].lower())
 
 
 def get_ua_results_dropdown_options(metadata: dict) -> list[dict[str, str]]:
@@ -154,7 +181,14 @@ def get_ua_results_dropdown_options(metadata: dict) -> list[dict[str, str]]:
 
     options = []
     for value, data in metadata["results"].items():
-        label = data["label2"] if "label2" in data else data["label"]
+        label = (
+            data["label2"]
+            if (
+                "label2" in data
+                and not data["label2"].startswith(("Trn.", "Srvc.", "Ind.", "Pwr."))
+            )
+            else data["label"]
+        )
         options.append({"label": label, "value": value})
 
     return options
@@ -292,3 +326,17 @@ def get_discrete_color_scale_options() -> list[str]:
 def get_plotly_plotting_themes() -> list[str]:
     """Get the plotly plotting themes."""
     return list(pio.templates.keys())
+
+
+def get_emission_limits(emissions: list[dict[str, Any]]) -> tuple[float, float]:
+    """Reads in serialized emissions data."""
+    emissions_2005 = 0
+    emissions_2030 = 0
+    for _, data in emissions.items():
+        emissions_2005 += data["2005_mmt"]
+        emissions_2030 += data["2030_mmt"]
+
+    emissions_2005 *= 1000000
+    emissions_2030 *= 1000000
+
+    return emissions_2005, emissions_2030

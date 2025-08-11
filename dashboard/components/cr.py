@@ -9,6 +9,9 @@ from .utils import (
     DEFAULT_LEGEND,
     get_iso_dropdown_options,
     get_y_label,
+    get_emission_limits,
+    DEFAULT_2005_EMISSION_LIMIT,
+    DEFAULT_2030_EMISSION_LIMIT,
 )
 from .data import SECTOR_DROPDOWN_OPTIONS_NO_ALL, METADATA
 from . import ids as ids
@@ -32,6 +35,7 @@ def cr_options_block() -> html.Div:
             cr_result_dropdown(),
             cr_parameter_dropdown(),
             cr_percentile_interval_slider(),
+            cr_emission_target_rb(),
         ],
     )
 
@@ -105,7 +109,7 @@ def cr_percentile_interval_slider() -> html.Div:
                 id=ids.CR_INTERVAL_SLIDER,
                 min=0,
                 max=100,
-                value=[1, 99],
+                value=[0, 100],
                 step=1,
                 included=False,
                 marks={x: str(x) for x in range(0, 101, 25)},
@@ -118,6 +122,24 @@ def cr_percentile_interval_slider() -> html.Div:
         ],
     )
 
+def cr_emission_target_rb() -> html.Div:
+    """Custom Result emission target rb component."""
+    return html.Div(
+        [
+            html.H6("Show Emission Target"),
+            dcc.RadioItems(
+                id=ids.CR_EMISSION_TARGET_RB,
+                options=[
+                    {"label": "True", "value": True},
+                    {"label": "False", "value": False},
+                ],
+                value=True,
+                inline=True,
+                className="me-3",
+                labelStyle={"marginRight": "20px"},
+            ),
+        ],
+    )
 
 def _read_serialized_cr_data(data: dict[str, Any]) -> pd.DataFrame:
     """Read serialized CR data."""
@@ -187,7 +209,11 @@ def get_cr_data_table(
 
 
 def get_cr_scatter_plot(
-    data: dict[str, Any], nice_names: bool = True, marginal: str = None, **kwargs
+    data: dict[str, Any],
+    nice_names: bool = True,
+    marginal: str = None,
+    emissions: list[dict[str, Any]] | None = None,
+    **kwargs,
 ) -> go.Figure:
     """UA scatter plot component."""
 
@@ -292,6 +318,19 @@ def get_cr_scatter_plot(
                 side="right",
                 showgrid=False,
             ),
+        )
+
+    if emissions:
+        emissions_2005, emissions_2030 = get_emission_limits(emissions)
+
+        fig.add_hline(
+            y=emissions_2005,
+            **DEFAULT_2005_EMISSION_LIMIT,
+        )
+
+        fig.add_hline(
+            y=emissions_2030,
+            **DEFAULT_2030_EMISSION_LIMIT,
         )
 
     return fig

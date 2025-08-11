@@ -16,10 +16,12 @@ from .utils import (
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
     DEFAULT_OPACITY,
-    DEFAULT_Y_LABEL,
+    get_emission_limits,
     get_ua_param_result_mapper,
     get_ua_param_sector_mapper,
     get_y_label,
+    DEFAULT_2005_EMISSION_LIMIT,
+    DEFAULT_2030_EMISSION_LIMIT,
 )
 from . import ids as ids
 from .utils import _unflatten_dropdown_options
@@ -51,6 +53,7 @@ def ua_options_block() -> html.Div:
             ua_result_type_dropdown(),
             ua_result_sector_dropdown(),
             ua_percentile_interval_slider(),
+            ua_emission_target_rb(),
         ],
     )
 
@@ -63,7 +66,7 @@ def ua_result_type_dropdown() -> html.Div:
             dcc.Dropdown(
                 id=ids.UA_RESULTS_TYPE_DROPDOWN,
                 options=RESULT_TYPE_DROPDOWN_OPTIONS,
-                value="costs",
+                value="cost",
             ),
         ],
     )
@@ -93,7 +96,7 @@ def ua_percentile_interval_slider() -> html.Div:
                 id=ids.UA_INTERVAL_SLIDER,
                 min=0,
                 max=100,
-                value=[1, 99],
+                value=[0, 100],
                 step=1,
                 included=False,
                 marks={x: str(x) for x in range(0, 101, 25)},
@@ -102,6 +105,26 @@ def ua_percentile_interval_slider() -> html.Div:
                     "always_visible": False,
                     "template": "{value}%",
                 },
+            ),
+        ],
+    )
+
+
+def ua_emission_target_rb() -> html.Div:
+    """UA emission target rb component."""
+    return html.Div(
+        [
+            html.H6("Show Emission Target"),
+            dcc.RadioItems(
+                id=ids.UA_EMISSION_TARGET_RB,
+                options=[
+                    {"label": "True", "value": True},
+                    {"label": "False", "value": False},
+                ],
+                value=True,
+                inline=True,
+                className="me-3",
+                labelStyle={"marginRight": "20px"},
             ),
         ],
     )
@@ -238,7 +261,10 @@ def get_ua_data_table(
 
 
 def get_ua_scatter_plot(
-    data: dict[str, Any], nice_names: bool = True, **kwargs
+    data: dict[str, Any],
+    nice_names: bool = True,
+    emissions: list[dict[str, Any]] | None = None,
+    **kwargs,
 ) -> go.Figure:
     """UA scatter plot component."""
 
@@ -312,11 +338,27 @@ def get_ua_scatter_plot(
             ),
         )
 
+    if emissions:
+        emissions_2005, emissions_2030 = get_emission_limits(emissions)
+
+        fig.add_hline(
+            y=emissions_2005,
+            **DEFAULT_2005_EMISSION_LIMIT,
+        )
+
+        fig.add_hline(
+            y=emissions_2030,
+            **DEFAULT_2030_EMISSION_LIMIT,
+        )
+
     return fig
 
 
 def get_ua_barchart(
-    data: dict[str, Any], nice_names: bool = True, **kwargs
+    data: dict[str, Any],
+    nice_names: bool = True,
+    emissions: list[dict[str, Any]] | None = None,
+    **kwargs,
 ) -> go.Figure:
     """UA barchart component showing mean values with 95% confidence intervals for each result category."""
     if not data:
@@ -405,6 +447,19 @@ def get_ua_barchart(
                 side="right",
                 showgrid=False,
             ),
+        )
+
+    if emissions:
+        emissions_2005, emissions_2030 = get_emission_limits(emissions)
+
+        fig.add_hline(
+            y=emissions_2005,
+            **DEFAULT_2005_EMISSION_LIMIT,
+        )
+
+        fig.add_hline(
+            y=emissions_2030,
+            **DEFAULT_2030_EMISSION_LIMIT,
         )
 
     return fig
@@ -525,7 +580,10 @@ def get_ua_histogram(
 
 
 def get_ua_violin_plot(
-    data: dict[str, Any], nice_names: bool = True, **kwargs
+    data: dict[str, Any],
+    nice_names: bool = True,
+    emissions: list[dict[str, Any]] | None = None,
+    **kwargs,
 ) -> go.Figure:
     """UA violin plot component."""
     if not data:
@@ -600,11 +658,27 @@ def get_ua_violin_plot(
             ),
         )
 
+    if emissions:
+        emissions_2005, emissions_2030 = get_emission_limits(emissions)
+
+        fig.add_hline(
+            y=emissions_2005,
+            **DEFAULT_2005_EMISSION_LIMIT,
+        )
+
+        fig.add_hline(
+            y=emissions_2030,
+            **DEFAULT_2030_EMISSION_LIMIT,
+        )
+
     return fig
 
 
 def get_ua_box_whisker(
-    data: dict[str, Any], nice_names: bool = True, **kwargs
+    data: dict[str, Any],
+    nice_names: bool = True,
+    emissions: list[dict[str, Any]] | None = None,
+    **kwargs,
 ) -> go.Figure:
     """UA box whisker plot component."""
     if not data:
@@ -674,6 +748,19 @@ def get_ua_box_whisker(
                 side="right",
                 showgrid=False,
             ),
+        )
+
+    if emissions:
+        emissions_2005, emissions_2030 = get_emission_limits(emissions)
+
+        fig.add_hline(
+            y=emissions_2005,
+            **DEFAULT_2005_EMISSION_LIMIT,
+        )
+
+        fig.add_hline(
+            y=emissions_2030,
+            **DEFAULT_2030_EMISSION_LIMIT,
         )
 
     return fig

@@ -28,8 +28,8 @@ def get_ua_scatterplot_csvs(wildcards):
 
 def get_ua_barplot_csvs(wildcards):
     csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="ua").output[0]
-    df = pd.read_csv(csv).dropna(subset=["barplot"]).copy()
-    df = df[df.barplot == wildcards.plot]
+    df = pd.read_csv(csv).dropna(subset=["ua_plot"]).copy()
+    df = df[df.ua_plot == wildcards.plot]
     assert not df.empty
     csvs = df.name.to_list()
     return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in csvs]

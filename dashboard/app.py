@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 
 from components.data import (
+    EMISSIONS,
     METADATA,
     RAW_GSA,
     RAW_UA,
@@ -14,8 +15,8 @@ from components.data import (
     ISO_SHAPE,
     GSA_PARM_OPTIONS,
     GSA_RESULT_OPTIONS,
-    SECTOR_DROPDOWN_OPTIONS,
     SECTOR_DROPDOWN_OPTIONS_ALL,
+    SECTOR_DROPDOWN_OPTIONS_SYSTEM,
     SECTOR_DROPDOWN_OPTIONS_IDV,
     CR_PARAM_OPTIONS,
     CR_DATA,
@@ -273,6 +274,8 @@ app.layout = html.Div(
                 dcc.Store(id=ids.INPUTS_DATA),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER),
+                dcc.Store(id=ids.UA_EMISSIONS),
+                dcc.Store(id=ids.CR_EMISSIONS),
                 dcc.Store(id=ids.GSA_PARAM_BUTTON_STATE, data=""),
                 dcc.Store(id=ids.GSA_RESULTS_BUTTON_STATE, data=""),
             ],
@@ -296,6 +299,8 @@ app.layout = html.Div(
         Input(ids.UA_RUN_DATA, "data"),
         Input(ids.CR_DATA, "data"),
         Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
+        Input(ids.UA_EMISSIONS, "data"),
+        Input(ids.CR_EMISSIONS, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
@@ -310,6 +315,8 @@ def render_tab_content(
     ua_run_data: list[dict[str, Any]] | None,
     cr_data: list[dict[str, Any]] | None,
     inputs_data: list[dict[str, Any]] | None,
+    ua_emissions: list[dict[str, Any]] | None,
+    cr_emissions: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
     ua_result_type: str,
@@ -349,7 +356,10 @@ def render_tab_content(
             view = dcc.Graph(
                 id=ids.UA_BAR_CHART,
                 figure=get_ua_barchart(
-                    ua_run_data, template=color, result_type=ua_result_type
+                    ua_run_data,
+                    template=color,
+                    result_type=ua_result_type,
+                    emissions=ua_emissions if ua_result_type == "emissions" else None,
                 ),
             )
         elif plotting_type == "violin":
@@ -359,6 +369,7 @@ def render_tab_content(
                     ua_run_data,
                     template=color,
                     result_type=ua_result_type,
+                    emissions=ua_emissions if ua_result_type == "emissions" else None,
                 ),
             )
         elif plotting_type == "scatter":
@@ -368,6 +379,7 @@ def render_tab_content(
                     ua_run_data,
                     template=color,
                     result_type=ua_result_type,
+                    emissions=ua_emissions if ua_result_type == "emissions" else None,
                 ),
             )
         elif plotting_type == "histogram":
@@ -378,7 +390,10 @@ def render_tab_content(
             view = dcc.Graph(
                 id=ids.UA_BOX_WHISKER,
                 figure=get_ua_box_whisker(
-                    ua_run_data, template=color, result_type=ua_result_type
+                    ua_run_data,
+                    template=color,
+                    result_type=ua_result_type,
+                    emissions=ua_emissions if ua_result_type == "emissions" else None,
                 ),
             )
         else:
@@ -391,7 +406,11 @@ def render_tab_content(
             view = dcc.Graph(
                 id=ids.UA_SCATTER,
                 figure=get_cr_scatter_plot(
-                    cr_data, template=color, marginal=None, result_type=cr_result_type
+                    cr_data,
+                    template=color,
+                    marginal=None,
+                    result_type=cr_result_type,
+                    emissions=cr_emissions if cr_result_type == "emissions" else None,
                 ),
             )
         elif plotting_type == "scatter-box":
@@ -402,6 +421,7 @@ def render_tab_content(
                     template=color,
                     marginal="box",
                     result_type=cr_result_type,
+                    emissions=cr_emissions if cr_result_type == "emissions" else None,
                 ),
             )
         elif plotting_type == "scatter-histogram":
@@ -412,6 +432,7 @@ def render_tab_content(
                     template=color,
                     marginal="histogram",
                     result_type=cr_result_type,
+                    emissions=cr_emissions if cr_result_type == "emissions" else None,
                 ),
             )
         elif plotting_type == "scatter-rug":
@@ -422,6 +443,7 @@ def render_tab_content(
                     template=color,
                     marginal="rug",
                     result_type=cr_result_type,
+                    emissions=cr_emissions if cr_result_type == "emissions" else None,
                 ),
             )
         elif plotting_type == "scatter-violin":
@@ -432,6 +454,7 @@ def render_tab_content(
                     template=color,
                     marginal="violin",
                     result_type=cr_result_type,
+                    emissions=cr_emissions if cr_result_type == "emissions" else None,
                 ),
             )
         else:
@@ -593,6 +616,22 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
 
 
 @app.callback(
+    Output(ids.UA_EMISSIONS, "data"),
+    [
+        Input(ids.ISO_DROPDOWN, "value"),
+        Input(ids.UA_EMISSION_TARGET_RB, "value"),
+    ],
+)
+def callback_update_ua_emissions(
+    isos: list[str], emission_target: bool
+) -> dict[str, dict[str, float]]:
+    if emission_target:
+        return {x: EMISSIONS[x] for x in isos}
+    else:
+        return {}
+
+
+@app.callback(
     Output(ids.INPUTS_DATA, "data"),
     Input(ids.ISO_DROPDOWN, "value"),
 )
@@ -659,6 +698,23 @@ def callback_update_inputs_data_attribute_sector(
         logger.debug("No data found for the given sector")
         return []
     return df.to_dict("records")
+
+
+@app.callback(
+    Output(ids.UA_EMISSION_TARGET_RB, "options"),
+    Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+)
+def disable_ua_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
+    if result_type == "emissions":
+        return [
+            {"label": "True", "value": True, "disabled": False},
+            {"label": "False", "value": False, "disabled": False},
+        ]
+    else:
+        return [
+            {"label": "True", "value": True, "disabled": True},
+            {"label": "False", "value": False, "disabled": True},
+        ]
 
 
 #####
@@ -1067,11 +1123,11 @@ def callback_update_ua_results_sector_dropdown_options(
 ) -> list[dict[str, str]]:
     logger.debug(f"Updating UA sector dropdown options for: {result_type}")
     if result_type == "cost":
-        options = SECTOR_DROPDOWN_OPTIONS_ALL
+        options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "marginal_cost":
-        options = SECTOR_DROPDOWN_OPTIONS
+        options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "emissions":
-        options = SECTOR_DROPDOWN_OPTIONS_ALL
+        options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "new_capacity":
         options = SECTOR_DROPDOWN_OPTIONS_IDV
     elif result_type == "total_capacity":
@@ -1218,6 +1274,39 @@ def callback_update_cr_data(
     filtered = remove_ua_outliers(filtered, interval)  # ua is same as cr
 
     return filtered.to_dict(orient="records")
+
+
+@app.callback(
+    Output(ids.CR_EMISSIONS, "data"),
+    [
+        Input(ids.CR_ISO_DROPDOWN, "value"),
+        Input(ids.CR_EMISSION_TARGET_RB, "value"),
+    ],
+)
+def callback_update_cr_emissions(
+    iso: str | None = None, emission_target: bool = True
+) -> dict[str, dict[str, float]]:
+    if emission_target and iso:
+        return {iso: EMISSIONS[iso]}
+    else:
+        return {}
+
+
+@app.callback(
+    Output(ids.CR_EMISSION_TARGET_RB, "options"),
+    Input(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
+)
+def disable_cr_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
+    if result_type == "emissions":
+        return [
+            {"label": "True", "value": True, "disabled": False},
+            {"label": "False", "value": False, "disabled": False},
+        ]
+    else:
+        return [
+            {"label": "True", "value": True, "disabled": True},
+            {"label": "False", "value": False, "disabled": True},
+        ]
 
 
 # Run the server

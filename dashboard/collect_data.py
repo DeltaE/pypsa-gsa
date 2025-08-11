@@ -43,6 +43,7 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "rps": "Constraints",
     "ces": "Constraints",
     "elec_trade": "Constraints",
+    "landuse": "Constraints",
 }
 
 PWR_CARRIERS = [
@@ -200,6 +201,8 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             return "Power"
         elif carrier in ["imports", "exports"]:
             return "Power"
+        elif carrier == "landuse":
+            return "System"
         else:
             raise ValueError(f"Invalid carrier: {carrier}")
 
@@ -214,7 +217,7 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
         logger.error(
             f"Missing attribute and/or attribute_nice_name: {missing.name.unique()}"
         )
-        raise ValueError("Missing attribute amd/or attribute_nice_name")
+        raise ValueError("Missing attribute and/or attribute_nice_name")
 
     return params
 
@@ -237,11 +240,13 @@ def get_ur_params_expanded(
     for group, _ in ua_params.items():
         temp = params[params.group == group]
         for row in temp.itertuples():
-            label = (
-                metadata["parameters"][row.name]["label"]
-                if row.name in metadata["parameters"]
-                else row.nice_name
-            )
+            if row.name in metadata["parameters"]:
+                if "label2" in metadata["parameters"][row.name]:
+                    label = metadata["parameters"][row.name]["label2"]
+                else:
+                    label = metadata["parameters"][row.name]["label"]
+            else:
+                label = row.nice_name
             cr_params[row.name] = label
     return cr_params
 

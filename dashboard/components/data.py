@@ -7,6 +7,7 @@ import geopandas as gpd
 
 from .utils import (
     get_cr_data_by_iso,
+    get_emissions,
     get_metadata,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
@@ -48,6 +49,9 @@ SECTOR_DROPDOWN_OPTIONS_NO_ALL = [
 SECTOR_DROPDOWN_OPTIONS_ALL = [
     x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] == "all"
 ]
+SECTOR_DROPDOWN_OPTIONS_SYSTEM = [
+    x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] == "system"
+]
 SECTOR_DROPDOWN_OPTIONS_IDV = [
     x
     for x in SECTOR_DROPDOWN_OPTIONS
@@ -57,3 +61,5 @@ SECTOR_DROPDOWN_OPTIONS_IDV = [
 RESULT_TYPE_DROPDOWN_OPTIONS = [
     {"label": y, "value": x} for x, y in METADATA["nice_names"]["results"].items()
 ]
+
+EMISSIONS = get_emissions(root)

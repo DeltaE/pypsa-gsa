@@ -43,6 +43,8 @@ GSA_RESULTS_BUTTON_STATE = "gsa-results-button-state"
 
 # radio buttons
 GSA_PARAM_SELECTION_RB = "gsa-param-selection-rb"
+UA_EMISSION_TARGET_RB = "ua-emission-target-rb"
+CR_EMISSION_TARGET_RB = "cr-emission-target-rb"
 
 # sliders
 GSA_PARAMS_SLIDER = "gsa-range-slider"
@@ -69,7 +71,7 @@ GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
 UA_ISO_DATA = "ua-iso-data"  # filtered by ISO
 UA_RUN_DATA = "ua-run-data"  # filtered by result
 
-CR_DATA = "cr-data" # dict of dfs
+CR_DATA = "cr-data"  # dict of dfs
 
 INPUTS_DATA = "inputs-data"
 INPUTS_DATA_BY_ATTRIBUTE = "inputs-data-by-attribute"
@@ -101,3 +103,7 @@ UA_BOX_WHISKER = "ua-box-whisker"
 # custom result plots
 CR_SCATTER = "cr-scatter"
 CR_HISTOGRAM = "cr-histogram"
+
+# for drawing emission limit lines on charts
+UA_EMISSIONS = "ua-emissions"
+CR_EMISSIONS = "cr-emissions"

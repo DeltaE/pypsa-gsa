@@ -29,8 +29,12 @@ def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> flo
         assert component == "stores"
         stores = df[df.carrier.isin(carriers)].index
         df = getattr(n, "stores_t")["e"][stores]
-        assert all(df >= 0)
-        return df.sum().sum()
+        # emissions just want final value
+        if any([x in carriers for x in ["co2", "ch4"]]):
+            assert all(df >= 0)
+            return round(df.max().sum() * 1e-6, 3)  # convert to MMT
+        else:
+            return df.sum().sum()
     else:
         return e_nom_opt
 
@@ -94,8 +98,18 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
             value = _get_p_total(n, component, variable, carriers)
         elif variable == "cost":
             value = _get_objective_cost(n)
-        elif variable == "marginal_price":
-            value = _get_marginal_cost(n, carriers, metric="mean")
+        elif variable.startswith("marginal_price"):
+            metric = variable.split("_")[-1]
+            if metric == "price":
+                metric = "mean"
+            elif metric in ("25", "50", "75"):
+                metric = f"{metric}%"
+            if metric == "iqr":  # have to manually calculate iqr
+                upper = _get_marginal_cost(n, carriers, metric="75%")
+                lower = _get_marginal_cost(n, carriers, metric="25%")
+                value = upper - lower
+            else:
+                value = _get_marginal_cost(n, carriers, metric=metric)
         elif variable == "e_nom_opt":
             value = _get_e_nom_opt(n, component, carriers)
         else:
@@ -114,9 +128,9 @@ if __name__ == "__main__":
         csv = snakemake.output.csv
         configure_logging(snakemake)
     else:
-        network = "results/caiso/gsa/modelruns/1678/network.nc"
+        network = "results/caiso/gsa/modelruns/0/network.nc"
         results_f = "results/caiso/gsa/results.csv"
-        csv = "results/caiso/gsa/modelruns/1678/results.csv"
+        csv = "results/caiso/gsa/modelruns/0/results.csv"
         model_run = 1678
 
     n = pypsa.Network(network)

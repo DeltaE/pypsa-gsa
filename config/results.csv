@@ -2,6 +2,16 @@ name,nice_name,component,carriers,variable,unit,gsa_plot,ua_plot
 objective_cost,Objective Cost,system,,cost,$,cost,
 marginal_cost_elec,System Electricity Cost,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price,$/MWh,electric_marginal_price,
 marginal_cost_energy,System Energy Cost,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh,energy_marginal_price,
+marginal_cost_elec_iqr,System Electricity Cost IQR,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price_iqr,$/MWh,electric_marginal_price_iqr,
+marginal_cost_energy_iqr,System Energy Cost IQR,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price_iqr,$/MWh,energy_marginal_price_iqr,
+marginal_cost_elec_std,System Electricity Cost Standard Deviation,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price_std,$/MWh,electric_marginal_price_std,
+marginal_cost_energy_std,System Energy Cost Standard Deviation,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price_std,$/MWh,energy_marginal_price_std,
+marginal_cost_elec_25,System Electricity Cost 25%,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price_25,$/MWh,electric_marginal_price_25,
+marginal_cost_energy_25,System Energy Cost 25%,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price_25,$/MWh,energy_marginal_price_25,
+marginal_cost_elec_50,System Electricity Cost 50%,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price_50,$/MWh,electric_marginal_price_50,
+marginal_cost_energy_50,System Energy Cost 50%,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price_50,$/MWh,energy_marginal_price_50,
+marginal_cost_elec_75,System Electricity Cost 75%,buses_t,ind-elec;res-total-elec;com-total-elec;trn-elec-veh,marginal_price_75,$/MWh,electric_marginal_price_75,
+marginal_cost_energy_75,System Energy Cost 75%,buses_t,ind-elec;ind-heat;res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool;com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool;trn-elec-veh;trn-lpg-veh,marginal_price_75,$/MWh,energy_marginal_price_75,
 carbon_co2,Emissions (CO2),store,co2,e_nom_opt,carbon,carbon,TCO2e
 carbon_ch4,Emissions (CH4 as CO2e),store,ch4,e_nom_opt,carbon,carbon,TCO2e
 carbon_total,Emissions Total (CO2 + CH4 as CO2e),store,co2;ch4,e_nom_opt,carbon,carbon,TCO2e
@@ -70,7 +80,7 @@ elec_water_heater_capacity,Electric Water Heater,stores,res-total-water-elec;com
 elec_water_heater_capacity_new,Electric Water Heater,stores,res-total-water-elec;com-total-water-elec,e_nom_opt,MWh,,service_new
 hp_generation,Heat Pump,links_t,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p1,MWh,,srvice_gen
 ashp_generation,Air Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p1,MWh,,srvice_gen
-gshp_generation,Ground Source Heat Pump,links_t,com-total-ashp;res-total-ashp,p1,MWh,,srvice_gen
+gshp_generation,Ground Source Heat Pump,links_t,com-total-gshp;res-total-gshp,p1,MWh,,srvice_gen
 gas_furnace_generation,Gas Furnace,links_t,res-total-space-gas-furnace;com-total-space-gas-furnace,p1,MWh,,srvice_gen
 elec_furnace_generation,Electric Furnace,links_t,res-total-space-elec-furnace;com-total-space-elec-furnace,p1,MWh,,srvice_gen
 oil_furnace_generation,Oil Furnace,links_t,res-total-space-oil-furnace;com-total-space-oil-furnace,p1,MWh,,srvice_gen

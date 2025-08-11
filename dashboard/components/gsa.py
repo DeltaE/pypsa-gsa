@@ -44,11 +44,19 @@ def _default_gsa_params_value(options: list[dict[str, str]]) -> list[str]:
 
 def _default_gsa_results_value() -> list[str]:
     """Default value for the GSA results dropdown."""
-    defaults = [
-        x["value"]
-        for x in GSA_RESULT_OPTIONS
-        if any(y in x["value"] for y in ["_energy_", "carbon_"])
+    defaults_expected = [
+        "marginal_cost_energy",
+        "marginal_cost_elec",
+        "carbon_co2",
+        "carbon_total",
     ]
+
+    defaults = []
+    for x in GSA_RESULT_OPTIONS:
+        for default in defaults_expected:
+            if default == x["value"]:
+                defaults.append(default)
+
     if not defaults:
         return GSA_RESULT_OPTIONS[0]["value"]
     return defaults
