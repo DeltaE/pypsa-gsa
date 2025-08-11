@@ -1154,6 +1154,262 @@
                 "result": "generation",
                 "visible": true,
                 "unit": "MWh"
+            },
+            "load_factor_pwr_solar": {
+                "label": "Solar",
+                "label2": "Pwr. Solar Load Factor",
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"   
+            },
+            "load_factor_pwr_onwind": {
+                "label": "Onwind",
+                "label2": "Pwr. Onwind Load Factor",
+                "sector": "power",
+                "result": "load_factor",    
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_pwr_offwind": {
+                "label": "Offwind",
+                "label2": "Pwr. Offwind Load Factor",   
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_pwr_ocgt": {   
+                "label": "OCGT",
+                "label2": "Pwr. OCGT Load Factor",
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"   
+            },
+            "load_factor_pwr_ccgt": {
+                "label": "CCGT",
+                "label2": "Pwr. CCGT Load Factor",
+                "sector": "power",
+                "result": "load_factor",    
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_pwr_ccgt95ccs": {
+                "label": "CCGT-95CCS",
+                "label2": "Pwr. CCGT-95CCS Load Factor",    
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_pwr_hydro": {  
+                "label": "Hydro",
+                "label2": "Pwr. Hydro Load Factor",
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_pwr_coal": {
+                "label": "Coal",
+                "label2": "Pwr. Coal Load Factor",
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,    
+                "unit": "pct"
+            },
+            "load_factor_pwr_nuclear": {
+                "label": "Nuclear",
+                "label2": "Pwr. Nuclear Load Factor",
+                "sector": "power",  
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_pwr_other": {
+                "label": "Other",   
+                "label2": "Pwr. Other Load Factor",
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_pwr_geothermal": {
+                "label": "Geothermal",
+                "label2": "Pwr. Geothermal Load Factor",
+                "sector": "power",
+                "result": "load_factor",
+                "visible": true,    
+                "unit": "pct"
+            },
+            "load_factor_svc_ashp": {
+                "label": "Air Source Heat Pump",
+                "label2": "Svc. Air Source Heat Pump Load Factor",
+                "sector": "service",    
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_gshp": {
+                "label": "Ground Source Heat Pump", 
+                "label2": "Svc. Ground Source Heat Pump Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_gas_furnace": {
+                "label": "Gas Furnace",
+                "label2": "Svc. Gas Furnace Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_elec_furnace": {
+                "label": "Electric Furnace",
+                "label2": "Svc. Electric Furnace Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_oil_furnace": {
+                "label": "Oil Furnace",
+                "label2": "Svc. Oil Furnace Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_air_con": {
+                "label": "Air Conditioner",
+                "label2": "Svc. Air Conditioner Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_gas_water_heater": {
+                "label": "Gas Water Heater",
+                "label2": "Svc. Gas Water Heater Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_elec_water_heater": {
+                "label": "Electric Water Heater",
+                "label2": "Svc. Electric Water Heater Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_svc_oil_water_heater": {
+                "label": "Oil Water Heater",
+                "label2": "Svc. Oil Water Heater Load Factor",
+                "sector": "service",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_trn_ev_lgt": {
+                "label": "Light Duty EV",
+                "label2": "Trn. Light Duty EV Load Factor",
+                "sector": "transport",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_trn_lpg_lgt": {
+                "label": "Light Duty LPG",
+                "label2": "Trn. Light Duty LPG Load Factor",
+                "sector": "transport",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_trn_ev_med": {
+                "label": "Medium Duty EV",
+                "label2": "Trn. Medium Duty EV Load Factor",
+                "sector": "transport",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_trn_lpg_med": {
+                "label": "Medium Duty LPG",
+                "label2": "Trn. Medium Duty LPG Load Factor",
+                "sector": "transport",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_trn_ev_hvy": {
+                "label": "Heavy Duty EV",
+                "label2": "Trn. Heavy Duty EV Load Factor",
+                "sector": "transport",
+                "result": "load_factor",
+                "visible": true,    
+                "unit": "pct"
+            },
+            "load_factor_trn_lpg_hvy": {
+                "label": "Heavy Duty LPG",
+                "label2": "Trn. Heavy Duty LPG Load Factor",
+                "sector": "transport",  
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },
+            "load_factor_trn_ev_bus": {
+                "label": "Bus EV",  
+                "label2": "Trn. Bus EV Load Factor",
+                "sector": "transport",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_trn_lpg_bus": {
+                "label": "Bus LPG",
+                "label2": "Trn. Bus LPG Load Factor",
+                "sector": "transport",
+                "result": "load_factor",
+                "visible": true,    
+                "unit": "pct"
+            },
+            "load_factor_ind_gas_furnace": {
+                "label": "Gas Furnace",
+                "label2": "Ind. Gas Furnace Load Factor",
+                "sector": "industry",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_ind_coal_furnace": {
+                "label": "Coal Furnace",
+                "label2": "Ind. Coal Furnace Load Factor",
+                "sector": "industry",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
+            },  
+            "load_factor_ind_heat_pump": {
+                "label": "Heat Pump",
+                "label2": "Ind. Heat Pump Load Factor",
+                "sector": "industry",
+                "result": "load_factor",
+                "visible": true,    
+                "unit": "pct"
+            },
+            "load_factor_tx_transmission": {
+                "label": "Transmission",
+                "label2": "Transmission Load Factor",
+                "sector": "system",
+                "result": "load_factor",
+                "visible": true,
+                "unit": "pct"
             }
         }
     ,

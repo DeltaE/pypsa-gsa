@@ -66,6 +66,79 @@ def _get_marginal_cost(
     return n.buses_t["marginal_price"][buses].mean(axis=1).describe().loc[metric]
 
 
+def _get_load_factor(n: pypsa.Network, component: str, carriers: list[str]) -> float:
+    if component == "generators_t":
+        actual = _get_generator_actual_output(n, carriers)
+        maximum = _get_generator_maximum_output(n, carriers)
+    elif component == "links_t":
+        actual = _get_link_actual_output(n, carriers)
+        maximum = _get_link_maximum_output(n, carriers)
+    else:
+        raise ValueError(
+            f"Unrecognized component: {component}. Must be one of generators_t or links_t."
+        )
+
+    load_factor = actual / maximum * 100
+
+    assert 0 <= load_factor <= 100, (
+        f"Load factor is {load_factor} which is not between 0 and 100 for carriers {carriers}."
+    )
+
+    return round(load_factor, 3)
+
+
+def _get_generator_actual_output(n: pypsa.Network, carriers: list[str]) -> float:
+    gens = n.generators[n.generators.carrier.isin(carriers)].index
+    return (
+        n.generators_t["p"][gens]
+        .mul(n.snapshot_weightings.objective, axis=0)
+        .sum()
+        .sum()
+    )
+
+
+def _get_generator_maximum_output(n: pypsa.Network, carriers: list[str]) -> float:
+    gens = n.generators[n.generators.carrier.isin(carriers)].index
+    return (
+        n.generators["p_nom_opt"][gens]
+        .mul(n.snapshot_weightings.objective.sum(), axis=0)
+        .sum()
+        .sum()
+    )
+
+
+def _get_link_actual_output(n: pypsa.Network, carriers: list[str]) -> float:
+    links = n.links[n.links.carrier.isin(carriers)].index
+    gen = (
+        n.links_t.p1[links]
+        .mul(-1)
+        .mul(n.snapshot_weightings.objective, axis=0)
+        .sum()
+        .sum()
+    )
+    for car in carriers:  # get hp cooling generation
+        if any(x in car for x in ("ashp", "gshp")):
+            additional_gen = (
+                n.links_t.p2[car]
+                .mul(-1)
+                .mul(n.snapshot_weightings.objective, axis=0)
+                .sum()
+                .sum()
+            )
+            gen += additional_gen
+    return gen
+
+
+def _get_link_maximum_output(n: pypsa.Network, carriers: list[str]) -> float:
+    links = n.links[n.links.carrier.isin(carriers)].index
+
+    eff = n.get_switchable_as_dense("Link", "efficiency")
+    eff = eff[[x for x in eff.columns if x in links]]
+
+    cap = n.links.loc[eff.columns].p_nom_opt
+    return eff.mul(cap).mul(n.snapshot_weightings.objective, axis=0).sum().sum()
+
+
 def _get_objective_cost(n: pypsa.Network) -> float:
     return n.objective
 
@@ -112,6 +185,8 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
                 value = _get_marginal_cost(n, carriers, metric=metric)
         elif variable == "e_nom_opt":
             value = _get_e_nom_opt(n, component, carriers)
+        elif variable == "lf":  # load factor
+            value = _get_load_factor(n, component, carriers)
         else:
             raise KeyError(f"Unrecognized argument of {variable}.")
 
