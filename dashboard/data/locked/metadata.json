@@ -299,6 +299,13 @@
                 "visible": true,
                 "unit": "MWh"
             },
+            "demand_response": {
+                "label": "Demand Response",
+                "sector": "system",
+                "result": "demand_response",
+                "visible": true,
+                "unit": "MWh"
+            },
             "solar_capacity": {
                 "label": "Solar",
                 "label2": "Pwr. Solar Capacity Total",

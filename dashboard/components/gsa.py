@@ -140,7 +140,7 @@ def gsa_params_dropdown() -> html.Div:
             html.H6("Select Parameter(s)"),
             dcc.Dropdown(
                 id=ids.GSA_PARAM_DROPDOWN,
-                options=GSA_PARM_OPTIONS,
+                options=sorted(GSA_PARM_OPTIONS, key=lambda x: x["label"]),
                 value=_default_gsa_params_value(GSA_PARM_OPTIONS),
                 multi=True,
             ),

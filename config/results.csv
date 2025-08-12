@@ -16,6 +16,7 @@ carbon_co2,Emissions (CO2),store,co2,e_nom_opt,carbon,carbon,TCO2e
 carbon_ch4,Emissions (CH4 as CO2e),store,ch4,e_nom_opt,carbon,carbon,TCO2e
 carbon_total,Emissions Total (CO2 + CH4 as CO2e),store,co2;ch4,e_nom_opt,carbon,carbon,TCO2e
 load_shedding,Load Shedding,generators,load,p_nom_opt,MW,load_shed,
+demand_response,Demand Response,stores,demand_response,e_nom_opt,MWh,,demand_response
 solar_capacity,Solar,generators,solar,p_nom_opt,MW,,pwr_opt
 solar_capacity_new,Solar,generators,solar,p_nom_new,MW,,pwr_new
 onwind_capacity,Onshore Wind,generators,onwind,p_nom_opt,MW,,pwr_opt
