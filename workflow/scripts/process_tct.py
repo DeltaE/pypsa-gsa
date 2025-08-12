@@ -125,8 +125,8 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
             min_value = cap * GROWTHS[name]["ref_growth"] / 100
             max_value = cap * GROWTHS[name]["max_growth"] / 100
 
-        min_value = float(math.ceil(min_value / cap))
-        max_value = float(math.ceil(max_value / cap))
+        min_value = round(min_value,0)
+        max_value = round(max_value,0)
 
         if abs(min_value - max_value) < 0.0001:
             logger.info(f"No limits created for {name}")
@@ -181,10 +181,10 @@ if __name__ == "__main__":
         tct_gsa_f = snakemake.output.tct_gsa
         ccs_limit = snakemake.params.ccs_limit  # as a percentage of max ccgt cap
     else:
-        network = ""
+        network = "config/pypsa-usa/caiso/elec_s12_c4m_ec_lv1.0_4h_E-G.nc"
         include_tct = True
-        tct_aeo_f = ""
-        tct_gsa_f = ""
+        tct_aeo_f = "results/caiso/generated/tct_aeo.csv"
+        tct_gsa_f = "results/caiso/generated/tct_aeo.csv"
         ccs_limit = 50  # as a percentage of max ccgt cap
 
     n = pypsa.Network(network)

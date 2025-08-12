@@ -122,35 +122,35 @@ ind_heat_pump_capacity_new,Heat Pump,links,ind-heat-pump,p_nom_new,MW,,ind_gen
 ind_gas_furnace_generation,Gas Furnace,links_t,ind-gas-furnace,p1,MWh,,ind_gen
 ind_coal_furnace_generation,Coal Furnace,links_t,ind-coal-furnace,p1,MWh,,ind_gen
 ind_heat_pump_generation,Heat Pump,links_t,ind-heat-pump,p1,MWh,,ind_gen
-load_factor_pwr_solar,Solar,generators_t,solar,lf,pct,,load_factor_pwr
-load_factor_pwr_onwind,Onwind,generators_t,onwind,lf,pct,,load_factor_pwr
-load_factor_pwr_offwind,Offwind,generators_t,offwind_floating,lf,pct,,load_factor_pwr
-load_factor_pwr_ocgt,OCGT,links_t,OCGT,lf,pct,,load_factor_pwr
-load_factor_pwr_ccgt,CCGT,links_t,CCGT,lf,pct,,load_factor_pwr
-load_factor_pwr_ccgt95ccs,CCGT-95CCS,links_t,CCGT-95CCS,lf,pct,,load_factor_pwr
-load_factor_pwr_hydro,Hydro,generators_t,hydro,lf,pct,,load_factor_pwr
-load_factor_pwr_coal,Coal,links_t,coal,lf,pct,,load_factor_pwr
-load_factor_pwr_nuclear,Nuclear,generators_t,nuclear,lf,pct,,load_factor_pwr
-load_factor_pwr_other,Other,generators_t,biomass;waste,lf,pct,,load_factor_pwr
-load_factor_pwr_geothermal,Geothermal,generators_t,geothermal,lf,pct,,load_factor_pwr
-load_factor_svc_ashp,Air Source Heat Pump,links_t,com-total-ashp;res-total-ashp,lf,pct,,load_factor_svc
-load_factor_svc_gshp,Ground Source Heat Pump,links_t,com-total-gshp;res-total-gshp,lf,pct,,load_factor_svc
-load_factor_svc_gas_furnace,Gas Furnace,links_t,res-total-space-gas-furnace;com-total-space-gas-furnace,lf,pct,,load_factor_svc
-load_factor_svc_elec_furnace,Electric Furnace,links_t,res-total-space-elec-furnace;com-total-space-elec-furnace,lf,pct,,load_factor_svc
-load_factor_svc_oil_furnace,Oil Furnace,links_t,res-total-space-oil-furnace;com-total-space-oil-furnace,lf,pct,,load_factor_svc
-load_factor_svc_air_con,Air Conditioner,links_t,res-total-air-con;com-total-air-con,lf,pct,,load_factor_svc
-load_factor_svc_gas_water_heater,Gas Water Heater,links_t,res-total-water-gas;com-total-water-gas,lf,pct,,load_factor_svc
-load_factor_svc_oil_water_heater,Oil Water Heater,links_t,res-total-water-oil;com-total-water-oil,lf,pct,,load_factor_svc
-load_factor_svc_elec_water_heater,Electric Water Heater,links_t,res-total-water-elec;com-total-water-elec,lf,pct,,load_factor_svc
-load_factor_trn_ev_lgt,Light Duty EV,links_t,trn-elec-veh-lgt,lf,pct,,load_factor_trn
-load_factor_trn_lpg_lgt,Light Duty LPG,links_t,trn-lpg-veh-lgt,lf,pct,,load_factor_trn
-load_factor_trn_ev_med,Med Duty EV,links_t,trn-elec-veh-med,lf,pct,,load_factor_trn
-load_factor_trn_lpg_med,Med Duty LPG,links_t,trn-lpg-veh-med,lf,pct,,load_factor_trn
-load_factor_trn_ev_hvy,Heavy Duty EV,links_t,trn-elec-veh-hvy,lf,pct,,load_factor_trn
-load_factor_trn_lpg_hvy,Heavy Duty LPG,links_t,trn-lpg-veh-hvy,lf,pct,,load_factor_trn
-load_factor_trn_ev_bus,Bus EV,links_t,trn-elec-veh-bus,lf,pct,,load_factor_trn
-load_factor_trn_lpg_bus,Bus LPG,links_t,trn-lpg-veh-bus,lf,pct,,load_factor_trn
-load_factor_ind_gas_furnace,Gas Furnace,links_t,ind-gas-furnace,lf,pct,,load_factor_ind
-load_factor_ind_coal_furnace,Coal Furnace,links_t,ind-coal-furnace,lf,pct,,load_factor_ind
-load_factor_ind_heat_pump,Heat Pump,links_t,ind-heat-pump,lf,pct,,load_factor_ind
-load_factor_tranmsission,Transmission,links_t,AC,lf,pct,,load_factor_tx
+utilization_pwr_solar,Solar,generators_t,solar,utilization,pct,,utilization_pwr
+utilization_pwr_onwind,Onwind,generators_t,onwind,utilization,pct,,utilization_pwr
+utilization_pwr_offwind,Offwind,generators_t,offwind_floating,utilization,pct,,utilization_pwr
+utilization_pwr_ocgt,OCGT,links_t,OCGT,utilization,pct,,utilization_pwr
+utilization_pwr_ccgt,CCGT,links_t,CCGT,utilization,pct,,utilization_pwr
+utilization_pwr_ccgt95ccs,CCGT-95CCS,links_t,CCGT-95CCS,utilization,pct,,utilization_pwr
+utilization_pwr_hydro,Hydro,generators_t,hydro,utilization,pct,,utilization_pwr
+utilization_pwr_coal,Coal,links_t,coal,utilization,pct,,utilization_pwr
+utilization_pwr_nuclear,Nuclear,generators_t,nuclear,utilization,pct,,utilization_pwr
+utilization_pwr_other,Other,generators_t,biomass;waste,utilization,pct,,utilization_pwr
+utilization_pwr_geothermal,Geothermal,generators_t,geothermal,utilization,pct,,utilization_pwr
+utilization_svc_ashp,Air Source Heat Pump,links_t,com-total-ashp;res-total-ashp,utilization,pct,,utilization_svc
+utilization_svc_gshp,Ground Source Heat Pump,links_t,com-total-gshp;res-total-gshp,utilization,pct,,utilization_svc
+utilization_svc_gas_furnace,Gas Furnace,links_t,res-total-space-gas-furnace;com-total-space-gas-furnace,utilization,pct,,utilization_svc
+utilization_svc_elec_furnace,Electric Furnace,links_t,res-total-space-elec-furnace;com-total-space-elec-furnace,utilization,pct,,utilization_svc
+utilization_svc_oil_furnace,Oil Furnace,links_t,res-total-space-oil-furnace;com-total-space-oil-furnace,utilization,pct,,utilization_svc
+utilization_svc_air_con,Air Conditioner,links_t,res-total-air-con;com-total-air-con,utilization,pct,,utilization_svc
+utilization_svc_gas_water_heater,Gas Water Heater,links_t,res-total-water-gas;com-total-water-gas,utilization,pct,,utilization_svc
+utilization_svc_oil_water_heater,Oil Water Heater,links_t,res-total-water-oil;com-total-water-oil,utilization,pct,,utilization_svc
+utilization_svc_elec_water_heater,Electric Water Heater,links_t,res-total-water-elec;com-total-water-elec,utilization,pct,,utilization_svc
+utilization_trn_ev_lgt,Light Duty EV,links_t,trn-elec-veh-lgt,utilization,pct,,utilization_trn
+utilization_trn_lpg_lgt,Light Duty LPG,links_t,trn-lpg-veh-lgt,utilization,pct,,utilization_trn
+utilization_trn_ev_med,Med Duty EV,links_t,trn-elec-veh-med,utilization,pct,,utilization_trn
+utilization_trn_lpg_med,Med Duty LPG,links_t,trn-lpg-veh-med,utilization,pct,,utilization_trn
+utilization_trn_ev_hvy,Heavy Duty EV,links_t,trn-elec-veh-hvy,utilization,pct,,utilization_trn
+utilization_trn_lpg_hvy,Heavy Duty LPG,links_t,trn-lpg-veh-hvy,utilization,pct,,utilization_trn
+utilization_trn_ev_bus,Bus EV,links_t,trn-elec-veh-bus,utilization,pct,,utilization_trn
+utilization_trn_lpg_bus,Bus LPG,links_t,trn-lpg-veh-bus,utilization,pct,,utilization_trn
+utilization_ind_gas_furnace,Gas Furnace,links_t,ind-gas-furnace,utilization,pct,,utilization_ind
+utilization_ind_coal_furnace,Coal Furnace,links_t,ind-coal-furnace,utilization,pct,,utilization_ind
+utilization_ind_heat_pump,Heat Pump,links_t,ind-heat-pump,utilization,pct,,utilization_ind
+utilization_tranmsission,Transmission,links_t,AC,utilization,pct,,utilization_tx

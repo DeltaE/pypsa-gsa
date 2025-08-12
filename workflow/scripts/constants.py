@@ -131,10 +131,17 @@ VALID_UNITS = [
 
 VALID_RESULTS = {
     "generators": ["p_nom_opt", "p_nom_new"],
-    "generators_t": ["p"],
+    "generators_t": ["p", "utilization"],
     "links": ["p_nom_opt", "p_nom_new"],
-    "links_t": ["p0", "p1", "p2"],
-    "buses_t": ["marginal_price"],
+    "links_t": ["p0", "p1", "p2", "utilization"],
+    "buses_t": [
+        "marginal_price",
+        "marginal_price_25",
+        "marginal_price_50",
+        "marginal_price_75",
+        "marginal_price_iqr",
+        "marginal_price_std",
+    ],
     "system": ["cost"],
     "stores": ["e_nom_opt"],
 }

@@ -66,7 +66,7 @@ def _get_marginal_cost(
     return n.buses_t["marginal_price"][buses].mean(axis=1).describe().loc[metric]
 
 
-def _get_load_factor(n: pypsa.Network, component: str, carriers: list[str]) -> float:
+def _get_utilization_rate(n: pypsa.Network, component: str, carriers: list[str]) -> float:
     if component == "generators_t":
         actual = _get_generator_actual_output(n, carriers)
         maximum = _get_generator_maximum_output(n, carriers)
@@ -78,13 +78,13 @@ def _get_load_factor(n: pypsa.Network, component: str, carriers: list[str]) -> f
             f"Unrecognized component: {component}. Must be one of generators_t or links_t."
         )
 
-    load_factor = actual / maximum * 100
+    utilization_rate = actual / maximum * 100
 
-    assert 0 <= load_factor <= 100, (
-        f"Load factor is {load_factor} which is not between 0 and 100 for carriers {carriers}."
+    assert 0 <= utilization_rate <= 100, (
+        f"Utilization rate is {utilization_rate} which is not between 0 and 100 for carriers {carriers}."
     )
 
-    return round(load_factor, 3)
+    return round(utilization_rate, 3)
 
 
 def _get_generator_actual_output(n: pypsa.Network, carriers: list[str]) -> float:
@@ -185,8 +185,8 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
                 value = _get_marginal_cost(n, carriers, metric=metric)
         elif variable == "e_nom_opt":
             value = _get_e_nom_opt(n, component, carriers)
-        elif variable == "lf":  # load factor
-            value = _get_load_factor(n, component, carriers)
+        elif variable == "utilization":
+            value = _get_utilization_rate(n, component, carriers)
         else:
             raise KeyError(f"Unrecognized argument of {variable}.")
 
