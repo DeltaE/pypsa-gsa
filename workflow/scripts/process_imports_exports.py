@@ -147,7 +147,7 @@ def _expand_interchange_data(interchange_data: pd.DataFrame) -> pd.DataFrame:
     df = interchange_data.copy()
     mask = df.interchange_reported_mwh < 0
     df.loc[mask, ["from", "to"]] = df.loc[mask, ["to", "from"]].values
-    df.loc[mask, "interchange_reported_mwh"] *= -1
+    df.loc[mask, "interchange_reported_mwh"] = df.loc[mask, "interchange_reported_mwh"].mul(-1)
 
     all_isos = list(set(df["from"].unique().tolist() + df["to"].unique().tolist()))
     all_months = df.month.unique()

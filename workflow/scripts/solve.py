@@ -15,7 +15,6 @@ from utils import (
     get_network_iso,
     get_region_buses,
     get_rps_demand_supplyside,
-    get_rps_demand_demandside,
     get_rps_eligible,
     get_rps_generation,
     concat_rps_standards,
@@ -188,6 +187,15 @@ def no_economic_retirement_constraint(n):
     n.links.loc[links.index, "capital_cost"] = (
         0  # not actually needed, just for sanity :)
     )
+    
+    gens = n.gens[
+        (n.gens.index.str.endswith(" existing")) & (n.gens.carrier.isin(pwr_cars))
+    ]
+    n.gens.loc[gens.index, "p_nom_extendable"] = False
+    n.gens.loc[gens.index, "capital_cost"] = (
+        0  # not actually needed, just for sanity :)
+    )
+    
     return n
 
 
@@ -208,7 +216,7 @@ def add_technology_capacity_target_constraints(
     # apply sample
     tct_data = tct_data.set_index("name")
     for name, sample_value in zip(sample.name, sample.value):
-        tct_data.loc[name, "max"] *= sample_value
+        tct_data.loc[name, "max"] = sample_value # sample value already scaled
     tct_data = tct_data.reset_index()
 
     if tct_data.empty:
@@ -1158,7 +1166,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso/gsa/modelruns/1678/n.nc"
+        in_network = "results/caiso/gsa/modelruns/0/network.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
@@ -1175,7 +1183,7 @@ if __name__ == "__main__":
         tct_f = "results/caiso/constraints/tct.csv"
         ev_policy_f = "results/caiso/constraints/ev_policy.csv"
         import_export_flows_f = "results/caiso/constraints/import_export_flows.csv"
-        constraints_meta = "results/caiso/gsa/modelruns/1678/constraints.csv"
+        constraints_meta = "results/caiso/gsa/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)

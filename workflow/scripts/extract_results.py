@@ -66,7 +66,9 @@ def _get_marginal_cost(
     return n.buses_t["marginal_price"][buses].mean(axis=1).describe().loc[metric]
 
 
-def _get_utilization_rate(n: pypsa.Network, component: str, carriers: list[str]) -> float:
+def _get_utilization_rate(
+    n: pypsa.Network, component: str, carriers: list[str]
+) -> float:
     if component == "generators_t":
         actual = _get_generator_actual_output(n, carriers)
         maximum = _get_generator_maximum_output(n, carriers)
@@ -116,16 +118,6 @@ def _get_link_actual_output(n: pypsa.Network, carriers: list[str]) -> float:
         .sum()
         .sum()
     )
-    for car in carriers:  # get hp cooling generation
-        if any(x in car for x in ("ashp", "gshp")):
-            additional_gen = (
-                n.links_t.p2[car]
-                .mul(-1)
-                .mul(n.snapshot_weightings.objective, axis=0)
-                .sum()
-                .sum()
-            )
-            gen += additional_gen
     return gen
 
 
