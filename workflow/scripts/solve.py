@@ -187,15 +187,15 @@ def no_economic_retirement_constraint(n):
     n.links.loc[links.index, "capital_cost"] = (
         0  # not actually needed, just for sanity :)
     )
-    
-    gens = n.gens[
-        (n.gens.index.str.endswith(" existing")) & (n.gens.carrier.isin(pwr_cars))
+
+    gens = n.generators[
+        (n.generators.index.str.endswith(" existing")) & (n.generators.carrier.isin(pwr_cars))
     ]
-    n.gens.loc[gens.index, "p_nom_extendable"] = False
-    n.gens.loc[gens.index, "capital_cost"] = (
+    n.generators.loc[gens.index, "p_nom_extendable"] = False
+    n.generators.loc[gens.index, "capital_cost"] = (
         0  # not actually needed, just for sanity :)
     )
-    
+
     return n
 
 
@@ -216,7 +216,7 @@ def add_technology_capacity_target_constraints(
     # apply sample
     tct_data = tct_data.set_index("name")
     for name, sample_value in zip(sample.name, sample.value):
-        tct_data.loc[name, "max"] = sample_value # sample value already scaled
+        tct_data.loc[name, "max"] = sample_value  # sample value already scaled
     tct_data = tct_data.reset_index()
 
     if tct_data.empty:
@@ -1166,7 +1166,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso/gsa/modelruns/0/network.nc"
+        in_network = "results/caiso/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
