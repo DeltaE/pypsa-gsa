@@ -1134,6 +1134,8 @@ def callback_update_ua_results_sector_dropdown_options(
         options = SECTOR_DROPDOWN_OPTIONS_IDV
     elif result_type == "generation":
         options = SECTOR_DROPDOWN_OPTIONS_IDV
+    elif result_type == "demand_response":
+        options = SECTOR_DROPDOWN_OPTIONS_ALL
     else:
         logger.debug(f"Invalid result type for UA sector dropdown: {result_type}")
         options = SECTOR_DROPDOWN_OPTIONS_ALL

@@ -48,22 +48,23 @@ DEFAULT_HEIGHT = 600
 DEFAULT_OPACITY = 0.7
 
 DEFAULT_2005_EMISSION_LIMIT = dict(
-    line_dash="dash",
-    line_color="red",
+    line_dash="dot",
+    line_color="black",
     line_width=2,
     annotation_text="2005 Emissions",
     annotation_position="top left",
-    annotation_font_color="red",
+    annotation_font_color="black",
 )
 
 DEFAULT_2030_EMISSION_LIMIT = dict(
     line_dash="dot",
-    line_color="green",
+    line_color="black",
     line_width=2,
     annotation_text="2030 Emission Target",
     annotation_position="bottom left",
-    annotation_font_color="green",
+    annotation_font_color="black",
 )
+
 DEFAULT_Y_LABEL = {
     "cost": "Cost ($)",
     "marginal_cost": "Marginal Costs ($/MWh)",
@@ -75,6 +76,8 @@ DEFAULT_Y_LABEL = {
     "generation": "Generation (MWh)",
     "generation_trn": "Generation (kVMT)",
     "other": "Other",
+    "demand_response": "Load (MWh)",
+    "load_shedding": "Load Shed (MWh)",
 }
 
 
@@ -335,8 +338,5 @@ def get_emission_limits(emissions: list[dict[str, Any]]) -> tuple[float, float]:
     for _, data in emissions.items():
         emissions_2005 += data["2005_mmt"]
         emissions_2030 += data["2030_mmt"]
-
-    emissions_2005 *= 1000000
-    emissions_2030 *= 1000000
 
     return emissions_2005, emissions_2030

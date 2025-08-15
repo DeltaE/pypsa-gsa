@@ -40,9 +40,10 @@ CR_PARAM_OPTIONS = {iso: get_cr_params_dropdown_options(root, iso) for iso in IS
 
 CR_DATA = {iso: get_cr_data_by_iso(root, iso) for iso in ISOS}
 
-SECTOR_DROPDOWN_OPTIONS = [
-    {"label": y, "value": x} for x, y in METADATA["nice_names"]["sector"].items()
-]
+SECTOR_DROPDOWN_OPTIONS = sorted(
+    [{"label": y, "value": x} for x, y in METADATA["nice_names"]["sector"].items()],
+    key=lambda x: x["label"],
+)
 SECTOR_DROPDOWN_OPTIONS_NO_ALL = [
     x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] != "all"
 ]
@@ -52,14 +53,18 @@ SECTOR_DROPDOWN_OPTIONS_ALL = [
 SECTOR_DROPDOWN_OPTIONS_SYSTEM = [
     x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] == "system"
 ]
-SECTOR_DROPDOWN_OPTIONS_IDV = [
-    x
-    for x in SECTOR_DROPDOWN_OPTIONS
-    if x["value"] in ["power", "industry", "service", "transport"]
-]
+SECTOR_DROPDOWN_OPTIONS_IDV = sorted(
+    [
+        x
+        for x in SECTOR_DROPDOWN_OPTIONS
+        if x["value"] in ["power", "industry", "service", "transport"]
+    ],
+    key=lambda x: x["label"],
+)
 
-RESULT_TYPE_DROPDOWN_OPTIONS = [
-    {"label": y, "value": x} for x, y in METADATA["nice_names"]["results"].items()
-]
+RESULT_TYPE_DROPDOWN_OPTIONS = sorted(
+    [{"label": y, "value": x} for x, y in METADATA["nice_names"]["results"].items()],
+    key=lambda x: x["label"],
+)
 
 EMISSIONS = get_emissions(root)

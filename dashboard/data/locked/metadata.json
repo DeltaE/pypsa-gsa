@@ -15,7 +15,8 @@
             "emissions": "Emissions",
             "generation": "Generation",
             "total_capacity": "Total Capacity",
-            "new_capacity": "New Capacity"
+            "new_capacity": "New Capacity",
+            "demand_response": "Demand Response"
         },
         "parameter": {
             "eff": "Efficiency",
@@ -48,7 +49,7 @@
                 "unit": "USD"
             },
             "marginal_cost_elec": {
-                "label": "Marginal Cost (Electricity)",
+                "label": "Marginal Cost Average(Electricity)",
                 "label2": "System Electricity Cost",
                 "sector": "system",
                 "sector2": "power",
@@ -57,7 +58,7 @@
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy": {
-                "label": "Marginal Cost (Energy)",
+                "label": "Marginal Cost Average (Energy)",
                 "label2": "System Energy Cost",
                 "sector": "system",
                 "result": "marginal_cost",
@@ -237,7 +238,7 @@
                 "unit": "USD/MWh"
             },  
             "marginal_cost_elec_50": {
-                "label": "Marginal Cost 50% (Electricity)",
+                "label": "Marginal Cost Median (Electricity)",
                 "label2": "System Electricity Cost Median",
                 "sector": "system",
                 "result": "marginal_cost",
@@ -245,7 +246,7 @@
                 "unit": "USD/MWh"
             },  
             "marginal_cost_energy_50": {
-                "label": "Marginal Cost 50% (Energy)",
+                "label": "Marginal Cost Median (Energy)",
                 "label2": "System Energy Cost Median",
                 "sector": "system",
                 "result": "marginal_cost",
@@ -293,14 +294,35 @@
                 "unit": "T CO2e"
             },
             "load_shedding": {
-                "label": "Load Shedding",
+                "label": "Load Shed",
                 "sector": "system",
-                "result": "other",
+                "result": "demand_response",
                 "visible": true,
                 "unit": "MWh"
             },
             "demand_response": {
-                "label": "Demand Response",
+                "label": "Load Shifted",
+                "sector": "system",
+                "result": "demand_response",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "demand_response_max": {
+                "label": "Load Shifted (Max)",
+                "sector": "system",
+                "result": "demand_response",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "demand_response_avg": {
+                "label": "Load Shifted (Avgerage)",
+                "sector": "system",
+                "result": "demand_response",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "demand_response_total": {
+                "label": "Load Shifted (Max)",
                 "sector": "system",
                 "result": "demand_response",
                 "visible": true,
@@ -357,7 +379,7 @@
             "wind_capacity": {
                 "label": "Wind",
                 "label2": "Pwr. Wind Capacity Total",
-                "sector": "power",
+                "sector": "system",
                 "result": "total_capacity",
                 "visible": false,
                 "unit": "MW"
@@ -365,7 +387,7 @@
             "wind_capacity_new": {
                 "label": "Wind",
                 "label2": "Pwr. Wind Capacity New",
-                "sector": "power",
+                "sector": "system",
                 "result": "new_capacity",
                 "visible": false,
                 "unit": "MW"
@@ -530,6 +552,46 @@
                 "visible": false,
                 "unit": "MW"
             },
+            "battery_capacity": {
+                "label": "Battery Existing",
+                "label2": "Pwr. Battery Capacity Total",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "battery_capacity_4hr": {
+                "label": "Battery (4hr)",
+                "label2": "Pwr. Battery Capacity 4hr Total",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "battery_capacity_4hr_new": {
+                "label": "Battery (4hr)",
+                "label2": "Pwr. Battery Capacity 4hr New",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "battery_capacity_8hr": {
+                "label": "Battery (8hr)",
+                "label2": "Pwr. Battery Capacity 8hr Total",
+                "sector": "power",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "battery_capacity_8hr_new": {
+                "label": "Battery (8hr)",
+                "label2": "Pwr. Battery Capacity 8hr New",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
             "solar_generation": {
                 "label": "Solar",
                 "label2": "Pwr. Solar Generation",
@@ -640,6 +702,14 @@
                 "sector": "system",
                 "result": "generation",
                 "visible": false,
+                "unit": "MWh"
+            },
+            "battery_generation": {
+                "label": "Battery",
+                "label2": "Pwr. Battery Generation",
+                "sector": "power",
+                "result": "generation",
+                "visible": true,
                 "unit": "MWh"
             },
             "hp_capacity": {
@@ -1410,7 +1480,7 @@
                 "visible": true,    
                 "unit": "pct"
             },
-            "utilization_tx_transmission": {
+            "utilization_transmission": {
                 "label": "Transmission",
                 "label2": "Transmission Utilization",
                 "sector": "system",
@@ -4018,15 +4088,15 @@
               "unit": "percent"
             },
             "demand_response": {
-              "label": "Demand Response",
-              "sector": "Demand Response",
+              "label": "Demand Response Cost",
+              "sector": "system",
               "param": "dr",
               "visible": true,
               "unit": "usd/mwh"
             },
             "load_shedding": {
               "label": "Load Shedding",
-              "sector": "Demand Response",
+              "sector": "system",
               "param": "dr",
               "visible": true,
               "unit": "usd/mwh"
@@ -4364,7 +4434,7 @@
         "oil_cost": {"label": "Oil Fuel Cost"},
         "lpg_cost": {"label": "LPG Fuel Cost"},
         "nuclear_cost": {"label": "Uranium Fuel Cost"},
-        "demand_response": {"label": "Demand Response"},
+        "demand_response": {"label": "Demand Response Cost"},
         "load_shedding": {"label": "Load Shedding"},
         "transmission_expansion": {"label": "Transmission Expansion"},
         "transmission_itl": {"label": "Transmission Flows"},

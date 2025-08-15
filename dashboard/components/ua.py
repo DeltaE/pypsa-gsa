@@ -159,6 +159,10 @@ def _filter_ua_on_result_type(
 
     cols = list(set([x["value"] for x in result_mapper if x["label"] == result_type]))
 
+    # marginal cost is an edge case when in the UA page we only want to show the average
+    if result_type == "marginal_cost":
+        cols = [x for x in cols if x.endswith(("_elec", "_energy"))]
+
     if not cols:
         logger.debug(f"No columns found for result type {result_type}")
         return pd.DataFrame(index=df.index)

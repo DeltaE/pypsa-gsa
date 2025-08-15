@@ -122,6 +122,7 @@ def cr_percentile_interval_slider() -> html.Div:
         ],
     )
 
+
 def cr_emission_target_rb() -> html.Div:
     """Custom Result emission target rb component."""
     return html.Div(
@@ -140,6 +141,7 @@ def cr_emission_target_rb() -> html.Div:
             ),
         ],
     )
+
 
 def _read_serialized_cr_data(data: dict[str, Any]) -> pd.DataFrame:
     """Read serialized CR data."""
@@ -305,7 +307,8 @@ def get_cr_scatter_plot(
         )
 
         # so the stores are clearly different
-        scatter_fig.update_traces(marker_symbol="x")
+        if marginal != "histogram":
+            scatter_fig.update_traces(marker_symbol="x")
 
         for trace in scatter_fig.data:
             trace.yaxis = "y2"

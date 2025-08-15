@@ -12,14 +12,21 @@ logger = logging.getLogger(__name__)
 
 def _get_p_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
     df = getattr(n, component)
-    return df[df.carrier.isin(carriers)].p_nom_opt.sum()
+    if component == "storage_units":
+        return df[df.carrier.isin(carriers)].p_nom_opt.mul(df["max_hours"]).sum()
+    else:
+        return df[df.carrier.isin(carriers)].p_nom_opt.sum().round(3)
 
 
 def _get_p_nom_new(n: pypsa.Network, component: str, carriers: list[str]) -> float:
     df = getattr(n, component)
-    original = df[df.carrier.isin(carriers)].p_nom.sum()
-    optimial = df[df.carrier.isin(carriers)].p_nom_opt.sum()
-    return optimial - original
+    if component == "storage_units":
+        original = df[df.carrier.isin(carriers)].p_nom.mul(df["max_hours"]).sum()
+        optimial = df[df.carrier.isin(carriers)].p_nom_opt.mul(df["max_hours"]).sum()
+    else:
+        original = df[df.carrier.isin(carriers)].p_nom.sum()
+        optimial = df[df.carrier.isin(carriers)].p_nom_opt.sum()
+    return round(optimial - original, 3)
 
 
 def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
@@ -33,10 +40,30 @@ def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> flo
         if any([x in carriers for x in ["co2", "ch4"]]):
             assert all(df >= 0)
             return round(df.max().sum() * 1e-6, 3)  # convert to MMT
+        if any([x == "demand_response" for x in carriers]):
+            # correct for backwards demand response having negative values
+            df = df.abs()
+            return float(df.sum().sum())
         else:
             return df.sum().sum()
     else:
         return e_nom_opt
+
+
+def _get_e_nom_dr_metric(
+    n: pypsa.Network, component: str, carriers: list[str], metric: str
+) -> float:
+    assert carriers == ["demand_response"]
+    df = getattr(n, component)
+    stores = df[df.carrier.isin(carriers)]
+    if metric == "max":
+        return n.stores_t["e"][stores].abs().sum(axis=1).max()
+    elif metric == "avg":
+        return float(n.stores_t["e"][stores].abs().mean().mean())
+    else:
+        raise ValueError(
+            f"Unrecognized metric: {metric}. Must be one of ['max', 'avg']."
+        )
 
 
 def _get_p_total(
@@ -49,6 +76,10 @@ def _get_p_total(
     year = n.investment_periods[0]  # already checked that len == 1
     df = getattr(n, component)[var].loc[year]
     df = df[slicer]
+
+    # only get power injected into the grid
+    if component == "storage_units_t":
+        df = df.where(df > 0, 0)
 
     if var in ("p1", "p2"):
         assert all(df <= 0)
@@ -177,6 +208,12 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
                 value = _get_marginal_cost(n, carriers, metric=metric)
         elif variable == "e_nom_opt":
             value = _get_e_nom_opt(n, component, carriers)
+        elif variable == "e_nom_max":
+            # edge case for demand response
+            value = _get_e_nom_dr_metric(n, component, carriers, "max")
+        elif variable == "e_nom_avg":
+            # edge case for demand response
+            value = _get_e_nom_dr_metric(n, component, carriers, "avg")
         elif variable == "utilization":
             value = _get_utilization_rate(n, component, carriers)
         else:

@@ -1,7 +1,4 @@
 name,planning_horizon,region,carrier,min,max
-reeds_forced_retirements,2028,VA,biomass,,0
-reeds_forced_retirements,2024,VA,coal,,0
-reeds_forced_retirements,2024,VA,coal-95CCS,,0
 reeds_storage_mandate,2030,CA,4hr_battery_storage,2325,
 reeds_storage_mandate,2030,MA,4hr_battery_storage,50,
 reeds_storage_mandate,2030,MD,4hr_battery_storage,2102.1,

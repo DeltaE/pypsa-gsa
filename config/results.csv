@@ -16,7 +16,9 @@ carbon_co2,Emissions (CO2),store,co2,e_nom_opt,carbon,carbon,TCO2e
 carbon_ch4,Emissions (CH4 as CO2e),store,ch4,e_nom_opt,carbon,carbon,TCO2e
 carbon_total,Emissions Total (CO2 + CH4 as CO2e),store,co2;ch4,e_nom_opt,carbon,carbon,TCO2e
 load_shedding,Load Shedding,generators,load,p_nom_opt,MW,load_shed,
-demand_response,Demand Response,stores,demand_response,e_nom_opt,MWh,,demand_response
+demand_response_max,Demand Response Max Shifted,stores,demand_response,e_nom_max,MWh,,demand_response
+demand_response_total,Demand Response Total Shifted,stores,demand_response,e_nom_opt,MWh,,demand_response
+demand_response_avg,Demand Response Avg. Shifted,stores,demand_response,e_nom_avg,MWh,,demand_response
 solar_capacity,Solar,generators,solar,p_nom_opt,MW,,pwr_opt
 solar_capacity_new,Solar,generators,solar,p_nom_new,MW,,pwr_new
 onwind_capacity,Onshore Wind,generators,onwind,p_nom_opt,MW,,pwr_opt
@@ -45,6 +47,12 @@ geothermal_capacity,Geothermal,generators,geothermal,p_nom_opt,MW,,pwr_opt
 geothermal_capacity_new,Geothermal,generators,geothermal,p_nom_new,MW,,pwr_new
 vre_capacity,VRE,generators,solar;onwind;offwind_floating,p_nom_opt,MW,,
 vre_capacity_new,VRE,generators,solar;onwind;offwind_floating,p_nom_new,MW,,
+battery_capacity,Battery,storage_units,battery,p_nom_opt,MWh,,pwr_opt
+battery_capacity_new,Battery,storage_units,battery,p_nom_new,MWh,,pwr_new
+battery_capacity_4hr,Battery (4hr),storage_units,4hr_battery_storage,p_nom_opt,MWh,,pwr_opt
+battery_capacity_4hr_new,Battery (4hr),storage_units,4hr_battery_storage,p_nom_new,MWh,,pwr_new
+battery_capacity_8hr,Battery (8hr),storage_units,8hr_battery_storage,p_nom_opt,MWh,,pwr_opt
+battery_capacity_8hr_new,Battery (8hr),storage_units,8hr_battery_storage,p_nom_new,MWh,,pwr_new
 solar_generation,Solar,generators_t,solar,p,MWh,,pwr_gen
 onwind_generation,Onshore Wind,generators_t,onwind,p,MWh,,pwr_gen
 offwind_generation,Offshore Wind,generators_t,offwind_floating,p,MWh,,pwr_gen
@@ -59,6 +67,7 @@ nuclear_generation,Nuclear,generators_t,nuclear,p,MWh,,pwr_gen
 other_generation,Other,generators_t,biomass;waste,p,MWh,,pwr_gen
 geothermal_generation,Geothermal,generators_t,geothermal,p,MWh,,pwr_gen
 vre_generation,VRE,generators_t,solar;onwind;offwind_floating,p,MWh,,pwr_gen
+battery_generation,Battery,storage_units_t,battery;4hr_battery_storage;8hr_battery_storage,p,MWh,,pwr_gen
 hp_capacity,Heat Pump,links,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_opt,MW,,service_opt
 hp_capacity_new,Heat Pump,links,com-total-ashp;res-total-ashp;com-total-gshp;res-total-gshp,p_nom_new,MW,,service_new
 ashp_capacity,Air Source Heat Pump,links,com-total-ashp;res-total-ashp,p_nom_opt,MW,,service_opt
@@ -153,4 +162,4 @@ utilization_trn_lpg_bus,Bus LPG,links_t,trn-lpg-veh-bus,utilization,pct,,utiliza
 utilization_ind_gas_furnace,Gas Furnace,links_t,ind-gas-furnace,utilization,pct,,utilization_ind
 utilization_ind_coal_furnace,Coal Furnace,links_t,ind-coal-furnace,utilization,pct,,utilization_ind
 utilization_ind_heat_pump,Heat Pump,links_t,ind-heat-pump,utilization,pct,,utilization_ind
-utilization_tranmsission,Transmission,links_t,AC,utilization,pct,,utilization_tx
+utilization_transmission,Transmission,links_t,AC,utilization,pct,,utilization_tx
