@@ -1116,10 +1116,13 @@ def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, 
         Output(ids.UA_RESULTS_SECTOR_DROPDOWN, "options"),
         Output(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
     ],
-    Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+    [
+        Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+        Input(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
+    ],
 )
 def callback_update_ua_results_sector_dropdown_options(
-    result_type: str,
+    result_type: str, existing_value: str | None
 ) -> list[dict[str, str]]:
     logger.debug(f"Updating UA sector dropdown options for: {result_type}")
     if result_type == "cost":
@@ -1136,10 +1139,23 @@ def callback_update_ua_results_sector_dropdown_options(
         options = SECTOR_DROPDOWN_OPTIONS_IDV
     elif result_type == "demand_response":
         options = SECTOR_DROPDOWN_OPTIONS_ALL
+    elif result_type == "utilization":
+        options = SECTOR_DROPDOWN_OPTIONS_IDV
     else:
         logger.debug(f"Invalid result type for UA sector dropdown: {result_type}")
         options = SECTOR_DROPDOWN_OPTIONS_ALL
-    return options, options[0]["value"]
+
+    # keep existing value, else try to set to power sector, else any value
+    if not existing_value:
+        existing_value = "power"
+    if existing_value not in [x["value"] for x in options]:
+        existing_value = "power"
+    if any(x["value"] == existing_value for x in options):
+        value = existing_value
+    else:
+        value = options[0]["value"]
+
+    return options, value
 
 
 ########################

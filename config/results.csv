@@ -148,9 +148,6 @@ utilization_svc_gas_furnace,Gas Furnace,links_t,res-total-space-gas-furnace;com-
 utilization_svc_elec_furnace,Electric Furnace,links_t,res-total-space-elec-furnace;com-total-space-elec-furnace,utilization,pct,,utilization_svc
 utilization_svc_oil_furnace,Oil Furnace,links_t,res-total-space-oil-furnace;com-total-space-oil-furnace,utilization,pct,,utilization_svc
 utilization_svc_air_con,Air Conditioner,links_t,res-total-air-con;com-total-air-con,utilization,pct,,utilization_svc
-utilization_svc_gas_water_heater,Gas Water Heater,links_t,res-total-water-gas;com-total-water-gas,utilization,pct,,utilization_svc
-utilization_svc_oil_water_heater,Oil Water Heater,links_t,res-total-water-oil;com-total-water-oil,utilization,pct,,utilization_svc
-utilization_svc_elec_water_heater,Electric Water Heater,links_t,res-total-water-elec;com-total-water-elec,utilization,pct,,utilization_svc
 utilization_trn_ev_lgt,Light Duty EV,links_t,trn-elec-veh-lgt,utilization,pct,,utilization_trn
 utilization_trn_lpg_lgt,Light Duty LPG,links_t,trn-lpg-veh-lgt,utilization,pct,,utilization_trn
 utilization_trn_ev_med,Med Duty EV,links_t,trn-elec-veh-med,utilization,pct,,utilization_trn
