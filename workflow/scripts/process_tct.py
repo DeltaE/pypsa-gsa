@@ -54,6 +54,10 @@ GROWTHS = {
         "ref_growth": 46.1,
         "max_growth": 100,
     },
+    "battery": {
+        "ref_growth": 100,
+        "max_growth": 2155,
+    },
 }
 
 CARRIERS = {
@@ -67,15 +71,36 @@ CARRIERS = {
     "ccgt": ["CCGT", "CCGT-95CCS"],
     "ocgt": ["OCGT"],
     "coal": ["coal"],
+    "battery": ["4hr_battery_storage", "8hr_battery_storage", "battery"],
+}
+
+COMPONENTS = {
+    "biomass": "generator",
+    "geothermal": "generator",
+    "steam": "generator",
+    "nuclear": "link",
+    "wind": "generator",
+    "solar": "generator",
+    "hydro": "generator",
+    "ccgt": "link",
+    "ocgt": "link",
+    "coal": "link",
+    "battery": "storage_units",
 }
 
 TCT_COLUMNS = ["name", "planning_horizon", "region", "carrier", "min", "max"]
 
 
-def _get_current_capactity(n: pypsa.Network, cars: list[str]) -> float:
-    gens = n.generators[n.generators.carrier.isin(cars)].p_nom.sum()
-    links = n.links[n.links.carrier.isin(cars)].p_nom.sum()
-    return round(gens + links, 5)
+def _get_current_capactity(n: pypsa.Network, cars: list[str], component: str) -> float:
+    if component == "generators":
+        value = n.generators[n.generators.carrier.isin(cars)].p_nom.sum()
+    elif component == "links":
+        value = n.links[n.links.carrier.isin(cars)].p_nom.sum()
+    elif component == "storage_units":
+        value = n.storage_units[n.storage_units.carrier.isin(cars)].p_nom.sum()
+    else:
+        raise ValueError(f"Invalid component: {component}")
+    return round(value, 5)
 
 
 def get_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFrame:
@@ -116,17 +141,17 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
     data = []
 
     for name, cars in CARRIERS.items():
-        cap = _get_current_capactity(n, cars)
+        cap = _get_current_capactity(n, cars, COMPONENTS[name])
         ref_growth = GROWTHS[name]["ref_growth"]
         if ref_growth < 100:
-            min_value = cap
+            min_value = cap - 0.1
             max_value = cap * GROWTHS[name]["max_growth"] / 100
         else:
             min_value = cap * GROWTHS[name]["ref_growth"] / 100
             max_value = cap * GROWTHS[name]["max_growth"] / 100
 
-        min_value = round(min_value,0)
-        max_value = round(max_value,0)
+        min_value = round(min_value, 1)
+        max_value = round(max_value, 1)
 
         if abs(min_value - max_value) < 0.0001:
             logger.info(f"No limits created for {name}")
@@ -136,7 +161,7 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
             f"tct_{name}",
             f"tct_{name}",
             f"{name.capitalize()} Max Capacity",
-            "generator",
+            COMPONENTS[name],
             ";".join(cars),
             "tct",
             "absolute",
@@ -155,7 +180,7 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
                 f"tct_{name}_ccs",
                 f"tct_{name}_ccs",
                 f"{name.capitalize()}-95CCS Max Capacity",
-                "generator",
+                COMPONENTS[name],
                 "CCGT-95CCS",
                 "tct",
                 "absolute",

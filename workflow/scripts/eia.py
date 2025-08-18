@@ -1026,6 +1026,7 @@ class _PowerCapacity(DataExtractor):
         "pumped_storage": "pps",
         "renewables": "rnwbsrc",
         "total": "tot",
+        "battery": "diurn", # diurnal storage
     }
 
     def __init__(self, fuel: str, year: int, scenario: str, api: str):

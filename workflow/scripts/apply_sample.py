@@ -278,7 +278,14 @@ def _apply_static_sample(
         if car == "demand_response":
             _apply_demand_response_marginal_cost(n, value)
         else:
-            getattr(n, c).loc[slicer, attr] = value
+            # split efficiency store between dispatch and storage
+            # only applies for absolute ranges 
+            if attr == "efficiency_store":
+                one_dir_eff = round(np.sqrt(value), 3)
+                getattr(n, c).loc[slicer, attr] = one_dir_eff
+                getattr(n, c).loc[slicer, "efficiency_dispatch"] = one_dir_eff
+            else:
+                getattr(n, c).loc[slicer, attr] = value
     else:
         # get metadata
         ref = getattr(n, c).loc[slicer, attr]

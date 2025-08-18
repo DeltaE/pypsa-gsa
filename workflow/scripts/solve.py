@@ -176,8 +176,7 @@ def no_economic_retirement_constraint(n):
         "offwind_floating",
         "solar",
         "hydro",
-        "4hr_battery_storage",
-        "8hr_battery_storage",
+        "battery",
     ]
 
     links = n.links[
@@ -189,13 +188,22 @@ def no_economic_retirement_constraint(n):
     )
 
     gens = n.generators[
-        (n.generators.index.str.endswith(" existing")) & (n.generators.carrier.isin(pwr_cars))
+        (n.generators.index.str.endswith(" existing"))
+        & (n.generators.carrier.isin(pwr_cars))
     ]
     n.generators.loc[gens.index, "p_nom_extendable"] = False
     n.generators.loc[gens.index, "capital_cost"] = (
         0  # not actually needed, just for sanity :)
     )
 
+    storageunits = n.storage_units[
+        (n.storage_units.index.str.endswith(" existing"))
+        & (n.storage_units.carrier.isin(pwr_cars))
+    ]
+    n.storage_units.loc[storageunits.index, "p_nom_extendable"] = False
+    n.storage_units.loc[storageunits.index, "capital_cost"] = (
+        0  # not actually needed, just for sanity :)
+    )
     return n
 
 
