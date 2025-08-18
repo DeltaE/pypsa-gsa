@@ -1145,6 +1145,8 @@ def callback_update_ua_results_sector_dropdown_options(
         options = SECTOR_DROPDOWN_OPTIONS_IDV
     elif result_type == "trade":
         options = SECTOR_DROPDOWN_OPTIONS_TRADE
+    elif result_type == "transmission":
+        options = SECTOR_DROPDOWN_OPTIONS_TRADE
     else:
         logger.debug(f"Invalid result type for UA sector dropdown: {result_type}")
         options = SECTOR_DROPDOWN_OPTIONS_ALL
@@ -1222,7 +1224,14 @@ def callback_update_cr_result_type_dropdown_options(
 ) -> list[dict[str, str]]:
     """Filter result options based on sector."""
 
-    if sector not in ["system", "power", "industry", "service", "transport"]:
+    if sector not in [
+        "system",
+        "power",
+        "industry",
+        "service",
+        "transport",
+        "natural_gas",
+    ]:
         logger.error(f"Invalid sector: {sector}")
         return {}
 

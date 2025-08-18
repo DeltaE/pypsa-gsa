@@ -164,7 +164,10 @@ nat_gas_processing_capacity,Natural Gas Processing Capacity,links,gas production
 nat_gas_processing_production,Natural Gas Processing Production,links_t,gas production,p1,MWh,,gas_production
 nat_gas_imports,Natural Gas Imports,stores,gas imports,e_nom_opt,MWh,,gas_trade
 nat_gas_exports,Natural Gas Exports,stores,gas exports,e_nom_opt,MWh,,gas_trade
-nat_gas_storage,Natural Gas Storage Average,stores_t,gas storage,e_nom_avg,MWh,,gas_storage
-nat_gas_linepack,Natural Gas Linepack Average,stores_t,gas pipeline,e_nom_avg,MWh,,gas_linepack
+nat_gas_storage,Natural Gas Storage Average,stores_t,gas storage,e_nom_opt,MWh,,gas_storage
+nat_gas_linepack,Natural Gas Linepack Average,stores_t,gas pipeline,e_nom_opt,MWh,,gas_linepack
 marginal_cost_gas,Natural Gas Marginal Cost,buses_t,gas,marginal_price,usd/mwh,,marginal_price_gas
 utilization_gas_processing,Natural Gas Processing,links_t,gas production,utilization,pct,,utilization_gas_processing
+elec_transmission_capacity,Electric Transmission Capacity,links,AC,p_nom_opt,mw,,elec_transmission_cap
+elec_transmission_capacity_new,Electric Transmission Capacity,links,AC,p_nom_new,mw,,elec_transmission_cap
+nat_gas_transmission_capacity,Electric Transmission Generation,links,gas pipeline,p_nom_opt,mw,,nat_gas_transmission_cap

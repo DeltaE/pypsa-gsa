@@ -231,7 +231,7 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
             # edge case for demand response
             value = _get_e_nom_dr_metric(n, component, carriers, "max")
         elif variable == "e_nom_avg":
-            # edge case for demand response and nat gas storage
+            # edge case for demand response
             value = _get_e_nom_dr_metric(n, component, carriers, "avg")
         elif variable == "utilization":
             value = _get_utilization_rate(n, component, carriers)

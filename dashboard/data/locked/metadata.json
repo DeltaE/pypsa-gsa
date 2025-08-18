@@ -19,7 +19,8 @@
             "new_capacity": "New Capacity",
             "demand_response": "Demand Response",
             "utilization": "Utilization Factor",
-            "trade": "Trade"
+            "trade": "Trade",
+            "transmission": "Transmission Capacity"
         },
         "parameter": {
             "eff": "Efficiency",
@@ -1520,16 +1521,16 @@
                 "unit": "MWh"
             },
             "nat_gas_storage": {
-                "label": "Natural Gas Storage (Average)",
+                "label": "Natural Gas Storage",
                 "sector": "natural_gas",
-                "result": "storage",
+                "result": "total_capacity",
                 "visible": true,
                 "unit": "MWh"
             },
             "nat_gas_linepack": {
-                "label": "Natural Gas Linepack (Average)",
+                "label": "Natural Gas Linepack",
                 "sector": "natural_gas",
-                "result": "storage",
+                "result": "total_capacity",
                 "visible": true,
                 "unit": "MWh"
             },
@@ -1547,6 +1548,27 @@
                 "result": "utilization",
                 "visible": true,
                 "unit": "pct"
+            },
+            "elec_transmission_capacity": {
+                "label": "Powerline Capacity Total",
+                "sector": "power",
+                "result": "transmission",
+                "visible": true,
+                "unit": "MW"
+            },
+            "elec_transmission_capacity_new": {
+                "label": "Powerline Capacity New",
+                "sector": "power",
+                "result": "transmission",
+                "visible": true,
+                "unit": "MW"
+            },
+            "nat_gas_transmission_capacity": {
+                "label": "Natural Gas Pipeline Capacity",
+                "sector": "natural_gas",
+                "result": "transmission",
+                "visible": true,
+                "unit": "MW"
             }
         }
     ,
