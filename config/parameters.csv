@@ -251,7 +251,7 @@ ng_leakage_downstream,ng_leakage_downstream,Nat Gas Leakage Downstream,link,leak
 gwp,gwp,Global Warming Potential,link,gwp,gwp,absolute,per_unit,27,83,https://www.epa.gov/ghgemissions/understanding-global-warming-potentials#changingGWPs,Re. Are there alternatives to the 100-year GWP for comparing GHGs?
 ng_marginal_cost_import,ng_marginal_cost_import,Nat Gas Import Cost,link_t,gas trade,marginal_cost,percent,percent,-52,42,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all export prices from 2019 to 2024
 ng_marginal_cost_export,ng_marginal_cost_export,Nat Gas Export Cost,link_t,gas trade,marginal_cost,percent,percent,-62,47,https://www.eia.gov/dnav/ng/ng_move_state_dcu_nus_a.htm,Min/max difference from average of all import prices from 2019 to 2024
-ng_linepack,ng_linepack,Nat Gas Linepack Capacity,link,gas pipeline,p_nom,percent,percent,-10,10,https://www.eia.gov/naturalgas/data.php,Estimated as no validation data sourced
+ng_linepack,ng_linepack,Nat Gas Linepack Capacity,store,gas pipeline,e_nom,percent,percent,-10,10,https://www.eia.gov/naturalgas/data.php,Estimated as no validation data sourced
 ng_storage_limits,ng_storage_limits,Nat Gas Underground Storage,store,gas storage,e_min_pu,percent,percent,-0.4,0.4,https://ir.eia.gov/ngs/ngs.html,Working gas assumed as uncertanity for max gas. Sampling variablility table
 res_electrical_demand,res_electrical_demand,Residential Electrical Demand,load_t,res-total-elec,p_set,percent,percent,-2.79,1.23,https://www.eia.gov/outlooks/aeo/,See notebook in repository
 res_space_heat_demand,res_space_heat_demand,Residential Space Heat Demand,load_t,res-total-space-heat,p_set,percent,percent,-2.79,1.23,https://www.eia.gov/outlooks/aeo/,See notebook in repository

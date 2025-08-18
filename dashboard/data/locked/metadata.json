@@ -7,7 +7,8 @@
             "power": "Power",
             "industry": "Industry",
             "service": "Service",
-            "transport": "Transport"
+            "transport": "Transport",
+            "natural_gas": "Natural Gas"
         },
         "results": {
             "cost": "Cost",
@@ -17,7 +18,8 @@
             "total_capacity": "Total Capacity",
             "new_capacity": "New Capacity",
             "demand_response": "Demand Response",
-            "utilization": "Utilization Factor"
+            "utilization": "Utilization Factor",
+            "trade": "Trade"
         },
         "parameter": {
             "eff": "Efficiency",
@@ -1485,6 +1487,63 @@
                 "label": "Transmission",
                 "label2": "Transmission Utilization",
                 "sector": "system",
+                "result": "utilization",
+                "visible": true,
+                "unit": "pct"
+            },
+            "nat_gas_processing_capacity": {
+                "label": "Natural Gas Processing Capacity",
+                "sector": "natural_gas",
+                "result": "total_capacity",
+                "visible": true,
+                "unit": "MW"
+            },
+            "nat_gas_processing_production": {
+                "label": "Natural Gas Processing Production",
+                "sector": "natural_gas",
+                "result": "generation",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "nat_gas_imports": {
+                "label": "Natural Gas Imports",
+                "sector": "natural_gas",
+                "result": "trade",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "nat_gas_exports": {
+                "label": "Natural Gas Exports",
+                "sector": "natural_gas",
+                "result": "trade",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "nat_gas_storage": {
+                "label": "Natural Gas Storage (Average)",
+                "sector": "natural_gas",
+                "result": "storage",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "nat_gas_linepack": {
+                "label": "Natural Gas Linepack (Average)",
+                "sector": "natural_gas",
+                "result": "storage",
+                "visible": true,
+                "unit": "MWh"
+            },
+            "marginal_cost_gas": {
+                "label": "Natural Gas Marginal Cost",
+                "sector": "system",
+                "sector2": "natural_gas",
+                "result": "marginal_cost",
+                "visible": true,
+                "unit": "usd/mwh"
+            },
+            "utilization_gas_processing": {
+                "label": "Natural Gas Processing",
+                "sector": "natural_gas",
                 "result": "utilization",
                 "visible": true,
                 "unit": "pct"

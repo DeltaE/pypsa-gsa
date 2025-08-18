@@ -203,6 +203,8 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             return "Power"
         elif carrier == "landuse":
             return "System"
+        elif carrier in ["gas", "gas production", "gas storage", "gas pipeline", "gas imports", "gas exports"]:
+            return "Natural Gas"
         else:
             raise ValueError(f"Invalid carrier: {carrier}")
 

@@ -20,6 +20,8 @@ from components.data import (
     SECTOR_DROPDOWN_OPTIONS_IDV,
     CR_PARAM_OPTIONS,
     CR_DATA,
+    SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG,
+    SECTOR_DROPDOWN_OPTIONS_TRADE,
 )
 import components.ids as ids
 from components.utils import (
@@ -1128,7 +1130,7 @@ def callback_update_ua_results_sector_dropdown_options(
     if result_type == "cost":
         options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "marginal_cost":
-        options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
+        options = SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG
     elif result_type == "emissions":
         options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "new_capacity":
@@ -1141,6 +1143,8 @@ def callback_update_ua_results_sector_dropdown_options(
         options = SECTOR_DROPDOWN_OPTIONS_ALL
     elif result_type == "utilization":
         options = SECTOR_DROPDOWN_OPTIONS_IDV
+    elif result_type == "trade":
+        options = SECTOR_DROPDOWN_OPTIONS_TRADE
     else:
         logger.debug(f"Invalid result type for UA sector dropdown: {result_type}")
         options = SECTOR_DROPDOWN_OPTIONS_ALL

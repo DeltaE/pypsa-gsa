@@ -28,10 +28,29 @@ def _get_p_nom_new(n: pypsa.Network, component: str, carriers: list[str]) -> flo
         optimial = df[df.carrier.isin(carriers)].p_nom_opt.sum()
     return round(optimial - original, 3)
 
+def _get_e_nom_opt_gas_trade(n: pypsa.Network, component: str, carrier: str) -> float:
+    """Handle edge case of natural gas trade not indexed by imports/exports"""
+    df = getattr(n, component)
+    stores = df[df.carrier.isin("gas trade")]
+    # buses are in the format 'CA AZ gas trade' and 'AZ CA gas trade'
+    stores["from"] = stores.bus.str.split(" ").str[0]
+    stores["to"] = stores.bus.str.split(" ").str[1]
+    internal_buses = n.buses[n.buses.carrier == "gas"].country.unique().to_list()
+    if carrier == "gas exports":
+        return stores[stores["from"].isin(internal_buses)].e_nom_opt.sum()
+    elif carrier == "gas imports":
+        return stores[stores["to"].isin(internal_buses)].e_nom_opt.sum()
 
 def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> float:
     df = getattr(n, component)
-    e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
+    # edge case of natural gas trade not indexed by imports/exports
+    if any([x in carriers for x in ["gas imports", "gas exports"]]):
+        if len(carriers) == 1:
+            e_nom_opt = _get_e_nom_opt_gas_trade(n, component, carriers[0])
+        else:
+            e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
+    else:
+        e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
     if e_nom_opt == np.inf:
         assert component == "stores"
         stores = df[df.carrier.isin(carriers)].index
@@ -212,7 +231,7 @@ def extract_results(n: pypsa.Network, results: pd.DataFrame) -> pd.DataFrame:
             # edge case for demand response
             value = _get_e_nom_dr_metric(n, component, carriers, "max")
         elif variable == "e_nom_avg":
-            # edge case for demand response
+            # edge case for demand response and nat gas storage
             value = _get_e_nom_dr_metric(n, component, carriers, "avg")
         elif variable == "utilization":
             value = _get_utilization_rate(n, component, carriers)

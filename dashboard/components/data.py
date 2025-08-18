@@ -53,12 +53,21 @@ SECTOR_DROPDOWN_OPTIONS_ALL = [
 SECTOR_DROPDOWN_OPTIONS_SYSTEM = [
     x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] == "system"
 ]
+SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG = [
+    x
+    for x in SECTOR_DROPDOWN_OPTIONS
+    if x["value"] in ["system", "power", "natural_gas"]
+]
 SECTOR_DROPDOWN_OPTIONS_IDV = sorted(
     [
         x
         for x in SECTOR_DROPDOWN_OPTIONS
-        if x["value"] in ["power", "industry", "service", "transport"]
+        if x["value"] in ["power", "industry", "service", "transport", "natural_gas"]
     ],
+    key=lambda x: x["label"],
+)
+SECTOR_DROPDOWN_OPTIONS_TRADE = sorted(
+    [x for x in SECTOR_DROPDOWN_OPTIONS if x["value"] in ["power", "natural_gas"]],
     key=lambda x: x["label"],
 )
 

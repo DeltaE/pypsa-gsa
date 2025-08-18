@@ -124,7 +124,7 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     n_cars = n.carriers.index.to_list()
     # for aggregating constraints and ng leaks
     n_cars.extend(
-        ["portfolio", "leakage_upstream", "leakage_downstream", "elec_trade", "gwp"]
+        ["portfolio", "leakage_upstream", "leakage_downstream", "elec_trade", "gwp", "gas imports", "gas exports"]
     )
 
     errors = []
