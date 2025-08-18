@@ -77,7 +77,7 @@ DEFAULT_Y_LABEL = {
     "generation_trn": "Generation (kVMT)",
     "other": "Other",
     "demand_response": "Load (MWh)",
-    "load_shedding": "Load Shed (MWh)",
+    "utilization": "Utilization Factor (%)",
 }
 
 

@@ -310,18 +310,36 @@ def get_cr_scatter_plot(
         if marginal != "histogram":
             scatter_fig.update_traces(marker_symbol="x")
 
-        for trace in scatter_fig.data:
-            trace.yaxis = "y2"
-            fig.add_trace(trace)
+        print(df_melted)
 
-        fig.update_layout(
-            yaxis2=dict(
-                title=y_label_store,
-                overlaying="y",
-                side="right",
-                showgrid=False,
-            ),
-        )
+        # plot on secondary only if primary is already in use
+        if df_melted.empty:
+            for trace in scatter_fig.data:
+                trace.yaxis = "y"
+                fig.add_trace(trace)
+
+            fig.update_layout(
+                yaxis=dict(
+                    title=y_label_store,
+                    overlaying="y",
+                    side="left",
+                    showgrid=False,
+                ),
+            )
+
+        else:
+            for trace in scatter_fig.data:
+                trace.yaxis = "y2"
+                fig.add_trace(trace)
+
+            fig.update_layout(
+                yaxis2=dict(
+                    title=y_label_store,
+                    overlaying="y",
+                    side="right",
+                    showgrid=False,
+                ),
+            )
 
     if emissions:
         emissions_2005, emissions_2030 = get_emission_limits(emissions)

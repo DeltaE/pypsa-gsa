@@ -16,7 +16,8 @@
             "generation": "Generation",
             "total_capacity": "Total Capacity",
             "new_capacity": "New Capacity",
-            "demand_response": "Demand Response"
+            "demand_response": "Demand Response",
+            "utilization": "Utilization Factor"
         },
         "parameter": {
             "eff": "Efficiency",
@@ -1642,7 +1643,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "capex_trn_elec_med": {
               "label": "Medium Duty EV",
@@ -1650,7 +1651,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "capex_trn_elec_hvy": {
               "label": "Heavy Duty EV",
@@ -1658,7 +1659,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "capex_trn_elec_bus": {
               "label": "Bus EV",
@@ -1666,7 +1667,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "capex_trn_lpg_lgt": {
               "label": "Light Duty ICE",
@@ -1674,7 +1675,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "capex_trn_lpg_med": {
               "label": "Medium Duty ICE",
@@ -1682,7 +1683,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "capex_trn_lpg_hvy": {
               "label": "Heavy Duty ICE",
@@ -1690,7 +1691,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "capex_trn_lpg_bus": {
               "label": "Bus ICE",
@@ -1698,7 +1699,7 @@
               "sector": "transport",
               "param": "capex",
               "visible": true,
-              "unit": "usd"
+              "unit": "usd/vehicle"
             },
             "fom_com_gas_furnace": {
               "label": "Commercial Gas Furnace",
@@ -2122,7 +2123,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "lifetime_vmt_trn_elec_med": {
               "label": "Medium Duty EV",
@@ -2130,7 +2131,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "lifetime_vmt_trn_elec_hvy": {
               "label": "Heavy Duty EV",
@@ -2138,7 +2139,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "lifetime_vmt_trn_elec_bus": {
               "label": "Bus EV",
@@ -2146,7 +2147,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "lifetime_vmt_trn_lpg_lgt": {
               "label": "Light Duty ICE",
@@ -2154,7 +2155,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "lifetime_vmt_trn_lpg_med": {
               "label": "Medium Duty ICE",
@@ -2162,7 +2163,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "lifetime_vmt_trn_lpg_hvy": {
               "label": "Heavy Duty ICE",
@@ -2170,7 +2171,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "lifetime_vmt_trn_lpg_bus": {
               "label": "Bus ICE",
@@ -2178,7 +2179,7 @@
               "sector": "transport",
               "param": "lifetime",
               "visible": true,
-              "unit": "kvmt/year"
+              "unit": "kvmt/year/vehicle"
             },
             "eff_com_gas_furnace": {
               "label": "Commercial Gas Furnace",
@@ -2218,7 +2219,7 @@
               "sector": "service",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "eff_res_ashp": {
               "label": "Residential ASHP",
@@ -2226,7 +2227,7 @@
               "sector": "service",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "eff_com_gshp": {
               "label": "Commercial GSHP",
@@ -2234,7 +2235,7 @@
               "sector": "service",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "eff_res_gshp": {
               "label": "Residential GSHP",
@@ -2242,7 +2243,7 @@
               "sector": "service",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "eff_com_aircon": {
               "label": "Commercial Air Conditioner",
@@ -2466,7 +2467,7 @@
               "sector": "industry",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "capex_coal": {
               "label": "Coal",
@@ -2946,7 +2947,7 @@
               "sector": "power",
               "param": "capfac",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "capex_solar": {
               "label": "Solar",
@@ -2994,7 +2995,7 @@
               "sector": "power",
               "param": "capfac",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "capex_onwind": {
               "label": "Onshore Wind",
@@ -3042,7 +3043,7 @@
               "sector": "power",
               "param": "capfac",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "capex_offwind_floating": {
               "label": "Offshore Wind",
@@ -3090,7 +3091,7 @@
               "sector": "power",
               "param": "capfac",
               "visible": true,
-              "unit": "percent"
+              "unit": "per_unit"
             },
             "capex_4hr_battery": {
               "label": "Battery (4hr)",
@@ -3194,7 +3195,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_res_gas_furnace": {
               "label": "Residential Gas Furnace",
@@ -3202,7 +3203,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_com_elec_furnace": {
               "label": "Commercial Oil Furnace",
@@ -3210,7 +3211,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_res_elec_furnace": {
               "label": "Residential Oil Furnace",
@@ -3218,7 +3219,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_com_lpg_furnace": {
               "label": "Commercial Electric Furnace",
@@ -3226,7 +3227,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_res_lpg_furnace": {
               "label": "Residential Electric Furnace",
@@ -3234,7 +3235,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_com_ashp": {
               "label": "Commercial ASHP",
@@ -3242,7 +3243,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_res_ashp": {
               "label": "Residential ASHP",
@@ -3250,7 +3251,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_com_gshp": {
               "label": "Commercial GSHP",
@@ -3258,7 +3259,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_res_gshp": {
               "label": "Residential GSHP",
@@ -3266,7 +3267,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_com_aircon": {
               "label": "Commercial Air Conditioner",
@@ -3274,7 +3275,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_res_aircon": {
               "label": "Residential Air Conditioner",
@@ -3282,7 +3283,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_com_gas_water_heater": {
               "label": "Commercial Gas Water Heater",
@@ -3290,7 +3291,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "p_nom_res_gas_water_heater": {
               "label": "Residential Gas Water Heater",
@@ -3298,7 +3299,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "p_nom_com_lpg_water_heater": {
               "label": "Commercial Oil Water Heater",
@@ -3306,7 +3307,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "p_nom_res_lpg_water_heater": {
               "label": "Residential Oil Water Heater",
@@ -3314,7 +3315,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "p_nom_com_elec_water_heater": {
               "label": "Commercial Electric Water Heater",
@@ -3322,7 +3323,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "p_nom_res_elec_water_heater": {
               "label": "Residential Electric Water Heater",
@@ -3330,7 +3331,7 @@
               "sector": "service",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "p_nom_ind_gas_furnace": {
               "label": "Industrial Gas Furnace",
@@ -3338,7 +3339,7 @@
               "sector": "industry",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_ind_coal_furnace": {
               "label": "Industrial Coal Furnace",
@@ -3346,7 +3347,7 @@
               "sector": "industry",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_ind_heat_pump": {
               "label": "Industrial Heat Pump",
@@ -3354,7 +3355,7 @@
               "sector": "industry",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_trn_elec_lgt": {
               "label": "Light Duty EV",
@@ -3362,7 +3363,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "p_nom_trn_elec_med": {
               "label": "Medium Duty EV",
@@ -3370,7 +3371,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "p_nom_trn_elec_hvy": {
               "label": "Heavy Duty EV",
@@ -3378,7 +3379,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "p_nom_trn_elec_bus": {
               "label": "Bus EV",
@@ -3386,7 +3387,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "p_nom_trn_lpg_lgt": {
               "label": "Light Duty ICE",
@@ -3394,7 +3395,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "p_nom_trn_lpg_med": {
               "label": "Medium Duty ICE",
@@ -3402,7 +3403,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "p_nom_trn_lpg_hvy": {
               "label": "Heavy Duty ICE",
@@ -3410,7 +3411,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "p_nom_trn_lpg_bus": {
               "label": "Bus ICE",
@@ -3418,7 +3419,7 @@
               "sector": "transport",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "ng_imports": {
               "label": "Import Volume",
@@ -3426,7 +3427,7 @@
               "sector": "Natural Gas",
               "param": "trade",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "ng_exports": {
               "label": "Export Volume",
@@ -3434,7 +3435,7 @@
               "sector": "Natural Gas",
               "param": "trade",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "ng_pipeline_efficiency": {
               "label": "Pipeline Efficiency",
@@ -3450,7 +3451,7 @@
               "sector": "Natural Gas",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "ng_pipeline_int_p_nom": {
               "label": "International Pipeline Capacity",
@@ -3458,7 +3459,7 @@
               "sector": "Natural Gas",
               "param": "p_nom",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "ng_processing_p_nom": {
               "label": "Processing Capacity",
@@ -3466,7 +3467,7 @@
               "sector": "Natural Gas",
               "param": "ng",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "ng_leakage_upstream": {
               "label": "Upstream Leakage",
@@ -3489,7 +3490,7 @@
               "sector": "Carbon",
               "param": "gwp",
               "visible": true,
-              "unit": "per_unit"
+              "unit": ""
             },
             "ng_marginal_cost_import": {
               "label": "Import Cost",
@@ -3497,7 +3498,7 @@
               "sector": "Natural Gas",
               "param": "ng",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "ng_marginal_cost_export": {
               "label": "Export Cost",
@@ -3505,7 +3506,7 @@
               "sector": "Natural Gas",
               "param": "ng",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "ng_linepack": {
               "label": "Linepack Capacity",
@@ -3513,7 +3514,7 @@
               "sector": "Natural Gas",
               "param": "ng",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "ng_storage_limits": {
               "label": "Underground Storage Capacity",
@@ -3521,7 +3522,7 @@
               "sector": "Natural Gas",
               "param": "ng",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "res_electrical_demand": {
               "label": "Residential Electrical",
@@ -3529,7 +3530,7 @@
               "sector": "service",
               "param": "res",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "res_space_heat_demand": {
               "label": "Residential Space Heat",
@@ -3537,7 +3538,7 @@
               "sector": "service",
               "param": "res",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "res_water_heat_deamand": {
               "label": "Residential Water Heat",
@@ -3545,7 +3546,7 @@
               "sector": "service",
               "param": "res",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "res_cooling_demand": {
               "label": "Residential Space Cooling",
@@ -3553,7 +3554,7 @@
               "sector": "service",
               "param": "res",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "com_electrical_demand": {
               "label": "Commercial Electrical",
@@ -3561,7 +3562,7 @@
               "sector": "service",
               "param": "com",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "com_cooling_demand": {
               "label": "Commercial Space Heat",
@@ -3569,7 +3570,7 @@
               "sector": "service",
               "param": "com",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "com_space_heat_demand": {
               "label": "Commercial Water Heat",
@@ -3577,7 +3578,7 @@
               "sector": "service",
               "param": "com",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "com_water_heat_deamand": {
               "label": "Commercial Space Cooling",
@@ -3585,7 +3586,7 @@
               "sector": "service",
               "param": "com",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "ind_electrical_demand": {
               "label": "Industrial Electrical",
@@ -3593,7 +3594,7 @@
               "sector": "industry",
               "param": "ind",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "ind_heat_demand": {
               "label": "Industrial Heating",
@@ -3601,7 +3602,7 @@
               "sector": "industry",
               "param": "ind",
               "visible": true,
-              "unit": "percent"
+              "unit": "mwh"
             },
             "trn_veh_lgt_demand": {
               "label": "Light Duty",
@@ -3609,7 +3610,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "trn_veh_med_demand": {
               "label": "Medium Duty",
@@ -3617,7 +3618,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "trn_veh_hvy_demand": {
               "label": "Heavy Duty",
@@ -3625,7 +3626,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "trn_veh_bus_demand": {
               "label": "Bus",
@@ -3633,7 +3634,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "trn_ship_boat_demand": {
               "label": "Domestic Shipping",
@@ -3641,7 +3642,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "trn_rail_psg_demand": {
               "label": "Passenger Rail",
@@ -3649,7 +3650,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "trn_rail_ship_demand": {
               "label": "Freight Rail",
@@ -3657,7 +3658,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "kvmt"
             },
             "trn_air_psg_demand": {
               "label": "Passenger Air Travel",
@@ -3665,7 +3666,7 @@
               "sector": "transport",
               "param": "trn",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "ptc_solar": {
               "label": "Solar",
@@ -3713,7 +3714,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mw"
             },
             "itc_onwind": {
               "label": "Onshore Wind",
@@ -3721,7 +3722,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mw"
             },
             "itc_offwind": {
               "label": "Offshore Wind",
@@ -3729,7 +3730,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mw"
             },
             "itc_geo": {
               "label": "Geothermal",
@@ -3737,7 +3738,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mw"
             },
             "itc_bio": {
               "label": "Biomass",
@@ -3745,7 +3746,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mw"
             },
             "itc_hydro": {
               "label": "Hydro",
@@ -3753,7 +3754,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mw"
             },
             "itc_4hrbat": {
               "label": "Battery (4hr)",
@@ -3761,7 +3762,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mwh"
             },
             "itc_8hrbat": {
               "label": "Battery (8hr)",
@@ -3769,7 +3770,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mwh"
             },
             "itc_nuclear": {
               "label": "Nuclear",
@@ -3777,7 +3778,7 @@
               "sector": "power",
               "param": "itc",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "usd/mw"
             },
             "discount_rate_res_gas_furnace": {
               "label": "Residential Gas Furnace",
@@ -4017,7 +4018,7 @@
               "sector": "transport",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "kton_miles/mwh"
             },
             "eff_trn_rail_psg": {
               "label": "Passenger Rail",
@@ -4025,7 +4026,7 @@
               "sector": "transport",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "kpassenger_miles/mwh"
             },
             "eff_trn_rail_ship": {
               "label": "Freight Rail",
@@ -4033,7 +4034,7 @@
               "sector": "transport",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "kton_miles/mwh"
             },
             "eff_trn_air_psg": {
               "label": "Passenger Air",
@@ -4041,7 +4042,7 @@
               "sector": "transport",
               "param": "eff",
               "visible": true,
-              "unit": "percent"
+              "unit": "kseat_miles/mwh"
             },
             "res_gshp_limit": {
               "label": "GSHP Capacity",
@@ -4049,7 +4050,7 @@
               "sector": "service",
               "param": "res",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "com_gshp_limit": {
               "label": "GSHP Capacity",
@@ -4057,35 +4058,35 @@
               "sector": "service",
               "param": "com",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "coal_cost": {
               "label": "Coal Fuel Cost",
               "sector": "Primary Fuel",
               "param": "fuel",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "oil_cost": {
               "label": "Oil Fuel Cost",
               "sector": "Primary Fuel",
               "param": "fuel",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "lpg_cost": {
               "label": "LPG Fuel Cost",
               "sector": "Primary Fuel",
               "param": "fuel",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "nuclear_cost": {
               "label": "Uranium Fuel Cost",
               "sector": "Primary Fuel",
               "param": "fuel",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "demand_response": {
               "label": "Demand Response Cost",
@@ -4106,7 +4107,7 @@
               "sector": "Transmission",
               "param": "transmission",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "transmission_itl": {
               "label": "Transmission Flows",
@@ -4114,7 +4115,7 @@
               "sector": "Transmission",
               "param": "transmission",
               "visible": true,
-              "unit": "percent"
+              "unit": "mw"
             },
             "ev_policy_lgt_duty": {
               "label": "Light Duty EV",
@@ -4122,7 +4123,7 @@
               "sector": "transport",
               "param": "ev",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "ev_policy_med_duty": {
               "label": "Medium Duty EV",
@@ -4130,7 +4131,7 @@
               "sector": "transport",
               "param": "ev",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "ev_policy_hvy_duty": {
               "label": "Heavy Duty EV",
@@ -4138,7 +4139,7 @@
               "sector": "transport",
               "param": "ev",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "ev_policy_bus": {
               "label": "Bus EV",
@@ -4146,42 +4147,42 @@
               "sector": "transport",
               "param": "ev",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "rps": {
               "label": "Renewable Portfolio Standard",
               "sector": "power",
               "param": "rps",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "ces": {
               "label": "Clean Energy Standard",
               "sector": "power",
               "param": "ces",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "elec_trade_flow": {
               "label": "Electricity Trade Volume",
               "sector": "power",
               "param": "trade",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mwh"
             },
             "elec_import_price": {
               "label": "Electricity Import Price",
               "sector": "power",
               "param": "marginal_cost",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "elec_export_price": {
               "label": "Electricity Export Price",
               "sector": "power",
               "param": "marginal_cost",
               "visible": true,
-              "unit": "percent"
+              "unit": "usd/mwh"
             },
             "tct_biomass": {
               "label": "Biomass",
@@ -4189,7 +4190,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_geothermal": {
               "label": "Geothermal",
@@ -4197,7 +4198,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_nuclear": {
               "label": "Nuclear",
@@ -4205,7 +4206,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_wind": {
               "label": "Wind",
@@ -4213,7 +4214,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_solar": {
               "label": "Solar",
@@ -4221,7 +4222,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_hydro": {
               "label": "Hydro",
@@ -4229,7 +4230,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_ccgt": {
               "label": "Combined Cycle Gas Turbine",
@@ -4237,7 +4238,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_ccgt_ccs": {
               "label": "Combined Cycle Gas Turbine (95% CCS)",
@@ -4245,7 +4246,7 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "tct_ocgt": {
               "label": "Open-Cycle Gas Turbine",
@@ -4253,14 +4254,14 @@
               "sector": "power",
               "param": "tct",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw"
             },
             "landuse": {
               "label": "Landuse",
               "sector": "system",
               "param": "landuse",
               "visible": true,
-              "unit": "per_unit"
+              "unit": "mw/mile2"
             }
           }
     ,
