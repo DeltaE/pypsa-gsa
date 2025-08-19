@@ -129,6 +129,7 @@ VALID_UNITS = [
     "mmt",
 ]
 
+# be strcit on what functionality I have actually implemented and validated
 VALID_RESULTS = {
     "generators": ["p_nom_opt", "p_nom_new"],
     "generators_t": ["p", "utilization"],
@@ -143,7 +144,10 @@ VALID_RESULTS = {
         "marginal_price_std",
     ],
     "system": ["cost"],
-    "stores": ["e_nom_opt"],
+    "stores": ["e_nom_opt", "e_nom_avg", "e_nom_max"],
+    "stores_t": ["e_nom_opt"],
+    "storage_units": ["p_nom_opt", "p_nom_new"],
+    "storage_units_t": ["p", "p_nom_opt", "state_of_charge"],
 }
 
 VALID_UA_PLOTS = ["scatter", "bar"]

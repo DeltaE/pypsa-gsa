@@ -55,6 +55,13 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
     n_cars = n.carriers.index.to_list()
     n_cars.append("load")  # load shedding added during sample
 
+    # we need to split the 'gas trade' carrier into 'gas imports' and 'gas exports'
+    # ideally this would happen upstream in the pypsa-usa repo
+    # but its just manually done here for the time being
+    # the result calcs have been adjusted to handle this
+    n_cars.append("gas imports")
+    n_cars.append("gas exports")
+
     errors = []
 
     for car in sa_cars_flat:
@@ -103,9 +110,9 @@ if __name__ == "__main__":
         out_results = snakemake.output.results
         configure_logging(snakemake)
     else:
-        network = "results/Testing/base.nc"
-        in_results = "config/results_gsa.csv"
-        out_results = "results/Testing/gsa/results.csv"
+        network = "results/caiso/base.nc"
+        in_results = "config/results.csv"
+        out_results = "results/caiso/gsa/results.csv"
 
     df = pd.read_csv(in_results)
 
@@ -113,7 +120,7 @@ if __name__ == "__main__":
     df = strip_whitespace(df)
     assert is_valid_variables(df)
     assert is_unique_names(df)
-    if "plots" in df.columns: # only needed for gsa
+    if "plots" in df.columns:  # only needed for gsa
         assert no_nans(df)
 
     n = pypsa.Network(network)

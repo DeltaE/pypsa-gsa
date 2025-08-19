@@ -109,7 +109,7 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 | "storage_unit_t"
                 | "storage_units_t"
             ):
-                return "storageunits_t"
+                return "storage_units_t"
             case "links_t" | "link_t":
                 return "links_t"
             case "loads" | "load":
