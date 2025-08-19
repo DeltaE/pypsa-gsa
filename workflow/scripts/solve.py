@@ -1258,6 +1258,8 @@ if __name__ == "__main__":
         else:
             extra_fn["ng_trade"]["min_import"] = 0.99
             extra_fn["ng_trade"]["max_import"] = 1.01
+        # extra_fn["ng_trade"]["min_import"] = 0
+        # extra_fn["ng_trade"]["max_import"] = value
     elif len(imports) > 1:
         raise ValueError("Too many samples for ng_gas_import")
     else:
@@ -1275,6 +1277,8 @@ if __name__ == "__main__":
         else:
             extra_fn["ng_trade"]["min_export"] = 0.99
             extra_fn["ng_trade"]["max_export"] = 1.01
+        # extra_fn["ng_trade"]["min_export"] = 0
+        # extra_fn["ng_trade"]["max_export"] = value
     elif len(exports) > 1:
         raise ValueError("Too many samples for ng_gas_export")
     else:

@@ -124,7 +124,15 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     n_cars = n.carriers.index.to_list()
     # for aggregating constraints and ng leaks
     n_cars.extend(
-        ["portfolio", "leakage_upstream", "leakage_downstream", "elec_trade", "gwp", "gas imports", "gas exports"]
+        [
+            "portfolio",
+            "leakage_upstream",
+            "leakage_downstream",
+            "elec_trade",
+            "gwp",
+            "gas imports",
+            "gas exports",
+        ]
     )
 
     errors = []
@@ -279,7 +287,7 @@ def _apply_static_sample(
             _apply_demand_response_marginal_cost(n, value)
         else:
             # split efficiency store between dispatch and storage
-            # only applies for absolute ranges 
+            # only applies for absolute ranges
             if attr == "efficiency_store":
                 one_dir_eff = round(np.sqrt(value), 3)
                 getattr(n, c).loc[slicer, attr] = one_dir_eff
@@ -516,7 +524,7 @@ def _get_landuse_limit(n: pypsa.Network) -> float:
             & ~n.generators.index.str.contains("existing")
         ].p_nom_max.sum()
     )
-    
+
 def apply_land_use_limit(n: pypsa.Network, sample: float) -> None:
     """Applies land use limit to the network."""
     gens = n.generators[
@@ -612,7 +620,7 @@ def _get_constraint_sample(
         if landuse.empty:
             raise ValueError("No landuse data provided.")
         ref = _get_landuse_limit(n, landuse)
-        apply_land_use_limit(n, sample) # this only modifies the p_nom_max
+        apply_land_use_limit(n, sample)  # this only modifies the p_nom_max
         scaled = ref * sample
     else:
         raise ValueError(f"Bad control flow for get_constraint_sample: {attr}")
@@ -623,10 +631,18 @@ def _get_constraint_sample(
         "attribute": attr,
         "value": sample,  # actual solve network still ingests unscaled value
     }
+
+    if ref != 0:
+        difference = round(abs(scaled - ref) / ref * 100, 5)
+    elif scaled != 0:
+        difference = round(abs(ref - scaled) / ref * 100, 5)
+    else:
+        difference = 0
+
     sampled = {
         "ref": ref,
         "scaled": scaled,
-        "difference": round(abs(scaled - ref) / ref * 100, 5),
+        "difference": difference,
     }
 
     return meta, sampled

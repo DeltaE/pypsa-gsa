@@ -101,9 +101,14 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "stores"
             case "store_t" | "stores_t":
                 return "stores_t"
-            case "storageunit" | "storageunits":
+            case "storageunit" | "storageunits" | "storage_unit" | "storage_units":
                 return "storage_units"
-            case "storageunit_t" | "storageunits_t":
+            case (
+                "storageunit_t"
+                | "storageunits_t"
+                | "storage_unit_t"
+                | "storage_units_t"
+            ):
                 return "storageunits_t"
             case "links_t" | "link_t":
                 return "links_t"
