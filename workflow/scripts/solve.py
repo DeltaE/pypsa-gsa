@@ -656,8 +656,9 @@ def add_ng_import_export_limits(
     trade = ng_trade["domestic"].copy()
     trade = format_raw_ng_trade_data(trade, " trade")
 
-    add_import_limits(n, trade, "min", import_min)
-    add_export_limits(n, trade, "min", export_min)
+    """Forcing exports/imports can lead to overconstrained solutions"""
+    # add_import_limits(n, trade, "min", import_min)
+    # add_export_limits(n, trade, "min", export_min)
 
     if not import_max == "inf":
         add_import_limits(n, trade, "max", import_max)
@@ -669,8 +670,9 @@ def add_ng_import_export_limits(
     trade = ng_trade["international"].copy()
     trade = format_raw_ng_trade_data(trade, " trade")
 
-    add_import_limits(n, trade, "min", import_min)
-    add_export_limits(n, trade, "min", export_min)
+    """Forcing exports/imports can lead to overconstrained solutions"""
+    # add_import_limits(n, trade, "min", import_min)
+    # add_export_limits(n, trade, "min", export_min)
 
     if not import_max == "inf":
         add_import_limits(n, trade, "max", import_max)
@@ -1249,41 +1251,43 @@ if __name__ == "__main__":
 
     if len(imports) == 1:
         value = imports.value.values[0]
-        if value < 1:
-            extra_fn["ng_trade"]["min_import"] = value
-            extra_fn["ng_trade"]["max_import"] = 1
-        elif value > 1:
-            extra_fn["ng_trade"]["min_import"] = 1
-            extra_fn["ng_trade"]["max_import"] = value
-        else:
-            extra_fn["ng_trade"]["min_import"] = 0.99
-            extra_fn["ng_trade"]["max_import"] = 1.01
-        # extra_fn["ng_trade"]["min_import"] = 0
-        # extra_fn["ng_trade"]["max_import"] = value
+        """Forcing imports can lead to overconstrained solutions"""
+        # if value < 1:
+        #     extra_fn["ng_trade"]["min_import"] = value
+        #     extra_fn["ng_trade"]["max_import"] = 1
+        # elif value > 1:
+        #     extra_fn["ng_trade"]["min_import"] = 1
+        #     extra_fn["ng_trade"]["max_import"] = value
+        # else:
+        #     extra_fn["ng_trade"]["min_import"] = 0.99
+        #     extra_fn["ng_trade"]["max_import"] = 1.01
+        extra_fn["ng_trade"]["min_import"] = 0
+        extra_fn["ng_trade"]["max_import"] = value
     elif len(imports) > 1:
         raise ValueError("Too many samples for ng_gas_import")
     else:
-        extra_fn["ng_trade"]["min_import"] = 0.99
-        extra_fn["ng_trade"]["max_import"] = 1.01
+        extra_fn["ng_trade"]["min_import"] = 0
+        extra_fn["ng_trade"]["max_import"] = 1
 
     if len(exports) == 1:
         value = exports.value.values[0]
-        if value < 1:
-            extra_fn["ng_trade"]["min_export"] = value
-            extra_fn["ng_trade"]["max_export"] = 1
-        elif value > 1:
-            extra_fn["ng_trade"]["min_export"] = 1
-            extra_fn["ng_trade"]["max_export"] = value
-        else:
-            extra_fn["ng_trade"]["min_export"] = 0.99
-            extra_fn["ng_trade"]["max_export"] = 1.01
-        # extra_fn["ng_trade"]["min_export"] = 0
-        # extra_fn["ng_trade"]["max_export"] = value
+        """Forcing exports can lead to overconstrained solutions"""
+        # if value < 1:
+        #     extra_fn["ng_trade"]["min_export"] = value
+        #     extra_fn["ng_trade"]["max_export"] = 1
+        # elif value > 1:
+        #     extra_fn["ng_trade"]["min_export"] = 1
+        #     extra_fn["ng_trade"]["max_export"] = value
+        # else:
+        #     extra_fn["ng_trade"]["min_export"] = 0.99
+        #     extra_fn["ng_trade"]["max_export"] = 1.01
+        extra_fn["ng_trade"]["min_export"] = 0
+        extra_fn["ng_trade"]["max_export"] = value
     elif len(exports) > 1:
         raise ValueError("Too many samples for ng_gas_export")
     else:
-        extra_fn["ng_trade"]["min_export"] = 1 - 0.01
-        extra_fn["ng_trade"]["max_export"] = 1 + 0.01
+        extra_fn["ng_trade"]["min_export"] = 0
+        extra_fn["ng_trade"]["max_export"] = 1
 
     ###
     # GSHP capacity constrinats
