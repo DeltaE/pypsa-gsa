@@ -1152,6 +1152,8 @@ def solve_network(
         )
     if "infeasible" in condition:
         raise RuntimeError("Solving status 'infeasible'")
+    elif "other" in condition:
+        raise RuntimeError("Solving status 'other'")
 
     return n
 
@@ -1176,7 +1178,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso/gsa/modelruns/0/n.nc"
+        in_network = "results/caiso/gsa/modelruns/734/network.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
@@ -1193,7 +1195,7 @@ if __name__ == "__main__":
         tct_f = "results/caiso/constraints/tct.csv"
         ev_policy_f = "results/caiso/constraints/ev_policy.csv"
         import_export_flows_f = "results/caiso/constraints/import_export_flows.csv"
-        constraints_meta = "results/caiso/gsa/modelruns/0/constraints.csv"
+        constraints_meta = "results/caiso/gsa/modelruns/734/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)

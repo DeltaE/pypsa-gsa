@@ -229,7 +229,11 @@ def get_rps_demand_gsa(
         & (load_buses.carrier.str.contains("-elec"))
     ]
 
-    return n.loads_t.p_set.loc[planning_horizon, load_buses.index].sum().sum()
+    demand = n.loads_t.p_set.loc[planning_horizon, load_buses.index].sum().sum()
+    demand *= 1.1  # approximate for transportation elec demenad
+    demand *= 1.1  # approximate for system losses
+
+    return demand
 
 
 def get_rps_demand_supplyside(

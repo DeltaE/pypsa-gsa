@@ -453,7 +453,6 @@ def _get_rps_value(n: pypsa.Network, rps: pd.DataFrame) -> float:
             region_demand = get_rps_demand_gsa(
                 n, constraint_row.planning_horizon, region_buses
             )
-            region_demand *= 1.1  # approximate for transportation elec demenad
             demand.append(constraint_row.pct * region_demand)
 
     return sum(demand) / len(demand)

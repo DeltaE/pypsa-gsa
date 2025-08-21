@@ -255,10 +255,10 @@ if __name__ == "__main__":
         csv = snakemake.output.csv
         configure_logging(snakemake)
     else:
-        network = "results/caiso/gsa/modelruns/1415/network.nc"
+        network = "results/caiso/gsa/modelruns/723/network.nc"
         results_f = "results/caiso/gsa/results.csv"
-        csv = "results/caiso/gsa/modelruns/1415/results.csv"
-        model_run = 1678
+        csv = "results/caiso/gsa/modelruns/723/results.csv"
+        model_run = 723
 
     n = pypsa.Network(network)
 

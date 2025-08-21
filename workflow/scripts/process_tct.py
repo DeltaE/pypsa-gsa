@@ -54,8 +54,11 @@ GROWTHS = {
         "ref_growth": 46.1,
         "max_growth": 100,
     },
+    # assumed higher then ref for lower bounds cause for high demand and high rps
+    # runs, infeasabilities can occur due to REC trading not being captured
+    # to models outside the scope
     "battery": {
-        "ref_growth": 862.5,
+        "ref_growth": 1725,  # ref * 2 = 862.5 * 2 = 1725
         "max_growth": 2155,
     },
 }
