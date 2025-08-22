@@ -1155,7 +1155,7 @@ def solve_network(
     elif "other" in condition:
         raise RuntimeError("Solving status 'other'")
 
-    return n
+    return n, condition
 
 
 if __name__ == "__main__":
@@ -1178,7 +1178,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso/gsa/modelruns/734/network.nc"
+        in_network = "results/caiso/gsa/modelruns/734/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
@@ -1403,13 +1403,26 @@ if __name__ == "__main__":
     ###
     extra_fn["lolp"] = True
 
-    n = solve_network(
-        n,
-        solver_name=solver_name,
-        solver_options=solver_opts,
-        solving_options=solving_opts,
-        log=solving_log,
-        extra_fn=extra_fn,
-    )
+    # due to how the RPS REC system is set up, there can be edge cases where
+    # rps is not met. This is a hack to allow for a second attempt at solving
+    # if the first attempt fails
+
+    rps_iteration = 0
+    solving_status = ""
+    while rps_iteration < 3 and solving_status != "optimal":
+        n, solving_status = solve_network(
+            n,
+            solver_name=solver_name,
+            solver_options=solver_opts,
+            solving_options=solving_opts,
+            log=solving_log,
+            extra_fn=extra_fn,
+        )
+        # decrement the rps target by 1%
+        rps_iteration += 1
+        extra_fn["rps"]["data"].pct -= 0.01
+
+    if solving_status != "optimal":
+        raise RuntimeError(f"Solving status '{solving_status}'")
 
     n.export_to_netcdf(out_network)
