@@ -165,9 +165,13 @@ def _get_generator_maximum_output(n: pypsa.Network, carriers: list[str]) -> floa
 
 def _get_link_actual_output(n: pypsa.Network, carriers: list[str]) -> float:
     links = n.links[n.links.carrier.isin(carriers)].index
+    p0 = n.links_t.p0[links]
+    p0 = p0.where(p0 > 0, 0) # feasability tolerance issues on edge cases
+    eff = n.get_switchable_as_dense("Link", "efficiency")
+    eff = eff[[x for x in eff.columns if x in links]]
     gen = (
-        n.links_t.p1[links]
-        .mul(-1)
+        p0
+        .mul(eff)
         .mul(n.snapshot_weightings.objective, axis=0)
         .sum()
         .sum()
@@ -255,10 +259,10 @@ if __name__ == "__main__":
         csv = snakemake.output.csv
         configure_logging(snakemake)
     else:
-        network = "results/caiso/gsa/modelruns/723/network.nc"
+        network = "results/caiso/gsa/modelruns/725/network.nc"
         results_f = "results/caiso/gsa/results.csv"
-        csv = "results/caiso/gsa/modelruns/723/results.csv"
-        model_run = 723
+        csv = "results/caiso/gsa/modelruns/725/results.csv"
+        model_run = 725
 
     n = pypsa.Network(network)
 

@@ -75,7 +75,7 @@
                 "sector": "industry",
                 "sector2": "power",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_heat_ind": {
@@ -83,7 +83,7 @@
                 "label2": "Industrial Heating Cost",
                 "sector": "industry",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_ind": {
@@ -91,7 +91,7 @@
                 "label2": "Industrial Energy Cost",
                 "sector": "industry",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_res": {
@@ -100,7 +100,7 @@
                 "sector": "service",
                 "sector2": "power",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_heat_res": {
@@ -108,7 +108,7 @@
                 "label2": "Residential Space Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_water_heat_res": {
@@ -116,7 +116,7 @@
                 "label2": "Residential Water Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_cool_res": {
@@ -124,7 +124,7 @@
                 "label2": "Residential Space Cool Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_res": {
@@ -132,7 +132,7 @@
                 "label2": "Residential Energy Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_com": {
@@ -141,7 +141,7 @@
                 "sector": "service",
                 "sector2": "power",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_heat_com": {
@@ -149,7 +149,7 @@
                 "label2": "Commercial Space Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_water_heat_com": {
@@ -157,7 +157,7 @@
                 "label2": "Commercial Water Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_cool_com": {
@@ -165,7 +165,7 @@
                 "label2": "Commercial Space Cool Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_com": {
@@ -173,7 +173,7 @@
                 "label2": "Commercial Energy Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_trn": {
@@ -182,7 +182,7 @@
                 "sector": "transport",
                 "sector2": "power",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_trn": {
@@ -190,7 +190,7 @@
                 "label2": "Transport Energy Cost",
                 "sector": "transport",
                 "result": "marginal_cost",
-                "visible": false,
+                "visible": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_iqr": {

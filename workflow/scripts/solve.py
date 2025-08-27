@@ -1077,12 +1077,15 @@ def _clip_p_max(n: pypsa.Network, value: Optional[float] = None) -> None:
     if not value:
         value = 1.0e-2
 
-    for df in (
-        n.generators_t.p_max_pu,
-        n.generators_t.p_min_pu,
-        n.storage_units_t.inflow,
-    ):
-        df.where(df > value, other=0.0, inplace=True)
+    n.generators_t.p_max_pu = n.generators_t.p_max_pu.where(
+        n.generators_t.p_max_pu > value, other=0.0
+    )
+    n.generators_t.p_min_pu = n.generators_t.p_min_pu.where(
+        n.generators_t.p_min_pu > value, other=0.0
+    )
+    n.storage_units_t.inflow = n.storage_units_t.inflow.where(
+        n.storage_units_t.inflow > value, other=0.0
+    )
 
 
 def _apply_noisy_costs(n: pypsa.Network) -> None:
@@ -1153,7 +1156,9 @@ def solve_network(
     if "infeasible" in condition:
         raise RuntimeError("Solving status 'infeasible'")
     elif "other" in condition:
-        logger.warning(f"Solving status 'other' with termination condition '{condition}'")
+        logger.warning(
+            f"Solving status 'other' with termination condition '{condition}'"
+        )
 
     return n, condition
 
@@ -1418,8 +1423,8 @@ if __name__ == "__main__":
             log=solving_log,
             extra_fn=extra_fn,
         )
-        # decrement the rps target by 1%
-        rps_iteration += 1
+        # relax the rps target by 2%
+        rps_iteration += 2
         extra_fn["rps"]["data"].pct -= 0.01
 
     if solving_status != "optimal":
