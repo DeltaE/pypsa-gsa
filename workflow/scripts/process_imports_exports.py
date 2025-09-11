@@ -272,12 +272,14 @@ if __name__ == "__main__":
         year = snakemake.params.year
         balancing_period = snakemake.params.balancing_period
         pudl_path = snakemake.params.pudl_path
+        eia_path = snakemake.input.eia_path
         regions_f = snakemake.input.regions
         membership_f = snakemake.input.membership
         flowgates_f = snakemake.input.flowgates
         net_flows_f = snakemake.output.net_flows
         capacities_f = snakemake.output.capacities
         elec_costs_f = snakemake.output.costs
+        by_iso = snakemake.params.by_iso
     else:
         api = ""
         network = Path("results", "caiso", "base.nc")

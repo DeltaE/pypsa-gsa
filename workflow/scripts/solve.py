@@ -796,11 +796,12 @@ def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
         """Get all links for elec trade."""
         return n.links[n.links.carrier == "exports"].index
 
-    state = get_network_state(n)
-    if len(state) < 1:
+    states = get_network_state(n)
+    if len(states) < 1:
         raise ValueError("No states found for network")
-    elif len(state) > 1:
+    elif len(states) > 1:
         raise ValueError("Multiple states found for network")
+    state = states[0]
 
     weights = n.snapshot_weightings.objective
     period = n.snapshots.get_level_values("period").unique().tolist()
@@ -814,29 +815,11 @@ def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
 
     # balance at at yearly level
 
-    timesteps = n.snapshots.get_level_values("timestep")
-
     elec_trade = elec_trade.set_index("state")
     net_trade = elec_trade.at[state, "interchange_reported_mwh"]
 
-    imports = (
-        n.model["Link-p"]
-        .mul(weights)
-        .sel(period=period, Link=import_links)
-        .sel(
-            timestep=timesteps
-        )  # Seperate cause slicing on multi-index is not supported
-        .sum()
-    )
-    exports = (
-        n.model["Link-p"]
-        .mul(weights)
-        .sel(period=period, Link=export_links)
-        .sel(
-            timestep=timesteps
-        )  # Seperate cause slicing on multi-index is not supported
-        .sum()
-    )
+    imports = n.model["Link-p"].mul(weights).sel(period=period, Link=import_links).sum()
+    exports = n.model["Link-p"].mul(weights).sel(period=period, Link=export_links).sum()
 
     # if positive, then net exporting
     # if negative, then net importing
@@ -1268,7 +1251,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso/gsa/modelruns/725/n.nc"
+        in_network = "results/caiso/gsa/modelruns/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
@@ -1285,7 +1268,7 @@ if __name__ == "__main__":
         tct_f = "results/caiso/constraints/tct.csv"
         ev_policy_f = "results/caiso/constraints/ev_policy.csv"
         import_export_flows_f = "results/caiso/constraints/import_export_flows.csv"
-        constraints_meta = "results/caiso/gsa/modelruns/725/constraints.csv"
+        constraints_meta = "results/caiso/gsa/modelruns/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1491,6 +1474,7 @@ if __name__ == "__main__":
     ###
     # Loss of Load Probability Constraint
     ###
+    extra_fn["lolp"] = {}
     extra_fn["lolp"]["enable"] = True
     extra_fn["lolp"]["relax"] = 1.0
 

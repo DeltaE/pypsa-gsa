@@ -187,11 +187,12 @@ rule process_interchange_data:
         regions = "resources/interchanges/regions.csv",
         membership = "resources/interchanges/membership.csv",
         flowgates = "resources/interchanges/transmission_capacity_init_AC_ba_NARIS2024.csv",
+        eia_path = "resources/interchanges/state_interchange_data.csv"
     params:
         api = config["api"]["eia"],
         year = config["pypsa_usa"]["era5_year"],
         balancing_period = "year", # only one supported right now
-        pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"
+        pudl_path = "s3://pudl.catalyst.coop/v2025.2.0",
         by_iso = False # DO NOT CHANGE THIS! This script will run, but not downstream
     output:
         net_flows = "results/{scenario}/constraints/import_export_flows.csv",

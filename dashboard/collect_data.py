@@ -22,6 +22,7 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "e_min_pu": "Natural Gas",  # only one e_min_pu
     "efficiency": "Efficiency",
     "efficiency_store": "Efficiency",
+    "efficiency2": "Efficiency",
     "ev_policy": "Constraints",
     "fixed_cost": "Fixed Cost",
     "gshp": "Constraints",

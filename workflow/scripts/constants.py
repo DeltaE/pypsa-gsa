@@ -71,6 +71,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "leakage",
         "gwp",
         "elec_trade",  # constraint
+        "efficiency2",  # not a default in pypsa
     ],
     "generators": [
         "tct",
@@ -127,6 +128,7 @@ VALID_UNITS = [
     "kvmt/mwh",
     "years",
     "mmt",
+    "T/mwh",
 ]
 
 # be strcit on what functionality I have actually implemented and validated
