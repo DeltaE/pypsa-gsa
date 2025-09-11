@@ -5,10 +5,10 @@ import pypsa
 import pandas as pd
 import duckdb
 from eia import FuelCosts
-from constants import ISO_STATES, REGION_2_ISO
+from constants import ISO_STATES, REGION_2_ISO, STATE_2_CODE
 
 
-def load_yearly_interchange_data(pudl_path: str, year: int) -> pd.DataFrame:
+def load_pudl_interchange_data(pudl_path: str, year: int) -> pd.DataFrame:
     """Loads yearly data from PUDL."""
     df = duckdb.query(
         f"SELECT * FROM read_parquet('{pudl_path}/core_eia930__hourly_interchange.parquet') WHERE EXTRACT(YEAR FROM datetime_utc) = {year}"
@@ -17,7 +17,19 @@ def load_yearly_interchange_data(pudl_path: str, year: int) -> pd.DataFrame:
     return df.fillna(0).set_index(pd.to_datetime(df.datetime_utc))
 
 
-def format_interchange_data(
+def load_eia_interchange_data(
+    csv_path: str, state_2_code: dict[str, str], loss_factor: float = 1.0
+) -> pd.DataFrame:
+    """Loads yearly data from EIA."""
+    df = pd.read_csv(csv_path)
+    df["state"] = df.Name.map(state_2_code)
+    df["interchange_reported_mwh"] = (
+        df["Net generation (MWh)"] * loss_factor - df["Total retail sales (MWh)"]
+    )
+    return df[["state", "interchange_reported_mwh"]]
+
+
+def format_pudl_interchange_data(
     interchange_data: pd.DataFrame,
     ba_2_region: dict[str, str],
     region_2_iso: dict[str, str],
@@ -34,6 +46,16 @@ def format_interchange_data(
             ~(df["from"].isin(["canada", "mexico"]))
             & ~(df["to"].isin(["canada", "mexico"]))
         ]
+    return df[["from", "to", "interchange_reported_mwh"]]
+
+
+def format_eia_interchange_data(
+    interchange_data: pd.DataFrame,
+) -> pd.DataFrame:
+    """Formats interchange data for state mappings."""
+    df = interchange_data.copy()
+    df["from"] = df.balancing_authority_code_eia
+    df["to"] = df.balancing_authority_code_adjacent_eia
     return df[["from", "to", "interchange_reported_mwh"]]
 
 
@@ -102,6 +124,19 @@ def get_flowgates_in_model(flowgates: pd.DataFrame, zones: list[str]) -> dict[st
     return df.groupby(["r", "rr"]).sum().round(2).reset_index()
 
 
+def collapse_flowgate_data(
+    flowgate_data: pd.DataFrame, zones: list[str]
+) -> pd.DataFrame:
+    """Collapses flowgate data to be all permutations."""
+    df = flowgate_data.copy()
+    df = df[(df.r.isin(zones)) ^ (df.rr.isin(zones))][["r", "rr", "MW_f0", "MW_r0"]]
+    # organize so r is always the ba and rr is always the connection outside
+    mask = ~(df.r.isin(zones))
+    df.loc[mask, ["r", "rr"]] = df.loc[mask, ["rr", "r"]].values
+    df.loc[mask, ["MW_f0", "MW_r0"]] = df.loc[mask, ["MW_r0", "MW_f0"]].values
+    return df
+
+
 def get_aggregated_interchange_data(
     interchange_data: pd.DataFrame, balancing_period: str
 ) -> dict[str, str]:
@@ -147,7 +182,9 @@ def _expand_interchange_data(interchange_data: pd.DataFrame) -> pd.DataFrame:
     df = interchange_data.copy()
     mask = df.interchange_reported_mwh < 0
     df.loc[mask, ["from", "to"]] = df.loc[mask, ["to", "from"]].values
-    df.loc[mask, "interchange_reported_mwh"] = df.loc[mask, "interchange_reported_mwh"].mul(-1)
+    df.loc[mask, "interchange_reported_mwh"] = df.loc[
+        mask, "interchange_reported_mwh"
+    ].mul(-1)
 
     all_isos = list(set(df["from"].unique().tolist() + df["to"].unique().tolist()))
     all_months = df.month.unique()
@@ -175,7 +212,34 @@ def _expand_interchange_data(interchange_data: pd.DataFrame) -> pd.DataFrame:
     return expanded
 
 
-def format_fuel_costs(fuel_costs: pd.DataFrame) -> pd.DataFrame:
+def _expand_eia_interchange_data(
+    interchange_data: pd.DataFrame, year: int, balancing_period: str
+) -> pd.DataFrame:
+    """Expands and aggregates interchange data."""
+
+    def expand_to_months(row):
+        months = pd.date_range(start=row.name, periods=12, freq="MS")
+        return pd.DataFrame(
+            {
+                "state": row["state"],
+                "interchange_reported_mwh": row["interchange_reported_mwh"] / 12,
+            },
+            index=months,
+        )
+
+    assert balancing_period in ["month", "year"]  # only supported right now
+
+    df = interchange_data.copy()
+    df["datetime_utc"] = pd.to_datetime(f"{year}-01-01")
+    df = df.set_index("datetime_utc")
+
+    if balancing_period == "month":
+        return pd.concat([expand_to_months(row) for _, row in df.iterrows()])
+    else:
+        return df
+
+
+def format_pudl_fuel_costs(fuel_costs: pd.DataFrame) -> pd.DataFrame:
     """Formats fuel costs for ISO mappings."""
     df = fuel_costs.copy()
     data = []
@@ -192,6 +256,13 @@ def format_fuel_costs(fuel_costs: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(data, columns=["period", "iso", "value", "units"]).set_index(
         "period"
     )
+
+
+def format_eia_fuel_costs(fuel_costs: pd.DataFrame, states: list[str]) -> pd.DataFrame:
+    """Formats fuel costs for state mappings."""
+    df = fuel_costs.copy()
+    df = df[df.state.isin(states)].copy()
+    return df[["state", "value", "units"]]
 
 
 if __name__ == "__main__":
@@ -211,8 +282,9 @@ if __name__ == "__main__":
         api = ""
         network = Path("results", "caiso", "base.nc")
         year = 2019
-        balancing_period = "month"
+        balancing_period = "year"
         pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"
+        eia_path = Path("resources", "interchanges", "state_interchange_data.csv")
         regions_f = Path("resources", "interchanges", "regions.csv")
         membership_f = Path("resources", "interchanges", "membership.csv")
         flowgates_f = Path(
@@ -223,41 +295,72 @@ if __name__ == "__main__":
         net_flows_f = "netflows.csv"
         capacities_f = "capacities.csv"
         elec_costs_f = "elec_costs.csv"
+        by_iso = False
 
-    assert balancing_period in ["month"]
+    assert balancing_period in ["month", "year"]
 
     n = pypsa.Network(network)
 
-    # mappers between bas and isos
-    ba_2_regions = _get_ba_2_regions_map(pd.read_csv(regions_f))
-    ba_2_iso = _get_ba_2_iso_map(pd.read_csv(membership_f))
-    region_2_iso = REGION_2_ISO
+    if by_iso:
+        assert balancing_period == "month"
 
-    # all interchange data for the year
-    # "core_eia930__hourly_interchange" from https://viewer.catalyst.coop/
-    interchange_data = load_yearly_interchange_data(pudl_path, year)
-    interchange_data = format_interchange_data(
-        interchange_data, ba_2_regions, region_2_iso, True
-    )
+        # mappers between bas and isos
+        ba_2_regions = _get_ba_2_regions_map(pd.read_csv(regions_f))
+        ba_2_iso = _get_ba_2_iso_map(pd.read_csv(membership_f))
+        region_2_iso = REGION_2_ISO
 
-    # aggregated interchange data by balancing period
-    monthly_aggregated_interchange_data = get_aggregated_interchange_data(
-        interchange_data, balancing_period
-    )
+        # all interchange data for the year
+        # "core_eia930__hourly_interchange" from https://viewer.catalyst.coop/
+        interchange_data = load_pudl_interchange_data(pudl_path, year)
+        interchange_data = format_pudl_interchange_data(
+            interchange_data, ba_2_regions, region_2_iso, True
+        )
 
-    # extract flowgate data
-    # these will be the link capacities implemented in the network
-    zones = get_zones_in_network(n)
-    flowgate_data = get_flowgate_data(pd.read_csv(flowgates_f), ba_2_iso)
-    flowgate_data = get_flowgates_in_model(flowgate_data, zones)
+        # aggregated interchange data by balancing period
+        aggregated_interchange_data = get_aggregated_interchange_data(
+            interchange_data, balancing_period
+        )
 
-    # extract monthly fuel costs
-    elec_costs = FuelCosts(
-        fuel="electricity", year=year, api=api, sector="all"
-    ).get_data()
-    elec_costs = format_fuel_costs(elec_costs)
+        # extract flowgate data
+        # these will be the link capacities implemented in the network
+        zones = get_zones_in_network(n)
+        flowgate_data = get_flowgate_data(pd.read_csv(flowgates_f), ba_2_iso)
+        flowgate_data = get_flowgates_in_model(flowgate_data, zones)
+
+        # extract monthly fuel costs
+        elec_costs = FuelCosts(
+            fuel="electricity", year=year, api=api, sector="all"
+        ).get_data()
+        elec_costs = format_pudl_fuel_costs(elec_costs)
+
+    else:
+        assert balancing_period == "year"
+
+        state_2_code = STATE_2_CODE
+        code_2_state = {v: k for k, v in state_2_code.items()}
+
+        # yearly state level interchange data
+        # https://www.eia.gov/electricity/state/
+        interchange_data = load_eia_interchange_data(
+            eia_path, state_2_code, loss_factor=1.05
+        ).dropna(subset=["state"])
+        aggregated_interchange_data = _expand_eia_interchange_data(
+            interchange_data, year, balancing_period
+        )
+
+        # extract flowgate data
+        # these will be the link capacities implemented in the network
+        zones = get_zones_in_network(n)
+        flowgate_data = pd.read_csv(flowgates_f)
+        flowgate_data = collapse_flowgate_data(flowgate_data, zones)
+
+        # extract monthly fuel costs
+        elec_costs = FuelCosts(
+            fuel="electricity", year=year, api=api, sector="all"
+        ).get_data()
+        elec_costs = format_eia_fuel_costs(elec_costs, code_2_state.keys())
 
     # write to csv
-    monthly_aggregated_interchange_data.to_csv(net_flows_f, index=False)
+    aggregated_interchange_data.to_csv(net_flows_f, index=False)
     flowgate_data.to_csv(capacities_f, index=False)
     elec_costs.to_csv(elec_costs_f, index=True)
