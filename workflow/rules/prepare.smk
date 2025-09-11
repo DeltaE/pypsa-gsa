@@ -190,8 +190,9 @@ rule process_interchange_data:
     params:
         api = config["api"]["eia"],
         year = config["pypsa_usa"]["era5_year"],
-        balancing_period = "month", # only one supported right now
+        balancing_period = "year", # only one supported right now
         pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"
+        by_iso = False # DO NOT CHANGE THIS! This script will run, but not downstream
     output:
         net_flows = "results/{scenario}/constraints/import_export_flows.csv",
         capacities = "results/{scenario}/constraints/import_export_capacity.csv",
@@ -213,7 +214,8 @@ rule add_import_export_to_network:
     input:
         network = "results/{scenario}/copy.nc", # use copy to avoid cyclic dependency
         capacities_f = "results/{scenario}/constraints/import_export_capacity.csv",
-        elec_costs_f = "results/{scenario}/constraints/import_export_costs.csv"
+        elec_costs_f = "results/{scenario}/constraints/import_export_costs.csv",
+        membership_f = "resources/interchanges/membership.csv"
     output:
         network = "results/{scenario}/base.nc",
     resources:
