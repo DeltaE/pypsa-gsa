@@ -787,7 +787,7 @@ def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
                 raise ValueError(f"Invalid flow direction for {to_iso} in {month}")
 
 
-def add_lolp_constraint(n):
+def add_lolp_constraint(n, relax: float = 1.0):
     """Adds a loss of load probability constraint.
 
     This constraint restricts the amount of load shedding that can occur.
@@ -816,7 +816,8 @@ def add_lolp_constraint(n):
 
         # LLOP of 0.1 day per year = 0.000274
         # https://en.wikipedia.org/wiki/Loss_of_load
-        rhs = round(load * 0.000274, 6)
+        # if a run fails, we relax the constraint (base relax is 1.0 for none)
+        rhs = round(load * 0.000274 * relax, 6)
 
         lhs = n.model["Generator-p"].loc[:, generator].sum()
 
@@ -1035,7 +1036,7 @@ def extra_functionality(n, sns):
     if "elec_trade" in opts:
         add_elec_trade_constraints(n, opts["elec_trade"]["flows"])
     if "lolp" in opts:
-        add_lolp_constraint(n)
+        add_lolp_constraint(n, opts["lolp"]["relax"])
 
 
 ###
@@ -1406,7 +1407,8 @@ if __name__ == "__main__":
     ###
     # Loss of Load Probability Constraint
     ###
-    extra_fn["lolp"] = True
+    extra_fn["lolp"]["enable"] = True
+    extra_fn["lolp"]["relax"] = 1.0
 
     # due to how the RPS REC system is set up, there can be edge cases where
     # rps is not met. This is a hack to allow for a second attempt at solving
@@ -1424,8 +1426,10 @@ if __name__ == "__main__":
             extra_fn=extra_fn,
         )
         # relax the rps target by 2%
-        rps_iteration += 2
-        extra_fn["rps"]["data"].pct -= 0.01
+        rps_iteration += 1
+        extra_fn["rps"]["data"].pct -= 0.02
+        # relax load shedding by 2%
+        extra_fn["lolp"]["relax"] += 0.02
 
     if solving_status != "optimal":
         raise RuntimeError(f"Solving status '{solving_status}'")
