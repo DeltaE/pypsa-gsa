@@ -17,7 +17,7 @@ from utils import (
     format_raw_ng_trade_data,
     get_urban_rural_fraction,
     configure_logging,
-    get_network_iso,
+    get_network_state,
 )
 from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
 
@@ -466,20 +466,32 @@ def _get_ng_trade(n: pypsa.Network, trade: pd.DataFrame, direction: str) -> floa
     return data.loc[links_in_scope, "rhs"].sum()
 
 
-def _get_elec_trade_limit(n: pypsa.Network, trade: pd.DataFrame) -> float:
-    """Gets RHS import/export limit.
+# def _get_elec_trade_limit_iso(n: pypsa.Network, trade: pd.DataFrame) -> float:
+#     """Gets RHS import/export limit.
 
-    This is total net summed. Just an approximation for scaling the EE.
-    """
-    network_iso = get_network_iso(n)
-    if len(network_iso) < 1:
-        raise ValueError("No full ISOs found for network")
-    elif len(network_iso) > 1:
-        raise ValueError("Multiple ISOs found for network")
-    iso = network_iso[0]
+#     This is total net summed. Just an approximation for scaling the EE.
+#     """
+#     network_iso = get_network_iso(n)
+#     if len(network_iso) < 1:
+#         raise ValueError("No full ISOs found for network")
+#     elif len(network_iso) > 1:
+#         raise ValueError("Multiple ISOs found for network")
+#     iso = network_iso[0]
 
-    trade_iso = trade[(trade["from"] == iso) | (trade["to"] == iso)]
-    return trade_iso["interchange_reported_mwh"].sum()
+#     trade_iso = trade[(trade["from"] == iso) | (trade["to"] == iso)]
+#     return trade_iso["interchange_reported_mwh"].sum()
+
+
+def _get_elec_trade_limit_state(n: pypsa.Network, trade: pd.DataFrame) -> float:
+    """Gets RHS import/export limit."""
+    network_state = get_network_state(n)
+    if len(network_state) < 1:
+        raise ValueError("No states found for network")
+    elif len(network_state) > 1:
+        raise ValueError("Multiple states found for network")
+    state = network_state[0]
+    trade = trade.set_index("state")
+    return trade.at[state, "interchange_reported_mwh"]
 
 
 def _get_gshp_multiplier(n: pypsa.Network, pop: pd.DataFrame) -> float:
@@ -523,6 +535,7 @@ def _get_landuse_limit(n: pypsa.Network) -> float:
             & ~n.generators.index.str.contains("existing")
         ].p_nom_max.sum()
     )
+
 
 def apply_land_use_limit(n: pypsa.Network, sample: float) -> None:
     """Applies land use limit to the network."""
@@ -612,7 +625,7 @@ def _get_constraint_sample(
         elec_trade = kwargs.get("elec_trade", pd.DataFrame())
         if elec_trade.empty:
             raise ValueError("No elec trade data provided.")
-        ref = _get_elec_trade_limit(n, elec_trade)
+        ref = _get_elec_trade_limit_state(n, elec_trade)
         scaled = ref * sample
     elif attr == "landuse":
         landuse = kwargs.get("landuse", pd.DataFrame())

@@ -12,7 +12,6 @@ from typing import Optional
 import yaml
 from utils import (
     get_existing_lv,
-    get_network_iso,
     get_region_buses,
     get_rps_demand_supplyside,
     get_rps_eligible,
@@ -22,6 +21,7 @@ from utils import (
     get_ng_trade_links,
     get_urban_rural_fraction,
     configure_logging,
+    get_network_state,
 )
 
 import logging
@@ -680,111 +680,195 @@ def add_ng_import_export_limits(
         add_export_limits(n, trade, "max", export_max)
 
 
+# def add_elec_trade_constraints_iso(n: pypsa.Network, elec_trade: pd.DataFrame):
+#     def _get_elec_import_links(n: pypsa.Network, iso: str) -> list[str]:
+#         """Get all links for elec trade."""
+#         return n.links[
+#             (n.links.carrier == "imports") & (n.links.bus0.str.startswith(iso))
+#         ].index
+
+#     def _get_elec_export_links(n: pypsa.Network, iso: str) -> list[str]:
+#         """Get all links for elec trade."""
+#         return n.links[
+#             (n.links.carrier == "exports") & (n.links.bus1.str.startswith(iso))
+#         ].index
+
+#     from_iso = get_network_iso(n)
+#     if len(from_iso) < 1:
+#         raise ValueError("No full ISOs found for network")
+#     elif len(from_iso) > 1:
+#         raise ValueError("Multiple ISOs found for network")
+#     from_iso = from_iso[0]
+
+#     # get unique to isos for constraint setup
+#     flows = elec_trade[
+#         ((elec_trade["to"] == from_iso) | (elec_trade["from"] == from_iso))
+#         & (elec_trade["interchange_reported_mwh"] > 0)
+#     ]
+#     to_isos = list(set(flows["to"].unique().tolist() + flows["from"].unique().tolist()))
+#     to_isos.remove(from_iso)  # list of unique connecting isos in the network
+
+#     weights = n.snapshot_weightings.objective
+#     period = n.snapshots.get_level_values("period").unique().tolist()
+#     assert len(period) == 1, "Only one period supported for elec trade constraints"
+
+#     for to_iso in to_isos:
+#         import_links = _get_elec_import_links(n, to_iso)
+#         export_links = _get_elec_export_links(n, to_iso)
+
+#         if import_links.empty and export_links.empty:
+#             raise ValueError(f"No links found for {to_iso}")
+
+#         timesteps = n.snapshots.get_level_values("timestep")
+
+#         for month in flows.month.unique():
+#             timesteps_in_month = timesteps[timesteps.month == month].strftime(
+#                 "%Y-%m-%d %H:%M:%S"
+#             )
+
+#             # filter flows to only include the current month
+#             rhs_df = flows[
+#                 ((flows["from"] == to_iso) | (flows["to"] == to_iso))
+#                 & (flows.month == month)
+#             ]
+#             assert len(rhs_df) == 1, f"Multiple flows found for {to_iso} in {month}"
+
+#             rhs = rhs_df.interchange_reported_mwh.values[0]
+
+#             imports = (
+#                 n.model["Link-p"]
+#                 .mul(weights)
+#                 .sel(period=period, Link=import_links)
+#                 .sel(
+#                     timestep=timesteps_in_month
+#                 )  # Seperate cause slicing on multi-index is not supported
+#                 .sum()
+#             )
+#             exports = (
+#                 n.model["Link-p"]
+#                 .mul(weights)
+#                 .sel(period=period, Link=export_links)
+#                 .sel(
+#                     timestep=timesteps_in_month
+#                 )  # Seperate cause slicing on multi-index is not supported
+#                 .sum()
+#             )
+
+#             if rhs_df["from"].values[0] == to_iso:
+#                 # net trade from outside model scope to within model scope
+#                 # the model can import up to the limit, but not more
+#                 lhs = imports - exports
+
+#                 n.model.add_constraints(
+#                     lhs <= rhs,
+#                     name=f"elec_trade_imports-{to_iso}-month_{month}",
+#                 )
+
+#             elif rhs_df["to"].values[0] == to_iso:
+#                 # net trade from inside model scope to neighboring iso
+#                 # the model must export at least this amount
+#                 lhs = exports - imports
+
+#                 # upper and lower as exports have a negative cost
+#                 lhs_lower = lhs.mul(0.99)
+#                 lhs_upper = lhs.mul(1.01)
+
+#                 n.model.add_constraints(
+#                     lhs_lower >= rhs,
+#                     name=f"elec_trade_exports_lower-{to_iso}-month_{month}",
+#                 )
+
+#                 n.model.add_constraints(
+#                     lhs_upper <= rhs,
+#                     name=f"elec_trade_exports_upper-{to_iso}-month_{month}",
+#                 )
+
+#             else:
+#                 raise ValueError(f"Invalid flow direction for {to_iso} in {month}")
+
+
 def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
-    def _get_elec_import_links(n: pypsa.Network, iso: str) -> list[str]:
+    def _get_elec_import_links(n: pypsa.Network) -> list[str]:
         """Get all links for elec trade."""
-        return n.links[
-            (n.links.carrier == "imports") & (n.links.bus0.str.startswith(iso))
-        ].index
+        return n.links[n.links.carrier == "imports"].index
 
-    def _get_elec_export_links(n: pypsa.Network, iso: str) -> list[str]:
+    def _get_elec_export_links(n: pypsa.Network) -> list[str]:
         """Get all links for elec trade."""
-        return n.links[
-            (n.links.carrier == "exports") & (n.links.bus1.str.startswith(iso))
-        ].index
+        return n.links[n.links.carrier == "exports"].index
 
-    from_iso = get_network_iso(n)
-    if len(from_iso) < 1:
-        raise ValueError("No full ISOs found for network")
-    elif len(from_iso) > 1:
-        raise ValueError("Multiple ISOs found for network")
-    from_iso = from_iso[0]
-
-    # get unique to isos for constraint setup
-    flows = elec_trade[
-        ((elec_trade["to"] == from_iso) | (elec_trade["from"] == from_iso))
-        & (elec_trade["interchange_reported_mwh"] > 0)
-    ]
-    to_isos = list(set(flows["to"].unique().tolist() + flows["from"].unique().tolist()))
-    to_isos.remove(from_iso)  # list of unique connecting isos in the network
+    state = get_network_state(n)
+    if len(state) < 1:
+        raise ValueError("No states found for network")
+    elif len(state) > 1:
+        raise ValueError("Multiple states found for network")
 
     weights = n.snapshot_weightings.objective
     period = n.snapshots.get_level_values("period").unique().tolist()
     assert len(period) == 1, "Only one period supported for elec trade constraints"
 
-    for to_iso in to_isos:
-        import_links = _get_elec_import_links(n, to_iso)
-        export_links = _get_elec_export_links(n, to_iso)
+    import_links = _get_elec_import_links(n)
+    export_links = _get_elec_export_links(n)
 
-        if import_links.empty and export_links.empty:
-            raise ValueError(f"No links found for {to_iso}")
+    if import_links.empty and export_links.empty:
+        raise ValueError(f"No links found for {state}")
 
-        timesteps = n.snapshots.get_level_values("timestep")
+    # balance at at yearly level
 
-        for month in flows.month.unique():
-            timesteps_in_month = timesteps[timesteps.month == month].strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+    timesteps = n.snapshots.get_level_values("timestep")
 
-            # filter flows to only include the current month
-            rhs_df = flows[
-                ((flows["from"] == to_iso) | (flows["to"] == to_iso))
-                & (flows.month == month)
-            ]
-            assert len(rhs_df) == 1, f"Multiple flows found for {to_iso} in {month}"
+    elec_trade = elec_trade.set_index("state")
+    net_trade = elec_trade.at[state, "interchange_reported_mwh"]
 
-            rhs = rhs_df.interchange_reported_mwh.values[0]
+    imports = (
+        n.model["Link-p"]
+        .mul(weights)
+        .sel(period=period, Link=import_links)
+        .sel(
+            timestep=timesteps
+        )  # Seperate cause slicing on multi-index is not supported
+        .sum()
+    )
+    exports = (
+        n.model["Link-p"]
+        .mul(weights)
+        .sel(period=period, Link=export_links)
+        .sel(
+            timestep=timesteps
+        )  # Seperate cause slicing on multi-index is not supported
+        .sum()
+    )
 
-            imports = (
-                n.model["Link-p"]
-                .mul(weights)
-                .sel(period=period, Link=import_links)
-                .sel(
-                    timestep=timesteps_in_month
-                )  # Seperate cause slicing on multi-index is not supported
-                .sum()
-            )
-            exports = (
-                n.model["Link-p"]
-                .mul(weights)
-                .sel(period=period, Link=export_links)
-                .sel(
-                    timestep=timesteps_in_month
-                )  # Seperate cause slicing on multi-index is not supported
-                .sum()
-            )
+    # if positive, then net exporting
+    # if negative, then net importing
+    lhs = exports - imports
 
-            if rhs_df["from"].values[0] == to_iso:
-                # net trade from outside model scope to within model scope
-                # the model can import up to the limit, but not more
-                lhs = imports - exports
+    # net trade has been calcualted as generation - demand
+    # if positive, then net exporting
+    # if negative, then net importing
 
-                n.model.add_constraints(
-                    lhs <= rhs,
-                    name=f"elec_trade_imports-{to_iso}-month_{month}",
-                )
+    # net exporting
+    if net_trade >= 0:
+        n.model.add_constraints(
+            lhs <= net_trade,
+            name=f"elec_trade_imports-{state}_upper",
+        )
 
-            elif rhs_df["to"].values[0] == to_iso:
-                # net trade from inside model scope to neighboring iso
-                # the model must export at least this amount
-                lhs = exports - imports
+        n.model.add_constraints(
+            lhs >= 0,
+            name=f"elec_trade_imports-{state}_lower",
+        )
 
-                # upper and lower as exports have a negative cost
-                lhs_lower = lhs.mul(0.99)
-                lhs_upper = lhs.mul(1.01)
+    # net importing
+    else:
+        n.model.add_constraints(
+            lhs >= net_trade,
+            name=f"elec_trade_imports-{state}_upper",
+        )
 
-                n.model.add_constraints(
-                    lhs_lower >= rhs,
-                    name=f"elec_trade_exports_lower-{to_iso}-month_{month}",
-                )
-
-                n.model.add_constraints(
-                    lhs_upper <= rhs,
-                    name=f"elec_trade_exports_upper-{to_iso}-month_{month}",
-                )
-
-            else:
-                raise ValueError(f"Invalid flow direction for {to_iso} in {month}")
+        n.model.add_constraints(
+            lhs <= 0,
+            name=f"elec_trade_imports-{state}_lower",
+        )
 
 
 def add_lolp_constraint(n, relax: float = 1.0):

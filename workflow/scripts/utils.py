@@ -382,3 +382,9 @@ def get_network_iso(n: pypsa.Network) -> list[str]:
         if all(state in ISO_STATES[iso] for state in states):
             isos.append(iso)
     return isos
+
+
+def get_network_state(n: pypsa.Network) -> list[str]:
+    """Get the state of the network."""
+    states = n.buses[n.buses.carrier == "AC"].reeds_state.unique()
+    return states
