@@ -72,6 +72,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "gwp",
         "elec_trade",  # constraint
         "efficiency2",  # not a default in pypsa
+        "rec",
     ],
     "generators": [
         "tct",
@@ -98,6 +99,7 @@ CACHED_ATTRS = [
     "itc",
     "gwp",
     "leakage",
+    "rec",
 ]
 
 CONSTRAINT_ATTRS = [

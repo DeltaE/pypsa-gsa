@@ -211,7 +211,18 @@ def get_rps_generation(
         period=planning_horizon,
         Generator=region_gens.index,
     )
-    return p_eligible.sum()
+    gen = p_eligible.sum()
+    
+    # add in the rec imports 
+    rec_links = n.links[n.links.carrier == "imports_rec"]
+    rec_eligible = n.model["Link-p"].sel(
+        period=planning_horizon,
+        Link=rec_links.index,
+    )
+    rec = rec_eligible.sum()
+    
+    return gen + rec
+    
 
 
 def get_rps_demand_gsa(

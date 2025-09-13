@@ -10,6 +10,7 @@ def add_import_export_carriers(n: pypsa.Network) -> None:
     """Adds import and export carriers to the network."""
     n.add("Carrier", "imports", co2_emissions=0, nice_name="Electrical Imports")
     n.add("Carrier", "exports", co2_emissions=0, nice_name="Electrical Exports")
+    n.add("Carrier", "imports_rec", co2_emissions=0, nice_name="Electrical Imports REC")
 
 
 def add_import_export_buses(n: pypsa.Network, regions_2_add: list[str]) -> None:
@@ -19,6 +20,13 @@ def add_import_export_buses(n: pypsa.Network, regions_2_add: list[str]) -> None:
         regions_2_add,
         suffix="_imports",
         carrier="imports",
+        country=regions_2_add,
+    )
+    n.madd(
+        "Bus",
+        regions_2_add,
+        suffix="_imports_rec",
+        carrier="imports_rec",
         country=regions_2_add,
     )
     n.madd(
@@ -38,6 +46,20 @@ def add_import_export_stores(n: pypsa.Network, regions_2_add: list[str]) -> None
         bus=[f"{x}_imports" for x in regions_2_add],
         suffix="_imports",
         carrier="imports",
+        e_nom_extendable=True,
+        marginal_cost=0,
+        e_nom=0,
+        e_nom_max=np.inf,
+        e_min=0,
+        e_min_pu=-1,
+        e_max_pu=0,
+    )
+    n.madd(
+        "Store",
+        regions_2_add,
+        bus=[f"{x}_imports_rec" for x in regions_2_add],
+        suffix="_imports_rec",
+        carrier="imports_rec",
         e_nom_extendable=True,
         marginal_cost=0,
         e_nom=0,
@@ -121,7 +143,19 @@ def add_import_export_links(
             efficiency=1,
             efficiency2=0.384,  # T / MWh
         )
-
+        n.add(
+            "Link",
+            f"{r}_{rr}_imports_rec",
+            bus0=f"{rr}_imports_rec",
+            bus1=r,
+            carrier="imports_rec",
+            p_nom_extendable=False,
+            p_min_pu=0,
+            p_max_pu=1,
+            marginal_cost=marginal_cost.value,
+            p_nom=import_capacity,
+            efficiency=1,
+        )
         n.add(
             "Link",
             f"{r}_{rr}_exports",

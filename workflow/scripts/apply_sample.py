@@ -115,6 +115,26 @@ class MethaneLeakageCache:
         return round(self.gwp * self.leakage, 5)
 
 
+@dataclass
+class RecImportCache:
+    """Perform intermediate rec import calculation."""
+
+    component: str
+    import_price: pd.Series = None
+    rec: float = None  # additional rec price ontop of import price
+
+    def is_valid_data(self) -> bool:
+        """Checks that all data is present before applying sample"""
+        if not self.rec:
+            raise ValueError("rec_price")
+        else:
+            return True
+
+    def calculate_rec_price(self) -> pd.Series:
+        """Calculate rec price."""
+        return self.rec
+
+
 def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     """Check all defined carriers are in the network."""
 
@@ -353,6 +373,42 @@ def _apply_dynamic_sample(
     }
 
 
+def _apply_rec_to_existing_imports(n: pypsa.Network, rec: float) -> None:
+    """This is an edge case where we want to apply an additional value to an already applied sample.
+
+    The challenge comes in that we need to enforce that "imports" and "imports_rec" have the same base
+    cost, then only "imports_rec" has the additional rec cost. From a sampling perspective, this is
+    a little tricky to generalize.
+
+    Here, we take the already applied time-dependent sample for "imports", and apply that to the "imports_rec".
+    Then we apply the rec cost to the "imports_rec" only.
+    """
+
+    refs = []
+    scaleds = []
+
+    imports = n.links[n.links.carrier == "imports"].index
+    imports_rec = [f"{link}_rec" for link in imports]
+    for link, link_rec in zip(imports, imports_rec):
+        cost_base = n.links_t["marginal_cost"][link]
+        cost_rec = cost_base + rec
+        n.links_t["marginal_cost"][link_rec] = cost_rec
+
+        # metadata collection
+        refs.append(cost_base.mean())
+        scaleds.append(cost_rec.mean())
+
+    ref = np.mean(refs)
+    scaled = np.mean(scaleds)
+    diff = calc_difference(ref, scaled, "imports_rec", "marginal_cost")
+
+    return {
+        "ref": round(ref, 5),  # original mean value applied to network
+        "scaled": round(scaled, 5),  # new mean value applied to network
+        "difference": round(diff, 5),  # percent diff between original and new
+    }
+
+
 def _apply_cached_capex(
     n: pypsa.Network, car: str, data: dict[str, Any]
 ) -> dict[str, float]:
@@ -401,6 +457,20 @@ def _apply_cached_ch4_leakage(
                 n, cache.component, car, "efficiency3", leakage, "absolute"
             )
 
+    return sampled
+
+
+def _apply_cached_rec_import(
+    n: pypsa.Network, data: dict[str, Any]
+) -> dict[str, float]:
+    try:
+        cache = RecImportCache(**data)
+        rec_price = cache.calculate_rec_price()
+    except ValueError as ex:
+        logger.error("Rec Import error")
+        raise ValueError(ex)
+
+    sampled = _apply_rec_to_existing_imports(n, rec_price)
     return sampled
 
 
@@ -497,10 +567,9 @@ def _get_elec_trade_limit_state(n: pypsa.Network, trade: pd.DataFrame) -> float:
 def _get_gshp_multiplier(n: pypsa.Network, pop: pd.DataFrame) -> float:
     """Gets fractional multipler to apply to GSHP capacity."""
 
-    gshp = n.links[n.links.index.str.endswith("gshp")].copy()
-    fraction = get_urban_rural_fraction(pop)
-    gshp["urban_rural_fraction"] = gshp.bus0.map(fraction)
-    return gshp.urban_rural_fraction.mean() / 100
+    fractions = get_urban_rural_fraction(pop)
+    frac_per_node = [v for _, v in fractions.items()]
+    return round(sum(frac_per_node) / len(frac_per_node) / 100, 4)
 
 
 def _get_ev_generation_limit(
@@ -756,6 +825,9 @@ def apply_sample(
         elif car == "leakage_downstream":
             sampled = _apply_cached_ch4_leakage(n=n, data=data, upstream=False)
             attr = "efficiency3"
+        elif car == "imports_rec":  # this MUST happen after imports sample is applied
+            sampled = _apply_cached_rec_import(n, data)
+            attr = "marginal_cost"
         else:
             sampled = _apply_cached_capex(n, car, data)
             attr = "capital_cost"

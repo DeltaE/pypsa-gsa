@@ -472,6 +472,24 @@ def add_RPS_constraints(
         )
 
 
+def add_imports_rec_constraint(n: pypsa.Network):
+    """Constrain capacity limits on REC_imports and regular imports, so flows can only be max of one of them."""
+    links = n.links[n.links.carrier == "imports"]
+    for link in links.index:
+        link_rec = f"{link}_rec"
+        links_2_constrain = n.links[n.links.index.isin([link, link_rec])]
+        assert len(links_2_constrain) == 2, f"Expected 2 imports per link {link}"
+        assert links_2_constrain.iloc[0].p_nom == links_2_constrain.iloc[1].p_nom, (
+            f"Expected same capacity for imports and imports_rec for link {link}"
+        )
+        capacity = links_2_constrain.iloc[0].p_nom
+        
+        n.model.add_constraints(
+            n.model["Link-p"].sel(Link=links_2_constrain.index).sum(dim="Link") <= capacity,
+            name=f"imports_rec_capacity_constraint-{link}",
+        )
+
+
 def add_sector_co2_constraints(
     n: pypsa.Network, sample: float, include_ch4: bool = True
 ):
@@ -787,14 +805,41 @@ def add_ng_import_export_limits(
 #                 raise ValueError(f"Invalid flow direction for {to_iso} in {month}")
 
 
-def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
+def add_elec_trade_constraints(
+    n: pypsa.Network, elec_trade: pd.DataFrame, balancing_period: str = "year"
+):
+    def _get_periods(n: pypsa.Network) -> pd.Series:
+        """Get time periods from network snapshots.
+
+        Parameters
+        ----------
+        n : pypsa.Network
+            Network object containing snapshots
+        period_type : str
+            Type of period to return ('day', 'week', 'month', 'year')
+
+        Returns
+        -------
+        pd.Series
+            Series with datetime index and period values
+        """
+        timestamps = n.snapshots.get_level_values("timestep")
+
+        periods = pd.DataFrame(index=timestamps)
+        periods["day"] = timestamps.dayofyear
+        periods["week"] = timestamps.isocalendar().week
+        periods["month"] = timestamps.month
+        periods["year"] = timestamps.year
+
+        return periods
+
     def _get_elec_import_links(n: pypsa.Network) -> list[str]:
         """Get all links for elec trade."""
-        return n.links[n.links.carrier == "imports"].index
+        return n.links[n.links.carrier == "imports"].index.tolist()
 
     def _get_elec_export_links(n: pypsa.Network) -> list[str]:
         """Get all links for elec trade."""
-        return n.links[n.links.carrier == "exports"].index
+        return n.links[n.links.carrier == "exports"].index.tolist()
 
     states = get_network_state(n)
     if len(states) < 1:
@@ -803,55 +848,100 @@ def add_elec_trade_constraints(n: pypsa.Network, elec_trade: pd.DataFrame):
         raise ValueError("Multiple states found for network")
     state = states[0]
 
+    volume_limit = elec_trade.set_index("state")
+    volume_limit = volume_limit.at[state, "percentage_of_total_generation"]
+
     weights = n.snapshot_weightings.objective
     period = n.snapshots.get_level_values("period").unique().tolist()
-    assert len(period) == 1, "Only one period supported for elec trade constraints"
 
     import_links = _get_elec_import_links(n)
     export_links = _get_elec_export_links(n)
 
-    if import_links.empty and export_links.empty:
-        raise ValueError(f"No links found for {state}")
+    periods = _get_periods(n)
 
-    # balance at at yearly level
+    timesteps = n.snapshots.get_level_values("timestep")
+    for year in periods["year"].unique():
+        periods_in_year = periods[periods["year"] == year]
+        for period in periods_in_year[balancing_period].unique():
+            if balancing_period == "week":
+                timesteps_in_period = timesteps[
+                    (timesteps.year == year) & (timesteps.isocalendar().week == period)
+                ].strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                timesteps_in_period = timesteps[
+                    (timesteps.year == year)
+                    & (getattr(timesteps, balancing_period) == period)
+                ].strftime("%Y-%m-%d %H:%M:%S")
 
-    elec_trade = elec_trade.set_index("state")
-    net_trade = elec_trade.at[state, "interchange_reported_mwh"]
+            imports_lhs = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=year, Link=import_links)
+                .sel(
+                    timestep=timesteps_in_period
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
 
-    imports = n.model["Link-p"].mul(weights).sel(period=period, Link=import_links).sum()
-    exports = n.model["Link-p"].mul(weights).sel(period=period, Link=export_links).sum()
+            exports_lhs = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=year, Link=export_links)
+                .sel(
+                    timestep=timesteps_in_period
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
 
-    # if positive, then net exporting
-    # if negative, then net importing
-    lhs = exports - imports
+            net_imports = imports_lhs - exports_lhs
 
-    # net trade has been calcualted as generation - demand
-    # if positive, then net exporting
-    # if negative, then net importing
+            # apply the volume limit to energy supplied
 
-    # net exporting
-    if net_trade >= 0:
-        n.model.add_constraints(
-            lhs <= net_trade,
-            name=f"elec_trade_imports-{state}_upper",
-        )
+            # note that this is supplied electricity
+            buses = n.buses[n.buses.carrier == "AC"]
+            demand_links = n.links[
+                (n.links.bus0.isin(buses.index))
+                & (n.links.carrier.str.startswith(("res", "com", "ind", "trn")))
+            ].index
 
-        n.model.add_constraints(
-            lhs >= 0,
-            name=f"elec_trade_imports-{state}_lower",
-        )
+            demand = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=year, Link=demand_links)
+                .sel(
+                    timestep=timesteps_in_period
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
 
-    # net importing
-    else:
-        n.model.add_constraints(
-            lhs >= net_trade,
-            name=f"elec_trade_imports-{state}_upper",
-        )
+            volume_limit = round(volume_limit / 100, 2)
 
-        n.model.add_constraints(
-            lhs <= 0,
-            name=f"elec_trade_imports-{state}_lower",
-        )
+            if volume_limit >= 1:
+                imports_lhs = imports_lhs - (volume_limit * demand)
+                exports_lhs = exports_lhs - (volume_limit * demand)
+            else:  # net imports
+                imports_lhs = imports_lhs - (volume_limit * demand)
+                exports_lhs = exports_lhs + (volume_limit * demand)
+
+            if volume_limit >= 1:  # net exports
+                n.model.add_constraints(
+                    net_imports - (volume_limit * demand) >= 0,
+                    name=f"elec_trade-{state}_upper",
+                )
+                n.model.add_constraints(
+                    net_imports <= 0,
+                    name=f"elec_trade-{state}_lower",
+                )
+
+            else:  # net imports
+                n.model.add_constraints(
+                    net_imports - (volume_limit * demand) <= 0,
+                    name=f"elec_trade-{state}_upper",
+                )
+                n.model.add_constraints(
+                    net_imports >= 0,
+                    name=f"elec_trade-{state}_lower",
+                )
 
 
 def add_lolp_constraint(n, relax: float = 1.0):
@@ -1080,6 +1170,8 @@ def extra_functionality(n, sns):
         add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
     if "ces" in opts:
         add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
+    if "rps" or "ces" in opts:
+        add_imports_rec_constraint(n)
     if "tct" in opts:
         add_technology_capacity_target_constraints(
             n, opts["tct"]["data"], opts["tct"]["sample"]

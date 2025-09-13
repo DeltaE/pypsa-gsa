@@ -18,15 +18,18 @@ def load_pudl_interchange_data(pudl_path: str, year: int) -> pd.DataFrame:
 
 
 def load_eia_interchange_data(
-    csv_path: str, state_2_code: dict[str, str], loss_factor: float = 1.0
+    csv_path: str, state_2_code: dict[str, str], loss_factor: float = 1.1
 ) -> pd.DataFrame:
     """Loads yearly data from EIA."""
     df = pd.read_csv(csv_path)
     df["state"] = df.Name.map(state_2_code)
     df["interchange_reported_mwh"] = (
-        df["Net generation (MWh)"] * loss_factor - df["Total retail sales (MWh)"]
+        df["Net generation (MWh)"] - df["Total retail sales (MWh)"] * loss_factor
     )
-    return df[["state", "interchange_reported_mwh"]]
+    df["percentage_of_total_generation"] = df["Net generation (MWh)"] / (
+        df["Total retail sales (MWh)"] * loss_factor
+    )
+    return df[["state", "interchange_reported_mwh", "percentage_of_total_generation"]]
 
 
 def format_pudl_interchange_data(
@@ -223,6 +226,7 @@ def _expand_eia_interchange_data(
             {
                 "state": row["state"],
                 "interchange_reported_mwh": row["interchange_reported_mwh"] / 12,
+                "percentage_of_total_generation": row["percentage_of_total_generation"],
             },
             index=months,
         )
@@ -344,7 +348,7 @@ if __name__ == "__main__":
         # yearly state level interchange data
         # https://www.eia.gov/electricity/state/
         interchange_data = load_eia_interchange_data(
-            eia_path, state_2_code, loss_factor=1.05
+            eia_path, state_2_code, loss_factor=1.1
         ).dropna(subset=["state"])
         aggregated_interchange_data = _expand_eia_interchange_data(
             interchange_data, year, balancing_period
