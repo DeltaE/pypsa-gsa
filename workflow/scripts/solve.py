@@ -483,9 +483,10 @@ def add_imports_rec_constraint(n: pypsa.Network):
             f"Expected same capacity for imports and imports_rec for link {link}"
         )
         capacity = links_2_constrain.iloc[0].p_nom
-        
+
         n.model.add_constraints(
-            n.model["Link-p"].sel(Link=links_2_constrain.index).sum(dim="Link") <= capacity,
+            n.model["Link-p"].sel(Link=links_2_constrain.index).sum(dim="Link")
+            <= capacity,
             name=f"imports_rec_capacity_constraint-{link}",
         )
 
@@ -849,7 +850,9 @@ def add_elec_trade_constraints(
     state = states[0]
 
     volume_limit = elec_trade.set_index("state")
-    volume_limit = volume_limit.at[state, "percentage_of_total_generation"]
+    volume_limit = volume_limit.at[
+        state, "percentage_of_total_generation"
+    ]  # this is actually a decimal, not a percentage
 
     weights = n.snapshot_weightings.objective
     period = n.snapshots.get_level_values("period").unique().tolist()
@@ -914,14 +917,7 @@ def add_elec_trade_constraints(
                 .sum()
             )
 
-            volume_limit = round(volume_limit / 100, 2)
-
-            if volume_limit >= 1:
-                imports_lhs = imports_lhs - (volume_limit * demand)
-                exports_lhs = exports_lhs - (volume_limit * demand)
-            else:  # net imports
-                imports_lhs = imports_lhs - (volume_limit * demand)
-                exports_lhs = exports_lhs + (volume_limit * demand)
+            volume_limit = round(volume_limit, 3)
 
             if volume_limit >= 1:  # net exports
                 n.model.add_constraints(
