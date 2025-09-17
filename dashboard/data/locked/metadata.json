@@ -564,6 +564,14 @@
                 "visible": true,
                 "unit": "MWh"
             },
+            "battery_capacity_new": {
+                "label": "Battery",
+                "label2": "Pwr. Battery Capacity New",
+                "sector": "power",
+                "result": "new_capacity",
+                "visible": true,
+                "unit": "MWh"
+            },
             "battery_capacity_4hr": {
                 "label": "Battery (4hr)",
                 "label2": "Pwr. Battery Capacity 4hr Total",
@@ -4258,6 +4266,20 @@
               "visible": true,
               "unit": "usd/mwh"
             },
+            "elec_import_rec_price": {
+              "label": "Renewable Energy Certificate Price",
+              "sector": "power",
+              "param": "marginal_cost",
+              "visible": true,
+              "unit": "usd/mwh"
+            },
+            "elec_import_co2": {
+              "label": "Renewable Energy Certificate Price",
+              "sector": "power",
+              "param": "emissions",
+              "visible": true,
+              "unit": "T CO2e/mwh"
+            },
             "elec_export_price": {
               "label": "Electricity Export Price",
               "sector": "power",
@@ -4332,6 +4354,14 @@
             "tct_ocgt": {
               "label": "Open-Cycle Gas Turbine",
               "label2": "OCGT Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "mw"
+            },
+            "tct_battery": {
+              "label": "Battery",
+              "label2": "Battery Capacity Limit",
               "sector": "power",
               "param": "tct",
               "visible": true,
@@ -4525,6 +4555,8 @@
         "elec_trade_flow": {"label": "Electricity Trade Volume"},
         "elec_import_price": {"label": "Electricity Import Price"},
         "elec_export_price": {"label": "Electricity Export Price"},
+        "elec_import_rec_price": {"label": "Renewable Energy Certificate Price"},
+        "elec_import_co2": {"label": "Renewable Energy Certificate CO2e"},
         "tct_biomass": {"label": "Biomass Max Capacity"},
         "tct_geothermal": {"label": "Geothermal Max Capacity"},
         "tct_nuclear": {"label": "Nuclear Max Capacity"},
@@ -4534,6 +4566,7 @@
         "tct_ccgt": {"label": "Ccgt Max Capacity"},
         "tct_ccgt_ccs": {"label": "Ccgt-95CCS Max Capacity"},
         "tct_ocgt": {"label": "Ocgt Max Capacity"},
+        "tct_battery": {"label": "Battery Max Capacity"},
         "landuse": {"label": "Landuse"}
     }
         
