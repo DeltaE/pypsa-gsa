@@ -27,6 +27,10 @@ param_nice_names = {x: y["label"] for x, y in METADATA["parameters"].items()}
 RAW_PARAMS["nice_name"] = RAW_PARAMS.name.map(
     lambda x: param_nice_names[x] if x in param_nice_names else x
 )
+group_nice_names = {x: y["label"] for x, y in METADATA["groups"].items()}
+RAW_PARAMS["group_nice_name"] = RAW_PARAMS.group.map(
+    lambda x: group_nice_names[x] if x in group_nice_names else x
+)
 
 # ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
 STATE_SHAPE = gpd.read_file("data/locked/states.geojson")

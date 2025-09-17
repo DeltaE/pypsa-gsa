@@ -4274,7 +4274,7 @@
               "unit": "usd/mwh"
             },
             "elec_import_co2": {
-              "label": "Renewable Energy Certificate Price",
+              "label": "Import Co2e Emissions",
               "sector": "power",
               "param": "emissions",
               "visible": true,
@@ -4556,7 +4556,7 @@
         "elec_import_price": {"label": "Electricity Import Price"},
         "elec_export_price": {"label": "Electricity Export Price"},
         "elec_import_rec_price": {"label": "Renewable Energy Certificate Price"},
-        "elec_import_co2": {"label": "Renewable Energy Certificate CO2e"},
+        "elec_import_co2": {"label": "Import CO2e Emissions"},
         "tct_biomass": {"label": "Biomass Max Capacity"},
         "tct_geothermal": {"label": "Geothermal Max Capacity"},
         "tct_nuclear": {"label": "Nuclear Max Capacity"},
