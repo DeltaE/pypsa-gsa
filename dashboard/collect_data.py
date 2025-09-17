@@ -5,7 +5,7 @@ import pandas as pd
 from pathlib import Path
 import json
 
-from components.utils import ISOS, STATES
+from components.utils import STATES
 
 import logging
 
@@ -382,7 +382,7 @@ if __name__ == "__main__":
             dfs.append(state_params)
     if not dfs:
         logger.error("No data found.")
-        raise ValueError("No ISO data found.")
+        raise ValueError("No State data found.")
 
     params = pd.concat(dfs, axis=0)
     params = assign_parameter_filters(params)

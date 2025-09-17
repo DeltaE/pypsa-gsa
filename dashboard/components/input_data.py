@@ -93,7 +93,7 @@ def get_inputs_data_table(data: dict[str, Any]) -> dash_table.DataTable:
         {"name": "nice_name", "id": "name", "type": "text"},
         {"name": "group", "id": "group", "type": "text"},
         {"name": "group_nice_name", "id": "group_nice_name", "type": "text"},
-        {"name": "iso", "id": "iso", "type": "text"},
+        {"name": "state", "id": "state", "type": "text"},
         {"name": "component", "id": "component", "type": "text"},
         {"name": "carrier", "id": "carrier", "type": "text"},
         {"name": "attribute", "id": "attribute", "type": "text"},

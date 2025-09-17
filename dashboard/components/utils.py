@@ -157,12 +157,12 @@ def get_emissions(root: str) -> dict[str, dict[str, float]]:
     """Get the emissions."""
     with open(Path(root, "data", "locked", "emissions.json"), "r") as f:
         loaded = json.load(f)
-    return {x: loaded[x] for x in loaded.keys() if x in ISO_STATES}
+    return {x: loaded[x] for x in loaded.keys() if x in STATES}
 
 
-def get_iso_dropdown_options() -> list[dict[str, str]]:
-    """Get the ISO dropdown options."""
-    return _convert_to_dropdown_options(ISOS)
+def get_state_dropdown_options() -> list[dict[str, str]]:
+    """Get the State dropdown options."""
+    return _convert_to_dropdown_options(STATES)
 
 
 def get_y_label(df: str, result_type: str) -> str:
@@ -214,7 +214,7 @@ def get_gsa_results_dropdown_options(
     options = []
 
     for result in results:
-        if result in ["param", "iso"]:
+        if result in ["param", "state"]:
             pass
         elif result in metadata["results"]:
             if "label2" in metadata["results"][result]:
@@ -270,12 +270,12 @@ def get_ua_param_result_mapper(metadata: dict = None) -> list[dict[str, str]]:
 
 
 def get_cr_params_dropdown_options(
-    root: str, iso: str, flatten: bool = True
+    root: str, state: str, flatten: bool = True
 ) -> list[dict[str, str]]:
     """Get the Custom Result parameters dropdown options."""
-    params_f = Path(root, "data", "iso", iso, "ua_params.json")
+    params_f = Path(root, "data", "state", state, "ua_params.json")
     if not params_f.exists():
-        logger.error(f"No UA params for {iso}: {params_f}")
+        logger.error(f"No UA params for {state}: {params_f}")
         return {}
     with open(params_f, "r") as f:
         loaded = json.load(f)
@@ -321,42 +321,42 @@ def get_cr_results_dropdown_options(
         return data
 
 
-def get_cr_data_by_iso(root: Path, iso: str) -> pd.DataFrame:
-    """Get CR data by ISO."""
-    results = _get_cr_run_results(root, iso)
-    samples = _get_cr_run_samples(root, iso)
+def get_cr_data_by_state(root: Path, state: str) -> pd.DataFrame:
+    """Get CR data by State."""
+    results = _get_cr_run_results(root, state)
+    samples = _get_cr_run_samples(root, state)
     return pd.merge(results, samples, left_index=True, right_index=True)
 
 
-def _get_cr_run_results(root: Path, iso: str) -> pd.DataFrame:
+def _get_cr_run_results(root: Path, state: str) -> pd.DataFrame:
     """Get CR run results."""
-    results_f = Path(root, "data", "iso", iso, "ua_runs.csv")
+    results_f = Path(root, "data", "state", state, "ua_runs.csv")
     if not results_f.exists():
-        logger.error(f"No result data for {iso}: {results_f}")
+        logger.error(f"No result data for {state}: {results_f}")
         return pd.DataFrame()
     df = pd.read_csv(results_f, index_col=0)
-    return df.round(2).drop(columns=["iso"])
+    return df.round(2).drop(columns=["state"])
 
 
-def _get_cr_run_samples(root: Path, iso: str) -> list[str]:
+def _get_cr_run_samples(root: Path, state: str) -> list[str]:
     """Get CR run samples."""
-    names_f = Path(root, "data", "iso", iso, "ua_params.json")
-    samples_f = Path(root, "data", "iso", iso, "sample_data.csv")
+    names_f = Path(root, "data", "state", state, "ua_params.json")
+    samples_f = Path(root, "data", "state", state, "sample_data.csv")
 
     if not names_f.exists():
-        logger.error(f"No Custom Result names for {iso}: {names_f}")
+        logger.error(f"No Custom Result names for {state}: {names_f}")
         return pd.DataFrame()
     with open(names_f, "r") as f:
         names = json.load(f)
 
     if not samples_f.exists():
-        logger.error(f"No Custom Result sample for {iso}: {samples_f}")
+        logger.error(f"No Custom Result sample for {state}: {samples_f}")
         return pd.DataFrame()
-    sample = pd.read_csv(samples_f, index_col="run").drop(columns=["iso"])
+    sample = pd.read_csv(samples_f, index_col="run").drop(columns=["state"])
 
     if not all(x in sample.columns for x in names):
         missing = [x for x in names if x not in sample.columns]
-        logger.error(f"Missing result from {iso}: {missing}")
+        logger.error(f"Missing result from {state}: {missing}")
         return pd.DataFrame()
 
     return sample[list(names)]

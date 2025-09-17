@@ -199,7 +199,7 @@ def filter_gsa_data(
     params_dropdown: str | list[str],
     params_slider: int,
     results: str | list[str],
-    keep_iso: bool = False,
+    keep_state: bool = False,
 ) -> pd.DataFrame:
     """Filter GSA data based on selected parameters and results."""
     if not data:
@@ -233,9 +233,9 @@ def filter_gsa_data(
         params = [params]
     if isinstance(results, str):
         results = [results]
-    if keep_iso:
-        logger.debug("Removing ISO in GSA filtering")
-        results.append("iso")
+    if keep_state:
+        logger.debug("Removing State in GSA filtering")
+        results.append("state")
 
     result = df.loc[params][results].copy()
 
@@ -258,7 +258,7 @@ def filter_gsa_data_for_map(
         logger.debug(f"GSA results not a single result: {result}")
         return pd.DataFrame()
 
-    df = pd.DataFrame(data).set_index(["iso"])[["param", result]]
+    df = pd.DataFrame(data).set_index(["state"])[["param", result]]
 
     df = df.pivot_table(columns="param", index=df.index).T.droplevel(
         0
@@ -399,7 +399,7 @@ def normalize_mu_star_data(data: pd.DataFrame) -> pd.DataFrame:
     df = data.copy().set_index("param")
 
     for column in df.columns:
-        if column == "iso":
+        if column == "state":
             continue
         max_value = df[column].max()
         df[column] = df[column].div(max_value)
@@ -476,17 +476,17 @@ def _get_gsa_map_figure(
         logger.debug(f"Top n is {top_n}, setting to 1")
         top_n = 1
 
-    # to fill in any missing ISOs
-    no_data = pd.DataFrame({"iso": gdf.iso.astype(str), "value": "No Data"}).set_index(
-        "iso"
-    )
+    # to fill in any missing states
+    no_data = pd.DataFrame(
+        {"state": gdf.STATE_ID.astype(str), "value": "No Data"}
+    ).set_index("state")
 
     if not data:
         logger.debug("No GSA map data found")
         rankings = no_data
     else:
         rankings = pd.DataFrame(data, dtype=str)
-        rankings = rankings.set_index("iso").astype(str)
+        rankings = rankings.set_index("state").astype(str)
         rankings = rankings.loc[:, str(top_n)].rename("value")
 
     rankings = (
@@ -502,7 +502,7 @@ def _get_gsa_map_figure(
 
     fig = px.choropleth(
         rankings,
-        geojson=gdf.set_index("iso"),
+        geojson=gdf.set_index("STATE_ID"),
         locations=rankings.index,
         color="value",
         hover_data=["value"],
@@ -543,7 +543,7 @@ def _get_gsa_map_figure(
 
 def get_gsa_map(
     gsa_map_data: list[dict[str, Any]],
-    iso_shape: gpd.GeoDataFrame,
+    state_shape: gpd.GeoDataFrame,
     num_cols: int = 2,
     card_class: str = "h-100",
     row_class: str = "mb-2 g-2",  # Adds margin bottom and gap between cards
@@ -554,11 +554,11 @@ def get_gsa_map(
     if not gsa_map_data:
         num_maps = 1  # print an empty map
     else:
-        num_maps = len(gsa_map_data[0]) - 1  # minus 1 as iso is included
+        num_maps = len(gsa_map_data[0]) - 1  # minus 1 as state is included
         logger.debug(f"User input for top params of: {num_maps}")
 
     color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
-    categories = set(pd.DataFrame(gsa_map_data).set_index("iso").values.ravel())
+    categories = set(pd.DataFrame(gsa_map_data).set_index("state").values.ravel())
     color_map = _get_gsa_map_color_map(color_scale, categories)
     color_map.update({"No Data": "lightgrey"})  # Modify in-place instead of reassigning
     logger.debug(f"Color map: {color_map}")
@@ -568,7 +568,7 @@ def get_gsa_map(
             id=ids.GSA_MAP,
             figure=_get_gsa_map_figure(
                 data=gsa_map_data,
-                gdf=iso_shape,
+                gdf=state_shape,
                 top_n=num_maps,
                 color_palette=color_scale,
                 color_map=color_map,
@@ -593,7 +593,7 @@ def get_gsa_map(
                             id=f"{ids.GSA_MAP}-{num_map}",
                             figure=_get_gsa_map_figure(
                                 data=gsa_map_data,
-                                gdf=iso_shape,
+                                gdf=state_shape,
                                 top_n=num_map,
                                 # color_palette=color_scale,
                                 color_map=color_map,

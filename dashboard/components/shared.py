@@ -4,54 +4,54 @@ from dash import html, dcc
 import pandas as pd
 import plotly.colors as pc
 from . import ids as ids
-from .utils import get_iso_dropdown_options
-
-ISO_OPTIONS = get_iso_dropdown_options()
+from .utils import get_state_dropdown_options
 
 import logging
+
+STATE_OPTIONS = get_state_dropdown_options()
 
 logger = logging.getLogger(__name__)
 
 
-def iso_options_block(*args: pd.DataFrame | None) -> html.Div:
-    """ISO options block component."""
+def state_options_block(*args: pd.DataFrame | None) -> html.Div:
+    """STATE options block component."""
 
-    # only allow available isos to be selected if data is loaded
+    # only allow available states to be selected if data is loaded
     if not args:
-        loaded_isos = [x["value"] for x in ISO_OPTIONS]
+        loaded_states = [x["value"] for x in STATE_OPTIONS]
     else:
-        loaded_isos = []
+        loaded_states = []
         for df in args:
-            if "iso" in df.columns:
-                loaded_isos.extend(df.iso.unique())
-        if not loaded_isos:
-            loaded_isos = [x["value"] for x in ISO_OPTIONS]
+            if "state" in df.columns:
+                loaded_states.extend(df.state.unique())
+        if not loaded_states:
+            loaded_states = [x["value"] for x in STATE_OPTIONS]
         else:
-            loaded_isos = list(set(loaded_isos))
+            loaded_states = list(set(loaded_states))
 
-    options = [x for x in ISO_OPTIONS if x["value"] in loaded_isos]
+    options = [x for x in STATE_OPTIONS if x["value"] in loaded_states]
 
-    logger.debug(f"Loaded isos: {options}")
+    logger.debug(f"Loaded states: {options}")
 
     default = [x["value"] for x in options] if options else None
 
-    logger.debug(f"Default ISO options: {default}")
+    logger.debug(f"Default STATE options: {default}")
 
     return html.Div(
         [
-            iso_dropdown(options, default),
+            state_dropdown(options, default),
         ],
     )
 
 
-def iso_dropdown(options: list[str], default: list[str] | None = None) -> html.Div:
-    """ISO dropdown component."""
+def state_dropdown(options: list[str], default: list[str] | None = None) -> html.Div:
+    """STATE dropdown component."""
 
     return html.Div(
         [
-            html.H6("Select ISO(s)"),
+            html.H6("Select State(s)"),
             dcc.Dropdown(
-                id=ids.ISO_DROPDOWN,
+                id=ids.STATE_DROPDOWN,
                 options=options,
                 value=default if default else options[0],
                 multi=True,

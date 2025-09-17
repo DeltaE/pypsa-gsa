@@ -7,7 +7,7 @@ from .utils import (
     DEFAULT_PLOTLY_THEME,
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
-    get_iso_dropdown_options,
+    get_state_dropdown_options,
     get_y_label,
     get_emission_limits,
     DEFAULT_2005_EMISSION_LIMIT,
@@ -30,7 +30,7 @@ def cr_options_block() -> html.Div:
     """Custom Result options block component."""
     return html.Div(
         [
-            cr_iso_dropdown(),
+            cr_state_dropdown(),
             cr_sector_dropdown(),
             cr_result_dropdown(),
             cr_parameter_dropdown(),
@@ -40,15 +40,15 @@ def cr_options_block() -> html.Div:
     )
 
 
-def cr_iso_dropdown() -> html.Div:
-    """Custom Result ISO dropdown component."""
-    isos = get_iso_dropdown_options()
+def cr_state_dropdown() -> html.Div:
+    """Custom Result State dropdown component."""
+    states = get_state_dropdown_options()
     return html.Div(
         [
-            html.H6("Select ISO"),
+            html.H6("Select State"),
             dcc.Dropdown(
-                id=ids.CR_ISO_DROPDOWN,
-                options=isos,
+                id=ids.CR_STATE_DROPDOWN,
+                options=states,
             ),
         ],
     )

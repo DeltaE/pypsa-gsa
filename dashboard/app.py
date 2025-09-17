@@ -12,7 +12,7 @@ from components.data import (
     RAW_GSA,
     RAW_UA,
     RAW_PARAMS,
-    ISO_SHAPE,
+    STATE_SHAPE,
     GSA_PARM_OPTIONS,
     GSA_RESULT_OPTIONS,
     SECTOR_DROPDOWN_OPTIONS_ALL,
@@ -45,7 +45,7 @@ from components.gsa import (
     get_gsa_barchart,
     normalize_mu_star_data,
 )
-from components.shared import iso_options_block, plotting_options_block
+from components.shared import state_options_block, plotting_options_block
 from components.ua import (
     filter_ua_on_result_sector_and_type,
     get_ua_box_whisker,
@@ -143,7 +143,7 @@ app.layout = html.Div(
                                                             "Spatial Options",
                                                             className="card-title",
                                                         ),
-                                                        iso_options_block(
+                                                        state_options_block(
                                                             RAW_GSA, RAW_UA
                                                         ),
                                                     ]
@@ -151,7 +151,7 @@ app.layout = html.Div(
                                             ]
                                         ),
                                     ],
-                                    id=ids.ISO_OPTIONS_BLOCK,
+                                    id=ids.STATE_OPTIONS_BLOCK,
                                     className=OPTIONS_BLOCK_CLASS,
                                 ),
                                 html.Div(
@@ -265,12 +265,12 @@ app.layout = html.Div(
                     ]
                 ),
                 # Store components to share data between callbacks
-                dcc.Store(id=ids.GSA_ISO_DATA),
-                dcc.Store(id=ids.GSA_ISO_NORMED_DATA),
+                dcc.Store(id=ids.GSA_STATE_DATA),
+                dcc.Store(id=ids.GSA_STATE_NORMED_DATA),
                 dcc.Store(id=ids.GSA_HM_DATA),
                 dcc.Store(id=ids.GSA_BAR_DATA),
                 dcc.Store(id=ids.GSA_MAP_DATA),
-                dcc.Store(id=ids.UA_ISO_DATA),
+                dcc.Store(id=ids.UA_STATE_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
                 dcc.Store(id=ids.CR_DATA),
                 dcc.Store(id=ids.INPUTS_DATA),
@@ -347,7 +347,7 @@ def render_tab_content(
                 figure=get_gsa_barchart(gsa_bar_data, color_scale=color),
             )
         elif plotting_type == "map":
-            view = get_gsa_map(gsa_map_data, ISO_SHAPE, color_scale=color)
+            view = get_gsa_map(gsa_map_data, STATE_SHAPE, color_scale=color)
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
@@ -533,7 +533,7 @@ def update_plotting_type_dropdown_options(
 @app.callback(
     [
         Output(ids.PLOTTING_OPTIONS_BLOCK, "style"),
-        Output(ids.ISO_OPTIONS_BLOCK, "style"),
+        Output(ids.STATE_OPTIONS_BLOCK, "style"),
         Output(ids.INPUT_DATA_OPTIONS_BLOCK, "style"),
         Output(ids.GSA_OPTIONS_BLOCK, "style"),
         Output(ids.UA_OPTIONS_BLOCK, "style"),
@@ -551,7 +551,7 @@ def callback_show_hide_option_blocks(
 
     # Start with all hidden
     plotting_style = hidden
-    iso_options = hidden
+    state_options = hidden
     input_data_options = hidden
     gsa_options = hidden
     ua_options = hidden
@@ -560,20 +560,20 @@ def callback_show_hide_option_blocks(
     plotting_style = visible
 
     if active_tab == ids.DATA_TAB:
-        iso_options = visible
+        state_options = visible
         input_data_options = visible
     elif active_tab == ids.SA_TAB:
-        iso_options = visible
+        state_options = visible
         gsa_options = visible
     elif active_tab == ids.UA_TAB:
-        iso_options = visible
+        state_options = visible
         ua_options = visible
     elif active_tab == ids.CR_TAB:
         cr_options = visible
 
     return (
         plotting_style,
-        iso_options,
+        state_options,
         input_data_options,
         gsa_options,
         ua_options,
@@ -620,30 +620,30 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
 @app.callback(
     Output(ids.UA_EMISSIONS, "data"),
     [
-        Input(ids.ISO_DROPDOWN, "value"),
+        Input(ids.STATE_DROPDOWN, "value"),
         Input(ids.UA_EMISSION_TARGET_RB, "value"),
     ],
 )
 def callback_update_ua_emissions(
-    isos: list[str], emission_target: bool
+    states: list[str], emission_target: bool
 ) -> dict[str, dict[str, float]]:
     if emission_target:
-        return {x: EMISSIONS[x] for x in isos}
+        return {x: EMISSIONS[x] for x in states}
     else:
         return {}
 
 
 @app.callback(
     Output(ids.INPUTS_DATA, "data"),
-    Input(ids.ISO_DROPDOWN, "value"),
+    Input(ids.STATE_DROPDOWN, "value"),
 )
-def callback_update_inputs_data(isos: list[str]) -> list[dict[str, Any]]:
-    logger.debug(f"ISO dropdown value: {isos}")
-    if not isos:
-        logger.debug("No ISOs selected from dropdown")
+def callback_update_inputs_data(states: list[str]) -> list[dict[str, Any]]:
+    logger.debug(f"State dropdown value: {states}")
+    if not states:
+        logger.debug("No states selected from dropdown")
         return []
-    isos.append("all")
-    data = RAW_PARAMS[RAW_PARAMS.iso.isin(isos)].to_dict("records")
+    states.append("all")
+    data = RAW_PARAMS[RAW_PARAMS.state.isin(states)].to_dict("records")
     return data
 
 
@@ -725,32 +725,32 @@ def disable_ua_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
 
 
 @app.callback(
-    Output(ids.GSA_ISO_DATA, "data"),
-    Input(ids.ISO_DROPDOWN, "value"),
+    Output(ids.GSA_STATE_DATA, "data"),
+    Input(ids.STATE_DROPDOWN, "value"),
 )
-def callback_filter_gsa_on_iso(isos: list[str]) -> list[dict[str, Any]]:
-    """Update the GSA store data based on the selected ISOs."""
-    logger.debug(f"ISO dropdown value: {isos}")
-    if not isos:
-        logger.debug("No ISOs selected from dropdown")
+def callback_filter_gsa_on_state(states: list[str]) -> list[dict[str, Any]]:
+    """Update the GSA store data based on the selected states."""
+    logger.debug(f"States dropdown value: {states}")
+    if not states:
+        logger.debug("No states selected from dropdown")
         return []
-    data = RAW_GSA[RAW_GSA.iso.isin(isos)].to_dict("records")
+    data = RAW_GSA[RAW_GSA.state.isin(states)].to_dict("records")
     return data
 
 
 @app.callback(
-    Output(ids.GSA_ISO_NORMED_DATA, "data"),
-    Input(ids.GSA_ISO_DATA, "data"),
+    Output(ids.GSA_STATE_NORMED_DATA, "data"),
+    Input(ids.GSA_STATE_DATA, "data"),
 )
 def callback_normalize_mu_star_data(
-    gsa_iso_data: list[dict[str, Any]],
+    gsa_state_data: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Normalize data for the mu/mu_max calculation.
 
     Treat this as a store so that it is not recalculated every time the data is filtered,
     as this is independent of the result selections.
     """
-    df = pd.DataFrame(gsa_iso_data)
+    df = pd.DataFrame(gsa_state_data)
     logger.debug(f"Normalizing GSA data of shape: {df.shape}")
     return normalize_mu_star_data(df).to_dict("records")
 
@@ -758,7 +758,7 @@ def callback_normalize_mu_star_data(
 @app.callback(
     Output(ids.GSA_HM_DATA, "data"),
     [
-        Input(ids.GSA_ISO_DATA, "data"),
+        Input(ids.GSA_STATE_DATA, "data"),
         Input(ids.GSA_PARAM_SELECTION_RB, "value"),
         Input(ids.GSA_PARAM_DROPDOWN, "value"),
         Input(ids.GSA_PARAMS_SLIDER, "value"),
@@ -767,7 +767,7 @@ def callback_normalize_mu_star_data(
     State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
 )
 def callback_filter_gsa_data_for_heatmap(
-    gsa_iso_data: list[dict[str, Any]] | None,
+    gsa_state_data: list[dict[str, Any]] | None,
     param_option: str,
     params_dropdown: str | list[str],
     params_slider: int,
@@ -778,12 +778,12 @@ def callback_filter_gsa_data_for_heatmap(
     if plotting_type == "map":  # map updates some dropdowns
         return dash.no_update
     df = filter_gsa_data(
-        data=gsa_iso_data,
+        data=gsa_state_data,
         param_option=param_option,
         params_dropdown=params_dropdown,
         params_slider=params_slider,
         results=results,
-        keep_iso=False,
+        keep_state=False,
     )
     return df.reset_index().to_dict("records")
 
@@ -791,7 +791,7 @@ def callback_filter_gsa_data_for_heatmap(
 @app.callback(
     Output(ids.GSA_BAR_DATA, "data"),
     [
-        Input(ids.GSA_ISO_NORMED_DATA, "data"),
+        Input(ids.GSA_STATE_NORMED_DATA, "data"),
         Input(ids.GSA_PARAM_SELECTION_RB, "value"),
         Input(ids.GSA_PARAM_DROPDOWN, "value"),
         Input(ids.GSA_PARAMS_SLIDER, "value"),
@@ -800,7 +800,7 @@ def callback_filter_gsa_data_for_heatmap(
     State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
 )
 def callback_filter_gsa_data_for_barchart(
-    gsa_iso_normed_data: list[dict[str, Any]] | None,
+    gsa_state_normed_data: list[dict[str, Any]] | None,
     param_option: str,
     params_dropdown: str | list[str],
     params_slider: int,
@@ -811,12 +811,12 @@ def callback_filter_gsa_data_for_barchart(
     if plotting_type == "map":  # map updates some dropdowns
         return dash.no_update
     df = filter_gsa_data(
-        data=gsa_iso_normed_data,
+        data=gsa_state_normed_data,
         param_option=param_option,
         params_dropdown=params_dropdown,
         params_slider=params_slider,
         results=results,
-        keep_iso=False,
+        keep_state=False,
     )
     return df.reset_index().to_dict("records")
 
@@ -824,20 +824,20 @@ def callback_filter_gsa_data_for_barchart(
 @app.callback(
     Output(ids.GSA_MAP_DATA, "data"),
     [
-        Input(ids.GSA_ISO_DATA, "data"),
+        Input(ids.GSA_STATE_DATA, "data"),
         Input(ids.GSA_PARAMS_SLIDER, "value"),
         Input(ids.GSA_RESULTS_DROPDOWN, "value"),
     ],
 )
 def callback_filter_gsa_data_for_map(
-    gsa_iso_data: list[dict[str, Any]] | None,
+    gsa_state_data: list[dict[str, Any]] | None,
     params_slider: int,
     result: str,  # only one result for map
     nice_names: bool = True,
 ) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
     df = filter_gsa_data_for_map(
-        data=gsa_iso_data,
+        data=gsa_state_data,
         params_slider=params_slider,
         result=result,
     )
@@ -845,7 +845,7 @@ def callback_filter_gsa_data_for_map(
         logger.debug("Using nice names for GSA map")
         nn = {x["value"]: x["label"] for x in GSA_PARM_OPTIONS}
         df = df.replace(nn)
-    return df.reset_index(names="iso").to_dict("records")
+    return df.reset_index(names="state").to_dict("records")
 
 
 #####
@@ -854,22 +854,22 @@ def callback_filter_gsa_data_for_map(
 
 
 @app.callback(
-    Output(ids.UA_ISO_DATA, "data"),
-    Input(ids.ISO_DROPDOWN, "value"),
+    Output(ids.UA_STATE_DATA, "data"),
+    Input(ids.STATE_DROPDOWN, "value"),
 )
-def callback_filter_ua_on_iso(isos: list[str]) -> list[dict[str, Any]]:
-    """Update the UA store data based on the selected ISOs."""
-    logger.debug(f"ISO dropdown value: {isos}")
-    if not isos:
-        logger.debug("No ISOs selected from dropdown")
+def callback_filter_ua_on_state(states: list[str]) -> list[dict[str, Any]]:
+    """Update the UA store data based on the selected States."""
+    logger.debug(f"State dropdown value: {states}")
+    if not states:
+        logger.debug("No States selected from dropdown")
         return []
-    return RAW_UA[RAW_UA.iso.isin(isos)].to_dict("records")
+    return RAW_UA[RAW_UA.state.isin(states)].to_dict("records")
 
 
 @app.callback(
     Output(ids.UA_RUN_DATA, "data"),
     [
-        Input(ids.UA_ISO_DATA, "data"),
+        Input(ids.UA_STATE_DATA, "data"),
         Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
         Input(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
         Input(ids.UA_INTERVAL_SLIDER, "value"),
@@ -1171,11 +1171,11 @@ def callback_update_ua_results_sector_dropdown_options(
 
 @app.callback(
     Output(ids.CR_PARAMETER_DROPDOWN, "disabled"),
-    Input(ids.CR_ISO_DROPDOWN, "value"),
+    Input(ids.CR_STATE_DROPDOWN, "value"),
 )
-def callback_enable_cr_parameter_dropdown(iso_value: str) -> bool:
-    """Enable CR parameter dropdown only when ISO dropdown has a value."""
-    return not bool(iso_value)
+def callback_enable_cr_parameter_dropdown(state_value: str) -> bool:
+    """Enable CR parameter dropdown only when state dropdown has a value."""
+    return not bool(state_value)
 
 
 @app.callback(
@@ -1256,31 +1256,31 @@ def callback_update_cr_result_dropdown_options(
 
 @app.callback(
     Output(ids.CR_PARAMETER_DROPDOWN, "options"),
-    Input(ids.CR_ISO_DROPDOWN, "value"),
+    Input(ids.CR_STATE_DROPDOWN, "value"),
 )
-def callback_update_cr_parameter_dropdown_options(iso: str) -> list[dict[str, str]]:
-    """Update CR parameter dropdown options based on ISO."""
-    if not iso:
+def callback_update_cr_parameter_dropdown_options(state: str) -> list[dict[str, str]]:
+    """Update CR parameter dropdown options based on state."""
+    if not state:
         return {}
-    logger.info(f"CR data: ISO: {iso}")
-    return CR_PARAM_OPTIONS[iso]
+    logger.info(f"CR data: state: {state}")
+    return CR_PARAM_OPTIONS[state]
 
 
 @app.callback(
     Output(ids.CR_DATA, "data"),
     [
-        Input(ids.CR_ISO_DROPDOWN, "value"),
+        Input(ids.CR_STATE_DROPDOWN, "value"),
         Input(ids.CR_PARAMETER_DROPDOWN, "value"),
         Input(ids.CR_RESULT_DROPDOWN, "value"),
         Input(ids.CR_INTERVAL_SLIDER, "value"),
     ],
 )
 def callback_update_cr_data(
-    iso: str, parameter: str, results: list[str], interval: list[int]
+    state: str, parameter: str, results: list[str], interval: list[int]
 ) -> list[dict[str, Any]]:
-    """Update CR parameter dropdown value based on ISO."""
-    if not iso:
-        logger.debug("ISO not provided")
+    """Update CR parameter dropdown value based on state."""
+    if not state:
+        logger.debug("State not provided")
         return {}
     if not results:
         logger.debug("Results not provided")
@@ -1289,15 +1289,15 @@ def callback_update_cr_data(
         logger.debug("Parameter not provided")
         return {}
 
-    df = CR_DATA[iso]
+    df = CR_DATA[state]
     cols = []
     if parameter not in df.columns:
-        logger.error(f"Parameter {parameter} not in CR data for {iso}")
+        logger.error(f"Parameter {parameter} not in CR data for {state}")
         return {}
     cols.append(parameter)
     for result in results:
         if result not in df.columns:
-            logger.error(f"Result {result} not in CR data for {iso}")
+            logger.error(f"Result {result} not in CR data for {state}")
         else:
             cols.append(result)
 
@@ -1310,15 +1310,15 @@ def callback_update_cr_data(
 @app.callback(
     Output(ids.CR_EMISSIONS, "data"),
     [
-        Input(ids.CR_ISO_DROPDOWN, "value"),
+        Input(ids.CR_STATE_DROPDOWN, "value"),
         Input(ids.CR_EMISSION_TARGET_RB, "value"),
     ],
 )
 def callback_update_cr_emissions(
-    iso: str | None = None, emission_target: bool = True
+    state: str | None = None, emission_target: bool = True
 ) -> dict[str, dict[str, float]]:
-    if emission_target and iso:
-        return {iso: EMISSIONS[iso]}
+    if emission_target and state:
+        return {state: EMISSIONS[state]}
     else:
         return {}
 

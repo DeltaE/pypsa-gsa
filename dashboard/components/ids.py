@@ -12,7 +12,7 @@ UA_TAB = "ua-tab"
 CR_TAB = "cr-tab"
 
 # dropdowns
-ISO_DROPDOWN = "iso-dropdown"
+STATE_DROPDOWN = "state-dropdown"
 GSA_PARAM_DROPDOWN = "gsa-param-dropdown"
 GSA_RESULTS_DROPDOWN = "gsa-results-dropdown"
 UA_PARAM_DROPDOWN = "ua-param-dropdown"
@@ -20,7 +20,7 @@ UA_RESULTS_DROPDOWN = "ua-results-dropdown"
 UA_RESULTS_TYPE_DROPDOWN = "ua-results-type-dropdown"
 UA_RESULTS_SECTOR_DROPDOWN = "ua-results-sector-dropdown"
 CR_SECTOR_DROPDOWN = "cr-sector-dropdown"
-CR_ISO_DROPDOWN = "cr-iso-dropdown"
+CR_STATE_DROPDOWN = "cr-state-dropdown"
 CR_PARAMETER_DROPDOWN = "cr-parameter-dropdown"
 CR_RESULT_DROPDOWN = "cr-result-dropdown"
 CR_RESULT_TYPE_DROPDOWN = "cr-result-type-dropdown"
@@ -52,7 +52,7 @@ UA_INTERVAL_SLIDER = "ua-interval-slider"
 
 # collapsable blocks
 PLOTTING_OPTIONS_BLOCK = "plotting-options-block"
-ISO_OPTIONS_BLOCK = "iso-options-block"
+STATE_OPTIONS_BLOCK = "state-options-block"
 GSA_OPTIONS_BLOCK = "gsa-options-block"
 GSA_PARAMS_RESULTS_COLLAPSE = "gsa-params-results-collapse"
 GSA_PARAMS_SLIDER_COLLAPSE = "gsa-range-slider-collapse"
@@ -61,14 +61,14 @@ INPUT_DATA_OPTIONS_BLOCK = "input-data-options-block"
 CR_OPTIONS_BLOCK = "cr-options-block"
 
 # gsa stores
-GSA_ISO_DATA = "gsa-iso-data"  # other stores use this
-GSA_ISO_NORMED_DATA = "gsa-iso-normed-data"
+GSA_STATE_DATA = "gsa-state-data"  # other stores use this
+GSA_STATE_NORMED_DATA = "gsa-state-normed-data"
 GSA_HM_DATA = "gsa-hm-data"
 GSA_BAR_DATA = "gsa-bar-data"
 GSA_MAP_DATA = "gsa-map-data"
 GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
 
-UA_ISO_DATA = "ua-iso-data"  # filtered by ISO
+UA_STATE_DATA = "ua-state-data"  # filtered by STATE
 UA_RUN_DATA = "ua-run-data"  # filtered by result
 
 CR_DATA = "cr-data"  # dict of dfs

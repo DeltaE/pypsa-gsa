@@ -140,7 +140,7 @@ def _filter_ua_on_result_sector(
 
     sector_mapper = get_ua_param_sector_mapper(metadata)
 
-    results = ["run", "iso"]
+    results = ["run", "state"]
     for result in sector_mapper:
         if result["label"] == sector:
             results.append(result["value"])
@@ -154,6 +154,10 @@ def _filter_ua_on_result_type(
     df: pd.DataFrame, result_type: str, metadata: dict
 ) -> pd.DataFrame:
     """Filter UA data on result type."""
+
+    if df.empty:
+        logger.debug("No UA data found")
+        return df
 
     result_mapper = get_ua_param_result_mapper(metadata)
 

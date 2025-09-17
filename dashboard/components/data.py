@@ -6,14 +6,14 @@ import pandas as pd
 import geopandas as gpd
 
 from .utils import (
-    get_cr_data_by_iso,
+    get_cr_data_by_state,
     get_emissions,
     get_metadata,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
     get_ua_results_dropdown_options,
     get_cr_params_dropdown_options,
-    ISOS,
+    STATES,
 )
 
 root = Path(__file__).parent.parent
@@ -28,17 +28,20 @@ RAW_PARAMS["nice_name"] = RAW_PARAMS.name.map(
     lambda x: param_nice_names[x] if x in param_nice_names else x
 )
 
-ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
+# ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
+STATE_SHAPE = gpd.read_file("data/locked/states.geojson")
 
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(METADATA)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(METADATA, list(RAW_GSA))
 
-# UA_PARAM_OPTIONS = get_ua_params_dropdown_options(METADATA) # need iso
+# UA_PARAM_OPTIONS = get_ua_params_dropdown_options(METADATA) # need state
 UA_RESULT_OPTIONS = get_ua_results_dropdown_options(METADATA)
 
-CR_PARAM_OPTIONS = {iso: get_cr_params_dropdown_options(root, iso) for iso in ISOS}
+CR_PARAM_OPTIONS = {
+    state: get_cr_params_dropdown_options(root, state) for state in STATES
+}
 
-CR_DATA = {iso: get_cr_data_by_iso(root, iso) for iso in ISOS}
+CR_DATA = {state: get_cr_data_by_state(root, state) for state in STATES}
 
 SECTOR_DROPDOWN_OPTIONS = sorted(
     [{"label": y, "value": x} for x, y in METADATA["nice_names"]["sector"].items()],
