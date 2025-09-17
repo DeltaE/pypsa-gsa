@@ -45,7 +45,7 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "ces": "Constraints",
     "elec_trade": "Constraints",
     "landuse": "Constraints",
-    "rec": "Renewable Energy Certificate",
+    "rec": "Marginal Cost",
     "imports_co2": "Import Emissions",
     "e_nom": "Natural Gas",  # only one e_nom
 }
