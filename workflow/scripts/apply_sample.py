@@ -146,6 +146,7 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
     n_cars.extend(
         [
             "portfolio",
+            "heat_portfolio",
             "leakage_upstream",
             "leakage_downstream",
             "elec_trade",

@@ -1155,6 +1155,48 @@ def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
             )
 
 
+def add_fossil_generation_constraint(n, sample: float):
+    """Adds a constraint to the minimum heat generation from fossil fuels per year in industry.
+
+    Since the industrial sector is still under development, we add a constraint to the
+    minimum generation from fossil fuels per year to prevent overinvestment in heat pumps.
+
+    This only applies to the heating load.
+
+    Default values taken from:
+    https://www.eia.gov/energyexplained/use-of-energy/industry.php
+    """
+
+    min_generation = sample  # per_unit
+
+    states = [x for x in n.buses.reeds_state.unique() if x]
+    for state in states:
+        buses_in_state = [
+            f"{x} ind-heat" for x in n.buses[n.buses.reeds_state == state].index
+        ]
+
+        heat_loads = n.loads[
+            (n.loads.carrier == "ind-heat") & (n.loads.bus.isin(buses_in_state))
+        ]
+
+        heat_demand = n.loads_t["p_set"][heat_loads.index].sum().sum().round(1)
+        rhs = heat_demand * min_generation
+
+        fossil_links = n.links[
+            (n.links.carrier.str.startswith("ind"))
+            & ~(n.links.carrier.str.contains("heat-pump"))
+            & (n.links.bus1.str.contains("heat"))
+            & (n.links.bus1.isin(buses_in_state))
+        ].index
+
+        # no time varying efficiency for these fossil links
+        fossil_efficiency = n.links.loc[fossil_links].efficiency
+
+        lhs = n.model["Link-p"].loc[:, fossil_links].mul(fossil_efficiency).sum()
+
+        n.model.add_constraints(lhs >= rhs, name=f"{state}_ind_fossil_generation")
+
+
 def extra_functionality(n, sns):
     """
     Collects supplementary constraints which will be passed to `pypsa.optimization.optimize`
@@ -1192,6 +1234,8 @@ def extra_functionality(n, sns):
         add_elec_trade_constraints(n, opts["elec_trade"]["flows"])
     if "lolp" in opts:
         add_lolp_constraint(n, opts["lolp"]["relax"])
+    if "ind_heat_ff_production" in opts:
+        add_fossil_generation_constraint(n, opts["ind_heat_ff_production"]["sample"])
 
 
 ###
@@ -1339,7 +1383,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso/gsa/modelruns/0/n.nc"
+        in_network = "results/caiso/gsa/modelruns/583/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
@@ -1356,7 +1400,7 @@ if __name__ == "__main__":
         tct_f = "results/caiso/constraints/tct.csv"
         ev_policy_f = "results/caiso/constraints/ev_policy.csv"
         import_export_flows_f = "results/caiso/constraints/import_export_flows.csv"
-        constraints_meta = "results/caiso/gsa/modelruns/0/constraints.csv"
+        constraints_meta = "results/caiso/gsa/modelruns/583/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -1424,7 +1468,7 @@ if __name__ == "__main__":
         # else:
         #     extra_fn["ng_trade"]["min_import"] = 0.99
         #     extra_fn["ng_trade"]["max_import"] = 1.01
-        extra_fn["ng_trade"]["min_import"] = 0
+        extra_fn["ng_trade"]["min_import"] = round(value * 0.50, 5)
         extra_fn["ng_trade"]["max_import"] = value
     elif len(imports) > 1:
         raise ValueError("Too many samples for ng_gas_import")
@@ -1444,7 +1488,7 @@ if __name__ == "__main__":
         # else:
         #     extra_fn["ng_trade"]["min_export"] = 0.99
         #     extra_fn["ng_trade"]["max_export"] = 1.01
-        extra_fn["ng_trade"]["min_export"] = 0
+        extra_fn["ng_trade"]["min_export"] = round(value * 0.50, 5)
         extra_fn["ng_trade"]["max_export"] = value
     elif len(exports) > 1:
         raise ValueError("Too many samples for ng_gas_export")
@@ -1560,10 +1604,25 @@ if __name__ == "__main__":
     extra_fn["hp_cooling"] = True
 
     ###
+    # Industrial Heat Fossil Fuel Production Constraint
+    ###
+    extra_fn["ind_heat_ff_production"] = {}
+    extra_fn["ind_heat_ff_production"]["sample"] = constraints[
+        constraints.attribute == "ind_heat_ff_production"
+    ].round(5)
+
+    if len(extra_fn["ind_heat_ff_production"]["sample"]) == 1:
+        extra_fn["ind_heat_ff_production"]["sample"] = extra_fn[
+            "ind_heat_ff_production"
+        ]["sample"].value.values[0]
+    elif len(extra_fn["ind_heat_ff_production"]["sample"]) > 1:
+        raise ValueError("Too many samples for ind_heat_ff_production")
+
+    ###
     # Loss of Load Probability Constraint
     ###
     extra_fn["lolp"] = {}
-    extra_fn["lolp"]["enable"] = True
+    extra_fn["lolp"]["enable"] = False
     extra_fn["lolp"]["relax"] = 1.0
 
     # due to how the RPS REC system is set up, there can be edge cases where
