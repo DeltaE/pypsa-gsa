@@ -73,6 +73,7 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "elec_trade",  # constraint
         "efficiency2",  # not a default in pypsa
         "rec",
+        "ind_heat_ff_production",  # constraint
     ],
     "generators": [
         "tct",
