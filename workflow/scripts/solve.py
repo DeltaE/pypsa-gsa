@@ -182,6 +182,8 @@ def no_economic_retirement_constraint(n):
     links = n.links[
         (n.links.index.str.endswith(" existing")) & (n.links.carrier.isin(pwr_cars))
     ]
+    if links.empty:
+        return n
     n.links.loc[links.index, "p_nom_extendable"] = False
     n.links.loc[links.index, "capital_cost"] = (
         0  # not actually needed, just for sanity :)
@@ -1275,17 +1277,20 @@ def prepare_network(
 
 def _clip_p_max(n: pypsa.Network, value: Optional[float] = None) -> None:
     if not value:
-        value = 1.0e-2
+        value = 1.0e-3
 
-    n.generators_t.p_max_pu = n.generators_t.p_max_pu.where(
-        n.generators_t.p_max_pu > value, other=0.0
-    )
-    n.generators_t.p_min_pu = n.generators_t.p_min_pu.where(
-        n.generators_t.p_min_pu > value, other=0.0
-    )
-    n.storage_units_t.inflow = n.storage_units_t.inflow.where(
-        n.storage_units_t.inflow > value, other=0.0
-    )
+    df = n.generators_t.p_max_pu
+    n.generators_t.p_max_pu = df.where(df > value, other=0.0)
+    df = n.generators_t.p_min_pu
+    n.generators_t.p_min_pu = df.where(df > value, other=0.0)
+
+    df = n.links_t.p_max_pu
+    n.links_t.p_max_pu = df.where(df > value, other=0.0)
+    df = n.links_t.p_min_pu
+    n.links_t.p_min_pu = df.where(df > value, other=0.0)
+
+    df = n.storage_units_t.inflow
+    n.storage_units_t.inflow = df.where(df > value, other=0.0)
 
 
 def _apply_noisy_costs(n: pypsa.Network) -> None:
