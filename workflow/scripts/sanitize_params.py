@@ -18,6 +18,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 ###
+# Offwind floating check
+###
+
+
+def remove_offwind_floating(params: pd.DataFrame) -> pd.DataFrame:
+    """Remove offwind floating if not present in network."""
+    df = params.copy()
+    return df[df.carrier != "offwind_floating"]
+
+
+def offwind_floating_in_network(n: pypsa.Network) -> bool:
+    """Check if offwind floating is in network."""
+    return "offwind_floating" in n.carriers.index
+
+
+###
 # Sanitize names
 ###
 
@@ -546,12 +562,15 @@ if __name__ == "__main__":
     if "snakemake" in globals():
         in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
+        network = snakemake.input.network
         configure_logging(snakemake)
     else:
-        in_params = "results/caiso/generated/config/parameters.csv"
-        out_params = "results/caiso/gsa/parameters.csv"
+        in_params = "results/testing/generated/config/parameters.csv"
+        out_params = "results/testing/gsa/parameters.csv"
+        network = "results/testing/base.nc"
 
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
+    n = pypsa.Network(network)
 
     # top level sanitize
     df = sanitize_component_name(df)
@@ -568,6 +587,10 @@ if __name__ == "__main__":
     df = correct_tonnes_units(df)
     df = correct_water_heater_units(df)
     df = correct_vmt_units(df)
+
+    # networks are not garunted to have offwind floating. Remove if not present.
+    if not offwind_floating_in_network(n):
+        df = remove_offwind_floating(df)
 
     # validation of data
     # note, does not check carrier

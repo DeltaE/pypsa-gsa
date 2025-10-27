@@ -165,6 +165,9 @@ def is_valid_carrier(n: pypsa.Network, params: pd.DataFrame) -> bool:
             cars = [cars]
         for car in cars:
             if car not in n_cars:
+                # skip if it is a aggregation constraint (i.e. portfolio)
+                if any(car in n_cars for car in cars):
+                    continue
                 errors.append(car)
 
     if errors:
@@ -950,23 +953,25 @@ if __name__ == "__main__":
         ces_f = snakemake.input.ces_f
         ev_policy_f = snakemake.input.ev_policy_f
         elec_trade_f = snakemake.input.elec_trade_f
+        testing = snakemake.params.testing
         configure_logging(snakemake)
     else:
-        param_file = "results/ct/gsa/parameters.csv"
-        sample_file = "results/ct/gsa/sample.csv"
+        param_file = "results/testing/gsa/parameters.csv"
+        sample_file = "results/testing/gsa/sample.csv"
         set_values_file = ""
-        base_network_file = "results/ct/base.nc"
-        root_dir = Path("results/ct/gsa/modelruns/")
+        base_network_file = "results/testing/base.nc"
+        root_dir = Path("results/testing/gsa/modelruns/")
         meta_yaml = False
         meta_csv = True
-        scaled_sample_file = "results/ct/gsa/scaled_sample.csv"
-        pop_f = "results/ct/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/ct/constraints/ng_domestic.csv"
-        ng_international_f = "results/ct/constraints/ng_international.csv"
-        rps_f = "results/ct/constraints/rps.csv"
-        ces_f = "results/ct/constraints/ces.csv"
-        ev_policy_f = "results/ct/constraints/ev_policy.csv"
-        elec_trade_f = "results/ct/constraints/import_export_flows.csv"
+        scaled_sample_file = "results/testing/gsa/scaled_sample.csv"
+        pop_f = "results/testing/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/testing/constraints/ng_domestic.csv"
+        ng_international_f = "results/testing/constraints/ng_international.csv"
+        rps_f = "results/testing/constraints/rps.csv"
+        ces_f = "results/testing/constraints/ces.csv"
+        ev_policy_f = "results/testing/constraints/ev_policy.csv"
+        elec_trade_f = "results/testing/constraints/import_export_flows.csv"
+        testing = True
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
@@ -1003,7 +1008,7 @@ if __name__ == "__main__":
         "elec_trade": pd.read_csv(elec_trade_f),
     }
 
-    if snakemake.params.testing:
+    if testing:
         runs = range(1)
         root_dir = Path(root_dir, "testing")
     else:

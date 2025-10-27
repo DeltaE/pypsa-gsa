@@ -111,7 +111,8 @@ def get_input_parameters_file(wildards):
 rule sanitize_parameters:
     message: "Sanitizing parameters"
     input:
-        parameters=get_input_parameters_file
+        parameters=get_input_parameters_file,
+        network = "results/{scenario}/base.nc"
     output:
         parameters="results/{scenario}/gsa/parameters.csv"
     log: 
