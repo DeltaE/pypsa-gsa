@@ -9,7 +9,8 @@ def get_solver_options(wildards) -> dict[str,str|float]:
 rule solve_network:
     message: "Solving network"
     wildcard_constraints:
-        mode="gsa|ua"
+        mode="gsa|ua",
+        run=r"\d+"
     params:
         solver = config["solver"]["name"],
         solver_opts = get_solver_options,
@@ -39,5 +40,41 @@ rule solve_network:
         solver = "logs/solve/{scenario}_{mode}_{run}_solver.log",
     group:
         "solve_{scenario}_{mode}_{run}"
+    script:
+        "../scripts/solve.py"
+
+rule test_solve_network:
+    message: "Solving network"
+    wildcard_constraints:
+        mode="gsa"
+    params:
+        solver = config["solver"]["name"],
+        solver_opts = get_solver_options,
+        solving_opts = config["solving"]["options"],
+        model_opts = config["model_options"],
+    input:
+        network = "results/{scenario}/{mode}/modelruns/testing/0/n.nc",
+        constraints = "results/{scenario}/{mode}/modelruns/testing/0/constraints.csv",
+        pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
+        ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
+        ng_international_f = "results/{scenario}/constraints/ng_international.csv",
+        rps_f = "results/{scenario}/constraints/rps.csv",
+        ces_f = "results/{scenario}/constraints/ces.csv",
+        tct_f = "results/{scenario}/constraints/tct.csv",
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        import_export_flows_f = "results/{scenario}/constraints/import_export_flows.csv",
+    output:
+        network = temp("results/{scenario}/{mode}/modelruns/testing/0/network.nc") if not config['metadata']['networks'] else "results/{scenario}/{mode}/modelruns/testing/0/network.nc",
+    threads: 12
+    resources:
+        mem_mb=2000,
+        runtime=2
+    benchmark:
+        "benchmarks/solve/{scenario}_{mode}_testing.txt"
+    log: 
+        python = "logs/solve/{scenario}_{mode}_testing_python.log",
+        solver = "logs/solve/{scenario}_{mode}_testing_solver.log",
+    group:
+        "solve_{scenario}_{mode}_testing"
     script:
         "../scripts/solve.py"

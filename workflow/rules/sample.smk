@@ -59,6 +59,7 @@ rule apply_gsa_sample_to_network:
         root_dir = "results/{scenario}/{mode}/modelruns/",
         meta_yaml = config["metadata"]["yaml"],
         meta_csv = config["metadata"]["csv"],
+        testing = False,
     input: 
         parameters = "results/{scenario}/{mode}/parameters.csv",
         set_values_file = get_static_values,
@@ -95,6 +96,7 @@ rule apply_ua_sample_to_network:
         root_dir = "results/{scenario}/{mode}/modelruns/",
         meta_yaml = config["metadata"]["yaml"],
         meta_csv = config["metadata"]["csv"],
+        testing = False,
     input: 
         parameters = "results/{scenario}/{mode}/parameters.csv",
         set_values_file = get_static_values,
@@ -118,6 +120,43 @@ rule apply_ua_sample_to_network:
         "benchmarks/apply_sample/{scenario}_{mode}.txt"
     group:
         "create_and_apply_sample"
+    log: 
+        "logs/apply_sample/{scenario}_{mode}.log"
+    script:
+        "../scripts/apply_sample.py"
+
+rule test_apply_gsa_sample_to_network:
+    message: "Applying test sample"
+    wildcard_constraints:
+        mode="gsa"
+    params:
+        root_dir = "results/{scenario}/{mode}/modelruns/",
+        meta_yaml = config["metadata"]["yaml"],
+        meta_csv = config["metadata"]["csv"],
+        testing = True
+    input: 
+        parameters = "results/{scenario}/{mode}/parameters.csv",
+        set_values_file = get_static_values,
+        sample_file = "results/{scenario}/{mode}/sample.csv",
+        network = "results/{scenario}/base.nc",
+        pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
+        ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
+        ng_international_f = "results/{scenario}/constraints/ng_international.csv",
+        rps_f = "results/{scenario}/constraints/rps.csv",
+        ces_f = "results/{scenario}/constraints/ces.csv",
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
+    output:
+        n = "results/{scenario}/{mode}/modelruns/testing/0/n.nc",
+        scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
+        meta_constriant = "results/{scenario}/{mode}/modelruns/testing/0/constraints.csv",
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
+        runtime=1
+    benchmark:
+        "benchmarks/apply_sample/{scenario}_{mode}.txt"
+    group:
+        "{scenario}_{mode}_testing"
     log: 
         "logs/apply_sample/{scenario}_{mode}.log"
     script:

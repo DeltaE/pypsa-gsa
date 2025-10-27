@@ -8,7 +8,7 @@ configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate, test_gsa, test_ua
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate
 
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
@@ -150,13 +150,9 @@ rule ua:
 # Testing solve resources on hpc
 ###
 
-rule test_gsa:
+rule test_solve:
     input:
-        expand("results/{scenario}/gsa/modelruns/0/network.nc", scenario=SCENARIO)
-
-rule test_ua:
-    input:
-        expand("results/{scenario}/ua/modelruns/0/network.nc", scenario=SCENARIO)
+        expand("results/{scenario}/gsa/modelruns/testing/0/network.nc", scenario=SCENARIO)
 
 ### 
 # Cleaning rules

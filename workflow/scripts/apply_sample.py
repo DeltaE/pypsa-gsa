@@ -1003,9 +1003,14 @@ if __name__ == "__main__":
         "elec_trade": pd.read_csv(elec_trade_f),
     }
 
-    # MUST BE 'sample' and NOT 'sample_data' as set_values is added to the 'sample_data'
+    if snakemake.params.testing:
+        runs = range(1)
+        root_dir = Path(root_dir, "testing")
+    else:
+        # MUST BE 'sample' and NOT 'sample_data' as set_values is added to the 'sample_data'
+        runs = range(len(sample))
 
-    for run in range(len(sample)):
+    for run in runs:
         n = base_n.copy()
 
         scaled, meta, meta_constraints = apply_sample(
