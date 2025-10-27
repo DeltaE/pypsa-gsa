@@ -508,11 +508,15 @@ def _get_rps_value(n: pypsa.Network, rps: pd.DataFrame) -> float:
     """Gets mean RPS requirement in MWh. Used only for SEE sample extraction."""
 
     if rps.empty:
-        return
+        return 0
 
     demand = []
 
     portfolio_standards = concat_rps_standards(n, rps)
+
+    # state does not have any RPS commitments
+    if portfolio_standards.empty:
+        return 0
 
     # Iterate through constraints
     for _, constraint_row in portfolio_standards.iterrows():

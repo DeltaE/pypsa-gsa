@@ -865,8 +865,10 @@ def add_lolp_constraint(n, relax: float = 1.0):
 
     for generator in generators.index:
         bus = n.generators.at[generator, "bus"]
-        loads_at_bus = loads[loads.country == bus].index
+        loads_at_bus = loads[loads.bus.str.startswith(bus)].index
         load = n.loads_t["p_set"].loc[:, loads_at_bus].sum().sum()
+
+        load *= 1.20  # approximate correction for EV load
 
         # LLOP of 0.1 day per year = 0.000274
         # https://en.wikipedia.org/wiki/Loss_of_load
@@ -1285,7 +1287,7 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/ct/gsa/modelruns/0/n.nc"
+        in_network = "results/testing/gsa/modelruns/testing/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
@@ -1294,15 +1296,15 @@ if __name__ == "__main__":
         }
         solving_log = ""
         out_network = ""
-        pop_f = "results/ct/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/ct/constraints/ng_domestic.csv"
-        ng_international_f = "results/ct/constraints/ng_international.csv"
-        rps_f = "results/ct/constraints/rps.csv"
-        ces_f = "results/ct/constraints/ces.csv"
-        tct_f = "results/ct/constraints/tct.csv"
-        ev_policy_f = "results/ct/constraints/ev_policy.csv"
-        import_export_flows_f = "results/ct/constraints/import_export_flows.csv"
-        constraints_meta = "results/ct/gsa/modelruns/0/constraints.csv"
+        pop_f = "results/testing/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/testing/constraints/ng_domestic.csv"
+        ng_international_f = "results/testing/constraints/ng_international.csv"
+        rps_f = "results/testing/constraints/rps.csv"
+        ces_f = "results/testing/constraints/ces.csv"
+        tct_f = "results/testing/constraints/tct.csv"
+        ev_policy_f = "results/testing/constraints/ev_policy.csv"
+        import_export_flows_f = "results/testing/constraints/import_export_flows.csv"
+        constraints_meta = "results/testing/gsa/modelruns/testing/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)

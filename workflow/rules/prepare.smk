@@ -112,7 +112,9 @@ rule sanitize_parameters:
     message: "Sanitizing parameters"
     input:
         parameters=get_input_parameters_file,
-        network = "results/{scenario}/base.nc"
+        network = "results/{scenario}/base.nc",
+        rps = "results/{scenario}/constraints/rps.csv",
+        ces = "results/{scenario}/constraints/ces.csv",
     output:
         parameters="results/{scenario}/gsa/parameters.csv"
     log: 

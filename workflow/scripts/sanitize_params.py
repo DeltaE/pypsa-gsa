@@ -18,19 +18,37 @@ import logging
 logger = logging.getLogger(__name__)
 
 ###
-# Offwind floating check
+# Network edge cases
 ###
 
 
 def remove_offwind_floating(params: pd.DataFrame) -> pd.DataFrame:
     """Remove offwind floating if not present in network."""
     df = params.copy()
-    return df[df.carrier != "offwind_floating"]
+    return df[df.carrier != "offwind_floating"].copy()
 
 
 def offwind_floating_in_network(n: pypsa.Network) -> bool:
     """Check if offwind floating is in network."""
     return "offwind_floating" in n.carriers.index
+
+
+def remove_rps_constraints(params: pd.DataFrame) -> pd.DataFrame:
+    """Remove RPS constraints if state has no commitments."""
+    df = params.copy()
+    return df[~df.carrier.isin(["rps", "rec"])].copy()
+
+
+def rps_in_network(n: pypsa.Network, *args: pd.DataFrame) -> bool:
+    """Check if state has any RPS commitments."""
+    states_in_network = n.buses.reeds_state.unique()
+    apply_rps = False
+    for policy in args:
+        df = policy[policy.region.isin(states_in_network)]
+        if not df.empty:
+            apply_rps = True
+            break
+    return apply_rps
 
 
 ###
@@ -563,14 +581,21 @@ if __name__ == "__main__":
         in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
         network = snakemake.input.network
+        rps = snakemake.input.rps
+        ces = snakemake.input.ces
         configure_logging(snakemake)
     else:
         in_params = "results/testing/generated/config/parameters.csv"
         out_params = "results/testing/gsa/parameters.csv"
         network = "results/testing/base.nc"
+        rps = "results/testing/constraints/rps.csv"
+        ces = "results/testing/constraints/ces.csv"
 
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
     n = pypsa.Network(network)
+
+    rps_df = pd.read_csv(rps)
+    ces_df = pd.read_csv(ces)
 
     # top level sanitize
     df = sanitize_component_name(df)
@@ -588,9 +613,13 @@ if __name__ == "__main__":
     df = correct_water_heater_units(df)
     df = correct_vmt_units(df)
 
-    # networks are not garunted to have offwind floating. Remove if not present.
+    # networks are not guaranteed to have offwind floating. Remove if not present.
     if not offwind_floating_in_network(n):
         df = remove_offwind_floating(df)
+
+    # states do not have any RPS commitments. Remove RPS constraints.
+    if not rps_in_network(n, rps_df, ces_df):
+        df = remove_rps_constraints(df)
 
     # validation of data
     # note, does not check carrier
