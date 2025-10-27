@@ -281,10 +281,10 @@ You should see many hundreds or thouands of steps be prompted. If everything loo
 snakemake gsa
 ```
 
-If you are running on an HPC and want to test the resources required for each solve, you can run the workflow through to one solve with the following command, then check the resouces required with the `seff` command and the job number.  
+If you are running on an HPC and want to test the resources required for each solve, you can run the workflow through to **one** solve with the following command, then check the resouces required with the `seff` command and the job number.  
 
 ```bash 
-snakemake test_gsa
+snakemake test_solve
 ```
 
 ```bash
@@ -317,12 +317,6 @@ You should see many hundreds or thouands of steps be prompted. If everything loo
 
 ```bash
 snakemake up
-```
-
-If you are running on an HPC and want to test the resources required for each solve, you can run the workflow through to one solve with the following command, then check the resouces required with the `seff` command and the job number.  
-
-```bash 
-snakemake test_up
 ```
 
 All results will be available in the `results/{scenario}/up/` directory.
