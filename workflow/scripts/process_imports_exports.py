@@ -20,16 +20,17 @@ def load_pudl_interchange_data(pudl_path: str, year: int) -> pd.DataFrame:
 def load_eia_interchange_data(
     csv_path: str, state_2_code: dict[str, str], loss_factor: float = 1.1
 ) -> pd.DataFrame:
-    """Loads yearly data from EIA."""
+    """Loads yearly data from EIA.
+    
+    https://www.eia.gov/electricity/state/
+    """
     df = pd.read_csv(csv_path)
     df["state"] = df.Name.map(state_2_code)
-    df["interchange_reported_mwh"] = (
-        df["Net generation (MWh)"] - df["Total retail sales (MWh)"] * loss_factor
-    )
-    df["percentage_of_total_generation"] = df["Net generation (MWh)"] / (
-        df["Total retail sales (MWh)"] * loss_factor
-    )
-    return df[["state", "interchange_reported_mwh", "percentage_of_total_generation"]]
+    df["sales"] = df["Total retail sales (MWh)"] * loss_factor
+    df["generation"] = df["Net generation (MWh)"]
+    df["net_imports"] = df["sales"] - df["generation"]
+    df["trade_factor"] = df["net_imports"] / df["sales"]
+    return df[["state", "sales", "generation", "net_imports", "trade_factor"]]
 
 
 def format_pudl_interchange_data(
@@ -225,8 +226,10 @@ def _expand_eia_interchange_data(
         return pd.DataFrame(
             {
                 "state": row["state"],
-                "interchange_reported_mwh": row["interchange_reported_mwh"] / 12,
-                "percentage_of_total_generation": row["percentage_of_total_generation"],
+                "sales" : row["sales"] / 12,
+                "generation" : row["generation"] / 12,
+                "net_imports" : row["net_imports"] / 12,
+                "trade_factor" : row["trade_factor"],
             },
             index=months,
         )
@@ -286,7 +289,7 @@ if __name__ == "__main__":
         by_iso = snakemake.params.by_iso
     else:
         api = ""
-        network = Path("results", "caiso", "base.nc")
+        network = Path("results", "ct", "base.nc")
         year = 2019
         balancing_period = "year"
         pudl_path = "s3://pudl.catalyst.coop/v2025.2.0"

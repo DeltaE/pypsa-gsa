@@ -53,7 +53,7 @@ def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> flo
             e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
     else:
         e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
-    if e_nom_opt == np.inf:
+    if e_nom_opt == 1e9:
         assert component == "stores"
         stores = df[df.carrier.isin(carriers)].index
         df = getattr(n, "stores_t")["e"][stores]
@@ -166,16 +166,10 @@ def _get_generator_maximum_output(n: pypsa.Network, carriers: list[str]) -> floa
 def _get_link_actual_output(n: pypsa.Network, carriers: list[str]) -> float:
     links = n.links[n.links.carrier.isin(carriers)].index
     p0 = n.links_t.p0[links]
-    p0 = p0.where(p0 > 0, 0) # feasability tolerance issues on edge cases
+    p0 = p0.where(p0 > 0, 0)  # feasability tolerance issues on edge cases
     eff = n.get_switchable_as_dense("Link", "efficiency")
     eff = eff[[x for x in eff.columns if x in links]]
-    gen = (
-        p0
-        .mul(eff)
-        .mul(n.snapshot_weightings.objective, axis=0)
-        .sum()
-        .sum()
-    )
+    gen = p0.mul(eff).mul(n.snapshot_weightings.objective, axis=0).sum().sum()
     return gen
 
 

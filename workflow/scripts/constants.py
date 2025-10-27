@@ -114,6 +114,7 @@ CONSTRAINT_ATTRS = [
     "rps",
     "ces",
     "elec_trade",
+    "ind_heat_ff_production",
 ]
 
 VALID_RANGES = ["percent", "absolute"]

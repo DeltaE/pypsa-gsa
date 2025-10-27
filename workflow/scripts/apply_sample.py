@@ -553,16 +553,35 @@ def _get_ng_trade(n: pypsa.Network, trade: pd.DataFrame, direction: str) -> floa
 #     return trade_iso["interchange_reported_mwh"].sum()
 
 
-def _get_elec_trade_limit_state(n: pypsa.Network, trade: pd.DataFrame) -> float:
+def _get_elec_trade_limit_state(
+    n: pypsa.Network, trade: pd.DataFrame, ev_policy: pd.DataFrame
+) -> float:
     """Gets RHS import/export limit."""
     network_state = get_network_state(n)
     if len(network_state) < 1:
         raise ValueError("No states found for network")
     elif len(network_state) > 1:
         raise ValueError("Multiple states found for network")
+
     state = network_state[0]
     trade = trade.set_index("state")
-    return trade.at[state, "interchange_reported_mwh"]
+    # I dont think absolute is strictly required, but just to be safe lol.
+    trade_factor = abs(trade.at[state, "trade_factor"])
+
+    loads = n.loads[
+        n.loads.carrier.str.startswith(("com", "res", "ind"))
+        & n.loads.carrier.str.endswith("-elec")
+    ]
+    approx_non_ev_load = n.loads_t["p_set"][loads.index].sum().sum()
+
+    approx_ev_load = 0
+    for ev_mode in ["light_duty", "med_duty", "heavy_duty", "bus"]:
+        ev_load = (
+            _get_ev_generation_limit(n, ev_mode, ev_policy) * 0.90
+        )  # 0.90 is the approximate uptake of evs of max ev adoption
+        approx_ev_load += ev_load
+
+    return (approx_non_ev_load + approx_ev_load) * trade_factor
 
 
 def _get_gshp_multiplier(n: pypsa.Network, pop: pd.DataFrame) -> float:
@@ -607,6 +626,18 @@ def _get_landuse_limit(n: pypsa.Network) -> float:
     )
 
 
+def _get_ind_heat_ff_production_limit(n: pypsa.Network) -> float:
+    """Gets ind heat ff production limit."""
+    buses = n.buses[n.buses.carrier == "ind-heat"]
+
+    heat_loads = n.loads[
+        (n.loads.carrier == "ind-heat") & (n.loads.bus.isin(buses.index))
+    ]
+
+    heat_demand = n.loads_t["p_set"][heat_loads.index].sum().sum().round(1)
+    return heat_demand
+
+
 def apply_land_use_limit(n: pypsa.Network, sample: float) -> None:
     """Applies land use limit to the network."""
     gens = n.generators[
@@ -649,13 +680,17 @@ def _get_constraint_sample(
         # domestic trade
         ng_domestic = kwargs.get("ng_domestic", pd.DataFrame())
         if ng_domestic.empty:
-            raise ValueError("No domestic NG trade data provided.")
-        dom = _get_ng_trade(n, ng_domestic, "imports")
+            logger.warning("No domestic NG trade data provided.")
+            dom = 0
+        else:
+            dom = _get_ng_trade(n, ng_domestic, "imports")
         # international trade
         ng_international = kwargs.get("ng_international", pd.DataFrame())
         if ng_international.empty:
-            raise ValueError("No international NG trade data provided.")
-        itl = _get_ng_trade(n, ng_domestic, "imports")
+            logger.warning("No international NG trade data provided.")
+            itl = 0
+        else:
+            itl = _get_ng_trade(n, ng_international, "imports")
         # return total imports
         ref = dom + itl
         scaled = ref * sample
@@ -663,13 +698,17 @@ def _get_constraint_sample(
         # domestic trade
         ng_domestic = kwargs.get("ng_domestic", pd.DataFrame())
         if ng_domestic.empty:
-            raise ValueError("No domestic NG trade data provided.")
-        dom = _get_ng_trade(n, ng_domestic, "imports")
+            logger.warning("No domestic NG trade data provided.")
+            dom = 0
+        else:
+            dom = _get_ng_trade(n, ng_domestic, "imports")
         # international trade
         ng_international = kwargs.get("ng_international", pd.DataFrame())
         if ng_international.empty:
-            raise ValueError("No international NG trade data provided.")
-        itl = _get_ng_trade(n, ng_domestic, "exports")
+            logger.warning("No international NG trade data provided.")
+            itl = 0
+        else:
+            itl = _get_ng_trade(n, ng_international, "exports")
         # return total exports
         ref = dom + itl
         scaled = ref * sample
@@ -695,7 +734,10 @@ def _get_constraint_sample(
         elec_trade = kwargs.get("elec_trade", pd.DataFrame())
         if elec_trade.empty:
             raise ValueError("No elec trade data provided.")
-        ref = _get_elec_trade_limit_state(n, elec_trade)
+        ev_policy = kwargs.get("ev_policy", pd.DataFrame())
+        if ev_policy.empty:
+            raise ValueError("No EV policy data provided.")
+        ref = _get_elec_trade_limit_state(n, elec_trade, ev_policy)
         scaled = ref * sample
     elif attr == "landuse":
         landuse = kwargs.get("landuse", pd.DataFrame())
@@ -703,6 +745,9 @@ def _get_constraint_sample(
             raise ValueError("No landuse data provided.")
         ref = _get_landuse_limit(n, landuse)
         apply_land_use_limit(n, sample)  # this only modifies the p_nom_max
+        scaled = ref * sample
+    elif attr == "ind_heat_ff_production":
+        ref = _get_ind_heat_ff_production_limit(n)
         scaled = ref * sample
     else:
         raise ValueError(f"Bad control flow for get_constraint_sample: {attr}")
@@ -907,21 +952,21 @@ if __name__ == "__main__":
         elec_trade_f = snakemake.input.elec_trade_f
         configure_logging(snakemake)
     else:
-        param_file = "results/caiso/gsa/parameters.csv"
-        sample_file = "results/caiso/gsa/sample.csv"
+        param_file = "results/ct/gsa/parameters.csv"
+        sample_file = "results/ct/gsa/sample.csv"
         set_values_file = ""
-        base_network_file = "results/caiso/base.nc"
-        root_dir = Path("results/caiso/gsa/modelruns/")
+        base_network_file = "results/ct/base.nc"
+        root_dir = Path("results/ct/gsa/modelruns/")
         meta_yaml = False
         meta_csv = True
-        scaled_sample_file = "results/caiso/gsa/scaled_sample.csv"
-        pop_f = "results/caiso/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/caiso/constraints/ng_domestic.csv"
-        ng_international_f = "results/caiso/constraints/ng_international.csv"
-        rps_f = "results/caiso/constraints/rps.csv"
-        ces_f = "results/caiso/constraints/ces.csv"
-        ev_policy_f = "results/caiso/constraints/ev_policy.csv"
-        elec_trade_f = "results/caiso/constraints/import_export_flows.csv"
+        scaled_sample_file = "results/ct/gsa/scaled_sample.csv"
+        pop_f = "results/ct/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/ct/constraints/ng_domestic.csv"
+        ng_international_f = "results/ct/constraints/ng_international.csv"
+        rps_f = "results/ct/constraints/rps.csv"
+        ces_f = "results/ct/constraints/ces.csv"
+        ev_policy_f = "results/ct/constraints/ev_policy.csv"
+        elec_trade_f = "results/ct/constraints/import_export_flows.csv"
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
