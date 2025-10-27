@@ -359,6 +359,24 @@ def _apply_dynamic_sample(
     name_carrier_map = {x: name_to_carrier[x] for x in df_t.columns}
     names = [x for x, y in name_carrier_map.items() if y == car]
 
+    # some edge cases where renewable profiles are not applied to network
+    if not names:
+        assert False, "Manual checks are required for these updates."
+        assert car in ["offwind_floating", "hydro"], f"No {car} found in {c}"
+        assert attr == "p_max_pu", f"Attribute {attr} is not p_max_pu"
+        # undervalue as this is estimated
+        p_max_pu_approx = {
+            "offwind_floating": 0.3,
+            "hydro": 0.8,
+        }
+        all_generators_by_car = n.generators[n.generators.carrier == car].index
+        missing_gens = [x for x in all_generators_by_car if x not in df_t.columns]
+        for gen in missing_gens:
+            n.generators_t["p_max_pu"][gen] = p_max_pu_approx[car]
+        df_t = getattr(n, c)[attr]
+        names = [x for x in all_generators_by_car if x in df_t.columns]
+        assert names, f"No {car} found in {c}"
+
     ref = getattr(n, c)[attr].loc[:, names]  # same as df_t.loc[...]
     multiplier = value / 100  # can be positive or negative
     getattr(n, c)[attr].loc[:, names] = ref + ref.mul(multiplier)
