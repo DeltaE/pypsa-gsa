@@ -143,8 +143,23 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
 
     data = []
 
+    total_cap_gen = _get_current_capactity(
+        n, [x for x, y in COMPONENTS.items() if y == "generator"], "generator"
+    )
+    total_cap_link = _get_current_capactity(
+        n, [x for x, y in COMPONENTS.items() if y == "link"], "link"
+    )
+    total_cap = total_cap_gen + total_cap_link
+
     for name, cars in CARRIERS.items():
         cap = _get_current_capactity(n, cars, COMPONENTS[name])
+
+        # allow some growth for new technologies
+        if cap < 1 and any(x in cars for x in ["solar", "onwind"]):
+            cap = total_cap * 0.10
+        elif cap < 1 and any(x in cars for x in ["CCGT", "OCGT"]):
+            cap = total_cap * 0.05
+
         ref_growth = GROWTHS[name]["ref_growth"]
         if ref_growth < 100:
             min_value = cap
@@ -209,10 +224,10 @@ if __name__ == "__main__":
         tct_gsa_f = snakemake.output.tct_gsa
         ccs_limit = snakemake.params.ccs_limit  # as a percentage of max ccgt cap
     else:
-        network = "config/pypsa-usa/caiso/elec_s12_c4m_ec_lv1.0_4h_E-G.nc"
+        network = "config/pypsa-usa/nd/elec_s20_c2m_ec_lv1.0_3h_E-G.nc"
         include_tct = True
-        tct_aeo_f = "results/caiso/generated/tct_aeo.csv"
-        tct_gsa_f = "results/caiso/generated/tct_aeo.csv"
+        tct_aeo_f = "results/testing/generated/tct_aeo.csv"
+        tct_gsa_f = "results/testing/generated/tct_aeo.csv"
         ccs_limit = 50  # as a percentage of max ccgt cap
 
     n = pypsa.Network(network)
