@@ -106,6 +106,27 @@ def _get_current_capactity(n: pypsa.Network, cars: list[str], component: str) ->
     return round(value, 5)
 
 
+def adjust_zero_capacity(n: pypsa.Network, cars: list[str], component: str) -> float:
+    """Allows for some growth if current capacity is zero."""
+
+    total_cap_gen = _get_current_capactity(
+        n, [x for x, y in COMPONENTS.items() if y == "generator"], "generator"
+    )
+    total_cap_link = _get_current_capactity(
+        n, [x for x, y in COMPONENTS.items() if y == "link"], "link"
+    )
+    total_cap = total_cap_gen + total_cap_link
+
+    current_cap = _get_current_capactity(n, cars, COMPONENTS[component])
+
+    if current_cap < 1 and any(x in cars for x in ["solar", "onwind"]):
+        current_cap = total_cap * 0.10
+    elif current_cap < 1 and any(x in cars for x in ["CCGT", "OCGT"]):
+        current_cap = total_cap * 0.05
+
+    return current_cap
+
+
 def get_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFrame:
     """Gets TCT constraint data."""
 
@@ -118,11 +139,18 @@ def get_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.DataFra
 
     for name, cars in CARRIERS.items():
         cap = _get_current_capactity(n, cars, COMPONENTS[name])
+
+        if cap < 1:
+            cap = adjust_zero_capacity(n, cars, name)
+
         ref_growth = GROWTHS[name]["ref_growth"]
         if ref_growth < 100:
             ref_cap = cap + 0.1
         else:
             ref_cap = float(math.ceil(cap * ref_growth / 100))
+
+        if ref_cap < 0.1:
+            ref_cap = 0.1
 
         tct = [f"tct_{name}", planning_year, "all", ",".join(cars), "", ref_cap]
         data.append(tct)
@@ -143,22 +171,12 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
 
     data = []
 
-    total_cap_gen = _get_current_capactity(
-        n, [x for x, y in COMPONENTS.items() if y == "generator"], "generator"
-    )
-    total_cap_link = _get_current_capactity(
-        n, [x for x, y in COMPONENTS.items() if y == "link"], "link"
-    )
-    total_cap = total_cap_gen + total_cap_link
-
     for name, cars in CARRIERS.items():
         cap = _get_current_capactity(n, cars, COMPONENTS[name])
 
         # allow some growth for new technologies
-        if cap < 1 and any(x in cars for x in ["solar", "onwind"]):
-            cap = total_cap * 0.10
-        elif cap < 1 and any(x in cars for x in ["CCGT", "OCGT"]):
-            cap = total_cap * 0.05
+        if cap < 1:
+            cap = adjust_zero_capacity(n, cars, name)
 
         ref_growth = GROWTHS[name]["ref_growth"]
         if ref_growth < 100:
@@ -170,6 +188,9 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
 
         min_value = round(min_value, 1)
         max_value = round(max_value, 1)
+
+        if max_value < 0.1:
+            max_value = 0.1
 
         if abs(min_value - max_value) < 0.0001:
             logger.info(f"No limits created for {name}")
@@ -194,6 +215,13 @@ def get_gsa_tct_data(n: pypsa.Network, ccs_limit: float | None = None) -> pd.Dat
         if name == "ccgt":
             min_value = float(math.ceil(min_value * ccs_limit / 100))
             max_value = float(math.ceil(max_value * ccs_limit / 100))
+
+            if abs(min_value - max_value) < 0.0001:
+                min_value -= 0.1
+                max_value += 0.1
+                if min_value < 0:
+                    min_value = 0
+
             gsa = [
                 f"tct_{name}_ccs",
                 f"tct_{name}_ccs",

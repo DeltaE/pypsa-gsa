@@ -355,6 +355,21 @@ def add_technology_capacity_target_constraints(
             + lhs_link_existing.p_nom.sum()
         )
 
+        # toss out reeds storage mandate if creates infeasability
+        # should only be happening with Maryland
+        if target["name"] == "reeds_storage_mandate":
+            try:
+                gsa_max = tct_data.loc[tct_data["name"] == "tct_battery", "max"].values[
+                    0
+                ]
+                if target["min"] > gsa_max:
+                    logger.warning(
+                        f"Tossing out reeds storage mandate for {target.name} because it creates infeasability"
+                    )
+                    continue
+            except KeyError:
+                pass
+
         if target["max"] == "existing":
             target["max"] = round(lhs_existing, 5) + 0.01
         else:
@@ -364,6 +379,16 @@ def add_technology_capacity_target_constraints(
             target["min"] = round(lhs_existing, 5) - 0.01
         else:
             target["min"] = float(target["min"])
+
+        # numerical stability
+        if target["min"]:
+            if abs(target["min"] - lhs_existing) < 0.01:
+                target["min"] -= 0.01
+                if target["min"] < 0:
+                    target["min"] = 0
+        if target["max"]:
+            if abs(target["max"] - lhs_existing) < 0.01:
+                target["max"] += 0.01
 
         if not np.isnan(target["min"]):
             rhs = target["min"] - round(lhs_existing, 5)
@@ -380,7 +405,8 @@ def add_technology_capacity_target_constraints(
                 f"Region: {target.region}\n"
                 f"Carrier: {target.carrier}\n"
                 f"Min Value: {target['min']}\n"
-                f"Min Value Adj: {rhs}",
+                f"Min Value Adj: {rhs}\n"
+                f"Current value: {lhs_existing}\n"
             )
 
         if not np.isnan(target["max"]):
@@ -402,7 +428,8 @@ def add_technology_capacity_target_constraints(
                 f"Region: {target.region}\n"
                 f"Carrier: {target.carrier}\n"
                 f"Max Value: {target['max']}\n"
-                f"Max Value Adj: {rhs}",
+                f"Max Value Adj: {rhs}\n"
+                f"Current value: {lhs_existing}\n"
             )
 
 
@@ -1392,7 +1419,8 @@ if __name__ == "__main__":
         # else:
         #     extra_fn["ng_trade"]["min_export"] = 0.99
         #     extra_fn["ng_trade"]["max_export"] = 1.01
-        extra_fn["ng_trade"]["min_export"] = round(value * 0.50, 5)
+        # extra_fn["ng_trade"]["min_export"] = round(value * 0.50, 5)
+        extra_fn["ng_trade"]["min_export"] = 0
         extra_fn["ng_trade"]["max_export"] = value
     elif len(exports) > 1:
         raise ValueError("Too many samples for ng_gas_export")
@@ -1455,7 +1483,7 @@ if __name__ == "__main__":
     # TCT Constraint
     ###
     extra_fn["tct"] = {}
-    extra_fn["tct"]["data"] = pd.read_csv(tct_f)
+    extra_fn["tct"]["data"] = pd.read_csv(tct_f, index_col=0)
     extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(5)
 
     target_names = extra_fn["tct"]["data"].name.to_list()
@@ -1526,7 +1554,6 @@ if __name__ == "__main__":
     # Loss of Load Probability Constraint
     ###
     extra_fn["lolp"] = {}
-    extra_fn["lolp"]["enable"] = False
     extra_fn["lolp"]["relax"] = 1.0
 
     # due to how the RPS REC system is set up, there can be edge cases where
