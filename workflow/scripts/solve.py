@@ -1320,6 +1320,7 @@ if __name__ == "__main__":
         model_opts = {
             "economic_retirement": False,
             "coal_oil_investment": False,
+            "nat_gas_import_relax": 1.5,
         }
         solving_log = ""
         out_network = ""
@@ -1385,6 +1386,8 @@ if __name__ == "__main__":
     imports = constraints[constraints.attribute == "nat_gas_import"].round(5)
     exports = constraints[constraints.attribute == "nat_gas_export"].round(5)
 
+    import_relax = model_opts["nat_gas_import_relax"]
+
     # to avoid infeasibilities, we always set one limit to 1
 
     if len(imports) == 1:
@@ -1400,12 +1403,12 @@ if __name__ == "__main__":
         #     extra_fn["ng_trade"]["min_import"] = 0.99
         #     extra_fn["ng_trade"]["max_import"] = 1.01
         extra_fn["ng_trade"]["min_import"] = round(value * 0.50, 5)
-        extra_fn["ng_trade"]["max_import"] = value
+        extra_fn["ng_trade"]["max_import"] = value * import_relax
     elif len(imports) > 1:
         raise ValueError("Too many samples for ng_gas_import")
     else:
         extra_fn["ng_trade"]["min_import"] = 0
-        extra_fn["ng_trade"]["max_import"] = 1
+        extra_fn["ng_trade"]["max_import"] = 1 * import_relax
 
     if len(exports) == 1:
         value = exports.value.values[0]

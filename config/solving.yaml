@@ -42,8 +42,8 @@ solving:
       AggFill: 0
       PreDual: 0
       GURO_PAR_BARDENSETHRESH: 200
+      # dual_reductions: 0
     gurobi-numeric-focus:
-      name: gurobi
       NumericFocus: 3       # Favour numeric stability over speed
       method: 2             # barrier
       crossover: 0          # do not use crossover
