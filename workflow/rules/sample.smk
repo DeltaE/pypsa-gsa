@@ -148,7 +148,7 @@ rule test_apply_gsa_sample_to_network:
         elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
     output:
         n = "results/{scenario}/{mode}/modelruns/testing/0/n.nc",
-        scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
+        scaled_sample = "results/{scenario}/{mode}/testing/sample_scaled.csv",
         meta_constriant = "results/{scenario}/{mode}/modelruns/testing/0/constraints.csv",
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),

@@ -366,7 +366,7 @@ def _apply_dynamic_sample(
         assert attr == "p_max_pu", f"Attribute {attr} is not p_max_pu"
         # undervalue as this is estimated
         p_max_pu_approx = {
-            "offwind_floating": 0.3,
+            "offwind_floating": 0.2,
             "hydro": 0.8,
         }
         all_generators_by_car = n.generators[n.generators.carrier == car].index
