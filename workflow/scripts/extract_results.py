@@ -1,6 +1,7 @@
 """Extracts results to have SA run over"""
 
 import pandas as pd
+from math import isclose
 import numpy as np
 import pypsa
 from utils import configure_logging
@@ -53,7 +54,7 @@ def _get_e_nom_opt(n: pypsa.Network, component: str, carriers: list[str]) -> flo
             e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
     else:
         e_nom_opt = df[df.carrier.isin(carriers)].e_nom_opt.sum()
-    if e_nom_opt == 1e9:
+    if e_nom_opt == np.inf:
         assert component == "stores"
         stores = df[df.carrier.isin(carriers)].index
         df = getattr(n, "stores_t")["e"][stores]
@@ -133,6 +134,9 @@ def _get_utilization_rate(
         raise ValueError(
             f"Unrecognized component: {component}. Must be one of generators_t or links_t."
         )
+
+    if isclose(maximum, 0, abs_tol=1e-6):
+        return 0
 
     utilization_rate = actual / maximum * 100
 
@@ -253,10 +257,10 @@ if __name__ == "__main__":
         csv = snakemake.output.csv
         configure_logging(snakemake)
     else:
-        network = "results/caiso/gsa/modelruns/725/network.nc"
-        results_f = "results/caiso/gsa/results.csv"
-        csv = "results/caiso/gsa/modelruns/725/results.csv"
-        model_run = 725
+        network = "results/ct/gsa/modelruns/0/network.nc"
+        results_f = "results/ct/gsa/results.csv"
+        csv = "results/ct/gsa/modelruns/0/results.csv"
+        model_run = 0
 
     n = pypsa.Network(network)
 

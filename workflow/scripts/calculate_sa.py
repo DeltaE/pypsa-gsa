@@ -54,7 +54,6 @@ def sa_results(
 
 
 def plot_si(si: np.array, name: str) -> tuple[plt.figure, plt.axes]:
-
     # save graphical resutls
     title = name
     fig, axs = plt.subplots(1, figsize=(10, 8))
@@ -78,12 +77,12 @@ if __name__ == "__main__":
         configure_logging(snakemake)
     else:
         result_name = "carbon"
-        parameters_f = "results/caiso/gsa/parameters.csv"
-        sample_f = "results/caiso/gsa/sample_scaled.csv"
-        results_f = "results/caiso/gsa/results/carbon.csv"
+        parameters_f = "results/ct/gsa/parameters.csv"
+        sample_f = "results/ct/gsa/sample_scaled.csv"
+        results_f = "results/ct/gsa/results/carbon_co2.csv"
         scaled = True
-        csv = "results/caiso/gsa/SA/carbon.csv"
-        png = "results/caiso/gsa/SA/carbon.png"
+        csv = "results/ct/gsa/SA/carbon_co2.csv"
+        png = "results/ct/gsa/SA/carbon_co2.png"
 
     params = pd.read_csv(parameters_f)
     X = pd.read_csv(sample_f).to_numpy()

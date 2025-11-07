@@ -43,14 +43,15 @@ if __name__ == "__main__":
         top_n = snakemake.params.top_n
         subset = snakemake.params.subset
     else:
-        input_f = "results/caiso/gsa/SA/all.csv"
-        rankings_f = "results/caiso/gsa/rankings.csv"
-        top_n_f = "results/caiso/gsa/top_n.csv"
+        input_f = "results/ct/gsa/SA/all.csv"
+        rankings_f = "results/ct/gsa/rankings.csv"
+        top_n_f = "results/ct/gsa/top_n.csv"
         top_n = 3
         subset = [
-            "objective_cost",
-            "marginal_cost_energy",
+            "carbon_co2",
+            "carbon_total",
             "marginal_cost_elec",
+            "marginal_cost_energy",
         ]
 
     df = pd.read_csv(input_f, index_col="param")
