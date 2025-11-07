@@ -576,6 +576,19 @@ def round_max_min(params: pd.DataFrame, round_to: int = 5) -> pd.DataFrame:
     return df
 
 
+def is_single_node(n: pypsa.Network) -> bool:
+    """Check if network is a single node."""
+    buses = n.buses[n.buses.carrier == "AC"]
+    assert len(buses) >= 1, "Network must have at least one AC bus"
+    return len(buses) == 1
+
+
+def remove_transmission_expansion(params: pd.DataFrame) -> pd.DataFrame:
+    """Remove transmission expansion if network is a single node."""
+    df = params.copy()
+    return df[~(df.attribute == "lv")].copy()
+
+
 if __name__ == "__main__":
     if "snakemake" in globals():
         in_params = snakemake.input.parameters
@@ -585,11 +598,11 @@ if __name__ == "__main__":
         ces = snakemake.input.ces
         configure_logging(snakemake)
     else:
-        in_params = "results/testing/generated/config/parameters.csv"
-        out_params = "results/testing/gsa/parameters.csv"
-        network = "results/testing/base.nc"
-        rps = "results/testing/constraints/rps.csv"
-        ces = "results/testing/constraints/ces.csv"
+        in_params = "results/ct/generated/config/parameters.csv"
+        out_params = "results/ct/gsa/parameters.csv"
+        network = "results/ct/base.nc"
+        rps = "results/ct/constraints/rps.csv"
+        ces = "results/ct/constraints/ces.csv"
 
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
     n = pypsa.Network(network)
@@ -620,6 +633,9 @@ if __name__ == "__main__":
     # states do not have any RPS commitments. Remove RPS constraints.
     if not rps_in_network(n, rps_df, ces_df):
         df = remove_rps_constraints(df)
+
+    if is_single_node(n):
+        df = remove_transmission_expansion(df)
 
     # validation of data
     # note, does not check carrier
