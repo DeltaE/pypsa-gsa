@@ -19,7 +19,7 @@ from utils import (
     configure_logging,
     get_network_state,
 )
-from constants import CACHED_ATTRS, CONSTRAINT_ATTRS
+from constants import CACHED_ATTRS, CONSTRAINT_ATTRS, CONVENTIONAL_CARRIERS
 
 import logging
 
@@ -800,6 +800,35 @@ def _get_constraint_sample(
     return meta, sampled
 
 
+def correct_link_capex(n: pypsa.Network) -> None:
+    """Corrects capex for links.
+
+    Needed as links are sized on input capacity, not output capacity.
+    See this issue for more details: https://github.com/PyPSA/pypsa-usa/issues/708
+    """
+
+    ## ASSUMES NO TIME VARRYING EFFICIENCIES
+
+    # supply side techs
+    links = n.links[n.links.carrier.isin(CONVENTIONAL_CARRIERS)].index
+    effs = n.links.loc[links].efficiency.mean().round(3)
+    n.links.loc[links, "capital_cost"] *= effs
+
+    # end use techs
+
+    end_use_carriers = (
+        "com-total-",
+        "res-total-",
+        "ind-gas-",
+        "ind-coal-",
+        "ind-heat-",
+    )
+
+    links = n.links[n.links.carrier.str.startswith(end_use_carriers)].index
+    effs = n.links.loc[links].efficiency.mean().round(3)
+    n.links.loc[links, "capital_cost"] *= effs
+
+
 def apply_sample(
     n: pypsa.Network, sample: dict[str, dict[str, Any]], run: int, **kwargs
 ) -> tuple[list[float], dict[dict[str, str | float]], pd.DataFrame]:
@@ -914,6 +943,9 @@ def apply_sample(
             "scaled_sample": float(sampled["scaled"]),
         }
 
+    # correct capex for links. Its easier to do it here as the efficiencies are also an uncertain parameter.
+    correct_link_capex(n)
+
     if not meta_constraints:
         meta_constraints = pd.DataFrame(
             columns=["name", "component", "carrier", "attribute", "value"]
@@ -978,22 +1010,22 @@ if __name__ == "__main__":
         testing = snakemake.params.testing
         configure_logging(snakemake)
     else:
-        param_file = "results/testing/gsa/parameters.csv"
-        sample_file = "results/testing/gsa/sample.csv"
+        param_file = "results/ct/gsa/parameters.csv"
+        sample_file = "results/ct/gsa/sample.csv"
         set_values_file = ""
-        base_network_file = "results/testing/base.nc"
-        root_dir = Path("results/testing/gsa/modelruns/")
+        base_network_file = "results/ct/base.nc"
+        root_dir = Path("results/ct/gsa/modelruns/")
         meta_yaml = False
         meta_csv = True
-        scaled_sample_file = "results/testing/gsa/scaled_sample.csv"
-        pop_f = "results/testing/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/testing/constraints/ng_domestic.csv"
-        ng_international_f = "results/testing/constraints/ng_international.csv"
-        rps_f = "results/testing/constraints/rps.csv"
-        ces_f = "results/testing/constraints/ces.csv"
-        ev_policy_f = "results/testing/constraints/ev_policy.csv"
-        elec_trade_f = "results/testing/constraints/import_export_flows.csv"
-        testing = True
+        scaled_sample_file = "results/ct/gsa/scaled_sample.csv"
+        pop_f = "results/ct/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/ct/constraints/ng_domestic.csv"
+        ng_international_f = "results/ct/constraints/ng_international.csv"
+        rps_f = "results/ct/constraints/rps.csv"
+        ces_f = "results/ct/constraints/ces.csv"
+        ev_policy_f = "results/ct/constraints/ev_policy.csv"
+        elec_trade_f = "results/ct/constraints/import_export_flows.csv"
+        testing = False
 
     params = pd.read_csv(param_file)
     sample = pd.read_csv(sample_file)
