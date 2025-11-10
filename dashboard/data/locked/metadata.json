@@ -4359,6 +4359,14 @@
               "visible": true,
               "unit": "mw"
             },
+            "tct_coal": {
+              "label": "Coal",
+              "label2": "Coal Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "mw"
+            },
             "tct_battery": {
               "label": "Battery",
               "label2": "Battery Capacity Limit",
@@ -4373,6 +4381,13 @@
               "param": "landuse",
               "visible": true,
               "unit": "mw/mile2"
+            },
+            "ind_heat_ff_production": {
+              "label": "Industrial Fossil Fuel Production",
+              "sector": "industry",
+              "param": "ind_heat_ff_production",
+              "visible": true,
+              "unit": "per_unit"
             }
           }
     ,
@@ -4566,8 +4581,10 @@
         "tct_ccgt": {"label": "Ccgt Max Capacity"},
         "tct_ccgt_ccs": {"label": "Ccgt-95CCS Max Capacity"},
         "tct_ocgt": {"label": "Ocgt Max Capacity"},
+        "tct_coal": {"label": "Coal Max Capacity"},
         "tct_battery": {"label": "Battery Max Capacity"},
-        "landuse": {"label": "Landuse"}
+        "landuse": {"label": "Landuse"},
+        "ind_heat_ff_production": {"label": "Industrial Fossil Fuel Production"}
     }
         
 }
