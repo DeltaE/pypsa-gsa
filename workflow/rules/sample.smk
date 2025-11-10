@@ -51,7 +51,7 @@ rule create_sample:
 # the the output should really be a wildcard to follow snakemake principals. 
 
 
-rule apply_gsa_sample_to_network:
+checkpoint apply_gsa_sample_to_network:
     message: "Applying sample"
     wildcard_constraints:
         mode="gsa"
@@ -88,7 +88,7 @@ rule apply_gsa_sample_to_network:
     script:
         "../scripts/apply_sample.py"
 
-rule apply_ua_sample_to_network:
+checkpoint apply_ua_sample_to_network:
     message: "Applying sample"
     wildcard_constraints:
         mode="ua"

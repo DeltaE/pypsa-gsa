@@ -108,7 +108,7 @@ rule retrieve_natural_gas_data:
 def get_input_parameters_file(wildards):
     return f"results/{wildards.scenario}/generated/{config['gsa']['parameters']}"
 
-rule sanitize_parameters:
+checkpoint sanitize_parameters:
     message: "Sanitizing parameters"
     input:
         parameters=get_input_parameters_file,

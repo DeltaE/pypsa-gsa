@@ -70,12 +70,16 @@ onsuccess:
 def get_gsa_modelruns() -> range:
     """number of gsa model runs"""
     try:
-        gsa_params = pd.read_csv(f"results/{SCENARIO}/generated/{config['gsa']['parameters']}")
+        # gsa_params = pd.read_csv(f"results/{SCENARIO}/generated/{config['gsa']['parameters']}")
+        gsa_params = pd.read_csv(f"results/{SCENARIO}/gsa/parameters.csv")
         gsa_groups = gsa_params.group.unique().tolist()
         return range((len(gsa_groups) + 1) * config["gsa"]["replicates"])
     except FileNotFoundError as e:
-        print("Generate data first with 'snakemake -s Sankefile.generate'")
-        raise e
+        if Path(f"results/{SCENARIO}/generated/{config['gsa']['parameters']}").exists():
+            return range(0,1) # checkpoint will retrigger this 
+        else:
+            print("*** Generate data first with 'snakemake -s Sankefile.generate' ***")
+            raise FileNotFoundError(f"Parameters file not found: {gen_params}")
 
 def get_gsa_result_files() -> list[str]:
     """All gsa results files"""
