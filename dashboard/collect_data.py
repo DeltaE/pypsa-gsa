@@ -48,6 +48,7 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "rec": "Marginal Cost",
     "imports_co2": "Import Emissions",
     "e_nom": "Natural Gas",  # only one e_nom
+    "ind_heat_ff_production": "Industrial Fossil Fuel Production",
 }
 
 PWR_CARRIERS = [
@@ -139,7 +140,7 @@ def collect_runs(root: Path, state: str, mode: str, results: list[str]) -> pd.Da
         df = df.rename(columns={"value": name})
         dfs.append(df)
     df = _round_df(pd.concat(dfs, axis=1))
-    df["state"] = state
+    df["state"] = state.upper()
     df = df.reset_index(names=["run"])
     return df.set_index(["run", "state"])
 
@@ -205,6 +206,8 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             return "Carbon"
         elif carrier == "portfolio":
             return "Power"
+        elif carrier == "heat_portfolio":
+            return "Industry"
         elif carrier in ["imports", "exports"]:
             return "Power"
         elif carrier == "landuse":
@@ -290,8 +293,12 @@ if __name__ == "__main__":
     )
     for state in STATES:
         try:
-            params = pd.read_csv(Path(root, "results", state, "gsa", "parameters.csv"))
-            results = pd.read_csv(Path(root, "results", state, "ua", "results.csv"))
+            params = pd.read_csv(
+                Path(root, "results", state.lower(), "gsa", "parameters.csv")
+            )
+            results = pd.read_csv(
+                Path(root, "results", state.lower(), "ua", "results.csv")
+            )
             check_metadata(metadata, params, results)
         except FileNotFoundError:
             continue
@@ -301,8 +308,10 @@ if __name__ == "__main__":
     dfs = []
     empty = True
     for state in STATES:
-        state_data = Path(root, "results", state, "gsa", "SA")
-        filtered_data = Path(root, "dashboard", "data", "state", state, "sa.csv")
+        state_data = Path(root, "results", state.lower(), "gsa", "SA")
+        filtered_data = Path(
+            root, "dashboard", "data", "state", state.upper(), "sa.csv"
+        )
 
         if not filtered_data.parent.exists():
             filtered_data.parent.mkdir(parents=True, exist_ok=True)
@@ -314,8 +323,8 @@ if __name__ == "__main__":
             logger.warning(f"No gsa model run data for '{state}'")
             sa = get_empty_sa()
         else:
-            sa_names = get_result_names(root, state, "gsa")
-            sa = collect_sa(root, state, sa_names.keys())
+            sa_names = get_result_names(root, state.lower(), "gsa")
+            sa = collect_sa(root, state.lower(), sa_names.keys())
 
         if empty:
             sa.to_csv(filtered_data, index=True)
@@ -333,8 +342,10 @@ if __name__ == "__main__":
     dfs = []
     empty = True
     for state in STATES:
-        state_data = Path(root, "results", state, "ua", "results")
-        filtered_data = Path(root, "dashboard", "data", "state", state, "ua_runs.csv")
+        state_data = Path(root, "results", state.lower(), "ua", "results")
+        filtered_data = Path(
+            root, "dashboard", "data", "state", state.upper(), "ua_runs.csv"
+        )
 
         if not filtered_data.parent.exists():
             filtered_data.parent.mkdir(parents=True, exist_ok=True)
@@ -348,14 +359,15 @@ if __name__ == "__main__":
             ua = get_empty_run()
 
         else:
-            result_names = get_result_names(root, state, "ua")
-            ua = collect_runs(root, state, "ua", result_names.keys())
+            result_names = get_result_names(root, state.lower(), "ua")
+            ua = collect_runs(root, state.lower(), "ua", result_names.keys())
 
         if empty:
             ua.to_csv(filtered_data, index=True)
 
         ua.to_csv(
-            Path(root, "dashboard", "data", "state", state, "ua_runs.csv"), index=True
+            Path(root, "dashboard", "data", "state", state.upper(), "ua_runs.csv"),
+            index=True,
         )
         dfs.append(ua)
 
@@ -364,6 +376,7 @@ if __name__ == "__main__":
         raise ValueError("No UA Run data found.")
 
     df = pd.concat(dfs, axis=0)
+    df = df.round(2)
     df.to_csv(Path(root, "dashboard", "data", "system", "ua_runs.csv"), index=True)
 
     # model parameters
@@ -371,14 +384,14 @@ if __name__ == "__main__":
     dfs = []
     base_params = pd.DataFrame()
     for state in STATES:
-        state_data = Path(root, "results", state, "gsa")
+        state_data = Path(root, "results", state.lower(), "gsa")
         if not state_data.exists():
-            logger.warning(f"No parameter data for '{state}'")
+            logger.warning(f"No parameter data for '{state.lower()}'")
         else:
             if base_params.empty:
-                base_params = get_base_params_file(root, state)
+                base_params = get_base_params_file(root, state.lower())
                 dfs.append(base_params)
-            state_params = get_state_params(root, state)
+            state_params = get_state_params(root, state.lower())
             dfs.append(state_params)
     if not dfs:
         logger.error("No data found.")
@@ -416,7 +429,7 @@ if __name__ == "__main__":
     all_params = []
     for state in STATES:
         try:
-            ua_params = get_param_names(root, state, "ua")
+            ua_params = get_param_names(root, state.lower(), "ua")
             all_params.append(ua_params)
         except FileNotFoundError:
             logger.debug(f"No ua nice names for {state}.")
@@ -425,7 +438,8 @@ if __name__ == "__main__":
         ua_params_expanded = get_ur_params_expanded(ua_params, params, metadata)
 
         with open(
-            Path(root, "dashboard", "data", "state", state, "ua_params.json"), "w"
+            Path(root, "dashboard", "data", "state", state.upper(), "ua_params.json"),
+            "w",
         ) as f:
             json.dump(ua_params_expanded, f, indent=4)
 
@@ -440,7 +454,7 @@ if __name__ == "__main__":
 
     # get the sample data
     for state in STATES:
-        state_data = Path(root, "results", state, "ua", "sample_scaled.csv")
+        state_data = Path(root, "results", state.lower(), "ua", "sample_scaled.csv")
         if not state_data.exists():
             logger.warning(f"No sample data for '{state}'")
             continue
@@ -450,6 +464,8 @@ if __name__ == "__main__":
             sample_data["state"] = state
             sample_data = sample_data.set_index(["run", "state"])
             sample_data.to_csv(
-                Path(root, "dashboard", "data", "state", state, "sample_data.csv"),
+                Path(
+                    root, "dashboard", "data", "state", state.upper(), "sample_data.csv"
+                ),
                 index=True,
             )
