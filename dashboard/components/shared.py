@@ -39,12 +39,12 @@ def state_options_block(*args: pd.DataFrame | None) -> html.Div:
 
     return html.Div(
         [
-            state_dropdown(options, default),
+            state_dropdown(options, multi=True, default=default),
         ],
     )
 
 
-def state_dropdown(options: list[str], default: list[str] | None = None) -> html.Div:
+def state_dropdown(options: list[str], multi: bool = True, default: list[str] | None = None) -> html.Div:
     """STATE dropdown component."""
 
     return html.Div(
@@ -54,7 +54,7 @@ def state_dropdown(options: list[str], default: list[str] | None = None) -> html
                 id=ids.STATE_DROPDOWN,
                 options=options,
                 value=default if default else options[0],
-                multi=True,
+                multi=multi,
             ),
         ],
         className="dropdown-container",

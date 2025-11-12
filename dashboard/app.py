@@ -625,8 +625,10 @@ def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]
     ],
 )
 def callback_update_ua_emissions(
-    states: list[str], emission_target: bool
+    states: str | list[str], emission_target: bool
 ) -> dict[str, dict[str, float]]:
+    if isinstance(states, str):
+        states = [states]
     if emission_target:
         return {x: EMISSIONS[x] for x in states}
     else:
@@ -637,7 +639,9 @@ def callback_update_ua_emissions(
     Output(ids.INPUTS_DATA, "data"),
     Input(ids.STATE_DROPDOWN, "value"),
 )
-def callback_update_inputs_data(states: list[str]) -> list[dict[str, Any]]:
+def callback_update_inputs_data(states: str | list[str]) -> list[dict[str, Any]]:
+    if isinstance(states, str):
+        states = [states]
     logger.debug(f"State dropdown value: {states}")
     if not states:
         logger.debug("No states selected from dropdown")
@@ -728,8 +732,10 @@ def disable_ua_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
     Output(ids.GSA_STATE_DATA, "data"),
     Input(ids.STATE_DROPDOWN, "value"),
 )
-def callback_filter_gsa_on_state(states: list[str]) -> list[dict[str, Any]]:
+def callback_filter_gsa_on_state(states: str | list[str]) -> list[dict[str, Any]]:
     """Update the GSA store data based on the selected states."""
+    if isinstance(states, str):
+        states = [states]
     logger.debug(f"States dropdown value: {states}")
     if not states:
         logger.debug("No states selected from dropdown")
@@ -857,8 +863,10 @@ def callback_filter_gsa_data_for_map(
     Output(ids.UA_STATE_DATA, "data"),
     Input(ids.STATE_DROPDOWN, "value"),
 )
-def callback_filter_ua_on_state(states: list[str]) -> list[dict[str, Any]]:
+def callback_filter_ua_on_state(states: str | list[str]) -> list[dict[str, Any]]:
     """Update the UA store data based on the selected States."""
+    if isinstance(states, str):
+        states = [states]
     logger.debug(f"State dropdown value: {states}")
     if not states:
         logger.debug("No States selected from dropdown")
@@ -1106,6 +1114,39 @@ def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, 
         num_params = len(GSA_PARM_OPTIONS)
         top_n = 6
     return num_params, _calc_marks(num_params), top_n
+
+
+@app.callback(
+    Output(ids.STATE_DROPDOWN, "multi"),
+    [
+        Input(ids.TABS, "active_tab"),
+        Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+    ],
+)
+def callback_modify_state_dropdown_multi(active_tab: str, plotting_type: str) -> bool:
+    """Modify state dropdown multi based on plotting type."""
+    if active_tab != ids.SA_TAB:
+        return dash.no_update
+    if plotting_type == "barchart" or plotting_type == "heatmap":
+        return False
+    else:
+        return True
+
+
+@app.callback(
+    Output(ids.STATE_DROPDOWN, "value"),
+    [
+        Input(ids.STATE_DROPDOWN, "value"),
+        Input(ids.STATE_DROPDOWN, "multi"),
+    ],
+)
+def callback_modify_state_dropdown_value(states: str | list[str], multi: str) -> str:
+    if isinstance(states, str):
+        states = [states]
+    if multi:
+        return states
+    else:
+        return states[0]
 
 
 ########################

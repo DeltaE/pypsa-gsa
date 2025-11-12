@@ -235,7 +235,7 @@ def filter_gsa_data(
         results = [results]
     if keep_state:
         logger.debug("Removing State in GSA filtering")
-        results.append("state")
+        results.insert(0, "state")
 
     result = df.loc[params][results].copy()
 
@@ -263,6 +263,13 @@ def filter_gsa_data_for_map(
     df = df.pivot_table(columns="param", index=df.index).T.droplevel(
         0
     )  # level 0 is the result
+
+    for col in df.columns:
+        if any(df[col].isna()):
+            logger.debug(
+                f"NA values found for map ranking | Column = {col} | NA Value Indexes: {df[col][df[col].isna()].index.tolist()}"
+            )
+            df[col] = df[col].fillna(0)  # zero is last rank
 
     for col in df.columns:
         df[col] = df[col].rank(method="dense", ascending=False).astype(int)
