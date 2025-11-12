@@ -67,6 +67,7 @@ GSA_HM_DATA = "gsa-hm-data"
 GSA_BAR_DATA = "gsa-bar-data"
 GSA_MAP_DATA = "gsa-map-data"
 GSA_NORMED = "gsa-normed"  # for mu/mu_max clac
+GSA_DATA_TABLE_DATA = "gsa-data-table-data"
 
 UA_STATE_DATA = "ua-state-data"  # filtered by STATE
 UA_RUN_DATA = "ua-run-data"  # filtered by result
