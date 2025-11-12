@@ -326,7 +326,7 @@
                 "unit": "MWh"
             },
             "demand_response_total": {
-                "label": "Load Shifted (Max)",
+                "label": "Load Shifted (Total)",
                 "sector": "system",
                 "result": "demand_response",
                 "visible": true,
