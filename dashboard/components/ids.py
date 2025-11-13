@@ -36,6 +36,8 @@ GSA_PARAM_REMOVE_ALL = "gsa-param-remove-all"
 GSA_RESULTS_SELECT_ALL = "gsa-results-select-all"
 GSA_RESULTS_REMOVE_ALL = "gsa-results-remove-all"
 INPUT_DATA_REMOVE_FILTERS = "input-data-remove-filters"
+STATES_SELECT_ALL = "states-select-all"
+STATES_REMOVE_ALL = "states-remove-all"
 
 # button states
 GSA_PARAM_BUTTON_STATE = "gsa-param-button-state"

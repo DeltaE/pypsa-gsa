@@ -1152,28 +1152,35 @@ def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, 
 
 
 @app.callback(
-    Output(ids.STATE_DROPDOWN, "multi"),
+    [
+        Output(ids.STATE_DROPDOWN, "multi"),
+        Output(ids.STATES_SELECT_ALL, "disabled"),
+        Output(ids.STATES_REMOVE_ALL, "disabled"),
+    ],
     [
         Input(ids.TABS, "active_tab"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
     ],
 )
-def callback_modify_state_dropdown_multi(active_tab: str, plotting_type: str) -> bool:
+def callback_modify_state_dropdown_multi(
+    active_tab: str, plotting_type: str
+) -> tuple[bool, bool, bool]:
     """Modify state dropdown multi based on plotting type."""
     if active_tab != ids.SA_TAB:
         return dash.no_update
     if plotting_type == "barchart" or plotting_type == "heatmap":
-        return False
+        return False, True, True
     else:
-        return True
+        return True, False, False
 
 
 @app.callback(
-    Output(ids.STATE_DROPDOWN, "value"),
+    Output(ids.STATE_DROPDOWN, "value", allow_duplicate=True),
     [
         Input(ids.STATE_DROPDOWN, "value"),
         Input(ids.STATE_DROPDOWN, "multi"),
     ],
+    prevent_initial_call="initial_duplicate",  # for the allow duplicates
 )
 def callback_modify_state_dropdown_value(states: str | list[str], multi: str) -> str:
     if isinstance(states, str):
@@ -1182,6 +1189,33 @@ def callback_modify_state_dropdown_value(states: str | list[str], multi: str) ->
         return states
     else:
         return states[0]
+
+
+@app.callback(
+    Output(ids.STATE_DROPDOWN, "value", allow_duplicate=True),
+    State(ids.STATE_DROPDOWN, "options"),
+    [
+        Input(ids.STATES_SELECT_ALL, "n_clicks"),
+        Input(ids.STATES_REMOVE_ALL, "n_clicks"),
+    ],
+    prevent_initial_call="initial_duplicate",  # for the allow duplicates
+)
+def callback_update_states_dropdown(
+    options: list[dict[str, str]], *args: Any
+) -> list[str]:
+    """Callback to select or remove all states in the states dropdown."""
+    ctx = dash.callback_context
+    if not ctx.triggered or not options:
+        return dash.no_update
+
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    values = [opt["value"] if isinstance(opt, dict) else opt for opt in options]
+    if button_id == ids.STATES_SELECT_ALL:
+        return values
+    elif button_id == ids.STATES_REMOVE_ALL:
+        return []
+    else:
+        raise dash.no_update
 
 
 ########################

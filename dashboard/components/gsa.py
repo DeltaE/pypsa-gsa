@@ -2,10 +2,7 @@
 
 from typing import Any
 from dash import dcc, html, dash_table
-from pathlib import Path
 from .utils import (
-    get_gsa_params_dropdown_options,
-    get_gsa_results_dropdown_options,
     _unflatten_dropdown_options,
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
@@ -557,6 +554,10 @@ def get_gsa_map(
     **kwargs: Any,
 ) -> html.Div:
     """Position maps on a grid system for lazy loading."""
+
+    if not gsa_map_data:
+        logger.debug("No GSA map data found")
+        return html.Div([dbc.Alert("No GSA map data found", color="info")])
 
     if not gsa_map_data:
         num_maps = 1  # print an empty map

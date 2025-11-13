@@ -1,10 +1,12 @@
 """Shared components for the dashboard."""
 
 from dash import html, dcc
+import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.colors as pc
 from . import ids as ids
 from .utils import get_state_dropdown_options
+from .styles import BUTTON_STYLE
 
 import logging
 
@@ -55,6 +57,20 @@ def state_dropdown(options: list[str], multi: bool = True, default: list[str] | 
                 options=options,
                 value=default if default else options[0],
                 multi=multi,
+            ),
+            html.Div(
+                [
+                    dbc.Button(
+                        "Select All",
+                        id=ids.STATES_SELECT_ALL,
+                        **BUTTON_STYLE,
+                    ),
+                    dbc.Button(
+                        "Remove All",
+                        id=ids.STATES_REMOVE_ALL,
+                        **BUTTON_STYLE,
+                    ),
+                ],
             ),
         ],
         className="dropdown-container",

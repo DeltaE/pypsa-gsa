@@ -7,13 +7,13 @@ from .utils import (
     DEFAULT_PLOTLY_THEME,
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
-    get_state_dropdown_options,
     get_y_label,
     get_emission_limits,
     DEFAULT_2005_EMISSION_LIMIT,
     DEFAULT_2030_EMISSION_LIMIT,
+    STATES,
 )
-from .data import SECTOR_DROPDOWN_OPTIONS_NO_ALL, METADATA
+from .data import SECTOR_DROPDOWN_OPTIONS_NO_ALL, METADATA, RAW_GSA
 from . import ids as ids
 from .styles import DATA_TABLE_STYLE
 
@@ -42,13 +42,14 @@ def cr_options_block() -> html.Div:
 
 def cr_state_dropdown() -> html.Div:
     """Custom Result State dropdown component."""
-    states = get_state_dropdown_options()
+    result_states = RAW_GSA.state.unique()
+    options = [{"label": STATES[x], "value": x} for x in result_states]
     return html.Div(
         [
             html.H6("Select State"),
             dcc.Dropdown(
                 id=ids.CR_STATE_DROPDOWN,
-                options=states,
+                options=options,
             ),
         ],
     )
