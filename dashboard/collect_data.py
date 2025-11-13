@@ -48,7 +48,7 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "rec": "Marginal Cost",
     "imports_co2": "Import Emissions",
     "e_nom": "Natural Gas",  # only one e_nom
-    "ind_heat_ff_production": "Industrial Fossil Fuel Production",
+    "ind_heat_ff_production": "Constraints",
 }
 
 PWR_CARRIERS = [
@@ -114,7 +114,7 @@ def collect_sa(root: Path, state: str, results: list[str]) -> pd.DataFrame:
         df.name = name
         dfs.append(df)
     df = _round_df(pd.concat(dfs, axis=1))
-    df["state"] = state
+    df["state"] = state.upper()
     df = df.reset_index(names=["param"])
     return df.set_index(["param", "state"])
 
@@ -169,7 +169,7 @@ def get_state_params(root: Path, state: str) -> pd.DataFrame:
     df = pd.read_csv(Path(root, "results", state, "gsa", "parameters.csv"))
     # track state specific data
     df = df[(df.name.str.startswith("tct_")) | (df.name == ("emission_limit"))]
-    df["state"] = state
+    df["state"] = state.upper()
     return df
 
 
@@ -461,7 +461,7 @@ if __name__ == "__main__":
         else:
             sample_data = pd.read_csv(state_data)
             sample_data["run"] = sample_data.index
-            sample_data["state"] = state
+            sample_data["state"] = state.upper()
             sample_data = sample_data.set_index(["run", "state"])
             sample_data.to_csv(
                 Path(
