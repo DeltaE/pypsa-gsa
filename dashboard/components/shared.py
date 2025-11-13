@@ -46,7 +46,9 @@ def state_options_block(*args: pd.DataFrame | None) -> html.Div:
     )
 
 
-def state_dropdown(options: list[str], multi: bool = True, default: list[str] | None = None) -> html.Div:
+def state_dropdown(
+    options: list[dict[str, str]], multi: bool = True, default: list[str] | None = None
+) -> html.Div:
     """STATE dropdown component."""
 
     return html.Div(
@@ -55,7 +57,7 @@ def state_dropdown(options: list[str], multi: bool = True, default: list[str] | 
             dcc.Dropdown(
                 id=ids.STATE_DROPDOWN,
                 options=options,
-                value=default if default else options[0],
+                value=default if default else options[0]["value"],
                 multi=multi,
             ),
             html.Div(

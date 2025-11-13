@@ -46,6 +46,7 @@ def _default_gsa_results_value() -> list[str]:
         "marginal_cost_elec",
         "carbon_co2",
         "carbon_total",
+        "objective_cost",
     ]
 
     defaults = []
