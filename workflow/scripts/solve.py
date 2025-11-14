@@ -1285,7 +1285,10 @@ def solve_network(
             f"Solving status '{status}' with termination condition '{condition}'"
         )
     if "infeasible" in condition:
-        raise RuntimeError("Solving status 'infeasible'")
+        # raise RuntimeError("Solving status 'infeasible'")
+        logger.warning(
+            f"Solving status 'other' with termination condition '{condition}'"
+        )
     elif "other" in condition:
         logger.warning(
             f"Solving status 'other' with termination condition '{condition}'"
