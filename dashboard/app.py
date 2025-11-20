@@ -632,6 +632,8 @@ def callback_update_ua_emissions(
 ) -> dict[str, dict[str, float]]:
     if isinstance(states, str):
         states = [states]
+    if not states:
+        return {}
     if emission_target:
         return {x: EMISSIONS[x] for x in states}
     else:
@@ -1185,6 +1187,8 @@ def callback_modify_state_dropdown_multi(
 def callback_modify_state_dropdown_value(states: str | list[str], multi: str) -> str:
     if isinstance(states, str):
         states = [states]
+    if not states:
+        return ""
     if multi:
         return states
     else:

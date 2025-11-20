@@ -140,7 +140,8 @@ def collect_runs(root: Path, state: str, mode: str, results: list[str]) -> pd.Da
         df = df.rename(columns={"value": name})
         dfs.append(df)
     df = _round_df(pd.concat(dfs, axis=1))
-    df["state"] = state.upper()
+    state_upper = state.upper()
+    df["state"] = state_upper  # performance warning
     df = df.reset_index(names=["run"])
     return df.set_index(["run", "state"])
 
