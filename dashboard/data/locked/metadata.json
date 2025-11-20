@@ -4367,6 +4367,14 @@
               "visible": true,
               "unit": "mw"
             },
+            "tct_steam": {
+              "label": "Thermal Steam",
+              "label2": "Thermal Steam Capacity Limit",
+              "sector": "power",
+              "param": "tct",
+              "visible": true,
+              "unit": "mw"
+            },
             "tct_battery": {
               "label": "Battery",
               "label2": "Battery Capacity Limit",
@@ -4582,6 +4590,7 @@
         "tct_ccgt_ccs": {"label": "Ccgt-95CCS Max Capacity"},
         "tct_ocgt": {"label": "Ocgt Max Capacity"},
         "tct_coal": {"label": "Coal Max Capacity"},
+        "tct_steam": {"label": "Thermal Steam Max Capacity"},
         "tct_battery": {"label": "Battery Max Capacity"},
         "landuse": {"label": "Landuse"},
         "ind_heat_ff_production": {"label": "Industrial Fossil Fuel Production"}
