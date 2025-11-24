@@ -19,6 +19,7 @@ SCENARIO = config["scenario"]["name"]
 # Include only generate-related rules
 ###
 
+include: "rules/prepare.smk"
 include: "rules/generate.smk"
 
 ###
@@ -29,3 +30,6 @@ rule all:
     input:
         f"results/{SCENARIO}/generated/{config['gsa']['parameters']}",
         f"results/{SCENARIO}/generated/tct_aeo.csv",
+        f"results/{SCENARIO}/gsa/parameters.csv",
+        f"results/{SCENARIO}/gsa/results.csv",
+        f"results/{SCENARIO}/ua/results.csv",

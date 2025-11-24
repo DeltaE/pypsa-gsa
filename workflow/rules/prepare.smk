@@ -105,61 +105,6 @@ rule retrieve_natural_gas_data:
     script:
         "../scripts/retrieve_ng_data.py"
 
-def get_input_parameters_file(wildards):
-    return f"results/{wildards.scenario}/generated/{config['gsa']['parameters']}"
-
-checkpoint sanitize_parameters:
-    message: "Sanitizing parameters"
-    input:
-        parameters=get_input_parameters_file,
-        network = "results/{scenario}/base.nc",
-        rps = "results/{scenario}/constraints/rps.csv",
-        ces = "results/{scenario}/constraints/ces.csv",
-    output:
-        parameters="results/{scenario}/gsa/parameters.csv"
-    log: 
-        "logs/sanitize_parameters/{scenario}.log"
-    benchmark:
-        "benchmarks/sanitize_parameters/{scenario}.txt"
-    resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
-        runtime=1
-    group:
-        "prepare_data"
-    script:
-        "../scripts/sanitize_params.py"
-
-
-def get_raw_result_path(wildards):
-    if wildards.mode == "gsa":
-        return config["gsa"]["results"]
-    elif wildards.mode == "ua":
-         return config["uncertainity"]["results"]
-    else:
-        raise ValueError(f"Invalid input {wildards.mode} for raw result path.")
-
-
-checkpoint sanitize_results:
-    message: "Sanitizing results"
-    wildcard_constraints:
-        mode="gsa|ua"
-    params:
-        results=get_raw_result_path
-    input:
-        network = "results/{scenario}/base.nc"
-    output:
-        results="results/{scenario}/{mode}/results.csv"
-    resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
-        runtime=1
-    benchmark:
-        "benchmarks/sanitize_results/{scenario}_{mode}.txt"
-    log: 
-        "logs/sanitize_results/{scenario}_{mode}.log"
-    group:
-        "prepare_data"
-    script:
-        "../scripts/sanitize_results.py"
 
 
 rule process_natural_gas:
@@ -278,7 +223,7 @@ rule prepare_ua_params:
         df.to_csv(output.parameters, index=False)
 
 
-checkpoint sanitize_ua_plot_params:
+rule sanitize_ua_plot_params:
     message: "Sanitizing uncertainity analysis plotting parameters."
     input:
         plots=config["uncertainity"]["plots"],

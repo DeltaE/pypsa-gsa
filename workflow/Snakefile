@@ -16,13 +16,30 @@ wildcard_constraints:
 
 SCENARIO = config["scenario"]["name"]
 
-onstart:
-    gen_params = Path("results", SCENARIO, "generated", "config", "parameters.csv")
-    if not gen_params.exists():
-        print("Generate data first with 'snakemake -s Sankefile.generate'")
-        raise FileNotFoundError(f"Parameters file not found: {gen_params}")
+# list of rules for which onstart should be skipped
+CLEANING_RULES = {"clean_all", "clean_gsa", "clean_ua", "clean_generate"}
+
+def conditional_onstart(workflow):
+    if any(rule in CLEANING_RULES for rule in workflow.dag_settings.targets):
+        return  
+
+    sanitized_params = Path("results", SCENARIO, "gsa", "parameters.csv")
+    sanitized_gsa_results = Path("results", SCENARIO, "gsa", "results.csv")
+    sanitized_ua_results = Path("results", SCENARIO, "ua", "results.csv")
+    if not sanitized_params.exists() or not sanitized_gsa_results.exists() or not sanitized_ua_results.exists():
+        print("Generate data first with 'snakemake -s workflow/Snakefile.generate'")
+        if not sanitized_params.exists():
+            raise FileNotFoundError(f"Sanitized parameters file not found: {sanitized_params}")
+        if not sanitized_gsa_results.exists():
+            raise FileNotFoundError(f"Sanitized GSA results file not found: {sanitized_gsa_results}")
+        if not sanitized_ua_results.exists():
+            raise FileNotFoundError(f"Sanitized UA results file not found: {sanitized_ua_results}")
     else:
-        print(f"Parameters file found: {gen_params}")
+        print(f"Sanitized files found: {sanitized_params}, {sanitized_gsa_results}, {sanitized_ua_results}")
+
+onstart:
+    conditional_onstart(workflow)
+
 
 # manually cleanup temporary networks
 # see the following issues on why temp() doesnt work with checkpoints
@@ -67,30 +84,51 @@ onsuccess:
 # GSA specific parameters
 ###
 
+# Cache for model runs to avoid repeated file reads
+_gsa_modelruns_cache = None
+
 def get_gsa_modelruns() -> range:
-    """number of gsa model runs"""
-    try:
-        # gsa_params = pd.read_csv(f"results/{SCENARIO}/generated/{config['gsa']['parameters']}")
-        gsa_params = pd.read_csv(f"results/{SCENARIO}/gsa/parameters.csv")
+    """number of gsa model runs - cached to avoid repeated file reads"""
+    global _gsa_modelruns_cache
+    if _gsa_modelruns_cache is not None:
+        return _gsa_modelruns_cache
+    
+    params_file = f"results/{SCENARIO}/gsa/parameters.csv"
+    if Path(params_file).exists():
+        gsa_params = pd.read_csv(params_file)
         gsa_groups = gsa_params.group.unique().tolist()
-        return range((len(gsa_groups) + 1) * config["gsa"]["replicates"])
-    except FileNotFoundError as e:
-        if Path(f"results/{SCENARIO}/generated/{config['gsa']['parameters']}").exists():
-            return range(0,1) # checkpoint will retrigger this 
-        else:
-            print("*** Generate data first with 'snakemake -s Sankefile.generate' ***")
-            raise FileNotFoundError(f"Parameters file not found: {gen_params}")
+        _gsa_modelruns_cache = range((len(gsa_groups) + 1) * config["gsa"]["replicates"])
+        return _gsa_modelruns_cache
+    else:
+        _gsa_modelruns_cache = range(0)
+        return _gsa_modelruns_cache
+
 
 def get_gsa_result_files() -> list[str]:
     """All gsa results files"""
-    results = pd.read_csv(config["gsa"]["results"])
-    return list(set(results.name.to_list()))
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/gsa/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return list(set(results.name.to_list()))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
 
 def get_gsa_plots() -> list[str]:
     """Gsa plots"""
-    results = pd.read_csv(config["gsa"]["results"])
-    plots_temp = results.gsa_plot.dropna().str.split(";").to_list()
-    return list(set(chain(*plots_temp)))
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/gsa/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        plots_temp = results.gsa_plot.dropna().str.split(";").to_list()
+        return list(set(chain(*plots_temp)))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
 
 ###
 # UA specific parameters
@@ -98,17 +136,38 @@ def get_gsa_plots() -> list[str]:
 
 def get_ua_result_files():
     """All ua results files"""
-    results = pd.read_csv(config["uncertainity"]["results"])
-    return list(set(results.name.to_list()))
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/ua/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return list(set(results.name.to_list()))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
 
 def get_ua_scatterplots():
     """UA scatterplots"""
-    return pd.read_csv(config["uncertainity"]["plots"])["plot"].to_list()
+    scenario = config["scenario"]["name"]
+    plots_f = f"results/{scenario}/ua/plots.csv"
+    if Path(plots_f).exists():
+        return pd.read_csv(plots_f)["plot"].to_list()
+    else:
+
+        return []
 
 def get_ua_barplots():
     """UA barplots"""
-    results = pd.read_csv(config["uncertainity"]["results"])
-    return results.ua_plot.dropna().to_list()
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/ua/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return results.ua_plot.dropna().to_list()
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
 
 def get_ua_modelruns():
     """Number of ua model runs"""

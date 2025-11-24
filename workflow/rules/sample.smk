@@ -23,6 +23,10 @@ def get_static_values(wildards):
     else:
         raise ValueError(f"{wildards.mode} is not valid for static values.")
 
+def get_sanitized_parameters_file(wildcards):
+    """Get sanitized parameters file"""
+    return f"results/{wildcards.scenario}/gsa/parameters.csv"
+
 rule create_sample:
     message: "Creating sample"
     wildcard_constraints:
@@ -61,6 +65,7 @@ checkpoint apply_gsa_sample_to_network:
         meta_csv = config["metadata"]["csv"],
         testing = False,
     input: 
+        sanitized_parameters = get_sanitized_parameters_file,
         parameters = "results/{scenario}/{mode}/parameters.csv",
         set_values_file = get_static_values,
         sample_file = "results/{scenario}/{mode}/sample.csv",
@@ -98,6 +103,7 @@ checkpoint apply_ua_sample_to_network:
         meta_csv = config["metadata"]["csv"],
         testing = False,
     input: 
+        sanitized_parameters = get_sanitized_parameters_file,
         parameters = "results/{scenario}/{mode}/parameters.csv",
         set_values_file = get_static_values,
         sample_file = "results/{scenario}/{mode}/sample.csv",
@@ -135,6 +141,7 @@ rule test_apply_gsa_sample_to_network:
         meta_csv = config["metadata"]["csv"],
         testing = True
     input: 
+        sanitized_parameters = get_sanitized_parameters_file,
         parameters = "results/{scenario}/{mode}/parameters.csv",
         set_values_file = get_static_values,
         sample_file = "results/{scenario}/{mode}/sample.csv",

@@ -1,5 +1,7 @@
 """Rules for processing results"""
 
+from pathlib import Path
+
 ###
 # INPUT FUNCTIONS
 ###
@@ -11,23 +13,37 @@ def get_sample_file(wildcards):
         return f"results/{wildcards.scenario}/gsa/sample.csv"
 
 def get_gsa_plotting_csvs(wildcards):
-    csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="gsa").output[0]
-    df = pd.read_csv(csv).dropna(subset=["gsa_plot"]).copy()
-    df = df[df.gsa_plot.str.contains(wildcards.plot)]
-    results = df.name.to_list()
-
-    return [f"results/{wildcards.scenario}/gsa/SA/{x}.csv" for x in results]
+    csv = f"results/{wildcards.scenario}/gsa/results.csv"
+    if Path(csv).exists():
+        df = pd.read_csv(csv).dropna(subset=["gsa_plot"]).copy()
+        df = df[df.gsa_plot.str.contains(wildcards.plot)]
+        results = df.name.to_list()
+        return [f"results/{wildcards.scenario}/gsa/SA/{x}.csv" for x in results]
+    else: # Called on import
+        return []
 
 def get_ua_scatterplot_csvs(wildcards):
-    csv = checkpoints.sanitize_ua_plot_params.get(scenario=wildcards.scenario).output[0]
-    df = pd.read_csv(csv, index_col=0)
-    df = df[df["plot"] == wildcards.plot]
-    assert not df.empty
-    csvs = df.xaxis.to_list() + df.yaxis.to_list()
-    return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in csvs]
+    # Read plots.csv (created by sanitize_ua_plot_params rule)
+    # Note: This function is called during DAG construction, but plots.csv is an input
+    # to plot_ua_scatter, so Snakemake will ensure sanitize_ua_plot_params runs first.
+    # However, during initial DAG construction, the file may not exist yet.
+    csv = f"results/{wildcards.scenario}/ua/plots.csv"
+    try:
+        df = pd.read_csv(csv, index_col=0)
+        df = df[df["plot"] == wildcards.plot]
+        if df.empty:
+            return []
+        csvs = df.xaxis.to_list() + df.yaxis.to_list()
+        return [f"results/{wildcards.scenario}/ua/results/{x}.csv" for x in csvs]
+    except (FileNotFoundError, pd.errors.EmptyDataError):
+        # File doesn't exist yet - Snakemake will re-evaluate after sanitize_ua_plot_params runs
+        # Return a placeholder that will be replaced when the file exists
+        # The actual files will be determined when the rule executes
+        return [f"results/{wildcards.scenario}/ua/results/placeholder_{wildcards.plot}.csv"]
+
 
 def get_ua_barplot_csvs(wildcards):
-    csv = checkpoints.sanitize_results.get(scenario=wildcards.scenario, mode="ua").output[0]
+    csv = f"results/{wildcards.scenario}/ua/results.csv"
     df = pd.read_csv(csv).dropna(subset=["ua_plot"]).copy()
     df = df[df.ua_plot == wildcards.plot]
     assert not df.empty
@@ -70,11 +86,16 @@ rule extract_results:
     script:
         "../scripts/extract_results.py"
 
-checkpoint combine_results:
+def get_sanitized_results_file(wildcards):
+    """Get sanitized results file"""
+    return f"results/{wildcards.scenario}/{wildcards.mode}/results.csv"
+
+rule combine_results:
     message: "Collapsing all results into single summary file"
     wildcard_constraints:
         mode="gsa|ua"
     input:
+        sanitized_results = get_sanitized_results_file,
         results = get_combined_results_inputs
     output:
         csv = temp("results/{scenario}/{mode}/results/all.csv")
@@ -97,11 +118,16 @@ checkpoint combine_results:
 # GSA RULES
 ###
 
+def get_sanitized_gsa_results_file(wildcards):
+    """Get sanitized GSA results file"""
+    return f"results/{wildcards.scenario}/gsa/results.csv"
+
 rule parse_gsa_results:
     message: "Parsing results by results file"
     params:
         base_dir = "results/{scenario}/gsa/results/"
     input:
+        sanitized_results = get_sanitized_gsa_results_file,
         results = "results/{scenario}/gsa/results/all.csv"
     output:
         expand("results/{{scenario}}/gsa/results/{sa_result}.csv", sa_result=get_gsa_result_files())
@@ -206,6 +232,9 @@ rule heatmap:
     message:
         "Generating heat map"
     input:
+        rules.combine_sa_results.output,
+        # sanitized_parameters = lambda x: checkpoints.sanitize_parameters.get(scenario=SCENARIO).output,
+        # sanitized_results = lambda x: checkpoints.sanitize_results.get(scenario=SCENARIO, mode="gsa").output,
         params = "results/{scenario}/gsa/parameters.csv",
         results = "results/{scenario}/gsa/results.csv",
         csvs = get_gsa_plotting_csvs
@@ -227,6 +256,9 @@ rule barplot:
     message:
         "Generating barplot"
     input:
+        rules.combine_sa_results.output,
+        # sanitized_parameters = lambda x: checkpoints.sanitize_parameters.get(scenario=SCENARIO).output,
+        # sanitized_results = lambda x: checkpoints.sanitize_results.get(scenario=SCENARIO, mode="gsa").output,
         params = "results/{scenario}/gsa/parameters.csv",
         results = "results/{scenario}/gsa/results.csv",
         csvs = get_gsa_plotting_csvs
@@ -248,11 +280,16 @@ rule barplot:
 # UA RULES
 ###
 
+def get_sanitized_ua_results_file(wildcards):
+    """Get sanitized UA results file"""
+    return f"results/{wildcards.scenario}/ua/results.csv"
+
 rule parse_ua_results:
     message: "Parsing results by results file"
     params:
         base_dir = "results/{scenario}/ua/results/"
     input:
+        sanitized_results = get_sanitized_ua_results_file,
         results = "results/{scenario}/ua/results/all.csv"
     output:
         expand("results/{{scenario}}/ua/results/{name}.csv", name=get_ua_result_files())
@@ -280,8 +317,9 @@ rule plot_ua_scatter:
     params:
         root_dir = "results/{scenario}/ua/results/"
     input:
+        sanitized_results = get_sanitized_ua_results_file,
         csvs = get_ua_scatterplot_csvs,
-        results = "results/{scenario}/ua/plots.csv"
+        plots_csv = "results/{scenario}/ua/plots.csv"  # Explicit dependency on sanitize_ua_plot_params output
     output:
         plot = "results/{scenario}/ua/scatterplots/{plot}.png"
     log: 
@@ -302,6 +340,7 @@ rule plot_ua_barplots:
     params:
         root_dir = "results/{scenario}/ua/results/"
     input:
+        sanitized_results = get_sanitized_ua_results_file,
         csvs = get_ua_barplot_csvs,
         results = "results/{scenario}/ua/results.csv"
     output:
