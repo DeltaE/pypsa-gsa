@@ -66,7 +66,11 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
 
     for car in sa_cars_flat:
         if car not in n_cars:
-            errors.append(car)
+            if car == "offwind_floating":
+                # only used in portfolio results
+                continue
+            else:
+                errors.append(car)
 
     if errors:
         logger.error(f"{errors} are not defined in network.")
@@ -102,6 +106,10 @@ def no_nans(results: pd.DataFrame) -> bool:
     else:
         return True
 
+def remove_offwind_floating(results: pd.DataFrame) -> pd.DataFrame:
+    """Remove offwind floating if not present in network."""
+    df = results.copy()
+    return df[df.carriers != "offwind_floating"]
 
 if __name__ == "__main__":
     if "snakemake" in globals():
@@ -124,6 +132,10 @@ if __name__ == "__main__":
         assert no_nans(df)
 
     n = pypsa.Network(network)
+    
+    if "offwind_floating" not in n.carriers.index:
+        df = remove_offwind_floating(df)
+    
     assert is_valid_carrier(n, df)
 
     df.to_csv(out_results, index=False)
