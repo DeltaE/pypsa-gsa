@@ -59,7 +59,11 @@ if __name__ == "__main__":
     for csv in csvs:
         name = Path(csv).stem
         dfs.append(pd.read_csv(csv, index_col=0)["mu_star"].to_frame(r_nice_name[name]))
-    df = pd.concat(dfs, axis=1)
+
+    if dfs:
+        df = pd.concat(dfs, axis=1)
+    else:
+        df = pd.DataFrame(index=p_nice_name.values())
 
     df.index = df.index.map(p_nice_name)
 

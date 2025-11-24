@@ -1,7 +1,7 @@
 
 # name of base pypsa network
 scenario: 
-  name: "ct"
+  name: "nh"
 
 model_options:
   ch4: false # if true, ch4 counts against emission budget. Else, ch4 tracked, but not counted against budget.
@@ -11,8 +11,8 @@ model_options:
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  network: "ct/elec_s10_c1m_ec_lv1.0_3h_E-G.nc"
-  pop_layout: "ct/pop_layout_elec_s10_c1m.csv"
+  network: "nh/elec_s20_c1m_ec_lv1.0_3h_E-G.nc"
+  pop_layout: "nh/pop_layout_elec_s20_c1m.csv"
   era5_year: 2018
 
 # write out GSA associated metadata with each run
@@ -54,6 +54,8 @@ uncertainity:
   replicates: 1100
   parameters: # naems or groups 
   - eff_trn_lpg
+  - elec_export_price
+  - elec_import_price
   - elec_import_rec_price
   - elec_trade_flow
   - gwp
