@@ -13,17 +13,19 @@ import yaml
 from utils import (
     get_existing_lv,
     get_region_buses,
-    get_rps_demand_actual,
+    get_rps_demand_supplyside,
     get_rps_eligible,
     get_rps_generation,
     concat_rps_standards,
     format_raw_ng_trade_data,
     get_ng_trade_links,
     get_urban_rural_fraction,
-    configure_logging
+    configure_logging,
+    get_network_state,
 )
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 ###
@@ -88,9 +90,11 @@ def filter_components(
 
     return filtered
 
+
 ###
 # Custom constraints
 ###
+
 
 def add_land_use_constraint_perfect(n):
     """
@@ -105,8 +109,8 @@ def add_land_use_constraint_perfect(n):
             > p_nom_max.groupby(level=[0, 1]).min()
         )
         if check.sum():
-            logger.debug(
-                f"summed p_min_pu values at node larger than technical potential {check[check].index}",
+            raise ValueError(
+                f"p_min_pu values at node larger than technical potential {check[check].index}"
             )
 
     grouper = [n.generators.carrier, n.generators.bus]
@@ -135,6 +139,76 @@ def add_land_use_constraint_perfect(n):
         n.buses.loc[bus, name] = df_carrier.p_nom_max.values
     return n
 
+
+def add_no_coal_oil_investment_constraint(n):
+    """
+    Add constraint to prevent investment in coal and oil.
+    """
+    cars = [
+        x
+        for x in n.carriers.index
+        if any(fuel in x for fuel in ["coal", "oil", "waste"])
+    ]
+    n.links.loc[n.links.carrier.isin(cars), "p_nom_extendable"] = False
+    return n
+
+
+def no_economic_retirement_constraint(n):
+    """
+    Turns off economic retirement for power generator assets.
+
+    This can be configured in the main pypsa_usa workflow. Its done here though as it
+    allows faster testing of economic retirement.
+    """
+
+    # very hacky, but I know this wont change for my project
+    pwr_cars = [
+        "nuclear",
+        "oil",
+        "OCGT",
+        "CCGT",
+        "CCGT-95CCS",
+        "coal",
+        "geothermal",
+        "biomass",
+        "waste",
+        "onwind",
+        "offwind_floating",
+        "solar",
+        "hydro",
+        "battery",
+    ]
+
+    links = n.links[
+        (n.links.index.str.endswith(" existing")) & (n.links.carrier.isin(pwr_cars))
+    ]
+    if links.empty:
+        return n
+    n.links.loc[links.index, "p_nom_extendable"] = False
+    n.links.loc[links.index, "capital_cost"] = (
+        0  # not actually needed, just for sanity :)
+    )
+
+    gens = n.generators[
+        (n.generators.index.str.endswith(" existing"))
+        & (n.generators.carrier.isin(pwr_cars))
+    ]
+    n.generators.loc[gens.index, "p_nom_extendable"] = False
+    n.generators.loc[gens.index, "capital_cost"] = (
+        0  # not actually needed, just for sanity :)
+    )
+
+    storageunits = n.storage_units[
+        (n.storage_units.index.str.endswith(" existing"))
+        & (n.storage_units.carrier.isin(pwr_cars))
+    ]
+    n.storage_units.loc[storageunits.index, "p_nom_extendable"] = False
+    n.storage_units.loc[storageunits.index, "capital_cost"] = (
+        0  # not actually needed, just for sanity :)
+    )
+    return n
+
+
 def add_technology_capacity_target_constraints(
     n: pypsa.Network, data: pd.DataFrame, sample: pd.DataFrame
 ):
@@ -152,7 +226,7 @@ def add_technology_capacity_target_constraints(
     # apply sample
     tct_data = tct_data.set_index("name")
     for name, sample_value in zip(sample.name, sample.value):
-        tct_data.loc[name, "max"] *= sample_value
+        tct_data.loc[name, "max"] = sample_value  # sample value already scaled
     tct_data = tct_data.reset_index()
 
     if tct_data.empty:
@@ -244,7 +318,12 @@ def add_technology_capacity_target_constraints(
             ).rename_axis(
                 "StorageUnit-ext",
             )
-            lhs_s = n.model["StorageUnit-p_nom"].loc[lhs_storage_ext.index].groupby(grouper_s).sum()
+            lhs_s = (
+                n.model["StorageUnit-p_nom"]
+                .loc[lhs_storage_ext.index]
+                .groupby(grouper_s)
+                .sum()
+            )
         else:
             lhs_s = None
 
@@ -276,6 +355,21 @@ def add_technology_capacity_target_constraints(
             + lhs_link_existing.p_nom.sum()
         )
 
+        # toss out reeds storage mandate if creates infeasability
+        # should only be happening with Maryland
+        if target["name"] == "reeds_storage_mandate":
+            try:
+                gsa_max = tct_data.loc[tct_data["name"] == "tct_battery", "max"].values[
+                    0
+                ]
+                if target["min"] > gsa_max:
+                    logger.warning(
+                        f"Tossing out reeds storage mandate for {target.name} because it creates infeasability"
+                    )
+                    continue
+            except KeyError:
+                pass
+
         if target["max"] == "existing":
             target["max"] = round(lhs_existing, 5) + 0.01
         else:
@@ -285,6 +379,16 @@ def add_technology_capacity_target_constraints(
             target["min"] = round(lhs_existing, 5) - 0.01
         else:
             target["min"] = float(target["min"])
+
+        # numerical stability
+        if target["min"]:
+            if abs(target["min"] - lhs_existing) < 0.01:
+                target["min"] -= 0.01
+                if target["min"] < 0:
+                    target["min"] = 0
+        if target["max"]:
+            if abs(target["max"] - lhs_existing) < 0.01:
+                target["max"] += 0.01
 
         if not np.isnan(target["min"]):
             rhs = target["min"] - round(lhs_existing, 5)
@@ -301,13 +405,14 @@ def add_technology_capacity_target_constraints(
                 f"Region: {target.region}\n"
                 f"Carrier: {target.carrier}\n"
                 f"Min Value: {target['min']}\n"
-                f"Min Value Adj: {rhs}",
+                f"Min Value Adj: {rhs}\n"
+                f"Current value: {lhs_existing}\n"
             )
 
         if not np.isnan(target["max"]):
-            assert (
-                target["max"] >= lhs_existing
-            ), f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
+            assert target["max"] >= lhs_existing, (
+                f"TCT constraint of {target['max']} MW for {target['carrier']} must be at least {lhs_existing}"
+            )
 
             rhs = target["max"] - round(lhs_existing, 5)
 
@@ -323,47 +428,101 @@ def add_technology_capacity_target_constraints(
                 f"Region: {target.region}\n"
                 f"Carrier: {target.carrier}\n"
                 f"Max Value: {target['max']}\n"
-                f"Max Value Adj: {rhs}",
+                f"Max Value Adj: {rhs}\n"
+                f"Current value: {lhs_existing}\n"
             )
+
 
 def add_RPS_constraints(
     n: pypsa.Network, policy_name: str, rps: pd.DataFrame, sample: float
 ):
     """
     Add Renewable Portfolio Standards constraint to the network.
+
+    This is applied at a **supply level**, not a demand level. Else we need to account for
+    imports/exports and sector links (ie. heatpumps, ect).
     """
 
     if rps.empty:
         return
-    
+
     portfolio_standards = concat_rps_standards(n, rps)
 
-    # Iterate through constraints
-    for _, constraint_row in portfolio_standards.iterrows():
-        
-        region_buses, region_gens = get_rps_eligible(n, constraint_row.region, constraint_row.carrier)
-        
-        if region_buses.empty:
-            continue
+    mapper = n.buses.groupby("reeds_state")["rec_trading_zone"].first().to_dict()
+    portfolio_standards["rec_trading_zone"] = portfolio_standards.region.map(
+        mapper
+    ).fillna(portfolio_standards.region)
 
-        if not region_gens.empty:
-            region_demand = get_rps_demand_actual(n, constraint_row.planning_horizon, region_buses)
-            region_gen = get_rps_generation(n, constraint_row.planning_horizon, region_gens)
+    for rec_trading_zone in portfolio_standards.rec_trading_zone.unique():
+        portfolio_standards_zone = portfolio_standards[
+            portfolio_standards.rec_trading_zone == rec_trading_zone
+        ]
 
-            lhs = region_gen - constraint_row.pct * region_demand * sample
-            rhs = 0
+        demands = []  # linear expressions for each demand
+        generation = []  # linear expressions for each generation
 
-            # Add constraint
-            n.model.add_constraints(
-                lhs >= rhs,
-                name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
-            )
-            logger.info(
-                f"Added RPS {constraint_row.region} for {constraint_row.planning_horizon}.",
+        for _, constraint_row in portfolio_standards_zone.iterrows():
+            region_buses, region_gens = get_rps_eligible(
+                n, constraint_row.region, constraint_row.carrier
             )
 
+            if region_buses.empty:
+                continue
 
-def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: bool):
+            if not region_gens.empty:
+                region_demand = get_rps_demand_supplyside(
+                    n, constraint_row.planning_horizon, region_buses, region_gens
+                )
+                # region_demand = get_rps_demand_demandside(
+                #     n, constraint_row.planning_horizon, region_buses
+                # )
+
+                # pct is really a decimal value, not a percentage
+                demands.append(constraint_row.pct * region_demand * sample)
+
+                region_gen = get_rps_generation(
+                    n, constraint_row.planning_horizon, region_gens
+                )
+                generation.append(region_gen)
+
+        demand = sum(demands)
+        generation = sum(generation)
+
+        lhs = generation - demand
+        rhs = 0
+
+        # Add constraint
+        n.model.add_constraints(
+            lhs >= rhs,
+            name=f"GlobalConstraint-{constraint_row.name}_{constraint_row.planning_horizon}_{policy_name}_limit",
+        )
+        logger.info(
+            f"Added {rec_trading_zone} {policy_name} for {constraint_row.planning_horizon}.",
+        )
+
+
+def add_imports_rec_constraint(n: pypsa.Network):
+    """Constrain capacity limits on REC_imports and regular imports, so flows can only be max of one of them."""
+    links = n.links[n.links.carrier == "imports"]
+    for link in links.index:
+        link_rec = f"{link}_rec"
+        links_2_constrain = n.links[n.links.index.isin([link, link_rec])]
+        assert len(links_2_constrain) == 2, f"Expected 2 imports per link {link}"
+        assert links_2_constrain.iloc[0].p_nom == links_2_constrain.iloc[1].p_nom, (
+            f"Expected same capacity for imports and imports_rec for link {link}"
+        )
+        capacity = links_2_constrain.iloc[0].p_nom
+
+        n.model.add_constraints(
+            n.model["Link-p"].sel(Link=links_2_constrain.index).sum(dim="Link")
+            <= capacity,
+            name=f"imports_rec_capacity_constraint-{link}",
+        )
+
+
+def add_sector_co2_constraints(
+    n: pypsa.Network, sample: float, include_ch4: bool = True
+):
     """Adds sector co2 constraints."""
 
     def apply_national_limit(
@@ -451,10 +610,10 @@ def add_sector_co2_constraints(n: pypsa.Network, sample: float, include_ch4: boo
                 else:
                     raise ValueError(state.lower())
 
-def add_ng_import_export_limits(
-    n: pypsa.Network, ng_trade: dict[str, pd.DataFrame], limits: dict[str, float]
-):
 
+def add_ng_import_export_limits(
+    n: pypsa.Network, ng_trade: dict[str, pd.DataFrame | float]
+):
     def add_import_limits(n, data, constraint, multiplier=None):
         """Sets gas import limit over each year."""
         assert constraint in ("max", "min")
@@ -465,7 +624,7 @@ def add_ng_import_export_limits(
         weights = n.snapshot_weightings.objective
 
         links = get_ng_trade_links(n, "imports")
-        
+
         for year in n.investment_periods:
             for link in links:
                 try:
@@ -494,7 +653,7 @@ def add_ng_import_export_limits(
             multiplier = 1
 
         weights = n.snapshot_weightings.objective
-        
+
         links = get_ng_trade_links(n, "exports")
 
         for year in n.investment_periods:
@@ -519,21 +678,20 @@ def add_ng_import_export_limits(
 
     # get limits
 
-    import_min = limits.get("import_min", 1)
-    import_max = limits.get("import_max", 1)
-    export_min = limits.get("export_min", 1)
-    export_max = limits.get("export_max", 1)
-
+    import_min = round(ng_trade.get("min_import", 1), 3)
+    import_max = round(ng_trade.get("max_import", 1), 3)
+    export_min = round(ng_trade.get("min_export", 1), 3)
+    export_max = round(ng_trade.get("max_export", 1), 3)
     # to avoid numerical issues, ensure there is a gap between min/max constraints
     if abs(import_max - import_min) < 0.0001:
-        import_min -= 0.001
-        import_max += 0.001
+        import_min -= 0.01
+        import_max += 0.01
         if import_min < 0:
             import_min = 0
 
     if abs(export_max - export_min) < 0.0001:
-        export_min -= 0.001
-        export_max += 0.001
+        export_min -= 0.01
+        export_max += 0.01
         if export_min < 0:
             export_min = 0
 
@@ -546,8 +704,9 @@ def add_ng_import_export_limits(
     trade = ng_trade["domestic"].copy()
     trade = format_raw_ng_trade_data(trade, " trade")
 
-    add_import_limits(n, trade, "min", import_min)
-    add_export_limits(n, trade, "min", export_min)
+    """Forcing exports/imports can lead to overconstrained solutions"""
+    # add_import_limits(n, trade, "min", import_min)
+    # add_export_limits(n, trade, "min", export_min)
 
     if not import_max == "inf":
         add_import_limits(n, trade, "max", import_max)
@@ -559,13 +718,196 @@ def add_ng_import_export_limits(
     trade = ng_trade["international"].copy()
     trade = format_raw_ng_trade_data(trade, " trade")
 
-    add_import_limits(n, trade, "min", import_min)
-    add_export_limits(n, trade, "min", export_min)
+    """Forcing exports/imports can lead to overconstrained solutions"""
+    # add_import_limits(n, trade, "min", import_min)
+    # add_export_limits(n, trade, "min", export_min)
 
     if not import_max == "inf":
         add_import_limits(n, trade, "max", import_max)
     if not export_max == "inf":
         add_export_limits(n, trade, "max", export_max)
+
+
+def add_elec_trade_constraints(
+    n: pypsa.Network, elec_trade: pd.DataFrame, balancing_period: str = "year"
+):
+    def _get_periods(n: pypsa.Network) -> pd.Series:
+        """Get time periods from network snapshots.
+
+        Parameters
+        ----------
+        n : pypsa.Network
+            Network object containing snapshots
+        period_type : str
+            Type of period to return ('day', 'week', 'month', 'year')
+
+        Returns
+        -------
+        pd.Series
+            Series with datetime index and period values
+        """
+        timestamps = n.snapshots.get_level_values("timestep")
+
+        periods = pd.DataFrame(index=timestamps)
+        periods["day"] = timestamps.dayofyear
+        periods["week"] = timestamps.isocalendar().week
+        periods["month"] = timestamps.month
+        periods["year"] = timestamps.year
+
+        return periods
+
+    def _get_elec_import_links(n: pypsa.Network) -> list[str]:
+        """Get all links for elec trade."""
+        return n.links[n.links.carrier.isin(["imports", "imports_rec"])].index.tolist()
+
+    def _get_elec_export_links(n: pypsa.Network) -> list[str]:
+        """Get all links for elec trade."""
+        return n.links[n.links.carrier == "exports"].index.tolist()
+
+    states = get_network_state(n)
+    if len(states) < 1:
+        raise ValueError("No states found for network")
+    elif len(states) > 1:
+        raise ValueError("Multiple states found for network")
+    state = states[0]
+
+    volume_limit = elec_trade.set_index("state")
+    volume_limit = volume_limit.at[state, "trade_factor"]
+
+    weights = n.snapshot_weightings.objective
+    period = n.snapshots.get_level_values("period").unique().tolist()
+
+    import_links = _get_elec_import_links(n)
+    export_links = _get_elec_export_links(n)
+
+    periods = _get_periods(n)
+
+    timesteps = n.snapshots.get_level_values("timestep")
+    for year in periods["year"].unique():
+        periods_in_year = periods[periods["year"] == year]
+        for period in periods_in_year[balancing_period].unique():
+            if balancing_period == "week":
+                timesteps_in_period = timesteps[
+                    (timesteps.year == year) & (timesteps.isocalendar().week == period)
+                ].strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                timesteps_in_period = timesteps[
+                    (timesteps.year == year)
+                    & (getattr(timesteps, balancing_period) == period)
+                ].strftime("%Y-%m-%d %H:%M:%S")
+
+            imports_lhs = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=year, Link=import_links)
+                .sel(
+                    timestep=timesteps_in_period
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
+
+            exports_lhs = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=year, Link=export_links)
+                .sel(
+                    timestep=timesteps_in_period
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
+
+            net_imports = imports_lhs - exports_lhs
+
+            # note that this is approx. consumed electricity
+            buses = n.buses[n.buses.carrier == "AC"]
+            demand_links = n.links[
+                (n.links.bus0.isin(buses.index))
+                & (n.links.carrier.str.startswith(("res", "com", "ind", "trn")))
+            ].index
+
+            demand = (
+                n.model["Link-p"]
+                .mul(weights)
+                .sel(period=year, Link=demand_links)
+                .sel(
+                    timestep=timesteps_in_period
+                )  # Seperate cause slicing on multi-index is not supported
+                .sum()
+            )
+
+            # setup for constraints
+            # if imports:
+            # - volumne_limit = (imports / sales) >= 0
+            # - net_imports >= 0
+            # - net_imports - volumne_limit * demand <= 0
+            # if exports:
+            # - volumne_limit = (imports / sales) <= 0
+            # - net_imports <= 0
+            # - net_imports - volumne_limit * demand <= 0
+
+            volume_limit = round(volume_limit, 3)
+
+            if volume_limit < 0:  # net exports
+                n.model.add_constraints(
+                    net_imports <= 0,
+                    name=f"elec_trade-{state}_upper",
+                )
+                n.model.add_constraints(
+                    net_imports - (volume_limit * demand) >= 0,
+                    name=f"elec_trade-{state}_lower",
+                )
+
+            else:  # net imports
+                n.model.add_constraints(
+                    net_imports >= 0,
+                    name=f"elec_trade-{state}_lower",
+                )
+                n.model.add_constraints(
+                    net_imports - (volume_limit * demand) <= 0,
+                    name=f"elec_trade-{state}_upper",
+                )
+
+
+def add_lolp_constraint(n, relax: float = 1.0):
+    """Adds a loss of load probability constraint.
+
+    This constraint restricts the amount of load shedding that can occur.
+    """
+
+    generators = n.generators[n.generators.carrier == "load"]
+
+    if generators.empty:
+        logger.warning(
+            "No load shedding generators found for loss of load probability constraint"
+        )
+        return
+
+    assert len(generators.bus.unique()) == len(generators), (
+        "Multiple generators at the same bus"
+    )
+
+    loads = n.loads[
+        n.loads.carrier.str.endswith("elec")
+    ]  # llop only to electrical loads
+
+    for generator in generators.index:
+        bus = n.generators.at[generator, "bus"]
+        loads_at_bus = loads[loads.bus.str.startswith(bus)].index
+        load = n.loads_t["p_set"].loc[:, loads_at_bus].sum().sum()
+
+        load *= 1.20  # approximate correction for EV load
+
+        # LLOP of 0.1 day per year = 0.000274
+        # https://en.wikipedia.org/wiki/Loss_of_load
+        # if a run fails, we relax the constraint (base relax is 1.0 for none)
+        rhs = round(load * 0.000274 * relax, 6)
+
+        lhs = n.model["Generator-p"].loc[:, generator].sum()
+
+        n.model.add_constraints(
+            lhs <= rhs,
+            name=f"llop-{bus}",
+        )
 
 
 def add_transmission_limit(n, factor):
@@ -627,7 +969,10 @@ def add_cooling_heat_pump_constraints(n):
 
         assert len(heating_hps) == len(cooling_hps)
 
-        lhs = n.model["Link-p_nom"].loc[heating_hps] - n.model["Link-p_nom"].loc[cooling_hps]
+        lhs = (
+            n.model["Link-p_nom"].loc[heating_hps]
+            - n.model["Link-p_nom"].loc[cooling_hps]
+        )
         rhs = 0
 
         n.model.add_constraints(lhs == rhs, name=f"Link-{hp_type}_cooling_capacity")
@@ -700,6 +1045,7 @@ def add_gshp_capacity_constraint(
 
     n.model.add_constraints(lhs >= rhs, name="Link-gshp_capacity_ratio")
 
+
 def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
     mode_mapper = {
         "light_duty": "lgt",
@@ -738,6 +1084,47 @@ def add_ev_generation_constraint(n, policy: pd.DataFrame, sample: float):
                 lhs <= rhs, name=f"Link-ev_gen_{mode}_{investment_period}"
             )
 
+
+def add_fossil_generation_constraint(n, sample: float):
+    """Adds a constraint to the minimum heat generation from fossil fuels per year in industry.
+
+    Since the industrial sector is still under development, we add a constraint to the
+    minimum generation from fossil fuels per year to prevent overinvestment in heat pumps.
+
+    This only applies to the heating load.
+
+    Default values taken from:
+    https://www.eia.gov/energyexplained/use-of-energy/industry.php
+    """
+
+    min_generation = sample  # per_unit
+
+    states = [x for x in n.buses.reeds_state.unique() if x]
+    for state in states:
+        buses = n.buses[n.buses.carrier == "ind-heat"]
+
+        heat_loads = n.loads[
+            (n.loads.carrier == "ind-heat") & (n.loads.bus.isin(buses.index))
+        ]
+
+        heat_demand = n.loads_t["p_set"][heat_loads.index].sum().sum().round(1)
+        rhs = heat_demand * min_generation
+
+        fossil_links = n.links[
+            (n.links.carrier.str.startswith("ind"))
+            & ~(n.links.carrier.str.contains("heat-pump"))
+            & (n.links.bus1.str.contains("heat"))
+            & (n.links.bus1.isin(buses.index))
+        ].index
+
+        # no time varying efficiency for these fossil links
+        fossil_efficiency = n.links.loc[fossil_links].efficiency
+
+        lhs = n.model["Link-p"].loc[:, fossil_links].mul(fossil_efficiency).sum()
+
+        n.model.add_constraints(lhs >= rhs, name=f"{state}_ind_fossil_generation")
+
+
 def extra_functionality(n, sns):
     """
     Collects supplementary constraints which will be passed to `pypsa.optimization.optimize`
@@ -745,10 +1132,12 @@ def extra_functionality(n, sns):
 
     opts = n.extra_fn
 
-    # if "rps" in opts:
-    #     add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
-    # if "ces" in opts:
-    #     add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
+    if "rps" in opts:
+        add_RPS_constraints(n, "rps", opts["rps"]["data"], opts["rps"]["sample"])
+    if "ces" in opts:
+        add_RPS_constraints(n, "ces", opts["ces"]["data"], opts["ces"]["sample"])
+    if "rps" or "ces" in opts:
+        add_imports_rec_constraint(n)
     if "tct" in opts:
         add_technology_capacity_target_constraints(
             n, opts["tct"]["data"], opts["tct"]["sample"]
@@ -758,17 +1147,23 @@ def extra_functionality(n, sns):
             n, opts["ev_gen"]["data"], opts["ev_gen"]["sample"]
         )
     if "co2L" in opts:
-        add_sector_co2_constraints(
-            n, opts["co2L"]["sample"], opts["co2L"]["include_ch4"]
-        )
+        add_sector_co2_constraints(n, opts["co2L"]["sample"])
     if "gshp" in opts:
         add_gshp_capacity_constraint(n, opts["gshp"]["data"], opts["gshp"]["sample"])
-    if "ng_limits" in opts:
-        add_ng_import_export_limits(n, opts["ng_limits"])
+    if "ng_trade" in opts:
+        add_ng_import_export_limits(n, opts["ng_trade"])
+    else:
+        raise ValueError("No ng_limits provided")
     if "lv" in opts:
         add_transmission_limit(n, opts["lv"]["sample"])
     if "hp_cooling" in opts:
         add_cooling_heat_pump_constraints(n)
+    if "elec_trade" in opts:
+        add_elec_trade_constraints(n, opts["elec_trade"]["flows"])
+    if "lolp" in opts:
+        add_lolp_constraint(n, opts["lolp"]["relax"])
+    if "ind_heat_ff_production" in opts:
+        add_fossil_generation_constraint(n, opts["ind_heat_ff_production"]["sample"])
 
 
 ###
@@ -781,9 +1176,10 @@ def prepare_network(
     clip_p_max_pu: Optional[bool | float] = None,
     noisy_costs: Optional[bool] = None,
     foresight: Optional[str] = None,
+    no_coal_oil_investment: Optional[bool] = None,
+    no_economic_retirement: Optional[bool] = None,
     **kwargs,
 ):
-
     if clip_p_max_pu:
         if isinstance(clip_p_max_pu, float):
             _clip_p_max(n, clip_p_max_pu)
@@ -796,19 +1192,31 @@ def prepare_network(
     if foresight == "perfect":
         n = add_land_use_constraint_perfect(n)
 
+    if no_coal_oil_investment:
+        n = add_no_coal_oil_investment_constraint(n)
+
+    if no_economic_retirement:
+        n = no_economic_retirement_constraint(n)
+
     return n
 
 
 def _clip_p_max(n: pypsa.Network, value: Optional[float] = None) -> None:
     if not value:
-        value = 1.0e-2
+        value = 1.0e-3
 
-    for df in (
-        n.generators_t.p_max_pu,
-        n.generators_t.p_min_pu,
-        n.storage_units_t.inflow,
-    ):
-        df.where(df > value, other=0.0, inplace=True)
+    df = n.generators_t.p_max_pu
+    n.generators_t.p_max_pu = df.where(df > value, other=0.0)
+    df = n.generators_t.p_min_pu
+    n.generators_t.p_min_pu = df.where(df > value, other=0.0)
+
+    df = n.links_t.p_max_pu
+    n.links_t.p_max_pu = df.where(df > value, other=0.0)
+    df = n.links_t.p_min_pu
+    n.links_t.p_min_pu = df.where(df > value, other=0.0)
+
+    df = n.storage_units_t.inflow
+    n.storage_units_t.inflow = df.where(df > value, other=0.0)
 
 
 def _apply_noisy_costs(n: pypsa.Network) -> None:
@@ -838,7 +1246,6 @@ def solve_network(
     extra_fn: Optional[dict[str, pd.DataFrame]] = None,
     **kwargs,
 ):
-
     options = {}
     options["solver_name"] = solver_name
     options["solver_options"] = solver_options
@@ -878,9 +1285,16 @@ def solve_network(
             f"Solving status '{status}' with termination condition '{condition}'"
         )
     if "infeasible" in condition:
-        raise RuntimeError("Solving status 'infeasible'")
+        # raise RuntimeError("Solving status 'infeasible'")
+        logger.warning(
+            f"Solving status 'other' with termination condition '{condition}'"
+        )
+    elif "other" in condition:
+        logger.warning(
+            f"Solving status 'other' with termination condition '{condition}'"
+        )
 
-    return n
+    return n, condition
 
 
 if __name__ == "__main__":
@@ -889,6 +1303,7 @@ if __name__ == "__main__":
         solver_name = snakemake.params.solver
         solver_opts = snakemake.params.solver_opts
         solving_opts = snakemake.params.solving_opts
+        model_opts = snakemake.params.model_opts
         solving_log = snakemake.log.solver
         out_network = snakemake.output.network
         pop_f = snakemake.input.pop_layout_f
@@ -898,24 +1313,29 @@ if __name__ == "__main__":
         ces_f = snakemake.input.ces_f
         tct_f = snakemake.input.tct_f
         ev_policy_f = snakemake.input.ev_policy_f
+        import_export_flows_f = snakemake.input.import_export_flows_f
         constraints_meta = snakemake.input.constraints
-        include_ch4 = snakemake.params.include_ch4
         configure_logging(snakemake)
     else:
-        in_network = "results/caiso2/gsa/modelruns/0/n.nc"
+        in_network = "results/testing/gsa/modelruns/testing/0/n.nc"
         solver_name = "gurobi"
         solving_opts_config = "config/solving.yaml"
+        model_opts = {
+            "economic_retirement": False,
+            "coal_oil_investment": False,
+            "nat_gas_import_relax": 1.5,
+        }
         solving_log = ""
         out_network = ""
-        pop_f = "results/caiso2/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/caiso2/constraints/ng_domestic.csv"
-        ng_international_f = "results/caiso2/constraints/ng_international.csv"
-        rps_f = "results/caiso2/constraints/rps.csv"
-        ces_f = "results/caiso2/constraints/ces.csv"
-        tct_f = "results/caiso2/constraints/tct.csv"
-        ev_policy_f = "results/caiso2/constraints/ev_policy.csv"
-        constraints_meta = "results/caiso2/gsa/modelruns/0/constraints.csv"
-        include_ch4 = False
+        pop_f = "results/testing/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/testing/constraints/ng_domestic.csv"
+        ng_international_f = "results/testing/constraints/ng_international.csv"
+        rps_f = "results/testing/constraints/rps.csv"
+        ces_f = "results/testing/constraints/ces.csv"
+        tct_f = "results/testing/constraints/tct.csv"
+        ev_policy_f = "results/testing/constraints/ev_policy.csv"
+        import_export_flows_f = "results/testing/constraints/import_export_flows.csv"
+        constraints_meta = "results/testing/gsa/modelruns/testing/0/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
@@ -928,6 +1348,14 @@ if __name__ == "__main__":
     # for land use constraint
     solving_opts["foresight"] = "perfect"
 
+    # different from pypsa-usa
+    solving_opts["no_economic_retirement"] = (
+        False if model_opts["economic_retirement"] else True
+    )
+    solving_opts["no_coal_oil_investment"] = (
+        False if model_opts["coal_oil_investment"] else True
+    )
+
     np.random.seed(solving_opts.get("seed", 123))
 
     n = prepare_network(n, **solving_opts)
@@ -938,6 +1366,21 @@ if __name__ == "__main__":
     extra_fn = {}
 
     ###
+    # import/export constraints
+    ###
+    extra_fn["elec_trade"] = {}
+    trade = pd.read_csv(import_export_flows_f)
+    multipliers = constraints[constraints.attribute == "elec_trade"].round(5)
+    if len(multipliers) == 1:
+        trade["trade_factor"] *= multipliers.value.values[0].round(5)
+        extra_fn["elec_trade"]["flows"] = trade
+    elif len(multipliers) > 1:
+        raise ValueError("Too many samples for elec_trade")
+    else:
+        logger.debug("No elec trade multipler provided")
+        extra_fn["elec_trade"]["flows"] = trade
+
+    ###
     # natural gas constraints
     ###
     extra_fn["ng_trade"] = {}
@@ -946,22 +1389,49 @@ if __name__ == "__main__":
     imports = constraints[constraints.attribute == "nat_gas_import"].round(5)
     exports = constraints[constraints.attribute == "nat_gas_export"].round(5)
 
+    import_relax = model_opts["nat_gas_import_relax"]
+
+    # to avoid infeasibilities, we always set one limit to 1
+
     if len(imports) == 1:
-        extra_fn["ng_trade"]["min_import"] = imports.value.values[0]
-        extra_fn["ng_trade"]["max_import"] = imports.value.values[0]
+        value = imports.value.values[0]
+        """Forcing imports can lead to overconstrained solutions"""
+        # if value < 1:
+        #     extra_fn["ng_trade"]["min_import"] = value
+        #     extra_fn["ng_trade"]["max_import"] = 1
+        # elif value > 1:
+        #     extra_fn["ng_trade"]["min_import"] = 1
+        #     extra_fn["ng_trade"]["max_import"] = value
+        # else:
+        #     extra_fn["ng_trade"]["min_import"] = 0.99
+        #     extra_fn["ng_trade"]["max_import"] = 1.01
+        extra_fn["ng_trade"]["min_import"] = round(value * 0.50, 5)
+        extra_fn["ng_trade"]["max_import"] = value * import_relax
     elif len(imports) > 1:
         raise ValueError("Too many samples for ng_gas_import")
     else:
-        extra_fn["ng_trade"]["min_import"] = 1
-        extra_fn["ng_trade"]["max_import"] = 1
+        extra_fn["ng_trade"]["min_import"] = 0
+        extra_fn["ng_trade"]["max_import"] = 1 * import_relax
 
     if len(exports) == 1:
-        extra_fn["ng_trade"]["min_export"] = exports.value.values[0]
-        extra_fn["ng_trade"]["max_export"] = exports.value.values[0]
+        value = exports.value.values[0]
+        """Forcing exports can lead to overconstrained solutions"""
+        # if value < 1:
+        #     extra_fn["ng_trade"]["min_export"] = value
+        #     extra_fn["ng_trade"]["max_export"] = 1
+        # elif value > 1:
+        #     extra_fn["ng_trade"]["min_export"] = 1
+        #     extra_fn["ng_trade"]["max_export"] = value
+        # else:
+        #     extra_fn["ng_trade"]["min_export"] = 0.99
+        #     extra_fn["ng_trade"]["max_export"] = 1.01
+        # extra_fn["ng_trade"]["min_export"] = round(value * 0.50, 5)
+        extra_fn["ng_trade"]["min_export"] = 0
+        extra_fn["ng_trade"]["max_export"] = value
     elif len(exports) > 1:
         raise ValueError("Too many samples for ng_gas_export")
     else:
-        extra_fn["ng_trade"]["min_export"] = 1
+        extra_fn["ng_trade"]["min_export"] = 0
         extra_fn["ng_trade"]["max_export"] = 1
 
     ###
@@ -998,6 +1468,11 @@ if __name__ == "__main__":
     ###
     # CES generation target
     ###
+    """Dont include ces as it may not have enforcement mechanisms
+    https://eta-publications.lbl.gov/sites/default/files/lbnl_rps_ces_status_report_2024_edition.pdf
+    """
+
+    """
     extra_fn["ces"] = {}
     extra_fn["ces"]["data"] = pd.read_csv(ces_f)
     ces_sample = constraints[constraints.attribute == "ces"].round(5)
@@ -1008,12 +1483,13 @@ if __name__ == "__main__":
         raise ValueError("Too many samples for ces")
     else:
         extra_fn["ces"]["sample"] = 1
+    """
 
     ###
     # TCT Constraint
     ###
     extra_fn["tct"] = {}
-    extra_fn["tct"]["data"] = pd.read_csv(tct_f)
+    extra_fn["tct"]["data"] = pd.read_csv(tct_f, index_col=0)
     extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(5)
 
     target_names = extra_fn["tct"]["data"].name.to_list()
@@ -1035,8 +1511,6 @@ if __name__ == "__main__":
     ###
     extra_fn["co2L"] = {}
 
-    extra_fn["co2L"]["include_ch4"] = include_ch4
-
     co2_sample = constraints[constraints.attribute == "co2L"].round(5)
 
     if len(co2_sample) == 1:
@@ -1044,7 +1518,7 @@ if __name__ == "__main__":
     elif len(co2_sample) > 1:
         raise ValueError("Too many samples for co2L")
     else:
-        logger.debug("No CO2 Limits provided")
+        logger.info("No CO2 Limits provided")
         extra_fn.pop("co2L")
 
     ###
@@ -1067,14 +1541,49 @@ if __name__ == "__main__":
     ###
     extra_fn["hp_cooling"] = True
 
+    ###
+    # Industrial Heat Fossil Fuel Production Constraint
+    ###
+    extra_fn["ind_heat_ff_production"] = {}
+    extra_fn["ind_heat_ff_production"]["sample"] = constraints[
+        constraints.attribute == "ind_heat_ff_production"
+    ].round(5)
 
-    n = solve_network(
-        n,
-        solver_name=solver_name,
-        solver_options=solver_opts,
-        solving_options=solving_opts,
-        log=solving_log,
-        extra_fn=extra_fn,
-    )
+    if len(extra_fn["ind_heat_ff_production"]["sample"]) == 1:
+        extra_fn["ind_heat_ff_production"]["sample"] = extra_fn[
+            "ind_heat_ff_production"
+        ]["sample"].value.values[0]
+    elif len(extra_fn["ind_heat_ff_production"]["sample"]) > 1:
+        raise ValueError("Too many samples for ind_heat_ff_production")
+
+    ###
+    # Loss of Load Probability Constraint
+    ###
+    extra_fn["lolp"] = {}
+    extra_fn["lolp"]["relax"] = 1.0
+
+    # due to how the RPS REC system is set up, there can be edge cases where
+    # rps is not met. This is a hack to allow for a second attempt at solving
+    # if the first attempt fails
+
+    rps_iteration = 0
+    solving_status = ""
+    while rps_iteration < 3 and solving_status != "optimal":
+        n, solving_status = solve_network(
+            n,
+            solver_name=solver_name,
+            solver_options=solver_opts,
+            solving_options=solving_opts,
+            log=solving_log,
+            extra_fn=extra_fn,
+        )
+        # relax the rps target by 2%
+        rps_iteration += 1
+        extra_fn["rps"]["data"].pct -= 0.02
+        # relax load shedding by 2%
+        extra_fn["lolp"]["relax"] += 0.02
+
+    if solving_status != "optimal":
+        raise RuntimeError(f"Solving status '{solving_status}'")
 
     n.export_to_netcdf(out_network)

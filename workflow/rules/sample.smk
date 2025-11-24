@@ -23,6 +23,10 @@ def get_static_values(wildards):
     else:
         raise ValueError(f"{wildards.mode} is not valid for static values.")
 
+def get_sanitized_parameters_file(wildcards):
+    """Get sanitized parameters file"""
+    return f"results/{wildcards.scenario}/gsa/parameters.csv"
+
 rule create_sample:
     message: "Creating sample"
     wildcard_constraints:
@@ -50,10 +54,8 @@ rule create_sample:
 # need of reding in the base network many times. This is a little hacky as the 'run' variable 
 # the the output should really be a wildcard to follow snakemake principals. 
 
-# due to this, we have to break this into two rules, as there is no way to access the add 
-# logic to determine the modelruns variable in the output :( 
 
-rule apply_gsa_sample_to_network:
+checkpoint apply_gsa_sample_to_network:
     message: "Applying sample"
     wildcard_constraints:
         mode="gsa"
@@ -61,7 +63,9 @@ rule apply_gsa_sample_to_network:
         root_dir = "results/{scenario}/{mode}/modelruns/",
         meta_yaml = config["metadata"]["yaml"],
         meta_csv = config["metadata"]["csv"],
+        testing = False,
     input: 
+        sanitized_parameters = get_sanitized_parameters_file,
         parameters = "results/{scenario}/{mode}/parameters.csv",
         set_values_file = get_static_values,
         sample_file = "results/{scenario}/{mode}/sample.csv",
@@ -71,11 +75,12 @@ rule apply_gsa_sample_to_network:
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
-        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
     output:
-        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=GSA_MODELRUNS)),
+        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=get_gsa_modelruns())),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
-        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=GSA_MODELRUNS)
+        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=get_gsa_modelruns())
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
         runtime=1
@@ -88,7 +93,7 @@ rule apply_gsa_sample_to_network:
     script:
         "../scripts/apply_sample.py"
 
-rule apply_ua_sample_to_network:
+checkpoint apply_ua_sample_to_network:
     message: "Applying sample"
     wildcard_constraints:
         mode="ua"
@@ -96,7 +101,9 @@ rule apply_ua_sample_to_network:
         root_dir = "results/{scenario}/{mode}/modelruns/",
         meta_yaml = config["metadata"]["yaml"],
         meta_csv = config["metadata"]["csv"],
+        testing = False,
     input: 
+        sanitized_parameters = get_sanitized_parameters_file,
         parameters = "results/{scenario}/{mode}/parameters.csv",
         set_values_file = get_static_values,
         sample_file = "results/{scenario}/{mode}/sample.csv",
@@ -106,11 +113,12 @@ rule apply_ua_sample_to_network:
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",
         rps_f = "results/{scenario}/constraints/rps.csv",
         ces_f = "results/{scenario}/constraints/ces.csv",
-        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
     output:
-        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=UA_MODELRUNS)),
+        n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=get_ua_modelruns())),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
-        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=UA_MODELRUNS)
+        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=get_ua_modelruns())
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
         runtime=1
@@ -118,6 +126,44 @@ rule apply_ua_sample_to_network:
         "benchmarks/apply_sample/{scenario}_{mode}.txt"
     group:
         "create_and_apply_sample"
+    log: 
+        "logs/apply_sample/{scenario}_{mode}.log"
+    script:
+        "../scripts/apply_sample.py"
+
+rule test_apply_gsa_sample_to_network:
+    message: "Applying test sample"
+    wildcard_constraints:
+        mode="gsa"
+    params:
+        root_dir = "results/{scenario}/{mode}/modelruns/",
+        meta_yaml = config["metadata"]["yaml"],
+        meta_csv = config["metadata"]["csv"],
+        testing = True
+    input: 
+        sanitized_parameters = get_sanitized_parameters_file,
+        parameters = "results/{scenario}/{mode}/parameters.csv",
+        set_values_file = get_static_values,
+        sample_file = "results/{scenario}/{mode}/sample.csv",
+        network = "results/{scenario}/base.nc",
+        pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
+        ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
+        ng_international_f = "results/{scenario}/constraints/ng_international.csv",
+        rps_f = "results/{scenario}/constraints/rps.csv",
+        ces_f = "results/{scenario}/constraints/ces.csv",
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
+    output:
+        n = "results/{scenario}/{mode}/modelruns/testing/0/n.nc",
+        scaled_sample = "results/{scenario}/{mode}/testing/sample_scaled.csv",
+        meta_constriant = "results/{scenario}/{mode}/modelruns/testing/0/constraints.csv",
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
+        runtime=1
+    benchmark:
+        "benchmarks/apply_sample/{scenario}_{mode}.txt"
+    group:
+        "{scenario}_{mode}_testing"
     log: 
         "logs/apply_sample/{scenario}_{mode}.log"
     script:

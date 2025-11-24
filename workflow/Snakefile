@@ -1,13 +1,14 @@
 import pandas as pd
 from itertools import chain
 import sys
+import os
 from pathlib import Path
 
 configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, gsa, ua, generate, clean_all, clean_gsa, clean_ua, clean_generate
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate
 
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
@@ -15,94 +16,206 @@ wildcard_constraints:
 
 SCENARIO = config["scenario"]["name"]
 
-# only use groups/names, so its okay to not use sanitized values
-# Calculates GSA specific parameters
-if config["scenario"]["include_generated"]: # gets model specific params
-    generated_f = f"results/{SCENARIO}/generated/{config['gsa']['parameters']}"
-    if not Path(generated_f).exists():
-        raise ValueError("Input data must first be generated")
-    GSA_PARAMETERS = pd.read_csv(generated_f)
-else:
-    GSA_PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
+# list of rules for which onstart should be skipped
+CLEANING_RULES = {"clean_all", "clean_gsa", "clean_ua", "clean_generate"}
 
-# TODO: This messes up the counting of samples as the parameter.csv still has ch4
-# also, if we treat ch4 as a set value, then the ua parameter csv will miss that
-"""
-# if not tracking ch4, treat it as a static value 
-if config["scenario"]["ch4"]: 
-    GSA_GROUPS = GSA_PARAMETERS.group.unique().tolist()
-else:
-    to_remove = ["ng_leakage_upstream", "ng_leakage_downstream", "ng_gwp"]
-    GSA_GROUPS = [x for x in GSA_PARAMETERS.group.unique() if x not in to_remove]
-"""
-GSA_GROUPS = GSA_PARAMETERS.group.unique().tolist()
+def conditional_onstart(workflow):
+    if any(rule in CLEANING_RULES for rule in workflow.dag_settings.targets):
+        return  
 
-GSA_RESULTS = pd.read_csv(config["gsa"]["results"])
-GSA_MODELRUNS = range((len(GSA_GROUPS) + 1) * config["gsa"]["replicates"])
-GSA_RESULT_FILES = list(set(GSA_RESULTS.name.to_list()))
-plots_temp = GSA_RESULTS.plots.dropna().str.split(";").to_list()
-GSA_PLOTS = list(set(chain(*plots_temp)))
+    sanitized_params = Path("results", SCENARIO, "gsa", "parameters.csv")
+    sanitized_gsa_results = Path("results", SCENARIO, "gsa", "results.csv")
+    sanitized_ua_results = Path("results", SCENARIO, "ua", "results.csv")
+    if not sanitized_params.exists() or not sanitized_gsa_results.exists() or not sanitized_ua_results.exists():
+        print("Generate data first with 'snakemake -s workflow/Snakefile.generate'")
+        if not sanitized_params.exists():
+            raise FileNotFoundError(f"Sanitized parameters file not found: {sanitized_params}")
+        if not sanitized_gsa_results.exists():
+            raise FileNotFoundError(f"Sanitized GSA results file not found: {sanitized_gsa_results}")
+        if not sanitized_ua_results.exists():
+            raise FileNotFoundError(f"Sanitized UA results file not found: {sanitized_ua_results}")
+    else:
+        print(f"Sanitized files found: {sanitized_params}, {sanitized_gsa_results}, {sanitized_ua_results}")
 
-# Calculates UA specific parameters
-UA_PARAMS = config["uncertainity"]["parameters"]
-UA_SAMPLING = config["uncertainity"]["sample"]
-UA_REPLICATES = config["uncertainity"]["replicates"]
-UA_RESULTS = pd.read_csv(config["uncertainity"]["results"])
-UA_RESULT_FILES = list(set(UA_RESULTS.name.to_list()))
-UA_SCATTERPLOTS = pd.read_csv(config["uncertainity"]["plots"])["plot"].to_list()
-UA_BARPLOTS = UA_RESULTS.barplot.dropna().to_list()
+onstart:
+    conditional_onstart(workflow)
 
-if UA_SAMPLING.lower() == 'lhs':
-    UA_MODELRUNS = range(UA_REPLICATES)
-elif UA_SAMPLING.lower() == 'sobol':
-    UA_MODELRUNS = range((2**UA_REPLICATES) * (len(UA_PARAMS) + 2))
-else:
-    raise ValueError(f"{UA_SAMPLING} is not a valid selection")
 
-include: "rules/generate.smk"
+# manually cleanup temporary networks
+# see the following issues on why temp() doesnt work with checkpoints
+# https://github.com/snakemake/snakemake/issues/2982
+onsuccess:
+
+    # copy network for circular dependency issue
+    copy_nc = Path("results", SCENARIO, "copy.nc")
+    if copy_nc.exists():    
+        shell(f"rm {copy_nc}")
+
+    # networks to remove 
+    networks = ["n"]
+    if not config["metadata"]["networks"]:
+        networks.append("network")
+
+    # pre-solve GSA networks
+    gsa_networks = Path("results", SCENARIO, "gsa", "modelruns")
+    if gsa_networks.exists():
+        for run in gsa_networks.iterdir():
+            for network in networks:
+                n = Path(run, f"{network}.nc")
+                # try/except faster than checking if file exists
+                try:
+                    os.remove(n)
+                except FileNotFoundError:
+                    pass
+        
+    # pre-solve UA networks
+    ua_networks = Path("results", SCENARIO, "ua", "modelruns")
+    if ua_networks.exists():
+        for run in ua_networks.iterdir():
+            for network in networks:
+                n = Path(run, f"{network}.nc")
+                # try/except faster than checking if file exists
+                try:
+                    os.remove(n)
+                except FileNotFoundError:
+                    pass
+
+###
+# GSA specific parameters
+###
+
+# Cache for model runs to avoid repeated file reads
+_gsa_modelruns_cache = None
+
+def get_gsa_modelruns() -> range:
+    """number of gsa model runs - cached to avoid repeated file reads"""
+    global _gsa_modelruns_cache
+    if _gsa_modelruns_cache is not None:
+        return _gsa_modelruns_cache
+    
+    params_file = f"results/{SCENARIO}/gsa/parameters.csv"
+    if Path(params_file).exists():
+        gsa_params = pd.read_csv(params_file)
+        gsa_groups = gsa_params.group.unique().tolist()
+        _gsa_modelruns_cache = range((len(gsa_groups) + 1) * config["gsa"]["replicates"])
+        return _gsa_modelruns_cache
+    else:
+        _gsa_modelruns_cache = range(0)
+        return _gsa_modelruns_cache
+
+
+def get_gsa_result_files() -> list[str]:
+    """All gsa results files"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/gsa/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return list(set(results.name.to_list()))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+
+def get_gsa_plots() -> list[str]:
+    """Gsa plots"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/gsa/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        plots_temp = results.gsa_plot.dropna().str.split(";").to_list()
+        return list(set(chain(*plots_temp)))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+###
+# UA specific parameters
+###
+
+def get_ua_result_files():
+    """All ua results files"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/ua/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return list(set(results.name.to_list()))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+
+def get_ua_scatterplots():
+    """UA scatterplots"""
+    scenario = config["scenario"]["name"]
+    plots_f = f"results/{scenario}/ua/plots.csv"
+    if Path(plots_f).exists():
+        return pd.read_csv(plots_f)["plot"].to_list()
+    else:
+
+        return []
+
+def get_ua_barplots():
+    """UA barplots"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/ua/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return results.ua_plot.dropna().to_list()
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+def get_ua_modelruns():
+    """Number of ua model runs"""
+    sampling = config["uncertainity"]["sample"].lower()
+    replicates = config["uncertainity"]["replicates"]
+    parameters = config["uncertainity"]["parameters"]
+    if sampling == 'lhs':
+        return range(replicates)
+    elif sampling == 'sobol':
+        return range((2**replicates) * (len(parameters) + 2))
+    else:
+        raise ValueError(f"{sampling} is not a valid selection")
+
+###
+# Additional rules
+###
+
 include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/solve.smk"
 include: "rules/results.smk"
 
-rule all:
-    shell:
-        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua', 'snakemake generate']"
-
 ###
 # Main execution
 ###
 
+rule all:
+    shell:
+        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua']"
+
 rule gsa:
     input:
-        # expand("results/{scenario}/gsa/modelruns/{run}/network.nc", scenario=SCENARIO, run=GSA_MODELRUNS),
-        expand("results/{scenario}/gsa/SA/{result}.csv", scenario=SCENARIO, result=GSA_RESULT_FILES),
-        expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS),
-        expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=GSA_PLOTS)
+        expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
+        expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
+        expand("results/{scenario}/gsa/rankings.csv", scenario=SCENARIO)
 
 rule ua:
     input:
-        # expand("results/{scenario}/ua/modelruns/{run}/network.nc", scenario=SCENARIO, run=UA_MODELRUNS),
-        expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=UA_SCATTERPLOTS),
-        expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=UA_BARPLOTS),
-
-# generates network sepecific TCT and CO2L constraints
-rule generate:
-    input:
-        f"results/{SCENARIO}/generated/{config['gsa']['parameters']}",
-        f"results/{SCENARIO}/generated/tct_aeo.csv",
+        expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=get_ua_scatterplots()),
+        expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=get_ua_barplots()),
 
 ###
 # Testing solve resources on hpc
 ###
 
-rule test_gsa:
+rule test_solve:
     input:
-        expand("results/{scenario}/gsa/modelruns/0/network.nc", scenario=SCENARIO)
-
-rule test_ua:
-    input:
-        expand("results/{scenario}/ua/modelruns/0/network.nc", scenario=SCENARIO)
+        expand("results/{scenario}/gsa/modelruns/testing/0/network.nc", scenario=SCENARIO)
 
 ### 
 # Cleaning rules

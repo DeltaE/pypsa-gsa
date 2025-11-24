@@ -1,37 +1,37 @@
 name,nice_name,type,xaxis,xlabel,yaxis,ylabel,plot,group,xhue
 hp_energy_cost,,scatter,hp_capacity_new,Heat Pump New Capacpity,marginal_cost_energy,Marginal Cost Energy,service_capacity,1,Capacity (MW)
 hp_electricity_cost,,scatter,hp_capacity_new,Heat Pump New Capacpity,marginal_cost_elec,Marginal Cost Electricity,service_capacity,2,Capacity (MW)
-hp_carbon_cost,,scatter,hp_capacity_new,Heat Pump New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,service_capacity,3,Capacity (MW)
+hp_carbon_cost,,scatter,hp_capacity_new,Heat Pump New Capacpity,carbon_total,Carbon,service_capacity,3,Capacity (MW)
 gas_furnace_energy_cost,,scatter,gas_furnace_capacity_new,Gas Furnace New Capacpity,marginal_cost_energy,Marginal Cost Energy,service_capacity,1,
 gas_furnace_electricity_cost,,scatter,gas_furnace_capacity_new,Gas Furnace New Capacpity,marginal_cost_elec,Marginal Cost Electricity,service_capacity,2,
-gas_furnace_carbon_cost,,scatter,gas_furnace_capacity_new,Gas Furnace New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,service_capacity,3,
+gas_furnace_carbon_cost,,scatter,gas_furnace_capacity_new,Gas Furnace New Capacpity,carbon_total,Carbon,service_capacity,3,
 oil_furnace_energy_cost,,scatter,oil_furnace_capacity_new,Oil Furnace New Capacpity,marginal_cost_energy,Marginal Cost Energy,service_capacity,1,
 oil_furnace_electricity_cost,,scatter,oil_furnace_capacity_new,Oil Furnace New Capacpity,marginal_cost_elec,Marginal Cost Electricity,service_capacity,2,
-oil_furnace_carbon_cost,,scatter,oil_furnace_capacity_new,Oil Furnace New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,service_capacity,3,
+oil_furnace_carbon_cost,,scatter,oil_furnace_capacity_new,Oil Furnace New Capacpity,carbon_total,Carbon,service_capacity,3,
 elec_furnace_energy_cost,,scatter,elec_furnace_capacity_new,Electric Furnace New Capacpity,marginal_cost_energy,Marginal Cost Energy,service_capacity,1,
 elec_furnace_electricity_cost,,scatter,elec_furnace_capacity_new,Electric Furnace New Capacpity,marginal_cost_elec,Marginal Cost Electricity,service_capacity,2,
-elec_furnace_carbon_cost,,scatter,elec_furnace_capacity_new,Electric Furnace New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,service_capacity,3,
+elec_furnace_carbon_cost,,scatter,elec_furnace_capacity_new,Electric Furnace New Capacpity,carbon_total,Carbon,service_capacity,3,
 ev_lgt_cap_energy_cost,,scatter,ev_lgt_capacity,Light Duty EV Capacpity,marginal_cost_energy,Marginal Cost Energy,ev_lgt,1,Capacity (kVMT)
 ev_lgt_cap_electricity_cost,,scatter,ev_lgt_capacity,Light Duty EV Capacpity,marginal_cost_elec,Marginal Cost Electricity,ev_lgt,2,Capacity (kVMT)
-ev_lgt_cap_carbon_cost,,scatter,ev_lgt_capacity,Light Duty EV Capacpity,marginal_cost_carbon,Marginal Cost Carbon,ev_lgt,3,Capacity (kVMT)
+ev_lgt_cap_carbon_cost,,scatter,ev_lgt_capacity,Light Duty EV Capacpity,carbon_total,Carbon,ev_lgt,3,Capacity (kVMT)
 lpg_lgt_cap_energy_cost,,scatter,lpg_lgt_capacity,Light Duty LPG Capacpity,marginal_cost_energy,Marginal Cost Energy,ev_lgt,1,
 lpg_lgt_cap_electricity_cost,,scatter,lpg_lgt_capacity,Light Duty LPG Capacpity,marginal_cost_elec,Marginal Cost Electricity,ev_lgt,2,
-lpg_lgt_cap_carbon_cost,,scatter,lpg_lgt_capacity,Light Duty LPG Capacpity,marginal_cost_carbon,Marginal Cost Carbon,ev_lgt,3,
+lpg_lgt_cap_carbon_cost,,scatter,lpg_lgt_capacity,Light Duty LPG Capacpity,carbon_total,Carbon,ev_lgt,3,
 ev_med_cap_energy_cost,,scatter,ev_lgt_capacity,Medium Duty EV Capacpity,marginal_cost_energy,Marginal Cost Energy,ev_med,1,Capacity (kVMT)
 ev_med_cap_electricity_cost,,scatter,ev_lgt_capacity,Medium Duty EV Capacpity,marginal_cost_elec,Marginal Cost Electricity,ev_med,2,Capacity (kVMT)
-ev_med_cap_carbon_cost,,scatter,ev_lgt_capacity,Medium Duty EV Capacpity,marginal_cost_carbon,Marginal Cost Carbon,ev_med,3,Capacity (kVMT)
+ev_med_cap_carbon_cost,,scatter,ev_lgt_capacity,Medium Duty EV Capacpity,carbon_total,Carbon,ev_med,3,Capacity (kVMT)
 lpg_med_cap_energy_cost,,scatter,lpg_lgt_capacity,Medium Duty LPG Capacpity,marginal_cost_energy,Marginal Cost Energy,ev_med,1,
 lpg_med_cap_electricity_cost,,scatter,lpg_lgt_capacity,Medium Duty LPG Capacpity,marginal_cost_elec,Marginal Cost Electricity,ev_med,2,
-lpg_med_cap_carbon_cost,,scatter,lpg_lgt_capacity,Medium Duty LPG Capacpity,marginal_cost_carbon,Marginal Cost Carbon,ev_med,3,
+lpg_med_cap_carbon_cost,,scatter,lpg_lgt_capacity,Medium Duty LPG Capacpity,carbon_total,Carbon,ev_med,3,
 vre_cap_energy_cost,,scatter,vre_capacity_new,VRE New Capacpity,marginal_cost_energy,Marginal Cost Energy,vre_cap,1,Capacity (MW)
 vre_cap_electricity_cost,,scatter,vre_capacity_new,VRE New Capacpity,marginal_cost_elec,Marginal Cost Electricity,vre_cap,2,Capacity (MW)
-vre_cap_carbon_cost,,scatter,vre_capacity_new,VRE New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,vre_cap,3,Capacity (MW)
+vre_cap_carbon_cost,,scatter,vre_capacity_new,VRE New Capacpity,carbon_total,Carbon,vre_cap,3,Capacity (MW)
 sol_cap_energy_cost,,scatter,solar_capacity_new,Solar New Capacpity,marginal_cost_energy,Marginal Cost Energy,pwr_cap,1,Capacity (MW)
 sol_cap_electricity_cost,,scatter,solar_capacity_new,Solar New Capacpity,marginal_cost_elec,Marginal Cost Electricity,pwr_cap,2,Capacity (MW)
-sol_cap_carbon_cost,,scatter,solar_capacity_new,Solar New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,pwr_cap,3,Capacity (MW)
+sol_cap_carbon_cost,,scatter,solar_capacity_new,Solar New Capacpity,carbon_total,Carbon,pwr_cap,3,Capacity (MW)
 wind_cap_energy_cost,,scatter,wind_capacity_new,Wind New Capacpity,marginal_cost_energy,Marginal Cost Energy,pwr_cap,1,
 wind_cap_electricity_cost,,scatter,wind_capacity_new,Wind New Capacpity,marginal_cost_elec,Marginal Cost Electricity,pwr_cap,2,
-wind_cap_carbon_cost,,scatter,wind_capacity_new,Wind New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,pwr_cap,3,
+wind_cap_carbon_cost,,scatter,wind_capacity_new,Wind New Capacpity,carbon_total,Carbon,pwr_cap,3,
 gas_cap_energy_cost,,scatter,gas_capacity_new,Gas New Capacpity,marginal_cost_energy,Marginal Cost Energy,pwr_cap,1,
 gas_cap_electricity_cost,,scatter,gas_capacity_new,Gas New Capacpity,marginal_cost_elec,Marginal Cost Electricity,pwr_cap,2,
-gas_cap_carbon_cost,,scatter,gas_capacity_new,Gas New Capacpity,marginal_cost_carbon,Marginal Cost Carbon,pwr_cap,3,
+gas_cap_carbon_cost,,scatter,gas_capacity_new,Gas New Capacpity,carbon_total,Carbon,pwr_cap,3,

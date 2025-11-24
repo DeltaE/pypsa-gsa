@@ -22,14 +22,14 @@ GSA_COLUMNS = [
 ]
 
 CONVENTIONAL_CARRIERS = [
-    "nuclear", 
-    "oil", 
-    "OCGT", 
-    "CCGT", 
-    "coal", 
-    "geothermal", 
-    "biomass", 
-    "waste"
+    "nuclear",
+    "oil",
+    "OCGT",
+    "CCGT",
+    "coal",
+    "geothermal",
+    "biomass",
+    "waste",
 ]
 
 RPS_CARRIERS = [
@@ -70,8 +70,21 @@ ADDITIONAL_VALID_ATTRIBUTES = {
         "itc",
         "leakage",
         "gwp",
+        "elec_trade",  # constraint
+        "efficiency2",  # not a default in pypsa
+        "rec",
+        "ind_heat_ff_production",  # constraint
     ],
-    "generators": ["tct", "discount_rate", "fixed_cost", "occ", "itc", "rps", "ces"],
+    "generators": [
+        "tct",
+        "discount_rate",
+        "fixed_cost",
+        "occ",
+        "itc",
+        "rps",
+        "ces",
+        "landuse",
+    ],
     "stores": ["co2L"],
     "storage_units": ["tct", "discount_rate", "fixed_cost", "occ", "itc"],
     "lines": [],
@@ -87,6 +100,7 @@ CACHED_ATTRS = [
     "itc",
     "gwp",
     "leakage",
+    "rec",
 ]
 
 CONSTRAINT_ATTRS = [
@@ -99,6 +113,8 @@ CONSTRAINT_ATTRS = [
     "ev_policy",
     "rps",
     "ces",
+    "elec_trade",
+    "ind_heat_ff_production",
 ]
 
 VALID_RANGES = ["percent", "absolute"]
@@ -115,17 +131,29 @@ VALID_UNITS = [
     "kvmt/year",
     "kvmt/mwh",
     "years",
-    "mmt"
+    "mmt",
+    "T/mwh",
 ]
 
+# be strcit on what functionality I have actually implemented and validated
 VALID_RESULTS = {
     "generators": ["p_nom_opt", "p_nom_new"],
-    "generators_t": ["p"],
+    "generators_t": ["p", "utilization"],
     "links": ["p_nom_opt", "p_nom_new"],
-    "links_t": ["p0", "p1", "p2"],
-    "buses_t": ["marginal_price"],
+    "links_t": ["p0", "p1", "p2", "utilization"],
+    "buses_t": [
+        "marginal_price",
+        "marginal_price_25",
+        "marginal_price_50",
+        "marginal_price_75",
+        "marginal_price_iqr",
+        "marginal_price_std",
+    ],
     "system": ["cost"],
-    "stores": ["e_nom_opt"],
+    "stores": ["e_nom_opt", "e_nom_avg", "e_nom_max"],
+    "stores_t": ["e_nom_opt"],
+    "storage_units": ["p_nom_opt", "p_nom_new"],
+    "storage_units_t": ["p", "p_nom_opt", "state_of_charge"],
 }
 
 VALID_UA_PLOTS = ["scatter", "bar"]
@@ -226,4 +254,39 @@ STATE_2_CODE = {
     "Yukon": "YT",
     # Mexico
     "Mexico": "MX",
+}
+
+# See ./dashboard/components/shared.py for same mappings.
+ISO_STATES = {
+    "caiso": ["CA"],
+    "ercot": ["TX"],
+    "isone": ["CT", "ME", "MA", "NH", "RI", "VT"],
+    "miso": ["AR", "IL", "IN", "IA", "LA", "MI", "MN", "MO", "MS", "WI"],
+    "nyiso": ["NY"],
+    "pjm": ["DE", "KY", "MD", "NJ", "OH", "PA", "VA", "WV"],
+    "spp": ["KS", "ND", "NE", "OK", "SD"],
+    "northwest": ["ID", "MT", "OR", "WA", "WY"],
+    "southeast": ["AL", "FL", "GA", "NC", "SC", "TN"],
+    "southwest": ["AZ", "CO", "NM", "NV", "UT"],
+    "mexico": ["MX"],
+    "canada": ["BC", "AB", "SK", "MB", "ON", "QC", "NB", "NS", "NL", "NFI", "PEI"],
+}
+
+# manually mapped to match EIA regions to ISOs
+REGION_2_ISO = {
+    "California": "caiso",
+    "Canada": "canada",
+    "Carolinas": "southeast",
+    "Central": "spp",
+    "Florida": "southeast",
+    "Mexico": "mexico",
+    "Mid-Atlantic": "pjm",
+    "Midwest": "miso",
+    "New England": "isone",
+    "New York": "nyiso",
+    "Northwest": "northwest",
+    "Southeast": "southeast",
+    "Southwest": "southwest",
+    "Tennessee": "southeast",
+    "Texas": "ercot",
 }

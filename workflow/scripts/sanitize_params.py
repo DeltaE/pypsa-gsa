@@ -14,16 +14,49 @@ from constants import (
 from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
+
+###
+# Network edge cases
+###
+
+
+def remove_offwind_floating(params: pd.DataFrame) -> pd.DataFrame:
+    """Remove offwind floating if not present in network."""
+    df = params.copy()
+    return df[df.carrier != "offwind_floating"].copy()
+
+
+def offwind_floating_in_network(n: pypsa.Network) -> bool:
+    """Check if offwind floating is in network."""
+    return "offwind_floating" in n.carriers.index
+
+
+def remove_rps_constraints(params: pd.DataFrame) -> pd.DataFrame:
+    """Remove RPS constraints if state has no commitments."""
+    df = params.copy()
+    return df[~df.carrier.isin(["rps", "rec"])].copy()
+
+
+def rps_in_network(n: pypsa.Network, *args: pd.DataFrame) -> bool:
+    """Check if state has any RPS commitments."""
+    states_in_network = n.buses.reeds_state.unique()
+    apply_rps = False
+    for policy in args:
+        df = policy[policy.region.isin(states_in_network)]
+        if not df.empty:
+            apply_rps = True
+            break
+    return apply_rps
+
 
 ###
 # Sanitize names
 ###
 
 
-def is_valid_attributes(
-    params: pd.DataFrame, n: pypsa.Network | None = None
-) -> bool:
+def is_valid_attributes(params: pd.DataFrame, n: pypsa.Network | None = None) -> bool:
     """Confirm attributes are valid.
 
     Assumes component names are valid.
@@ -56,7 +89,7 @@ def is_valid_attributes(
             valid = attr in VALID_LOAD_T_ATTRS
         else:
             raise ValueError(f"Component {c} not valid")
-        
+
         if not valid:
             try:
                 valid = attr in ADDITIONAL_VALID_ATTRIBUTES[c]
@@ -83,9 +116,7 @@ def is_valid_attributes(
     VALID_STORAGEUNIT_T_ATTRS = list(n.pnl("StorageUnit").keys())
 
     df = params.copy()
-    df.apply(
-        lambda row: _check_attribute(row["component"], row["attribute"]), axis=1
-    )
+    df.apply(lambda row: _check_attribute(row["component"], row["attribute"]), axis=1)
     return True
 
 
@@ -104,10 +135,15 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "stores"
             case "store_t" | "stores_t":
                 return "stores_t"
-            case "storageunit" | "storageunits":
+            case "storageunit" | "storageunits" | "storage_unit" | "storage_units":
                 return "storage_units"
-            case "storageunit_t" | "storageunits_t":
-                return "storageunits_t"
+            case (
+                "storageunit_t"
+                | "storageunits_t"
+                | "storage_unit_t"
+                | "storage_units_t"
+            ):
+                return "storage_units_t"
             case "links_t" | "link_t":
                 return "links_t"
             case "loads" | "load":
@@ -122,7 +158,7 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
                 return "buses"
             case "bus_t" | "buses_t":
                 return "buses_t"
-            case "system" | "network": # results processing
+            case "system" | "network":  # results processing
                 return "system"
             case _:
                 raise KeyError(c)
@@ -136,31 +172,43 @@ def sanitize_component_name(params: pd.DataFrame) -> pd.DataFrame:
 # Sanitize units
 ###
 
+
 def correct_usd(params: pd.DataFrame) -> pd.DataFrame:
     """Ensures all 'usd' references are lowercase"""
-    
+
     df = params.copy()
     df["unit"] = df["unit"].str.replace("USD", "usd")
     return df
+
 
 def correct_water_heater_units(params: pd.DataFrame) -> pd.DataFrame:
     """Takes same assumptions from PyPSA-USA
 
     USD/gal -> USD/MWh (water storage)
       assume cp = 4.186 kJ/kg/C
+
+      1. Get USD/kg water
       (USD / gal) * (1 gal / 3.75 liter) * (1L / 1 kg H2O) = 0.267 USD / kg water
-      (0.267 USD / kg) * (1 / 4.186 kJ/kg/C) * (1 / 1C) = 0.0637 USD / kJ
-      (0.0637 USD / kJ) * (1000 kJ / 1 MJ) * (3600sec / 1hr) = 229335 USD / MWh
+
+      2. Get energy stored per kg of deltaT (Assume deltaT of 50degC)
+      E_per_kg = cp * deltaT = 4.186 kJ/kg/C * 50C = 209.3 kJ/kg
+
+      3. Get USD/MWh
+      (0.267 USD / kg) * (1 / 209.3 kJ/kg) * (1000 kJ / 1 MJ) * (3600sec / 1hr) = 12275.68 USD / MWh
+
+      general formula:
+      (USD / gal) * 4586.68 = (gal/MWh)
+
     """
     df = params.copy()
     df.loc[
         ((df.unit == "usd/gal") & (df.carrier.str.startswith(("res", "com")))),
         "min_value",
-    ] *= 229335
+    ] *= 4586
     df.loc[
         ((df.unit == "usd/gal") & (df.carrier.str.startswith(("res", "com")))),
         "max_value",
-    ] *= 229335
+    ] *= 4586
     df.loc[
         ((df.unit == "usd/gal") & (df.carrier.str.startswith(("res", "com")))), "unit"
     ] = "usd/mwh"
@@ -214,12 +262,14 @@ def correct_mpge_units(params: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
 def correct_miles(params: pd.DataFrame) -> pd.DataFrame:
     """Ensures all miles are labeled as 'vmt'."""
-    
+
     df = params.copy()
     df["unit"] = df["unit"].str.replace("miles", "vmt")
     return df
+
 
 def correct_vmt_units(params: pd.DataFrame) -> pd.DataFrame:
     """Convert vmt units to kvmt."""
@@ -234,6 +284,7 @@ def correct_vmt_units(params: pd.DataFrame) -> pd.DataFrame:
     df.unit = df.unit.str.replace("vmt", "kvmt")
 
     return df
+
 
 def correct_mmbtu_units(params: pd.DataFrame) -> pd.DataFrame:
     """Converts MMBTU to MWh"""
@@ -295,9 +346,10 @@ def correct_percent_units(params: pd.DataFrame) -> pd.DataFrame:
     df.loc[(df.range == "absolute") & (df.unit == "percent"), "unit"] = "per_unit"
     return df
 
+
 def strip_whitespace(params: pd.DataFrame) -> pd.DataFrame:
     """Strips any leading/trailing whitespace from naming columns."""
-    
+
     df = params.copy()
     df["name"] = df.name.str.strip()
     df["group"] = df.group.str.strip()
@@ -305,6 +357,7 @@ def strip_whitespace(params: pd.DataFrame) -> pd.DataFrame:
     df["component"] = df.component.str.strip()
     df["attribute"] = df.attribute.str.strip()
     return df
+
 
 ###
 # Input checks
@@ -329,7 +382,11 @@ def is_valid_fom_units(params: pd.DataFrame) -> bool:
 
     df = params.copy()
 
-    fom = df[df.attribute == "fixed_cost"].set_index("carrier")["unit"].to_frame(name="fom")
+    fom = (
+        df[df.attribute == "fixed_cost"]
+        .set_index("carrier")["unit"]
+        .to_frame(name="fom")
+    )
     occ = df[df.attribute == "occ"].set_index("carrier")["unit"].to_frame(name="occ")
 
     units = occ.join(fom)
@@ -356,8 +413,11 @@ def is_valid_range(params: pd.DataFrame) -> bool:
         return True
     else:
         error = df[~df["range"].isin(VALID_RANGES)]
-        logger.error(f"{error.name.to_list()} do not have valid ranges of {VALID_RANGES}")
+        logger.error(
+            f"{error.name.to_list()} do not have valid ranges of {VALID_RANGES}"
+        )
         return False
+
 
 def is_valid_units(params: pd.DataFrame) -> bool:
     """Ensures converted units are valid."""
@@ -370,34 +430,37 @@ def is_valid_units(params: pd.DataFrame) -> bool:
         error = df[~df["unit"].isin(VALID_UNITS)]
         logger.error(f"{error.name.to_list()} do not have valid units of {VALID_UNITS}")
         return False
-    
+
+
 def no_empty_values(params: pd.DataFrame) -> bool:
     """Ensures all required columns have data."""
-    
+
     df = params.copy()
-    
+
     req_cols = [x for x in df.columns if x not in ("source", "notes")]
-    
+
     for col in req_cols:
         if any(df[col].isna()):
             error = df[df[col].isna()]
             logger.error(f"{error.name.to_list()} in {col} column do not have values")
             return False
-    
+
     return True
-    
+
+
 def is_valid_nice_name(params: pd.DataFrame) -> bool:
     """Ensures all group and nice_names are consistent."""
-    
+
     df = params.copy()
-    
+
     for group in df.group.unique():
         temp = df[df.group == group]
         if len(temp.nice_name.unique()) != 1:
             logger.error(f"Inconsistent nice_names for group {group}")
             return False
     return True
-    
+
+
 def is_valid_capital_costs(params: pd.DataFrame) -> bool:
     """Capital costs are an intermediate calculation."""
 
@@ -414,6 +477,7 @@ def is_valid_capital_costs(params: pd.DataFrame) -> bool:
 
     return True
 
+
 def is_no_duplicates(params: pd.DataFrame) -> bool:
     """No duplicate parameter names"""
 
@@ -426,6 +490,7 @@ def is_no_duplicates(params: pd.DataFrame) -> bool:
         return False
     else:
         return True
+
 
 def is_constraints_abs(params: pd.DataFrame) -> bool:
     """Constraints must be in absolute terms."""
@@ -440,6 +505,7 @@ def is_constraints_abs(params: pd.DataFrame) -> bool:
         return False
     else:
         return True
+
 
 def is_valid_gshp(params: pd.DataFrame) -> bool:
     """GSHP capacity constraint for res/com MUST be in the same group."""
@@ -466,7 +532,7 @@ def is_valid_gshp(params: pd.DataFrame) -> bool:
 
 def is_valid_demand_response(params: pd.DataFrame) -> bool:
     """As demand response sample needs to be modified for forward/backwards shifting."""
-    
+
     df = params.copy()
 
     df = df[df.carrier == "demand_response"]
@@ -485,6 +551,7 @@ def is_valid_demand_response(params: pd.DataFrame) -> bool:
     else:
         return True
 
+
 def is_attr_t_pct(params: pd.DataFrame) -> bool:
     """Time dependent values must be realitive"""
 
@@ -500,23 +567,54 @@ def is_attr_t_pct(params: pd.DataFrame) -> bool:
         return True
 
 
-if __name__ == "__main__":
+def round_max_min(params: pd.DataFrame, round_to: int = 5) -> pd.DataFrame:
+    """Rounds max and min values to given decimal places."""
 
+    df = params.copy()
+    df["min_value"] = df["min_value"].round(round_to)
+    df["max_value"] = df["max_value"].round(round_to)
+    return df
+
+
+def is_single_node(n: pypsa.Network) -> bool:
+    """Check if network is a single node."""
+    buses = n.buses[n.buses.carrier == "AC"]
+    assert len(buses) >= 1, "Network must have at least one AC bus"
+    return len(buses) == 1
+
+
+def remove_transmission_expansion(params: pd.DataFrame) -> pd.DataFrame:
+    """Remove transmission expansion if network is a single node."""
+    df = params.copy()
+    return df[~(df.attribute == "lv")].copy()
+
+
+if __name__ == "__main__":
     if "snakemake" in globals():
         in_params = snakemake.input.parameters
         out_params = snakemake.output.parameters
+        network = snakemake.input.network
+        rps = snakemake.input.rps
+        ces = snakemake.input.ces
         configure_logging(snakemake)
     else:
-        in_params = "config/parameters.csv"
-        out_params = "results/Test/parameters.csv"
-    
+        in_params = "results/ct/generated/config/parameters.csv"
+        out_params = "results/ct/gsa/parameters.csv"
+        network = "results/ct/base.nc"
+        rps = "results/ct/constraints/rps.csv"
+        ces = "results/ct/constraints/ces.csv"
+
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
-    
-    # top level sanitize 
+    n = pypsa.Network(network)
+
+    rps_df = pd.read_csv(rps)
+    ces_df = pd.read_csv(ces)
+
+    # top level sanitize
     df = sanitize_component_name(df)
     df = strip_whitespace(df)
 
-    # units 
+    # units
     df = correct_usd(df)
     df = correct_miles(df)
     df = correct_kw_units(df)
@@ -528,8 +626,18 @@ if __name__ == "__main__":
     df = correct_water_heater_units(df)
     df = correct_vmt_units(df)
 
-    
-    # validation of data 
+    # networks are not guaranteed to have offwind floating. Remove if not present.
+    if not offwind_floating_in_network(n):
+        df = remove_offwind_floating(df)
+
+    # states do not have any RPS commitments. Remove RPS constraints.
+    if not rps_in_network(n, rps_df, ces_df):
+        df = remove_rps_constraints(df)
+
+    if is_single_node(n):
+        df = remove_transmission_expansion(df)
+
+    # validation of data
     # note, does not check carrier
     assert no_empty_values(df), "empty values exist"
     assert is_valid_attributes(df), "invalid attributes"
@@ -544,5 +652,6 @@ if __name__ == "__main__":
     assert is_valid_gshp(df), "too many groups for gshp constraint"
     assert is_valid_demand_response(df), "demand_response must be percent"
 
+    df = round_max_min(df, 5)
+
     df.to_csv(out_params, index=False)
-    

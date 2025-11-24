@@ -1,33 +1,49 @@
 
 # name of base pypsa network
 scenario: 
-  name: "caiso3"
-  include_generated: false # to include model specific tct and co2L data
-  ch4: false # if true, ch4 counts against emission budget. Else, ch4 still tracked, but not counted against emission budget. 
+  name: "nh"
+
+model_options:
+  ch4: false # if true, ch4 counts against emission budget. Else, ch4 tracked, but not counted against budget.
+  coal_oil_investment: true # if true, coal and oil investment is allowed.
+  economic_retirement: false # if true, allow system to recoup costs by retiring assets
+  nat_gas_import_relax: 1.5 # relax import energy upper bound constraint by this factor
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  network: "caiso/elec_s12_c4m_ec_lv1.0_4h_E-G.nc"
-  pop_layout: "caiso/pop_layout_elec_s12_c4m.csv"
+  network: "nh/elec_s20_c1m_ec_lv1.0_3h_E-G.nc"
+  pop_layout: "nh/pop_layout_elec_s20_c1m.csv"
   era5_year: 2018
 
 # write out GSA associated metadata with each run
 metadata:
   csv: True
-  yaml: True
-  networks: True # keep solved networks 
+  yaml: False
+  networks: False
 
 # config options for data that is generated
 generated:
-  co2L_min: 40 # as percentage of 2005 level emissions
-  co2L_max: 50 # as percentage of 2005 level emissions
-  ccgtccs_max: 50 # as a percentage of max natgas capacity 
+  include:
+    tct: True
+    co2L: False
+  limits:
+    co2L_min: 40 # as percentage of 2005 level emissions
+    co2L_max: 50 # as percentage of 2005 level emissions
+    ccgtccs_max: 10 # as a percentage of max natgas capacity 
 
 gsa:
   parameters: config/parameters.csv 
-  results: config/results_gsa.csv # results to run SA over
+  results: config/results.csv # results to run SA over
   replicates: 10 
-  scale: True # Scale Elementary Effects 
+  scale: True # Scale Elementary Effect
+  rankings: # get union of most impactful parameters
+    top_n: 5
+    results:
+    - marginal_cost_energy
+    - marginal_cost_elec
+    - carbon_co2
+    - carbon_total
+    - objective_cost
 
 uncertainity:
   # general scaling guidlines
@@ -35,21 +51,21 @@ uncertainity:
   # sobol -> N=2^m (m is a power of 2) -> N ~ 10d
   # lhs -> N = r -> N ~ > 10d
   sample: lhs # (lhs|sobol)
-  replicates: 600
-  parameters: # **index names** from parameters csv to include in sample
-  - capex_com_elec_water_heater
-  - capex_res_elec_water_heater
-  - eff_trn_lpg_lgt
-  - trn_veh_lgt_demand
-  - eff_trn_lpg_hvy
-  - trn_veh_hvy_demand
-  - capex_ocgt
-  - capex_ccgt
-  - capex_ccgt95ccs
-  - emission_limit
+  replicates: 1100
+  parameters: # naems or groups 
+  - eff_trn_lpg
+  - elec_export_price
+  - elec_import_price
+  - elec_import_rec_price
+  - elec_trade_flow
+  - gwp
   - lpg_cost
-  - ng_leakage
-  results: config/results_ua.csv # results to extract from ua
+  - ng_leakage_downstream
+  - ng_marginal_cost_export
+  - ng_marginal_cost_import
+  - rps
+
+  results: config/results.csv # results to extract from ua
   plots: config/plots_ua.csv
 
 # Choose a solver

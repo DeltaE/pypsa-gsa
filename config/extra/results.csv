@@ -1,0 +1,16 @@
+name,nice_name,component,carriers,variable,unit,barplot
+marginal_cost_elec_ind,Industrial Electricity Cost,buses_t,ind-elec,marginal_price,$/MWh
+marginal_cost_heat_ind,Industrial Heating Cost,buses_t,ind-heat,marginal_price,$/MWh
+marginal_cost_energy_ind,Industrial Energy Cost,buses_t,ind-elec;ind-heat,marginal_price,$/MWh
+marginal_cost_elec_res,Residential Electricity Cost,buses_t,res-total-elec,marginal_price,$/MWh
+marginal_cost_space_heat_res,Residential Space Heat Cost,buses_t,res-total-space-heat,marginal_price,$/MWh
+marginal_cost_water_heat_res,Residential Water Heat Cost,buses_t,res-total-water-heat,marginal_price,$/MWh
+marginal_cost_space_cool_res,Residential Space Cool Cost,buses_t,res-total-cool,marginal_price,$/MWh
+marginal_cost_energy_res,Residential Energy Cost,buses_t,res-total-elec;res-total-space-heat;res-total-water-heat;res-total-cool,marginal_price,$/MWh
+marginal_cost_elec_com,Commercial Electricity Cost,buses_t,com-total-elec,marginal_price,$/MWh
+marginal_cost_space_heat_com,Commercial Space Heat Cost,buses_t,com-total-space-heat,marginal_price,$/MWh
+marginal_cost_water_heat_com,Commercial Water Heat Cost,buses_t,com-total-water-heat,marginal_price,$/MWh
+marginal_cost_space_cool_com,Commercial Space Cool Cost,buses_t,com-total-cool,marginal_price,$/MWh
+marginal_cost_energy_com,Commercial Energy Cost,buses_t,com-total-elec;com-total-space-heat;com-total-water-heat;com-total-cool,marginal_price,$/MWh
+marginal_cost_elec_trn,Transport Electricity Cost,buses_t,trn-elec-veh,marginal_price,$/MWh
+marginal_cost_energy_trn,Transport Energy Cost,buses_t,trn-elec-veh;trn-lpg-veh,marginal_price,$/MWh
