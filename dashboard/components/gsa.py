@@ -184,6 +184,11 @@ def gsa_results_dropdown() -> html.Div:
                         id=ids.GSA_RESULTS_REMOVE_ALL,
                         **BUTTON_STYLE,
                     ),
+                    dbc.Button(
+                        "Defaults",
+                        id=ids.GSA_RESULTS_SET_DEFAULT,
+                        **BUTTON_STYLE,
+                    ),
                 ]
             ),
         ],

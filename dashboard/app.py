@@ -44,6 +44,7 @@ from components.gsa import (
     get_gsa_data_table,
     get_gsa_barchart,
     normalize_mu_star_data,
+    _default_gsa_results_value
 )
 from components.shared import state_options_block, plotting_options_block
 from components.ua import (
@@ -1059,6 +1060,7 @@ def callback_select_remove_all_gsa_params(plotting_type: str, *args: Any) -> lis
     [
         Input(ids.GSA_RESULTS_SELECT_ALL, "n_clicks"),
         Input(ids.GSA_RESULTS_REMOVE_ALL, "n_clicks"),
+        Input(ids.GSA_RESULTS_SET_DEFAULT, "n_clicks"),
     ],
     prevent_initial_call=True,
 )
@@ -1079,6 +1081,8 @@ def callback_select_remove_all_gsa_results(plotting_type: str, *args: Any) -> li
         return [option["value"] for option in GSA_RESULT_OPTIONS]
     elif button_id == ids.GSA_RESULTS_REMOVE_ALL:
         return []
+    elif button_id == ids.GSA_RESULTS_SET_DEFAULT:
+        return _default_gsa_results_value()
     return dash.no_update
 
 
