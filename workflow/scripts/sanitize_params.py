@@ -36,7 +36,7 @@ def offwind_floating_in_network(n: pypsa.Network) -> bool:
 def remove_rps_constraints(params: pd.DataFrame) -> pd.DataFrame:
     """Remove RPS constraints if state has no commitments."""
     df = params.copy()
-    return df[~df.carrier.isin(["rps", "rec"])].copy()
+    return df[~df.attribute.isin(["rps", "rec"])].copy()
 
 
 def rps_in_network(n: pypsa.Network, *args: pd.DataFrame) -> bool:
@@ -598,11 +598,11 @@ if __name__ == "__main__":
         ces = snakemake.input.ces
         configure_logging(snakemake)
     else:
-        in_params = "results/ct/generated/config/parameters.csv"
-        out_params = "results/ct/gsa/parameters.csv"
-        network = "results/ct/base.nc"
-        rps = "results/ct/constraints/rps.csv"
-        ces = "results/ct/constraints/ces.csv"
+        in_params = "results/ga/generated/config/parameters.csv"
+        out_params = "results/ga/gsa/parameters.csv"
+        network = "results/ga/base.nc"
+        rps = "results/ga/constraints/rps.csv"
+        ces = "results/ga/constraints/ces.csv"
 
     df = pd.read_csv(in_params, dtype={"min_value": float, "max_value": float})
     n = pypsa.Network(network)
