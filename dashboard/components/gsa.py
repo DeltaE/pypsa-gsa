@@ -533,10 +533,11 @@ def _get_gsa_map_figure(
         geo=dict(
             # fitbounds="locations",
             projection=dict(
-                type="albers usa",
-                scale=0.85,
+                # type="albers usa",
+                type="mercator",
+                scale=5.9,
             ),
-            center=dict(lat=39, lon=-95),  # CONUS center
+            center=dict(lat=44, lon=-100),  # CONUS center
         ),
         legend=dict(
             orientation="h",
@@ -554,7 +555,7 @@ def _get_gsa_map_figure(
 def get_gsa_map(
     gsa_map_data: list[dict[str, Any]],
     state_shape: gpd.GeoDataFrame,
-    num_cols: int = 2,
+    num_cols: int = 3,
     card_class: str = "h-100",
     row_class: str = "mb-2 g-2",  # Adds margin bottom and gap between cards
     **kwargs: Any,
@@ -612,9 +613,12 @@ def get_gsa_map(
                                 # color_palette=color_scale,
                                 color_map=color_map,
                             ),
-                            style={"height": "300px"},  # fixed height for map
+                            style={
+                                # "height": "300px",
+                                "width": "100%",
+                            },  # fixed height for map
                         )
-                    ]
+                    ],
                 ),
             ],
             className=card_class,

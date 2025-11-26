@@ -33,7 +33,8 @@ RAW_PARAMS["group_nice_name"] = RAW_PARAMS.group.map(
 )
 
 # ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
-STATE_SHAPE = gpd.read_file("data/locked/states.geojson")
+STATE_SHAPE_ACTUAL = gpd.read_file("data/locked/states.geojson")
+STATE_SHAPE_HEX = gpd.read_file("data/locked/states_hex.geojson")
 
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(METADATA)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(METADATA, list(RAW_GSA))

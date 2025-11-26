@@ -12,7 +12,6 @@ from components.data import (
     RAW_GSA,
     RAW_UA,
     RAW_PARAMS,
-    STATE_SHAPE,
     GSA_PARM_OPTIONS,
     GSA_RESULT_OPTIONS,
     SECTOR_DROPDOWN_OPTIONS_ALL,
@@ -22,6 +21,8 @@ from components.data import (
     CR_DATA,
     SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG,
     SECTOR_DROPDOWN_OPTIONS_TRADE,
+    STATE_SHAPE_ACTUAL,
+    STATE_SHAPE_HEX,
 )
 import components.ids as ids
 from components.utils import (
@@ -44,7 +45,7 @@ from components.gsa import (
     get_gsa_data_table,
     get_gsa_barchart,
     normalize_mu_star_data,
-    _default_gsa_results_value
+    _default_gsa_results_value,
 )
 from components.shared import state_options_block, plotting_options_block
 from components.ua import (
@@ -350,8 +351,10 @@ def render_tab_content(
                 id=ids.GSA_BAR_CHART,
                 figure=get_gsa_barchart(gsa_bar_data, color_scale=color),
             )
-        elif plotting_type == "map":
-            view = get_gsa_map(gsa_map_data, STATE_SHAPE, color_scale=color)
+        elif plotting_type == "map_actual":
+            view = get_gsa_map(gsa_map_data, STATE_SHAPE_ACTUAL, color_scale=color)
+        elif plotting_type == "map_hex":
+            view = get_gsa_map(gsa_map_data, STATE_SHAPE_HEX, color_scale=color)
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
@@ -508,7 +511,8 @@ def update_plotting_type_dropdown_options(
                 {"label": "Bar Chart", "value": "barchart"},
                 {"label": "Data Table", "value": "data_table"},
                 {"label": "Heatmap", "value": "heatmap"},
-                {"label": "Map", "value": "map"},
+                {"label": "Map (Actual)", "value": "map_actual"},
+                {"label": "Map (Hex)", "value": "map_hex"},
             ],
             "heatmap",
         )
@@ -1092,6 +1096,7 @@ def callback_select_remove_all_gsa_results(plotting_type: str, *args: Any) -> li
         Output(ids.GSA_RESULTS_DROPDOWN, "value", allow_duplicate=True),
         Output(ids.GSA_RESULTS_SELECT_ALL, "disabled"),
         Output(ids.GSA_RESULTS_REMOVE_ALL, "disabled"),
+        Output(ids.GSA_RESULTS_SET_DEFAULT, "disabled"),
     ],
     Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
     State(ids.TABS, "active_tab"),
@@ -1100,15 +1105,15 @@ def callback_select_remove_all_gsa_results(plotting_type: str, *args: Any) -> li
 )
 def callback_update_gsa_results_dropdown(
     plotting_type: str, active_tab: str, current_results: list[str]
-) -> tuple[bool, bool, bool]:
+) -> tuple[bool, bool, bool, bool, bool]:
     if active_tab != ids.SA_TAB:
         return dash.no_update
-    if plotting_type == "map":
+    if plotting_type in ["map", "map_actual", "map_hex"]:
         if isinstance(current_results, str):
             current_results = [current_results]
-        return False, current_results[0], True, True
+        return False, current_results[0], True, True, True
     else:
-        return True, current_results, False, False
+        return True, current_results, False, False, False
 
 
 @app.callback(
