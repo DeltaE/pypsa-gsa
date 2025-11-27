@@ -74,6 +74,7 @@ from components.ua_system import (
     filter_ua2_on_result_name,
     get_ua2_data_table,
     ua2_options_block,
+    get_ua2_plot,
 )
 
 import logging
@@ -462,8 +463,24 @@ def render_tab_content(
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         elif plotting_type == "map_hex":
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
-        elif plotting_type == "barchart":
-            return html.Div([dbc.Alert("No plotting type selected", color="info")])
+        elif plotting_type == "boxplot":
+            view = dcc.Graph(
+                id=ids.UA2_BOX_PLOT,
+                figure=get_ua2_plot(
+                    ua2_run_data,
+                    template=color,
+                    result_type="boxplot",
+                ),
+            )
+        elif plotting_type == "violin":
+            view = dcc.Graph(
+                id=ids.UA2_VIOLIN,
+                figure=get_ua2_plot(
+                    ua2_run_data,
+                    template=color,
+                    result_type="violin",
+                ),
+            )
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
@@ -567,12 +584,13 @@ def update_plotting_type_dropdown_options(
     elif active_tab == ids.UA2_TAB:
         return (
             [
-                {"label": "Bar Chart", "value": "barchart"},
+                {"label": "Box Plot", "value": "boxplot"},
                 {"label": "Data Table", "value": "data_table"},
                 {"label": "Map (Real)", "value": "map_actual"},
                 {"label": "Map (Hex)", "value": "map_hex"},
+                {"label": "Violin Plot", "value": "violin"},
             ],
-            "barchart",
+            "boxplot",
         )
     elif active_tab == ids.SA_TAB:
         return (
@@ -1083,10 +1101,12 @@ def callback_update_color_options(
             return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
         else:
             return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+    elif active_tab == ids.UA2_TAB:
+        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     elif active_tab == ids.CR_TAB:
         return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     else:
-        return "", []
+        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
 
 
 ######################

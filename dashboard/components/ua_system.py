@@ -2,14 +2,20 @@
 
 from typing import Any
 from dash import dash_table, dcc, html
-
+import plotly.graph_objects as go
+import plotly.express as px
 from .data import (
     RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS,
 )
 
 import pandas as pd
 from . import ids as ids
-from .utils import _unflatten_dropdown_options
+from .utils import (
+    DEFAULT_HEIGHT,
+    DEFAULT_LEGEND,
+    DEFAULT_PLOTLY_THEME,
+    _unflatten_dropdown_options,
+)
 from .styles import DATA_TABLE_STYLE
 import logging
 
@@ -134,3 +140,61 @@ def filter_ua2_on_result_name(df: pd.DataFrame, result_name: str) -> pd.DataFram
 
     cols = ["run", "state", result_name]
     return df[cols]
+
+
+def get_ua2_plot(
+    data: dict[str, Any],
+    nice_names: bool = True,
+    result_type: str = "violin",
+    **kwargs,
+) -> go.Figure:
+    """UA2 plot component."""
+
+    if not data:
+        logger.debug("No UA plot data found")
+        if result_type == "violin":
+            return px.violin(
+                pd.DataFrame(columns=["result", "value"]), x="result", y="value"
+            )
+        else:
+            return px.box(
+                pd.DataFrame(columns=["result", "value"]), x="result", y="value"
+            )
+
+    df = _read_serialized_ua_data(data)
+
+    if nice_names:
+        df = apply_nice_names(df)
+
+    df = df.reset_index()
+    df_melted = df.melt(id_vars=["run", "state"], var_name="result", value_name="value")
+
+    color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
+    ylabel = ""
+
+    if result_type == "violin":
+        fig = px.violin(
+            df_melted,
+            x="state",
+            y="value",
+            labels=dict[str, str](result="", value=ylabel),
+        )
+    else:
+        fig = px.box(
+            df_melted,
+            x="state",
+            y="value",
+            labels=dict[str, str](result="", value=ylabel),
+        )
+
+    fig.update_layout(
+        title="",
+        xaxis_title="",
+        yaxis_title=ylabel,
+        height=DEFAULT_HEIGHT,
+        showlegend=True,
+        legend=DEFAULT_LEGEND,
+        template=color_theme,
+    )
+
+    return fig

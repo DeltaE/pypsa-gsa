@@ -111,6 +111,10 @@ UA_VIOLIN = "ua-violin"
 UA_HISTOGRAM = "ua-histogram"
 UA_BOX_WHISKER = "ua-box-whisker"
 
+# ua2 plots
+UA2_BOX_PLOT = "ua2-box-plot"
+UA2_VIOLIN = "ua2-violin"
+
 # custom result plots
 CR_SCATTER = "cr-scatter"
 CR_HISTOGRAM = "cr-histogram"
