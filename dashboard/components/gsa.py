@@ -479,6 +479,7 @@ def _get_gsa_map_figure(
     top_n: int = 0,
     color_map: dict[str, str] | None = None,
     color_palette: str = "Set3",
+    **kwargs: Any,
 ) -> plotly.graph_objects.Figure:
     """GSA map component."""
 
@@ -527,6 +528,12 @@ def _get_gsa_map_figure(
         showlakes=False,
         showcountries=False,
     )
+    
+    # defaults for the hex map
+    # overwrite for the actual map
+    scale = kwargs.get("scale", 5.9)
+    lat = kwargs.get("lat", 44)
+    lon = kwargs.get("lon", -100)
 
     fig.update_layout(
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
@@ -535,9 +542,9 @@ def _get_gsa_map_figure(
             projection=dict(
                 # type="albers usa",
                 type="mercator",
-                scale=5.9,
+                scale=scale,
             ),
-            center=dict(lat=44, lon=-100),  # CONUS center
+            center=dict(lat=lat, lon=lon),  # CONUS center
         ),
         legend=dict(
             orientation="h",
@@ -578,6 +585,12 @@ def get_gsa_map(
     color_map.update({"No Data": "lightgrey"})  # Modify in-place instead of reassigning
     logger.debug(f"Color map: {color_map}")
 
+    # defaults for the hex map
+    # overwrite for the actual map
+    scale = kwargs.get("scale", 5.9)
+    lat = kwargs.get("lat", 44)
+    lon = kwargs.get("lon", -100)
+    
     if num_maps == 1:
         return dcc.Graph(
             id=ids.GSA_MAP,
@@ -587,6 +600,9 @@ def get_gsa_map(
                 top_n=num_maps,
                 color_palette=color_scale,
                 color_map=color_map,
+                scale=scale,
+                lat=lat,
+                lon=lon,
             ),
             style={"height": "400px"},
         )
@@ -612,6 +628,9 @@ def get_gsa_map(
                                 top_n=num_map,
                                 # color_palette=color_scale,
                                 color_map=color_map,
+                                scale=scale,
+                                lat=lat,
+                                lon=lon,
                             ),
                             style={
                                 # "height": "300px",

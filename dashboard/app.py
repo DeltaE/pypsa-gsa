@@ -377,9 +377,23 @@ def render_tab_content(
                 figure=get_gsa_barchart(gsa_bar_data, color_scale=color),
             )
         elif plotting_type == "map_actual":
-            view = get_gsa_map(gsa_map_data, STATE_SHAPE_ACTUAL, color_scale=color)
+            view = get_gsa_map(
+                gsa_map_data,
+                STATE_SHAPE_ACTUAL,
+                color_scale=color,
+                scale=6.0,
+                lat=44,
+                lon=-95,
+            )
         elif plotting_type == "map_hex":
-            view = get_gsa_map(gsa_map_data, STATE_SHAPE_HEX, color_scale=color)
+            view = get_gsa_map(
+                gsa_map_data,
+                STATE_SHAPE_HEX,
+                color_scale=color,
+                scale=5.9,
+                lat=44,
+                lon=-100,
+            )
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
@@ -691,6 +705,9 @@ def callback_update_ua_emissions(
         states = [states]
     if not states:
         return {}
+    if len(states) == 1:
+        if not states[0]:
+            return {}
     if emission_target:
         return {x: EMISSIONS[x] for x in states}
     else:
@@ -1264,7 +1281,7 @@ def callback_modify_state_dropdown_multi(
         else:
             return True, False, False
     else:
-        return True, False, False
+        return False, True, True
 
 
 @app.callback(
@@ -1331,6 +1348,10 @@ def callback_update_states_dropdown(
 def callback_update_ua_results_sector_dropdown_options(
     result_type: str, existing_value: str | None
 ) -> list[dict[str, str]]:
+    """Update the UA sector dropdown options.
+
+    Done very hacky as each result has data not tagged in the metadata yet.
+    """
     logger.debug(f"Updating UA sector dropdown options for: {result_type}")
     if result_type == "cost":
         options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
