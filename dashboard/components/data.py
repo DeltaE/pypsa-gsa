@@ -11,6 +11,7 @@ from .utils import (
     get_metadata,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
+    get_ua2_result_dropdown_options,
     get_ua_results_dropdown_options,
     get_cr_params_dropdown_options,
     STATES,
@@ -85,3 +86,15 @@ RESULT_TYPE_DROPDOWN_OPTIONS = sorted(
 )
 
 EMISSIONS = get_emissions(root)
+
+###
+# Options for UA2
+###
+
+RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS = sorted(
+    [
+        {"label": y, "value": x}
+        for x, y in METADATA["nice_names"]["results_summary"].items()
+    ],
+    key=lambda x: x["label"],
+)

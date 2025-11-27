@@ -22,6 +22,14 @@
             "trade": "Trade",
             "transmission": "Transmission Capacity"
         },
+        "results_summary": {
+            "cost": "Cost",
+            "marginal_cost": "Marginal Cost",
+            "emissions": "Emissions",
+            "generation": "Generation",
+            "total_capacity": "Total Capacity",
+            "new_capacity": "New Capacity"
+        },
         "parameter": {
             "eff": "Efficiency",
             "capex": "CAPEX",
@@ -50,6 +58,7 @@
                 "sector": "system",
                 "result": "cost",
                 "visible": true,
+                "summary": true,
                 "unit": "USD"
             },
             "marginal_cost_elec": {
@@ -59,6 +68,7 @@
                 "sector2": "power",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy": {
@@ -67,6 +77,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": true,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_ind": {
@@ -76,6 +87,7 @@
                 "sector2": "power",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_heat_ind": {
@@ -84,6 +96,7 @@
                 "sector": "industry",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_ind": {
@@ -92,6 +105,7 @@
                 "sector": "industry",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_res": {
@@ -101,6 +115,7 @@
                 "sector2": "power",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_heat_res": {
@@ -109,6 +124,7 @@
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_water_heat_res": {
@@ -125,6 +141,7 @@
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_res": {
@@ -133,6 +150,7 @@
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_com": {
@@ -142,6 +160,7 @@
                 "sector2": "power",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_heat_com": {
@@ -150,6 +169,7 @@
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_water_heat_com": {
@@ -158,6 +178,7 @@
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_cool_com": {
@@ -166,6 +187,7 @@
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_com": {
@@ -174,6 +196,7 @@
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_trn": {
@@ -183,6 +206,7 @@
                 "sector2": "power",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_trn": {
@@ -191,6 +215,7 @@
                 "sector": "transport",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_iqr": {
@@ -199,6 +224,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_iqr": {
@@ -207,6 +233,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_std": {
@@ -215,6 +242,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },  
             "marginal_cost_energy_std": {
@@ -223,6 +251,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_elec_25": {
@@ -231,6 +260,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_25": {
@@ -239,6 +269,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },  
             "marginal_cost_elec_50": {
@@ -247,6 +278,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },  
             "marginal_cost_energy_50": {
@@ -255,6 +287,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },  
             "marginal_cost_elec_75": {
@@ -263,6 +296,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },      
             "marginal_cost_energy_75": {
@@ -271,6 +305,7 @@
                 "sector": "system",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "USD/MWh"
             },  
             "carbon_co2": {
@@ -279,6 +314,7 @@
                 "sector": "system",
                 "result": "emissions",
                 "visible": true,
+                "summary": true,
                 "unit": "T CO2e"
             },
             "carbon_ch4": {
@@ -287,6 +323,7 @@
                 "sector": "system",
                 "result": "emissions",
                 "visible": true,
+                "summary": true,
                 "unit": "T CO2e"
             },
             "carbon_total": {
@@ -295,6 +332,7 @@
                 "sector": "system",
                 "result": "emissions",
                 "visible": true,
+                "summary": true,
                 "unit": "T CO2e"
             },
             "load_shedding": {
@@ -302,6 +340,7 @@
                 "sector": "system",
                 "result": "demand_response",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "demand_response": {
@@ -309,6 +348,7 @@
                 "sector": "system",
                 "result": "demand_response",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "demand_response_max": {
@@ -316,6 +356,7 @@
                 "sector": "system",
                 "result": "demand_response",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "demand_response_avg": {
@@ -323,6 +364,7 @@
                 "sector": "system",
                 "result": "demand_response",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "demand_response_total": {
@@ -330,6 +372,7 @@
                 "sector": "system",
                 "result": "demand_response",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "solar_capacity": {
@@ -338,6 +381,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "solar_capacity_new": {
@@ -346,6 +390,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "onwind_capacity": {
@@ -354,6 +399,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "onwind_capacity_new": {
@@ -362,6 +408,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "offwind_capacity": {
@@ -370,6 +417,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "offwind_capacity_new": {
@@ -378,6 +426,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "wind_capacity": {
@@ -386,6 +435,7 @@
                 "sector": "system",
                 "result": "total_capacity",
                 "visible": false,
+                "summary": true,
                 "unit": "MW"
             },
             "wind_capacity_new": {
@@ -394,6 +444,7 @@
                 "sector": "system",
                 "result": "new_capacity",
                 "visible": false,
+                "summary": true,
                 "unit": "MW"
             },
             "gas_capacity": {
@@ -402,6 +453,7 @@
                 "sector": "system",
                 "result": "total_capacity",
                 "visible": false,
+                "summary": true,
                 "unit": "MW"
             },
             "gas_capacity_new": {
@@ -410,6 +462,7 @@
                 "sector": "system",
                 "result": "new_capacity",
                 "visible": false,
+                "summary": true,
                 "unit": "MW"
             },
             "ocgt_capacity": {
@@ -418,6 +471,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ocgt_capacity_new": {
@@ -426,6 +480,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ccgt_capacity": {
@@ -434,6 +489,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ccgt_capacity_new": {
@@ -442,6 +498,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ccgt95ccs_capacity": {
@@ -450,6 +507,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ccgt95ccs_capacity_new": {
@@ -458,6 +516,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "hydro_capacity": {
@@ -466,6 +525,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "hydro_capacity_new": {
@@ -474,6 +534,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "coal_capacity": {
@@ -482,6 +543,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "coal_capacity_new": {
@@ -490,6 +552,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "nuclear_capacity": {
@@ -498,6 +561,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "nuclear_capacity_new": {
@@ -506,6 +570,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "other_capacity": {
@@ -514,6 +579,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "other_capacity_new": {
@@ -522,6 +588,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "geothermal_capacity": {
@@ -530,6 +597,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "geothermal_capacity_new": {
@@ -538,6 +606,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MW"
             },
             "vre_capacity": {
@@ -546,6 +615,7 @@
                 "sector": "system",
                 "result": "total_capacity",
                 "visible": false,
+                "summary": false,
                 "unit": "MW"
             },
             "vre_capacity_new": {   
@@ -554,6 +624,7 @@
                 "sector": "system",
                 "result": "new_capacity",
                 "visible": false,
+                "summary": false,
                 "unit": "MW"
             },
             "battery_capacity": {
@@ -562,6 +633,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "battery_capacity_new": {
@@ -570,6 +642,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "battery_capacity_4hr": {
@@ -578,6 +651,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "battery_capacity_4hr_new": {
@@ -586,6 +660,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "battery_capacity_8hr": {
@@ -594,6 +669,7 @@
                 "sector": "power",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "battery_capacity_8hr_new": {
@@ -602,6 +678,7 @@
                 "sector": "power",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "solar_generation": {
@@ -610,6 +687,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "wind_generation": {
@@ -618,6 +696,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": false,
+                "summary": true,
                 "unit": "MWh"
             },
             "onwind_generation": {
@@ -626,6 +705,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "offwind_generation": {
@@ -634,6 +714,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "gas_generation": {
@@ -642,6 +723,7 @@
                 "sector": "system",
                 "result": "generation",
                 "visible": false,
+                "summary": true,
                 "unit": "MWh"
             },
             "hydro_generation": {
@@ -650,6 +732,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "coal_generation": {
@@ -658,6 +741,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "nuclear_generation": {
@@ -666,6 +750,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "other_generation": {
@@ -674,6 +759,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "geothermal_generation": {
@@ -682,6 +768,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "ocgt_generation": {
@@ -690,6 +777,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "ccgt_generation": {
@@ -698,6 +786,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "ccgt95ccs_generation": {
@@ -706,6 +795,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "vre_generation": {
@@ -714,6 +804,7 @@
                 "sector": "system",
                 "result": "generation",
                 "visible": false,
+                "summary": false,
                 "unit": "MWh"
             },
             "battery_generation": {
@@ -722,6 +813,7 @@
                 "sector": "power",
                 "result": "generation",
                 "visible": true,
+                "summary": true,
                 "unit": "MWh"
             },
             "hp_capacity": {
@@ -730,6 +822,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": false,
+                "summary": false,
                 "unit": "MW"
             },
             "hp_capacity_new": {
@@ -738,6 +831,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": false,
+                "summary": false,
                 "unit": "MW"
             },
             "ashp_capacity": {
@@ -746,6 +840,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ashp_capacity_new": {
@@ -754,6 +849,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "gshp_capacity": {
@@ -762,6 +858,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "gshp_capacity_new": {
@@ -770,6 +867,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "air_con_capacity": {
@@ -778,6 +876,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "air_con_capacity_new": {
@@ -786,6 +885,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "gas_furnace_capacity": {
@@ -794,6 +894,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },  
             "gas_furnace_capacity_new": {
@@ -802,6 +903,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "elec_furnace_capacity": {
@@ -810,6 +912,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },  
             "elec_furnace_capacity_new": {
@@ -818,6 +921,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "oil_furnace_capacity": {
@@ -826,6 +930,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },  
             "oil_furnace_capacity_new": {
@@ -834,6 +939,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "gas_water_heater_capacity": {
@@ -842,6 +948,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "gas_water_heater_capacity_new": {
@@ -850,6 +957,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "oil_water_heater_capacity": {
@@ -858,6 +966,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "oil_water_heater_capacity_new": {
@@ -866,6 +975,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "elec_water_heater_capacity": {
@@ -874,6 +984,7 @@
                 "sector": "service",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "elec_water_heater_capacity_new": {
@@ -882,6 +993,7 @@
                 "sector": "service",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "hp_gen_heat": {
@@ -890,6 +1002,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": false,
+                "summary": false,
                 "unit": "MWh"
             },
             "hp_gen_cool": {
@@ -898,6 +1011,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": false,
+                "summary": false,
                 "unit": "MWh"
             },
             "hp_generation": {
@@ -906,6 +1020,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": false,
+                "summary": false,
                 "unit": "MWh"
             },
             "ashp_generation": {
@@ -914,6 +1029,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "gshp_generation": {
@@ -922,6 +1038,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "gas_furnace_generation": {
@@ -930,6 +1047,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "oil_furnace_generation": {
@@ -938,6 +1056,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "elec_furnace_generation": {
@@ -946,6 +1065,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "air_con_generation": {
@@ -954,6 +1074,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "gas_water_heater_generation": {
@@ -962,6 +1083,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "oil_water_heater_generation": {
@@ -970,6 +1092,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "elec_water_heater_generation": {
@@ -978,6 +1101,7 @@
                 "sector": "service",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "ev_lgt_capacity": {
@@ -986,6 +1110,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_lgt_capacity_new": {
@@ -994,6 +1119,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_lgt_capacity": {
@@ -1002,6 +1128,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_lgt_capacity_new": {
@@ -1010,6 +1137,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_med_capacity": {
@@ -1018,6 +1146,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_med_capacity_new": {
@@ -1026,6 +1155,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_med_capacity": {
@@ -1034,6 +1164,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_med_capacity_new": {
@@ -1042,6 +1173,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_hvy_capacity": {
@@ -1050,6 +1182,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_hvy_capacity_new": {
@@ -1058,6 +1191,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_hvy_capacity": {
@@ -1066,6 +1200,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_hvy_capacity_new": {
@@ -1074,6 +1209,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_bus_capacity": {
@@ -1082,6 +1218,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_bus_capacity_new": {
@@ -1090,6 +1227,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_bus_capacity": {
@@ -1098,6 +1236,7 @@
                 "sector": "transport",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_bus_capacity_new": {
@@ -1106,6 +1245,7 @@
                 "sector": "transport",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_lgt_generation": {
@@ -1114,6 +1254,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_lgt_generation": {
@@ -1122,6 +1263,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_med_generation": {
@@ -1130,6 +1272,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_med_generation": {
@@ -1138,6 +1281,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_hvy_generation": {
@@ -1146,6 +1290,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_hvy_generation": {
@@ -1154,6 +1299,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ev_bus_generation": {
@@ -1162,6 +1308,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "lpg_bus_generation": {
@@ -1170,6 +1317,7 @@
                 "sector": "transport",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "kVMT"
             },
             "ind_gas_furnace_capacity": {
@@ -1178,6 +1326,7 @@
                 "sector": "industry",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ind_gas_furnace_capacity_new": {
@@ -1186,6 +1335,7 @@
                 "sector": "industry",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ind_coal_furnace_capacity": {
@@ -1194,6 +1344,7 @@
                 "sector": "industry",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ind_coal_furnace_capacity_new": {
@@ -1202,6 +1353,7 @@
                 "sector": "industry",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ind_heat_pump_capacity": {
@@ -1210,6 +1362,7 @@
                 "sector": "industry",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },  
             "ind_heat_pump_capacity_new": {
@@ -1218,6 +1371,7 @@
                 "sector": "industry",
                 "result": "new_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "ind_gas_furnace_generation": {
@@ -1226,6 +1380,7 @@
                 "sector": "industry",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "ind_coal_furnace_generation": {
@@ -1234,6 +1389,7 @@
                 "sector": "industry",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "ind_heat_pump_generation": {
@@ -1242,6 +1398,7 @@
                 "sector": "industry",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "utilization_pwr_solar": {
@@ -1250,6 +1407,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"   
             },
             "utilization_pwr_onwind": {
@@ -1258,6 +1416,7 @@
                 "sector": "power",
                 "result": "utilization",    
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_pwr_offwind": {
@@ -1266,6 +1425,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_pwr_ocgt": {   
@@ -1274,6 +1434,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"   
             },
             "utilization_pwr_ccgt": {
@@ -1282,6 +1443,7 @@
                 "sector": "power",
                 "result": "utilization",    
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_pwr_ccgt95ccs": {
@@ -1290,6 +1452,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_pwr_hydro": {  
@@ -1298,6 +1461,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_pwr_coal": {
@@ -1306,6 +1470,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,    
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_pwr_nuclear": {
@@ -1314,6 +1479,7 @@
                 "sector": "power",  
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_pwr_other": {
@@ -1322,6 +1488,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_pwr_geothermal": {
@@ -1330,6 +1497,7 @@
                 "sector": "power",
                 "result": "utilization",
                 "visible": true,    
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_ashp": {
@@ -1338,6 +1506,7 @@
                 "sector": "service",    
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_gshp": {
@@ -1346,6 +1515,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_gas_furnace": {
@@ -1354,6 +1524,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_elec_furnace": {
@@ -1362,6 +1533,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_oil_furnace": {
@@ -1370,6 +1542,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_air_con": {
@@ -1378,6 +1551,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_gas_water_heater": {
@@ -1386,6 +1560,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_elec_water_heater": {
@@ -1394,6 +1569,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_svc_oil_water_heater": {
@@ -1402,6 +1578,7 @@
                 "sector": "service",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_trn_ev_lgt": {
@@ -1410,6 +1587,7 @@
                 "sector": "transport",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_trn_lpg_lgt": {
@@ -1418,6 +1596,7 @@
                 "sector": "transport",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_trn_ev_med": {
@@ -1426,6 +1605,7 @@
                 "sector": "transport",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_trn_lpg_med": {
@@ -1434,6 +1614,7 @@
                 "sector": "transport",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_trn_ev_hvy": {
@@ -1442,6 +1623,7 @@
                 "sector": "transport",
                 "result": "utilization",
                 "visible": true,    
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_trn_lpg_hvy": {
@@ -1450,6 +1632,7 @@
                 "sector": "transport",  
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_trn_ev_bus": {
@@ -1458,6 +1641,7 @@
                 "sector": "transport",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_trn_lpg_bus": {
@@ -1466,6 +1650,7 @@
                 "sector": "transport",
                 "result": "utilization",
                 "visible": true,    
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_ind_gas_furnace": {
@@ -1474,6 +1659,7 @@
                 "sector": "industry",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_ind_coal_furnace": {
@@ -1482,6 +1668,7 @@
                 "sector": "industry",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },  
             "utilization_ind_heat_pump": {
@@ -1490,6 +1677,7 @@
                 "sector": "industry",
                 "result": "utilization",
                 "visible": true,    
+                "summary": false,
                 "unit": "pct"
             },
             "utilization_transmission": {
@@ -1498,6 +1686,7 @@
                 "sector": "system",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "nat_gas_processing_capacity": {
@@ -1505,6 +1694,7 @@
                 "sector": "natural_gas",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "nat_gas_processing_production": {
@@ -1512,6 +1702,7 @@
                 "sector": "natural_gas",
                 "result": "generation",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "nat_gas_imports": {
@@ -1519,6 +1710,7 @@
                 "sector": "natural_gas",
                 "result": "trade",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "nat_gas_exports": {
@@ -1526,6 +1718,7 @@
                 "sector": "natural_gas",
                 "result": "trade",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "nat_gas_storage": {
@@ -1533,6 +1726,7 @@
                 "sector": "natural_gas",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "nat_gas_linepack": {
@@ -1540,6 +1734,7 @@
                 "sector": "natural_gas",
                 "result": "total_capacity",
                 "visible": true,
+                "summary": false,
                 "unit": "MWh"
             },
             "marginal_cost_gas": {
@@ -1548,6 +1743,7 @@
                 "sector2": "natural_gas",
                 "result": "marginal_cost",
                 "visible": true,
+                "summary": false,
                 "unit": "usd/mwh"
             },
             "utilization_gas_processing": {
@@ -1555,6 +1751,7 @@
                 "sector": "natural_gas",
                 "result": "utilization",
                 "visible": true,
+                "summary": false,
                 "unit": "pct"
             },
             "elec_transmission_capacity": {
@@ -1562,6 +1759,7 @@
                 "sector": "power",
                 "result": "transmission",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "elec_transmission_capacity_new": {
@@ -1569,6 +1767,7 @@
                 "sector": "power",
                 "result": "transmission",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             },
             "nat_gas_transmission_capacity": {
@@ -1576,6 +1775,7 @@
                 "sector": "natural_gas",
                 "result": "transmission",
                 "visible": true,
+                "summary": false,
                 "unit": "MW"
             }
         }

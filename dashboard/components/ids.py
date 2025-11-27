@@ -9,6 +9,7 @@ TAB_CONTENT = "tab-content"
 DATA_TAB = "data-tab"
 SA_TAB = "sa-tab"
 UA_TAB = "ua-tab"
+UA2_TAB = "ua-system-tab"
 CR_TAB = "cr-tab"
 
 # dropdowns
@@ -52,6 +53,7 @@ CR_EMISSION_TARGET_RB = "cr-emission-target-rb"
 # sliders
 GSA_PARAMS_SLIDER = "gsa-range-slider"
 UA_INTERVAL_SLIDER = "ua-interval-slider"
+UA2_INTERVAL_SLIDER = "ua-system-interval-slider"
 
 # collapsable blocks
 PLOTTING_OPTIONS_BLOCK = "plotting-options-block"
@@ -60,6 +62,9 @@ GSA_OPTIONS_BLOCK = "gsa-options-block"
 GSA_PARAMS_RESULTS_COLLAPSE = "gsa-params-results-collapse"
 GSA_PARAMS_SLIDER_COLLAPSE = "gsa-range-slider-collapse"
 UA_OPTIONS_BLOCK = "ua-options-block"
+UA2_OPTIONS_BLOCK = "ua-system-options-block"
+UA2_RESULTS_TYPE_DROPDOWN = "ua-system-results-type-dropdown"
+UA2_RESULTS_DROPDOWN = "ua-system-results-dropdown"
 INPUT_DATA_OPTIONS_BLOCK = "input-data-options-block"
 CR_OPTIONS_BLOCK = "cr-options-block"
 
@@ -74,6 +79,7 @@ GSA_DATA_TABLE_DATA = "gsa-data-table-data"
 
 UA_STATE_DATA = "ua-state-data"  # filtered by STATE
 UA_RUN_DATA = "ua-run-data"  # filtered by result
+UA2_RUN_DATA = "ua-system-run-data"  # filtered by result
 
 CR_DATA = "cr-data"  # dict of dfs
 

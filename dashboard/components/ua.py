@@ -87,7 +87,7 @@ def ua_result_sector_dropdown() -> html.Div:
 
 
 def ua_percentile_interval_slider() -> html.Div:
-    """GSA slider component."""
+    """UA slider component."""
 
     return html.Div(
         [

@@ -34,6 +34,7 @@ from components.utils import (
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
     get_plotly_plotting_themes,
+    get_ua2_result_dropdown_options,
 )
 from components.gsa import (
     GSA_RB_OPTIONS,
@@ -69,6 +70,7 @@ from components.cr import (
     get_cr_data_table,
     get_cr_scatter_plot,
 )
+from components.ua_system import ua2_options_block
 
 import logging
 
@@ -220,6 +222,25 @@ app.layout = html.Div(
                                                 dbc.CardBody(
                                                     [
                                                         html.H4(
+                                                            "Uncertaintiy Options",
+                                                            className="card-title",
+                                                        ),
+                                                        ua2_options_block(),
+                                                    ]
+                                                ),
+                                            ]
+                                        ),
+                                    ],
+                                    id=ids.UA2_OPTIONS_BLOCK,
+                                    className=OPTIONS_BLOCK_CLASS,
+                                ),
+                                html.Div(
+                                    [
+                                        dbc.Card(
+                                            [
+                                                dbc.CardBody(
+                                                    [
+                                                        html.H4(
                                                             "Custom Result Options",
                                                             className="card-title",
                                                         ),
@@ -248,8 +269,12 @@ app.layout = html.Div(
                                             tab_id=ids.SA_TAB,
                                         ),
                                         dbc.Tab(
-                                            label="Uncertainty Analysis",
+                                            label="Uncertainty Analysis (State)",
                                             tab_id=ids.UA_TAB,
+                                        ),
+                                        dbc.Tab(
+                                            label="Uncertainty Analysis (System)",
+                                            tab_id=ids.UA2_TAB,
                                         ),
                                         dbc.Tab(
                                             label="Custom Result",
@@ -408,6 +433,17 @@ def render_tab_content(
         else:
             return html.Div([dbc.Alert("No plotting type selected", color="info")])
         return html.Div([dbc.Card([dbc.CardBody([view])])])
+    elif active_tab == ids.UA2_TAB:
+        if plotting_type == "data_table":
+            html.Div([dbc.Alert("No plotting type selected", color="info")])
+        elif plotting_type == "map_actual":
+            html.Div([dbc.Alert("No plotting type selected", color="info")])
+        elif plotting_type == "map_hex":
+            html.Div([dbc.Alert("No plotting type selected", color="info")])
+        elif plotting_type == "barchart":
+            html.Div([dbc.Alert("No plotting type selected", color="info")])
+        else:
+            html.Div([dbc.Alert("No plotting type selected", color="info")])
     elif active_tab == ids.CR_TAB:
         if plotting_type == "data_table":
             view = get_cr_data_table(cr_data)
@@ -505,13 +541,23 @@ def update_plotting_type_dropdown_options(
             ],
             "scatter",
         )
+    elif active_tab == ids.UA2_TAB:
+        return (
+            [
+                {"label": "Bar Chart", "value": "barchart"},
+                {"label": "Data Table", "value": "data_table"},
+                {"label": "Map (Real)", "value": "map_actual"},
+                {"label": "Map (Hex)", "value": "map_hex"},
+            ],
+            "barchart",
+        )
     elif active_tab == ids.SA_TAB:
         return (
             [
                 {"label": "Bar Chart", "value": "barchart"},
                 {"label": "Data Table", "value": "data_table"},
                 {"label": "Heatmap", "value": "heatmap"},
-                {"label": "Map (Actual)", "value": "map_actual"},
+                {"label": "Map (Real)", "value": "map_actual"},
                 {"label": "Map (Hex)", "value": "map_hex"},
             ],
             "heatmap",
@@ -545,6 +591,7 @@ def update_plotting_type_dropdown_options(
         Output(ids.INPUT_DATA_OPTIONS_BLOCK, "style"),
         Output(ids.GSA_OPTIONS_BLOCK, "style"),
         Output(ids.UA_OPTIONS_BLOCK, "style"),
+        Output(ids.UA2_OPTIONS_BLOCK, "style"),
         Output(ids.CR_OPTIONS_BLOCK, "style"),
     ],
     Input(ids.TABS, "active_tab"),
@@ -563,6 +610,7 @@ def callback_show_hide_option_blocks(
     input_data_options = hidden
     gsa_options = hidden
     ua_options = hidden
+    ua2_options = hidden
     cr_options = hidden
 
     plotting_style = visible
@@ -576,6 +624,9 @@ def callback_show_hide_option_blocks(
     elif active_tab == ids.UA_TAB:
         state_options = visible
         ua_options = visible
+    elif active_tab == ids.UA2_TAB:
+        state_options = visible
+        ua2_options = visible
     elif active_tab == ids.CR_TAB:
         cr_options = visible
 
@@ -585,6 +636,7 @@ def callback_show_hide_option_blocks(
         input_data_options,
         gsa_options,
         ua_options,
+        ua2_options,
         cr_options,
     )
 
@@ -938,6 +990,33 @@ def callback_filter_ua_on_result_sector_and_type(
 
 
 ###########################
+# UA2 Callbacks
+###########################
+
+
+@app.callback(
+    Output(ids.UA2_RUN_DATA, "data"),
+    [
+        Input(ids.UA_STATE_DATA, "data"),
+        Input(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+        Input(ids.UA2_RESULTS_DROPDOWN, "value"),
+        Input(ids.UA2_INTERVAL_SLIDER, "value"),
+    ],
+)
+def callback_filter_ua2_on_result_type_and_name(
+    data: list[dict[str, Any]],
+    result_type: str,
+    result_name: str,
+    interval: list[int],
+) -> list[dict[str, Any]]:
+    # df = pd.DataFrame(data)
+    # df = filter_ua_on_result_sector_and_type(df, result_sector, result_type, METADATA)
+    # df = remove_ua_outliers(df, interval)
+    # return df.to_dict("records")
+    return [{}]
+
+
+###########################
 # Shared Options Callbacks
 ###########################
 
@@ -1177,10 +1256,13 @@ def callback_modify_state_dropdown_multi(
     active_tab: str, plotting_type: str
 ) -> tuple[bool, bool, bool]:
     """Modify state dropdown multi based on plotting type."""
-    if active_tab != ids.SA_TAB:
+    if active_tab not in [ids.SA_TAB, ids.UA2_TAB]:
         return dash.no_update
-    if plotting_type == "barchart" or plotting_type == "heatmap":
-        return False, True, True
+    if active_tab == ids.SA_TAB:
+        if plotting_type == "barchart" or plotting_type == "heatmap":
+            return False, True, True
+        else:
+            return True, False, False
     else:
         return True, False, False
 
@@ -1285,6 +1367,31 @@ def callback_update_ua_results_sector_dropdown_options(
         value = options[0]["value"]
 
     return options, value
+
+
+########################
+# UA2 Options Callbacks
+########################
+
+
+@app.callback(
+    [
+        Output(ids.UA2_RESULTS_DROPDOWN, "options"),
+        Output(ids.UA2_RESULTS_DROPDOWN, "value"),
+    ],
+    [
+        Input(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+        Input(ids.UA2_RESULTS_DROPDOWN, "value"),
+    ],
+)
+def callback_update_ua2_result_summary_type_dropdown(
+    result_type: str, existing_value: str | None
+) -> list[dict[str, str]]:
+    logger.debug(
+        f"Updating UA2 (result summary) result dropdown options for: {result_type}"
+    )
+    valid_results = get_ua2_result_dropdown_options(METADATA, result_type)
+    return valid_results, valid_results[0]["value"]
 
 
 ########################
