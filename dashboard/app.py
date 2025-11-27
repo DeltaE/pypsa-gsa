@@ -70,7 +70,11 @@ from components.cr import (
     get_cr_data_table,
     get_cr_scatter_plot,
 )
-from components.ua_system import ua2_options_block
+from components.ua_system import (
+    filter_ua2_on_result_name,
+    get_ua2_data_table,
+    ua2_options_block,
+)
 
 import logging
 
@@ -300,6 +304,8 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_MAP_DATA),
                 dcc.Store(id=ids.UA_STATE_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
+                dcc.Store(id=ids.UA2_STATE_DATA),
+                dcc.Store(id=ids.UA2_RUN_DATA),
                 dcc.Store(id=ids.CR_DATA),
                 dcc.Store(id=ids.INPUTS_DATA),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE),
@@ -328,6 +334,7 @@ app.layout = html.Div(
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_RUN_DATA, "data"),
+        Input(ids.UA2_RUN_DATA, "data"),
         Input(ids.CR_DATA, "data"),
         Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
         Input(ids.UA_EMISSIONS, "data"),
@@ -345,6 +352,7 @@ def render_tab_content(
     gsa_bar_data: list[dict[str, Any]] | None,
     gsa_map_data: list[dict[str, Any]] | None,
     ua_run_data: list[dict[str, Any]] | None,
+    ua2_run_data: list[dict[str, Any]] | None,
     cr_data: list[dict[str, Any]] | None,
     inputs_data: list[dict[str, Any]] | None,
     ua_emissions: list[dict[str, Any]] | None,
@@ -449,15 +457,16 @@ def render_tab_content(
         return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.UA2_TAB:
         if plotting_type == "data_table":
-            html.Div([dbc.Alert("No plotting type selected", color="info")])
+            view = get_ua2_data_table(ua2_run_data)
         elif plotting_type == "map_actual":
-            html.Div([dbc.Alert("No plotting type selected", color="info")])
+            return html.Div([dbc.Alert("No plotting type selected", color="info")])
         elif plotting_type == "map_hex":
-            html.Div([dbc.Alert("No plotting type selected", color="info")])
+            return html.Div([dbc.Alert("No plotting type selected", color="info")])
         elif plotting_type == "barchart":
-            html.Div([dbc.Alert("No plotting type selected", color="info")])
+            return html.Div([dbc.Alert("No plotting type selected", color="info")])
         else:
-            html.Div([dbc.Alert("No plotting type selected", color="info")])
+            return html.Div([dbc.Alert("No plotting type selected", color="info")])
+        return html.Div([dbc.Card([dbc.CardBody([view])])])
     elif active_tab == ids.CR_TAB:
         if plotting_type == "data_table":
             view = get_cr_data_table(cr_data)
@@ -1012,25 +1021,37 @@ def callback_filter_ua_on_result_sector_and_type(
 
 
 @app.callback(
+    Output(ids.UA2_STATE_DATA, "data"),
+    Input(ids.STATE_DROPDOWN, "value"),
+)
+def callback_filter_ua2_on_state(states: str | list[str]) -> list[dict[str, Any]]:
+    """Update the UA store data based on the selected States."""
+    if isinstance(states, str):
+        states = [states]
+    logger.debug(f"State dropdown value: {states}")
+    if not states:
+        logger.debug("No States selected from dropdown")
+        return []
+    return RAW_UA[RAW_UA.state.isin(states)].to_dict("records")
+
+
+@app.callback(
     Output(ids.UA2_RUN_DATA, "data"),
     [
-        Input(ids.UA_STATE_DATA, "data"),
-        Input(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+        Input(ids.UA2_STATE_DATA, "data"),
         Input(ids.UA2_RESULTS_DROPDOWN, "value"),
         Input(ids.UA2_INTERVAL_SLIDER, "value"),
     ],
 )
 def callback_filter_ua2_on_result_type_and_name(
     data: list[dict[str, Any]],
-    result_type: str,
     result_name: str,
     interval: list[int],
 ) -> list[dict[str, Any]]:
-    # df = pd.DataFrame(data)
-    # df = filter_ua_on_result_sector_and_type(df, result_sector, result_type, METADATA)
-    # df = remove_ua_outliers(df, interval)
-    # return df.to_dict("records")
-    return [{}]
+    df = pd.DataFrame(data)
+    df = filter_ua2_on_result_name(df, result_name)
+    df = remove_ua_outliers(df, interval)
+    return df.to_dict("records")
 
 
 ###########################
@@ -1273,13 +1294,13 @@ def callback_modify_state_dropdown_multi(
     active_tab: str, plotting_type: str
 ) -> tuple[bool, bool, bool]:
     """Modify state dropdown multi based on plotting type."""
-    if active_tab not in [ids.SA_TAB, ids.UA2_TAB]:
-        return dash.no_update
     if active_tab == ids.SA_TAB:
         if plotting_type == "barchart" or plotting_type == "heatmap":
             return False, True, True
         else:
             return True, False, False
+    elif active_tab == ids.UA2_TAB:
+        return True, False, False
     else:
         return False, True, True
 
@@ -1411,8 +1432,18 @@ def callback_update_ua2_result_summary_type_dropdown(
     logger.debug(
         f"Updating UA2 (result summary) result dropdown options for: {result_type}"
     )
-    valid_results = get_ua2_result_dropdown_options(METADATA, result_type)
-    return valid_results, valid_results[0]["value"]
+    options = get_ua2_result_dropdown_options(METADATA, result_type)
+
+    if not existing_value:
+        existing_value = "objective_cost"
+    if existing_value not in [x["value"] for x in options]:
+        existing_value = "objective_cost"
+    if any(x["value"] == existing_value for x in options):
+        value = existing_value
+    else:
+        value = options[0]["value"]
+
+    return options, value
 
 
 ########################

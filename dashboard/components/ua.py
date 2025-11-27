@@ -189,6 +189,8 @@ def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
     for col in df.columns:
         if col == "run":  # shouldnt really happen, but just in case
             df_out[col] = df[col]
+        elif col == "state":  # for processing ua2 data
+            df_out[col] = df[col]
         else:
             lower_bound = df[col].quantile(interval_low)
             upper_bound = df[col].quantile(interval_high)

@@ -79,6 +79,7 @@ GSA_DATA_TABLE_DATA = "gsa-data-table-data"
 
 UA_STATE_DATA = "ua-state-data"  # filtered by STATE
 UA_RUN_DATA = "ua-run-data"  # filtered by result
+UA2_STATE_DATA = "ua-system-state-data"  # filtered by state
 UA2_RUN_DATA = "ua-system-run-data"  # filtered by result
 
 CR_DATA = "cr-data"  # dict of dfs
