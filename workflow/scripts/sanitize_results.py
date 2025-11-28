@@ -66,8 +66,8 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
 
     for car in sa_cars_flat:
         if car not in n_cars:
-            if car == "offwind_floating":
-                # only used in portfolio results
+            # only used in portfolio results
+            if car in ["offwind_floating", "battery"]:
                 continue
             else:
                 errors.append(car)
@@ -106,10 +106,18 @@ def no_nans(results: pd.DataFrame) -> bool:
     else:
         return True
 
+
 def remove_offwind_floating(results: pd.DataFrame) -> pd.DataFrame:
     """Remove offwind floating if not present in network."""
     df = results.copy()
     return df[df.carriers != "offwind_floating"]
+
+
+def remove_battery(results: pd.DataFrame) -> pd.DataFrame:
+    """Remove battery if not present in network."""
+    df = results.copy()
+    return df[df.carriers != "battery"]
+
 
 if __name__ == "__main__":
     if "snakemake" in globals():
@@ -118,9 +126,9 @@ if __name__ == "__main__":
         out_results = snakemake.output.results
         configure_logging(snakemake)
     else:
-        network = "results/caiso/base.nc"
+        network = "results/nd/base.nc"
         in_results = "config/results.csv"
-        out_results = "results/caiso/gsa/results.csv"
+        out_results = "results/nd/gsa/results.csv"
 
     df = pd.read_csv(in_results)
 
@@ -132,10 +140,12 @@ if __name__ == "__main__":
         assert no_nans(df)
 
     n = pypsa.Network(network)
-    
+
     if "offwind_floating" not in n.carriers.index:
         df = remove_offwind_floating(df)
-    
+    if "battery" not in n.carriers.index:  # existing batteries
+        df = remove_battery(df)
+
     assert is_valid_carrier(n, df)
 
     df.to_csv(out_results, index=False)
