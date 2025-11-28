@@ -81,6 +81,7 @@ UA_STATE_DATA = "ua-state-data"  # filtered by STATE
 UA_RUN_DATA = "ua-run-data"  # filtered by result
 UA2_STATE_DATA = "ua-system-state-data"  # filtered by state
 UA2_RUN_DATA = "ua-system-run-data"  # filtered by result
+UA2_MAP_DATA = "ua-system-map-data"  # filtered by result
 
 CR_DATA = "cr-data"  # dict of dfs
 
@@ -114,6 +115,7 @@ UA_BOX_WHISKER = "ua-box-whisker"
 # ua2 plots
 UA2_BOX_PLOT = "ua2-box-plot"
 UA2_VIOLIN = "ua2-violin"
+UA2_MAP = "ua2-map"
 
 # custom result plots
 CR_SCATTER = "cr-scatter"

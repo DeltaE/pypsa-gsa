@@ -72,7 +72,9 @@ from components.cr import (
 )
 from components.ua_system import (
     filter_ua2_on_result_name,
+    get_average_ua2_data,
     get_ua2_data_table,
+    get_ua2_map,
     ua2_options_block,
     get_ua2_plot,
 )
@@ -307,6 +309,7 @@ app.layout = html.Div(
                 dcc.Store(id=ids.UA_RUN_DATA),
                 dcc.Store(id=ids.UA2_STATE_DATA),
                 dcc.Store(id=ids.UA2_RUN_DATA),
+                dcc.Store(id=ids.UA2_MAP_DATA),
                 dcc.Store(id=ids.CR_DATA),
                 dcc.Store(id=ids.INPUTS_DATA),
                 dcc.Store(id=ids.INPUTS_DATA_BY_ATTRIBUTE),
@@ -336,6 +339,7 @@ app.layout = html.Div(
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_RUN_DATA, "data"),
         Input(ids.UA2_RUN_DATA, "data"),
+        Input(ids.UA2_MAP_DATA, "data"),
         Input(ids.CR_DATA, "data"),
         Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
         Input(ids.UA_EMISSIONS, "data"),
@@ -354,6 +358,7 @@ def render_tab_content(
     gsa_map_data: list[dict[str, Any]] | None,
     ua_run_data: list[dict[str, Any]] | None,
     ua2_run_data: list[dict[str, Any]] | None,
+    ua2_map_data: list[dict[str, Any]] | None,
     cr_data: list[dict[str, Any]] | None,
     inputs_data: list[dict[str, Any]] | None,
     ua_emissions: list[dict[str, Any]] | None,
@@ -460,9 +465,23 @@ def render_tab_content(
         if plotting_type == "data_table":
             view = get_ua2_data_table(ua2_run_data)
         elif plotting_type == "map_actual":
-            return html.Div([dbc.Alert("No plotting type selected", color="info")])
+            view = get_ua2_map(
+                ua2_map_data,
+                STATE_SHAPE_ACTUAL,
+                color_scale=color,
+                scale=5.9,
+                lat=44,
+                lon=-95,
+            )
         elif plotting_type == "map_hex":
-            return html.Div([dbc.Alert("No plotting type selected", color="info")])
+            view = get_ua2_map(
+                ua2_map_data,
+                STATE_SHAPE_HEX,
+                color_scale=color,
+                scale=5.9,
+                lat=44,
+                lon=-100,
+            )
         elif plotting_type == "boxplot":
             view = dcc.Graph(
                 id=ids.UA2_BOX_PLOT,
@@ -1072,6 +1091,27 @@ def callback_filter_ua2_on_result_type_and_name(
     return df.to_dict("records")
 
 
+@app.callback(
+    Output(ids.UA2_MAP_DATA, "data"),
+    [
+        Input(ids.UA2_STATE_DATA, "data"),
+        Input(ids.UA2_RESULTS_DROPDOWN, "value"),
+        Input(ids.UA2_INTERVAL_SLIDER, "value"),
+    ],
+)
+def callback_filter_ua2_data_for_map(
+    data: list[dict[str, Any]],
+    result_name: str,
+    interval: list[int],
+) -> list[dict[str, Any]]:
+    """Update the GSA barchart."""
+    df = pd.DataFrame(data)
+    df = filter_ua2_on_result_name(df, result_name)
+    df = remove_ua_outliers(df, interval)
+    df = get_average_ua2_data(df)
+    return df.reset_index(drop=True).to_dict("records")
+
+
 ###########################
 # Shared Options Callbacks
 ###########################
@@ -1102,7 +1142,10 @@ def callback_update_color_options(
         else:
             return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
     elif active_tab == ids.UA2_TAB:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        if plotting_type in ["map_actual", "map_hex"]:
+            return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+        else:
+            return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     elif active_tab == ids.CR_TAB:
         return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     else:

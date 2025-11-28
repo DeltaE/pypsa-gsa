@@ -2,15 +2,18 @@
 
 from typing import Any
 from dash import dash_table, dcc, html
+import geopandas as gpd
 import plotly.graph_objects as go
 import plotly.express as px
+import numpy as np
 from .data import (
     RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS,
 )
-
+import dash_bootstrap_components as dbc
 import pandas as pd
 from . import ids as ids
 from .utils import (
+    DEFAULT_DISCRETE_COLOR_SCALE,
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
     DEFAULT_PLOTLY_THEME,
@@ -198,3 +201,163 @@ def get_ua2_plot(
     )
 
     return fig
+
+
+def get_average_ua2_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Get the average UA2 data."""
+    df = df.drop(columns=["run"])
+    return df.groupby("state").mean().round(1).reset_index()
+
+
+def _get_ua2_map_color_map(color_palette: str, categories: list[str]) -> dict[str, str]:
+    """Get the color map for the UA2 map."""
+    try:
+        palette = getattr(px.colors.qualitative, color_palette)
+    except AttributeError:
+        logger.error(f"Color palette {color_palette} not found")
+        palette = px.colors.qualitative.Set3
+    return {cat: palette[i % len(palette)] for i, cat in enumerate(categories)}
+
+
+def _get_ua2_map_figure(
+    data: list[dict[str, Any]],
+    gdf: gpd.GeoDataFrame,
+    color_palette: str = "Set3",
+    **kwargs: Any,
+) -> go.Figure:
+    """UA2 map component."""
+
+    # to fill in any missing states
+    no_data = pd.DataFrame(
+        {"state": gdf.STATE_ID.astype(str), "value": np.nan}
+    ).set_index("state")
+
+    if not data:
+        logger.debug("No map data found")
+        df = no_data
+    else:
+        df = pd.DataFrame(data)
+        df = df.set_index("state")
+        if not len(df.columns) == 1:
+            logger.error(f"Expected 1 column, got {len(df.columns)}")
+            df = no_data
+        else:
+            df = df.rename(columns={df.columns[0]: "value"})
+            # Convert to numeric for continuous color scale
+            df["value"] = pd.to_numeric(df["value"], errors="coerce")
+
+    df = (
+        pd.concat([df, no_data], axis=0)
+        .reset_index()
+        .drop_duplicates(subset=["state"], keep="first")
+        .set_index("state")
+    )
+
+    # Separate data with values from NaN data
+    df_with_data = df[df["value"].notna()].copy()
+    df_no_data = df[df["value"].isna()].copy()
+
+    # Create choropleth with only data that has values
+    if len(df_with_data) > 0:
+        fig = px.choropleth(
+            df_with_data,
+            geojson=gdf.set_index("STATE_ID"),
+            locations=df_with_data.index,
+            color="value",
+            hover_data=["value"],
+            color_continuous_scale=color_palette,
+        )
+    else:
+        # If no data, create empty figure with just the geojson structure
+        fig = px.choropleth(
+            df_no_data,
+            geojson=gdf.set_index("STATE_ID"),
+            locations=df_no_data.index,
+            color_continuous_scale=color_palette,
+        )
+
+    # Overlay NaN states in grey
+    if len(df_no_data) > 0:
+        # Add grey choropleth trace for NaN states using the same geojson
+        gdf_indexed = gdf.set_index("STATE_ID")
+        # Convert geojson to dict format for go.Choropleth
+        geojson_dict = gdf_indexed.__geo_interface__
+
+        nan_trace = go.Choropleth(
+            geojson=geojson_dict,
+            locations=df_no_data.index,
+            z=[1] * len(df_no_data),  # Dummy values, we'll set color to grey
+            colorscale=[[0, "lightgrey"], [1, "lightgrey"]],  # All grey
+            showscale=False,  # Don't show in legend
+            hoverinfo="skip",  # Skip hover for NaN states
+            marker_line_width=0,
+        )
+        fig.add_trace(nan_trace)
+
+    fig.update_geos(
+        visible=False,  # remove background world map
+        showframe=False,
+        showcoastlines=False,
+        showland=False,
+        showlakes=False,
+        showcountries=False,
+    )
+
+    # defaults for the hex map
+    # overwrite for the actual map
+    scale = kwargs.get("scale", 5.9)
+    lat = kwargs.get("lat", 44)
+    lon = kwargs.get("lon", -100)
+
+    fig.update_layout(
+        margin={"r": 0, "t": 0, "l": 0, "b": 0},
+        geo=dict(
+            # fitbounds="locations",
+            projection=dict(
+                # type="albers usa",
+                type="mercator",
+                scale=scale,
+            ),
+            center=dict(lat=lat, lon=lon),  # CONUS center
+        ),
+    )
+
+    return fig
+
+
+def get_ua2_map(
+    map_data: list[dict[str, Any]],
+    state_shape: gpd.GeoDataFrame,
+    **kwargs: Any,
+) -> html.Div:
+    """Position maps on a grid system for lazy loading."""
+
+    if not map_data:
+        logger.debug("No map data found")
+        return html.Div([dbc.Alert("No map data found", color="info")])
+
+    color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
+    categories = set(pd.DataFrame(map_data).set_index("state").values.ravel())
+    color_map = _get_ua2_map_color_map(color_scale, categories)
+    color_map.update({"No Data": "lightgrey"})  # Modify in-place instead of reassigning
+    logger.debug(f"Color map: {color_map}")
+
+    # defaults for the hex map
+    # overwrite for the actual map
+    scale = kwargs.get("scale", 5.9)
+    lat = kwargs.get("lat", 44)
+    lon = kwargs.get("lon", -100)
+
+    return dcc.Graph(
+        id=ids.UA2_MAP,
+        figure=_get_ua2_map_figure(
+            data=map_data,
+            gdf=state_shape,
+            color_palette=color_scale,
+            color_map=color_map,
+            scale=scale,
+            lat=lat,
+            lon=lon,
+        ),
+        # style={"height": "400px"},
+    )
