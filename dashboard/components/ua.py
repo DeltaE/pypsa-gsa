@@ -87,7 +87,7 @@ def ua_result_sector_dropdown() -> html.Div:
 
 
 def ua_percentile_interval_slider() -> html.Div:
-    """GSA slider component."""
+    """UA slider component."""
 
     return html.Div(
         [
@@ -188,6 +188,8 @@ def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
     df_out = df.copy()
     for col in df.columns:
         if col == "run":  # shouldnt really happen, but just in case
+            df_out[col] = df[col]
+        elif col == "state":  # for processing ua2 data
             df_out[col] = df[col]
         else:
             lower_bound = df[col].quantile(interval_low)

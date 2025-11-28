@@ -11,6 +11,7 @@ from .utils import (
     get_metadata,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
+    get_ua2_result_dropdown_options,
     get_ua_results_dropdown_options,
     get_cr_params_dropdown_options,
     STATES,
@@ -33,7 +34,8 @@ RAW_PARAMS["group_nice_name"] = RAW_PARAMS.group.map(
 )
 
 # ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
-STATE_SHAPE = gpd.read_file("data/locked/states.geojson")
+STATE_SHAPE_ACTUAL = gpd.read_file("data/locked/states.geojson")
+STATE_SHAPE_HEX = gpd.read_file("data/locked/states_hex.geojson")
 
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(METADATA)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(METADATA, list(RAW_GSA))
@@ -84,3 +86,15 @@ RESULT_TYPE_DROPDOWN_OPTIONS = sorted(
 )
 
 EMISSIONS = get_emissions(root)
+
+###
+# Options for UA2
+###
+
+RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS = sorted(
+    [
+        {"label": y, "value": x}
+        for x, y in METADATA["nice_names"]["results_summary"].items()
+    ],
+    key=lambda x: x["label"],
+)

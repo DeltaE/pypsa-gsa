@@ -328,7 +328,8 @@ if __name__ == "__main__":
             sa = collect_sa(root, state.lower(), sa_names.keys())
 
         if empty:
-            sa.to_csv(filtered_data, index=True)
+            pass
+            # sa.to_csv(filtered_data, index=True)
         dfs.append(sa)
 
     if not dfs:
@@ -364,7 +365,8 @@ if __name__ == "__main__":
             ua = collect_runs(root, state.lower(), "ua", result_names.keys())
 
         if empty:
-            ua.to_csv(filtered_data, index=True)
+            pass
+            # ua.to_csv(filtered_data, index=True)
 
         ua.to_csv(
             Path(root, "dashboard", "data", "state", state.upper(), "ua_runs.csv"),

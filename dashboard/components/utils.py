@@ -249,6 +249,22 @@ def get_ua_results_dropdown_options(metadata: dict) -> list[dict[str, str]]:
     return options
 
 
+def get_ua2_result_dropdown_options(
+    metadata: dict, result_type: str
+) -> list[dict[str, str]]:
+    """Get the UA result summary type dropdown options."""
+    options = []
+    for value, data in metadata["results"].items():
+        summary = data.get("summary", False)
+        result_value = data.get("result", "")
+        if summary and result_value == result_type:
+            options.append({"label": data["label"], "value": value})
+    if not options:
+        logger.debug(f"No results found for {result_type}")
+        options = [{"label": "", "value": ""}]
+    return options
+
+
 def get_ua_param_sector_mapper(metadata: dict = None) -> list[dict[str, str]]:
     """Get the UA sectors dropdown options."""
 
