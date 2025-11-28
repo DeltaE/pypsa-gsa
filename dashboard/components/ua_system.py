@@ -149,6 +149,7 @@ def get_ua2_plot(
     data: dict[str, Any],
     nice_names: bool = True,
     result_type: str = "violin",
+    metadata: dict[str, Any] = None,
     **kwargs,
 ) -> go.Figure:
     """UA2 plot component."""
@@ -166,6 +167,12 @@ def get_ua2_plot(
 
     df = _read_serialized_ua_data(data)
 
+    if metadata:
+        value_name = df.columns[-1]
+        ylabel = metadata["results"][value_name]["unit"]
+    else:
+        ylabel = ""
+
     if nice_names:
         df = apply_nice_names(df)
 
@@ -173,7 +180,6 @@ def get_ua2_plot(
     df_melted = df.melt(id_vars=["run", "state"], var_name="result", value_name="value")
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
-    ylabel = ""
 
     if result_type == "violin":
         fig = px.violin(
@@ -223,6 +229,7 @@ def _get_ua2_map_figure(
     data: list[dict[str, Any]],
     gdf: gpd.GeoDataFrame,
     color_palette: str = "Set3",
+    metadata: dict[str, Any] = None,
     **kwargs: Any,
 ) -> go.Figure:
     """UA2 map component."""
@@ -237,6 +244,13 @@ def _get_ua2_map_figure(
         df = no_data
     else:
         df = pd.DataFrame(data)
+        # get units from metadata
+        if metadata:
+            value_name = df.columns[-1]
+            unit = metadata["results"][value_name]["unit"]
+        else:
+            unit = ""
+        # orientate data for choropleth
         df = df.set_index("state")
         if not len(df.columns) == 1:
             logger.error(f"Expected 1 column, got {len(df.columns)}")
@@ -266,6 +280,7 @@ def _get_ua2_map_figure(
             color="value",
             hover_data=["value"],
             color_continuous_scale=color_palette,
+            labels=dict(value=unit),
         )
     else:
         # If no data, create empty figure with just the geojson structure
@@ -274,6 +289,7 @@ def _get_ua2_map_figure(
             geojson=gdf.set_index("STATE_ID"),
             locations=df_no_data.index,
             color_continuous_scale=color_palette,
+            labels=dict(value=unit),
         )
 
     # Overlay NaN states in grey
@@ -348,6 +364,9 @@ def get_ua2_map(
     lat = kwargs.get("lat", 44)
     lon = kwargs.get("lon", -100)
 
+    # for extracting ylabels
+    metadata = kwargs.get("metadata", {})
+
     return dcc.Graph(
         id=ids.UA2_MAP,
         figure=_get_ua2_map_figure(
@@ -358,6 +377,7 @@ def get_ua2_map(
             scale=scale,
             lat=lat,
             lon=lon,
+            metadata=metadata,
         ),
         # style={"height": "400px"},
     )

@@ -472,6 +472,7 @@ def render_tab_content(
                 scale=5.9,
                 lat=44,
                 lon=-95,
+                metadata=METADATA,
             )
         elif plotting_type == "map_hex":
             view = get_ua2_map(
@@ -481,6 +482,7 @@ def render_tab_content(
                 scale=5.9,
                 lat=44,
                 lon=-100,
+                metadata=METADATA,
             )
         elif plotting_type == "boxplot":
             view = dcc.Graph(
@@ -489,6 +491,7 @@ def render_tab_content(
                     ua2_run_data,
                     template=color,
                     result_type="boxplot",
+                    metadata=METADATA,
                 ),
             )
         elif plotting_type == "violin":
@@ -498,6 +501,7 @@ def render_tab_content(
                     ua2_run_data,
                     template=color,
                     result_type="violin",
+                    metadata=METADATA,
                 ),
             )
         else:
