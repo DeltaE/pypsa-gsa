@@ -27,7 +27,7 @@ rule solve_network:
         network = "results/{scenario}/modelruns/{run}/network.nc",
     threads: 12
     resources:
-        mem_mb=2000,
+        mem_mb=8000,  # Increased for solver with 12 threads
         runtime=2
     benchmark:
         "benchmarks/solve/{scenario}_{run}.txt"

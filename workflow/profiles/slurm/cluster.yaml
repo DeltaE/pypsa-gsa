@@ -1,0 +1,7 @@
+__default__:
+  account: def-tniet-ab
+  partition: default
+  walltime: "00:05:00"
+  mem_mb: 8000
+  output: "logs/{rule}/%j.out"
+  error: "logs/{rule}/%j.err"
