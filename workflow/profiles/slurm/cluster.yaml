@@ -4,3 +4,11 @@ __default__:
   mem_mb: 4000
   output: "logs/{rule}/%j.out"
   error: "logs/{rule}/%j.err"
+
+# Rule-specific overrides for compute-intensive jobs
+# solve_network:
+#   account: def-tniet-ab
+#   partition: default 
+#   mem_mb: 8000
+#   output: "logs/{rule}/%j.out"
+#   error: "logs/{rule}/%j.err"

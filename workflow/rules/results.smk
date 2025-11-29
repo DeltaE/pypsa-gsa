@@ -81,8 +81,11 @@ rule extract_results:
         runtime=1
     benchmark:
         "benchmarks/extract_gsa_results/{scenario}_{mode}_{run}.txt"
+    # Removed from solve group to allow independent resource allocation
+    # Input dependency ensures it runs after solve_network completes
     group:
-        "solve_{scenario}_{mode}_{run}"
+        "extract_results"
+        # "solve_{scenario}_{mode}_{run}"
     script:
         "../scripts/extract_results.py"
 

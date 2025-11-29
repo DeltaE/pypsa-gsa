@@ -12,9 +12,10 @@ default-resources:
   - disk_mb=2000
   - threads=1
 
-jobs: 999
+jobs: 100  # Tuned for typical HPC cluster capacity (adjust based on your cluster)
 keep-going: True
 rerun-incomplete: True
+latency-wait: 10  # wait 10 seconds for files 
 use-envmodules: False
 use-conda: False
 
