@@ -25,9 +25,9 @@ rule solve_network:
         ev_policy_f = "results/{scenario}/constraints/ev_policy.csv"
     output:
         network = "results/{scenario}/modelruns/{run}/network.nc",
-    threads: 12
+    threads: config["solving"]["solver_options"][params.solver]["threads"]
     resources:
-        mem_mb=8000,  # Increased for solver with 12 threads
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 8000),
         runtime=2
     benchmark:
         "benchmarks/solve/{scenario}_{run}.txt"
