@@ -7,6 +7,6 @@ use-envmodules: True
 use-conda: False
 # quiet: all
 default-resources:
-  - runtime=10
+  - runtime=2
   - mem_mb_per_cpu=16000
   - disk_mb=1000

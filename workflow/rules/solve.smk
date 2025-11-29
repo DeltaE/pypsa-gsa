@@ -61,9 +61,9 @@ rule solve_network:
         import_export_flows_f = "results/{scenario}/constraints/import_export_flows.csv",
     output:
         network = temp("results/{scenario}/{mode}/modelruns/{run}/network.nc") if not config['metadata']['networks'] else "results/{scenario}/{mode}/modelruns/{run}/network.nc",
-    threads: 12
+    threads: lambda wildcards: config["solving"]["solver_options"][config["solver"]["name"]]["threads"]
     resources:
-        mem_mb=2000,
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 8000),
         runtime=2
     benchmark:
         "benchmarks/solve/{scenario}_{mode}_{run}.txt"
