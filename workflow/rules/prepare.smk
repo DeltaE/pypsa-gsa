@@ -3,7 +3,7 @@ rule copy_network:
     input:
         n = f"config/pypsa-usa/{config['pypsa_usa']['network']}"
     output:
-        n = "results/{scenario}/base.nc"
+        n = temp("results/{scenario}/copy.nc")
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
         runtime=1
@@ -13,7 +13,6 @@ rule copy_network:
         "benchmarks/copy_network/{scenario}.txt"
     shell:
         "cp {input.n} {output.n}"
-
 
 rule copy_pop_layout:
     message: "Copying population layout"
@@ -48,13 +47,13 @@ rule process_reeds_policy:
     benchmark:
         "benchmarks/process_reeds/{scenario}_{policy}.txt"
     script:
-        "../scripts/rps.py"
-        
+        "../scripts/process_rps.py"
 
 rule copy_tct_data:
     message: "Copying TCT data"
     input:
-        csv="resources/policy/technology_limits.csv"
+        base="resources/policy/technology_limits.csv",
+        tct="results/{scenario}/generated/tct_aeo.csv"
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
@@ -62,8 +61,13 @@ rule copy_tct_data:
         runtime=1
     group:
         "prepare_data"
-    shell:
-        "cp {input.csv} {output.csv}"
+    run:
+        import shutil
+        import pandas as pd
+        base = pd.read_csv(input.base)
+        tct = pd.read_csv(input.tct)
+        df = pd.concat([base, tct])
+        df.to_csv(output.csv)
 
 rule copy_ev_policy_data:
     message: "Copying EV Policy data"
@@ -78,6 +82,7 @@ rule copy_ev_policy_data:
         "prepare_data"
     shell:
         "cp {input.csv} {output.csv}"
+
 
 rule retrieve_natural_gas_data:
     message: "Retrieving import/export natural gas data"
@@ -100,44 +105,7 @@ rule retrieve_natural_gas_data:
     script:
         "../scripts/retrieve_ng_data.py"
 
-rule sanitize_parameters:
-    message: "Sanitizing parameters"
-    input:
-        parameters=config["gsa"]["parameters"]
-    output:
-        parameters="results/{scenario}/parameters.csv"
-    log: 
-        "logs/sanitize_parameters/{scenario}.log"
-    benchmark:
-        "benchmarks/sanitize_parameters/{scenario}.txt"
-    resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
-        runtime=1
-    group:
-        "prepare_data"
-    script:
-        "../scripts/sanitize_params.py"
 
-# checkpoint needed for heatmap input function
-checkpoint sanitize_results:
-    message: "Sanitizing results"
-    params:
-        results=config["gsa"]["results"]
-    input:
-        network = "results/{scenario}/base.nc"
-    output:
-        results="results/{scenario}/results.csv"
-    resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
-        runtime=1
-    benchmark:
-        "benchmarks/sanitize_results/{scenario}.txt"
-    log: 
-        "logs/sanitize_results/{scenario}.log"
-    group:
-        "prepare_data"
-    script:
-        "../scripts/sanitize_results.py"
 
 rule process_natural_gas:
     message: "Filtering constraint files"
@@ -159,3 +127,117 @@ rule process_natural_gas:
         "prepare_data"
     script:
         "../scripts/process_ng.py"
+
+rule process_interchange_data:
+    message: "Processing import/export data"
+    input:
+        network = "results/{scenario}/copy.nc", # use copy to avoid cyclic dependency
+        regions = "resources/interchanges/regions.csv",
+        membership = "resources/interchanges/membership.csv",
+        flowgates = "resources/interchanges/transmission_capacity_init_AC_ba_NARIS2024.csv",
+        eia_path = "resources/interchanges/state_interchange_data.csv"
+    params:
+        api = config["api"]["eia"],
+        year = config["pypsa_usa"]["era5_year"],
+        balancing_period = "year", # only one supported right now
+        pudl_path = "s3://pudl.catalyst.coop/v2025.2.0",
+        by_iso = False # DO NOT CHANGE THIS! This script will run, but not downstream
+    output:
+        net_flows = "results/{scenario}/constraints/import_export_flows.csv",
+        capacities = "results/{scenario}/constraints/import_export_capacity.csv",
+        costs = "results/{scenario}/constraints/import_export_costs.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 5000),
+        runtime=3
+    benchmark:
+        "benchmarks/process_interchanges/{scenario}.txt"
+    log: 
+        "logs/process_interchanges/{scenario}.log"
+    group:
+        "prepare_data"
+    script:
+        "../scripts/process_imports_exports.py"
+
+rule add_import_export_to_network:
+    message: "Adding import/export to network"
+    input:
+        network = "results/{scenario}/copy.nc", # use copy to avoid cyclic dependency
+        capacities_f = "results/{scenario}/constraints/import_export_capacity.csv",
+        elec_costs_f = "results/{scenario}/constraints/import_export_costs.csv",
+        membership_f = "resources/interchanges/membership.csv"
+    output:
+        network = "results/{scenario}/base.nc",
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
+        runtime=1
+    group:
+        "prepare_data"
+    script:
+        "../scripts/apply_import_export.py"
+
+# for the uncertainity propogation
+rule prepare_static_values:
+    message: "Setting static paramters for the uncertainity."
+    params:
+        to_remove=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/set_values.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_set_values/{scenario}.txt"
+    log: 
+        "logs/prepare_set_values/{scenario}.log"
+    group:
+        "prepare_data"
+    script:
+        "../scripts/prepare_static_values.py"
+
+
+rule prepare_ua_params:
+    message: "Getting parameters for the uncertainity sample."
+    params:
+        to_sample=config["uncertainity"]["parameters"]
+    input:
+        # use the gsa file as its been sanitized
+        parameters="results/{scenario}/gsa/parameters.csv"
+    output:
+        parameters="results/{scenario}/ua/parameters.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_ua_params/{scenario}.txt"
+    log: 
+        "logs/prepare_ua_params/{scenario}.log"
+    group:
+        "prepare_data"
+    run:
+        import pandas as pd
+        df = pd.read_csv(input.parameters)
+        df = df[(df.name.isin(params.to_sample)) | (df.group.isin(params.to_sample))]
+        df.to_csv(output.parameters, index=False)
+
+
+rule sanitize_ua_plot_params:
+    message: "Sanitizing uncertainity analysis plotting parameters."
+    input:
+        plots=config["uncertainity"]["plots"],
+        results="results/{scenario}/ua/results.csv"
+    output:
+        plots="results/{scenario}/ua/plots.csv"
+    resources:
+        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
+        runtime=1
+    benchmark:
+        "benchmarks/prepare_ua_params/{scenario}.txt"
+    log: 
+        "logs/prepare_ua_params/{scenario}.log"
+    group:
+        "prepare_data"
+    script:
+        "../scripts/sanitize_ua_plot_params.py"

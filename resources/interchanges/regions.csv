@@ -1,0 +1,78 @@
+Code,Name,Interconnection,Region,Date
+AEC,PowerSouth Energy Cooperative,Central,Southeast,2021-09-29
+AECI,Associated Electric Cooperative Inc.,Central,Midwest,
+AESO,Alberta Electric System Operator,Mountain,Canada,2022-02-01
+AVA,Avista Corporation,Pacific,Northwest,
+AVRN,Avangrid Renewables LLC,Pacific,Northwest,
+AZPS,Arizona Public Service Company,Arizona,Southwest,
+BANC,Balancing Authority of Northern California,Pacific,California,
+BCHA,British Columbia Hydro and Power Authority,Pacific,Canada,2022-02-01
+BPAT,Bonneville Power Administration,Pacific,Northwest,
+CEN,Centro Nacional de Control de Energia,Central,Mexico,2022-02-01
+CFE,Comision Federal de Electricidad,Central,Mexico,2022-02-01
+CHPD,Public Utility District No. 1 of Chelan County,Pacific,Northwest,
+CISO,California Independent System Operator,Pacific,California,
+CPLE,Duke Energy Progress East,Eastern,Carolinas,
+CPLW,Duke Energy Progress West,Eastern,Carolinas,
+DEAA,Arlington Valley LLC,Arizona,Southwest,
+DOPD,PUD No. 1 of Douglas County,Pacific,Northwest,
+DUK,Duke Energy Carolinas,Eastern,Carolinas,
+EEI,Electric Energy Inc.,Central,Midwest,2021-05-05
+EPE,El Paso Electric Company,Arizona,Southwest,
+ERCO,Electric Reliability Council of Texas Inc.,Central,Texas,
+FMPP,Florida Municipal Power Pool,Eastern,Florida,
+FPC,Duke Energy Florida Inc.,Eastern,Florida,
+FPL,Florida Power & Light Co.,Eastern,Florida,
+GCPD,Public Utility District No. 2 of Grant County Washington,Pacific,Northwest,
+GLHB,GridLiance,Central,Midwest,2022-09-01
+GRID,Gridforce Energy Management LLC,Pacific,Northwest,
+GRIF,Griffith Energy LLC,Arizona,Southwest,2023-11-01
+GRMA,Gila River Power LLC,Arizona,Southwest,2018-05-30
+GVL,Gainesville Regional Utilities,Eastern,Florida,
+GWA,NaturEner Power Watch LLC,Mountain,Northwest,
+HGMA,New Harquahala Generating Company LLC,Arizona,Southwest,
+HQT,Hydro-Quebec TransEnergie,Eastern,Canada,2022-02-01
+HST,City of Homestead,Eastern,Florida,
+IESO,Ontario IESO,Eastern,Canada,2022-02-01
+IID,Imperial Irrigation District,Pacific,California,
+IPCO,Idaho Power Company,Pacific,Northwest,
+ISNE,ISO New England,Eastern,New England,
+JEA,JEA,Eastern,Florida,
+LDWP,Los Angeles Department of Water and Power,Pacific,California,
+LGEE,LG&E and KU Services Company as agent for Louisville Gas and Electric Company and Kentucky Utilities Company,Eastern,Midwest,
+MHEB,Manitoba Hydro,Central,Canada,2022-02-01
+MISO,Midcontinent Independent System Operator Inc.,Eastern,Midwest,
+NBSO,New Brunswick System Operator,Eastern,Canada,2022-02-01
+NEVP,Nevada Power Company,Pacific,Northwest,
+NSB,Utilities Commission of New Smyrna Beach,Eastern,Florida,2020-01-26
+NWMT,NorthWestern Corporation,Mountain,Northwest,
+NYIS,New York Independent System Operator,Eastern,New York,
+OVEC,Ohio Valley Electric Corporation,Eastern,Mid-Atlantic,2020-01-08
+PACE,PacifiCorp East,Mountain,Northwest,
+PACW,PacifiCorp West,Pacific,Northwest,
+PGE,Portland General Electric Company,Pacific,Northwest,
+PJM,PJM Interconnection LLC,Eastern,Mid-Atlantic,
+PNM,Public Service Company of New Mexico,Arizona,Southwest,
+PSCO,Public Service Company of Colorado,Mountain,Northwest,
+PSEI,Puget Sound Energy Inc.,Pacific,Northwest,
+SC,South Carolina Public Service Authority,Eastern,Carolinas,
+SCEG,Dominion Energy South Carolina Inc.,Eastern,Carolinas,
+SCL,Seattle City Light,Pacific,Northwest,
+SEC,Seminole Electric Cooperative,Eastern,Florida,
+SEPA,Southeastern Power Administration,Central,Southeast,
+SOCO,Southern Company Services Inc. - Trans,Central,Southeast,
+SPA,Southwestern Power Administration,Central,Central,
+SPC,Saskatchewan Power Corporation,Central,Canada,2022-02-01
+SRP,Salt River Project Agricultural Improvement and Power District,Arizona,Southwest,
+SWPP,Southwest Power Pool,Central,Central,
+TAL,City of Tallahassee,Eastern,Florida,
+TEC,Tampa Electric Company,Eastern,Florida,
+TEPC,Tucson Electric Power,Arizona,Southwest,
+TIDC,Turlock Irrigation District,Pacific,California,
+TPWR,City of Tacoma Department of Public Utilities Light Division,Pacific,Northwest,
+TVA,Tennessee Valley Authority,Central,Tennessee,
+WACM,Western Area Power Administration - Rocky Mountain Region,Arizona,Northwest,
+WALC,Western Area Power Administration - Desert Southwest Region,Arizona,Southwest,
+WAUW,Western Area Power Administration - Upper Great Plains West,Mountain,Northwest,
+WWA,NaturEner Wind Watch LLC,Mountain,Northwest,
+YAD,Alcoa Power Generating Inc. - Yadkin Division,Eastern,Carolinas,

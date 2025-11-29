@@ -5,22 +5,25 @@ import pypsa
 import itertools
 from constants import VALID_RESULTS
 from sanitize_params import sanitize_component_name
+from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
 def strip_whitespace(results: pd.DataFrame) -> pd.DataFrame:
     """Strips any leading/trailing whitespace from naming columns."""
-    
+
     df = results.copy()
     df["name"] = df.name.str.strip()
     df["component"] = df.component.str.strip()
     df["carriers"] = df.carriers.str.strip()
     df["variable"] = df.variable.str.strip()
     df["unit"] = df.unit.str.strip()
-    df["plots"] = df.plots.str.strip()
+    df["gsa_plot"] = df.gsa_plot.str.strip()
     return df
+
 
 def is_valid_variables(results: pd.DataFrame) -> bool:
     """Confirm variables are valid.
@@ -52,17 +55,29 @@ def is_valid_carrier(n: pypsa.Network, results: pd.DataFrame) -> bool:
     n_cars = n.carriers.index.to_list()
     n_cars.append("load")  # load shedding added during sample
 
+    # we need to split the 'gas trade' carrier into 'gas imports' and 'gas exports'
+    # ideally this would happen upstream in the pypsa-usa repo
+    # but its just manually done here for the time being
+    # the result calcs have been adjusted to handle this
+    n_cars.append("gas imports")
+    n_cars.append("gas exports")
+
     errors = []
 
     for car in sa_cars_flat:
         if car not in n_cars:
-            errors.append(car)
+            # only used in portfolio results
+            if car in ["offwind_floating", "battery"]:
+                continue
+            else:
+                errors.append(car)
 
     if errors:
         logger.error(f"{errors} are not defined in network.")
         return False
     else:
         return True
+
 
 def is_unique_names(results: pd.DataFrame) -> bool:
     """Checks that all result names are unique."""
@@ -72,31 +87,65 @@ def is_unique_names(results: pd.DataFrame) -> bool:
     df = df[df.duplicated("name")]
     if not df.empty:
         duplicates = set(df.name.to_list())
-        print(f"Duplicate definitions of {duplicates}")
+        logger.error(f"Duplicate definitions of {duplicates}")
         return False
     else:
         return True
 
 
-if __name__ == "__main__":
+def no_nans(results: pd.DataFrame) -> bool:
+    """Checks that there are no NaNs in the result plots."""
+    df = results.copy()
+    if df.gsa_plot.isna().any():
+        nan_plots_rows = df[df.gsa_plot.isna()]
+        for _, row in nan_plots_rows.iterrows():
+            logger.error(
+                f"NaN found in plots column for {row['name']} with {row['component']} and {row['variable']}."
+            )
+        return False
+    else:
+        return True
 
+
+def remove_offwind_floating(results: pd.DataFrame) -> pd.DataFrame:
+    """Remove offwind floating if not present in network."""
+    df = results.copy()
+    return df[df.carriers != "offwind_floating"]
+
+
+def remove_battery(results: pd.DataFrame) -> pd.DataFrame:
+    """Remove battery if not present in network."""
+    df = results.copy()
+    return df[df.carriers != "battery"]
+
+
+if __name__ == "__main__":
     if "snakemake" in globals():
         network = snakemake.input.network
         in_results = snakemake.params.results
         out_results = snakemake.output.results
+        configure_logging(snakemake)
     else:
-        network = "results/Testing/base.nc"
+        network = "results/nd/base.nc"
         in_results = "config/results.csv"
-        out_results = "results/Testing/results.csv"
-    
+        out_results = "results/nd/gsa/results.csv"
+
     df = pd.read_csv(in_results)
-    
+
     df = sanitize_component_name(df)
     df = strip_whitespace(df)
     assert is_valid_variables(df)
     assert is_unique_names(df)
+    if "plots" in df.columns:  # only needed for gsa
+        assert no_nans(df)
 
     n = pypsa.Network(network)
+
+    if "offwind_floating" not in n.carriers.index:
+        df = remove_offwind_floating(df)
+    if "battery" not in n.carriers.index:  # existing batteries
+        df = remove_battery(df)
+
     assert is_valid_carrier(n, df)
 
     df.to_csv(out_results, index=False)

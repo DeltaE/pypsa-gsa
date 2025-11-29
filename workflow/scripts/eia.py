@@ -13,6 +13,7 @@ from urllib3.util import Retry
 from constants import POINTS_OF_ENTRY
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 API_BASE = "https://api.eia.gov/v2/"
@@ -184,6 +185,7 @@ class DataExtractor(ABC):
             {"series-description": str, "value": float, "units": str, "state": str},
         )
 
+
 class Emissions(EiaData):
     """State level emissions data."""
 
@@ -202,6 +204,7 @@ class Emissions(EiaData):
     def data_creator(self):
         """Initializes data extractor."""
         return _StateEmissions(self.sector, self.fuel, self.year, self.api)
+
 
 class EnergyDemand(EiaData):
     """
@@ -228,7 +231,7 @@ class EnergyDemand(EiaData):
         """Initializes data extractor."""
         if self.year < 2024:
             if self.scenario:
-                logger.warning("Can not apply AEO scenario to historical demand")
+                logger.debug("Can not apply AEO scenario to historical demand")
             return _HistoricalSectorEnergyDemand(self.sector, self.year, self.api)
         elif self.year >= 2024:
             aeo = "reference" if not self.scenario else self.scenario
@@ -345,6 +348,7 @@ class Trade(EiaData):
                 recived_option=self.fuel,
             )
 
+
 class InstalledCapacity(EiaData):
     """Technology Capacity Installations."""
 
@@ -356,7 +360,7 @@ class InstalledCapacity(EiaData):
         year: int,
         api: str,
     ) -> None:
-        self.sector = sector 
+        self.sector = sector
         self.fuel = fuel
         self.scenario = scenario
         self.year = year
@@ -371,6 +375,63 @@ class InstalledCapacity(EiaData):
                 propery="InstalledCapacity",
                 valid_options=["power"],
                 recived_option=self.sector,
+            )
+
+
+class FuelCosts(EiaData):
+    """Primary fuel cost data."""
+
+    valid_future_fuels: list[str] = [
+        "electricity",
+        "gas",
+        "coal",
+        "lpg",
+        "nuclear",
+        "heating_oil",
+        "propane",
+    ]
+
+    valid_historical_fuels: list[str] = ["electricity"]
+
+    def __init__(
+        self,
+        fuel: str,
+        year: int,
+        api: str,
+        scenario: str | None = None,
+        sector: str | None = "all",
+    ) -> None:
+        self.fuel = fuel
+        self.year = year
+        self.api = api
+        self.scenario = scenario
+        self.sector = sector
+
+    def data_creator(self) -> pd.DataFrame:
+        """Initializes data extractor."""
+        if self.year > 2024:
+            if self.fuel in self.valid_fuels:
+                return _FutureCosts(self.fuel, self.year, self.scenario, self.api)
+            else:
+                raise InputPropertyError(
+                    propery="Fuel Costs",
+                    valid_options=self.valid_fuels,
+                    recived_option=self.fuel,
+                )
+        elif self.year < 2024:
+            if self.fuel in self.valid_historical_fuels:
+                return _HistoricalCosts(self.fuel, self.year, self.api, self.sector)
+            else:
+                raise InputPropertyError(
+                    propery="Fuel Costs",
+                    valid_options=self.valid_historical_fuels,
+                    recived_option=self.fuel,
+                )
+        else:
+            raise InputPropertyError(
+                propery="Fuel Cost Year",
+                valid_options="2015 to 2050",
+                recived_option=self.year,
             )
 
 
@@ -715,39 +776,6 @@ class _ProjectedTransportBtuDemand(DataExtractor):
         return self._assign_dtypes(df)
 
 
-class FuelCosts(EiaData):
-    """Primary fuel cost data."""
-
-    valid_fuels: list[str] = [
-        "electricity",
-        "gas",
-        "coal",
-        "lpg",
-        "nuclear",
-        "heating_oil",
-        "propane",
-    ]
-
-    def __init__(
-        self, fuel: str, year: int, api: str, scenario: str | None = None
-    ) -> None:
-        self.fuel = fuel
-        self.year = year
-        self.api = api
-        self.scenario = scenario
-
-    def data_creator(self) -> pd.DataFrame:
-        """Initializes data extractor."""
-        if self.fuel in self.valid_fuels:
-            return _FutureCosts(self.fuel, self.year, self.scenario, self.api)
-        else:
-            raise InputPropertyError(
-                propery="Fuel Costs",
-                valid_options=self.valid_fuels,
-                recived_option=self.fuel,
-            )
-
-
 class _FutureCosts(DataExtractor):
     # https://www.eia.gov/outlooks/aeo/assumptions/case_descriptions.php
     scenario_codes = AEO_SCENARIOS
@@ -793,6 +821,54 @@ class _FutureCosts(DataExtractor):
         )
         df = df[["series-description", "value", "units", "state"]].sort_index()
         return self._assign_dtypes(df)
+
+
+class _HistoricalCosts(DataExtractor):
+    """Historical electrical fuel costs."""
+
+    sector_codes: ClassVar[dict[str, str]] = {
+        "all": "ALL",
+        "res": "RES",
+        "com": "COM",
+        "ind": "IND",
+        "trn": "TRA",
+        "other": "OTH",
+    }
+
+    def __init__(self, fuel: str, year: int, api: str, sector: str = "all") -> None:
+        self.fuel = fuel
+        self.api = api
+        self.sector = sector
+        if sector not in self.sector_codes:
+            raise InputPropertyError(
+                propery="Historical Cost Sector",
+                valid_options=list(self.sector_codes),
+                recived_option=sector,
+            )
+        super().__init__(year, api)
+
+    def build_url(self) -> str:
+        base_url = "electricity/retail-sales/data/"
+        facets = f"frequency=monthly&data[0]=price&facets[sectorid][]={self.sector_codes[self.sector]}&start={self.year}-01&end={self.year}-12&sort[0][column]=period&sort[0][direction]=desc&offset=0&length=5000"
+        return f"{API_BASE}{base_url}?api_key={self.api_key}&{facets}"
+
+    def format_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        df.index = pd.to_datetime(df.period)
+        df = df.rename(
+            columns={
+                "stateid": "state",
+                "snateDescription": "state_name",
+                "sectorName": "series-description",
+                "price": "value",
+                "price-units": "units",
+            },
+        )
+        df["value"] = round(df.value.astype(float) * 10, 3)  # cents / kwh -> $ / mwh
+        df["units"] = "$/mwh"
+        df["state"] = df["state"].replace("US", "U.S.")
+        df = df[["state", "series-description", "value", "units"]].sort_index()
+        return self._assign_dtypes(df)
+
 
 class _InternationalGasTrade(DataExtractor):
     """
@@ -929,13 +1005,14 @@ class _DomesticGasTrade(DataExtractor):
         except IndexError:  # country level
             return description.split(" Natural Gas Pipeline")[0]
 
+
 class _PowerCapacity(DataExtractor):
     """Extracts projected power sector capacity AEO 2023."""
 
     # https://www.eia.gov/outlooks/aeo/assumptions/case_descriptions.php
     scenario_codes = AEO_SCENARIOS
 
-    # See here for definitions on what is in each fuel 
+    # See here for definitions on what is in each fuel
     # https://www.eia.gov/outlooks/aeo/data/browser/#/?id=9-AEO2023&cases=ref2023&sourcekey=0
     fuel_codes: ClassVar[dict[str, str]] = {
         "coal": "cl",
@@ -949,6 +1026,7 @@ class _PowerCapacity(DataExtractor):
         "pumped_storage": "pps",
         "renewables": "rnwbsrc",
         "total": "tot",
+        "battery": "diurn", # diurnal storage
     }
 
     def __init__(self, fuel: str, year: int, scenario: str, api: str):
@@ -980,6 +1058,7 @@ class _PowerCapacity(DataExtractor):
         df["state"] = "U.S."
         df = df[["series-description", "value", "units", "state"]].sort_index()
         return self._assign_dtypes(df)
+
 
 class _StateEmissions(DataExtractor):
     """State Level CO2 Emissions."""
@@ -1017,7 +1096,7 @@ class _StateEmissions(DataExtractor):
             )
         super().__init__(year, api_key)
         if self.year > 2021:
-            logger.warning(f"Emissions data only available until {2021}")
+            logger.debug(f"Emissions data only available until {2021}")
             self.year = 2021
 
     def build_url(self) -> str:
@@ -1047,7 +1126,8 @@ class _StateEmissions(DataExtractor):
 
         return self._assign_dtypes(df)
 
+
 if __name__ == "__main__":
     api = ""
-    df = FuelCosts("lpg", 2040, api, "reference").get_data(pivot=True)
-    print(df)
+    # df = FuelCosts("lpg", 2040, api, "reference").get_data(pivot=True)
+    # print(df)

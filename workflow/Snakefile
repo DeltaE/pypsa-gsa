@@ -1,51 +1,248 @@
 import pandas as pd
 from itertools import chain
 import sys
+import os
+from pathlib import Path
 
 configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, clean
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate
+
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",
     model_run=r"\d+"
 
-# only use groups/names, so its okay to not use sanitized values
-PARAMETERS = pd.read_csv(config["gsa"]["parameters"])
-RESULTS = pd.read_csv(config["gsa"]["results"])
-
 SCENARIO = config["scenario"]["name"]
-RESULT_FILES = list(set(RESULTS.name.to_list()))
 
-plots_temp = RESULTS.plots.dropna().str.split(";").to_list()
-PLOTS = list(set(chain(*plots_temp)))
+# list of rules for which onstart should be skipped
+CLEANING_RULES = {"clean_all", "clean_gsa", "clean_ua", "clean_generate"}
 
-# Calculates number of model runs for the Method of Morris
-GROUPS = PARAMETERS.group.unique()
-MODELRUNS = range((len(GROUPS) + 1) * config["gsa"]["replicates"])
+def conditional_onstart(workflow):
+    if any(rule in CLEANING_RULES for rule in workflow.dag_settings.targets):
+        return  
 
-include: "rules/generate.smk"
+    sanitized_params = Path("results", SCENARIO, "gsa", "parameters.csv")
+    sanitized_gsa_results = Path("results", SCENARIO, "gsa", "results.csv")
+    sanitized_ua_results = Path("results", SCENARIO, "ua", "results.csv")
+    if not sanitized_params.exists() or not sanitized_gsa_results.exists() or not sanitized_ua_results.exists():
+        print("Generate data first with 'snakemake -s workflow/Snakefile.generate'")
+        if not sanitized_params.exists():
+            raise FileNotFoundError(f"Sanitized parameters file not found: {sanitized_params}")
+        if not sanitized_gsa_results.exists():
+            raise FileNotFoundError(f"Sanitized GSA results file not found: {sanitized_gsa_results}")
+        if not sanitized_ua_results.exists():
+            raise FileNotFoundError(f"Sanitized UA results file not found: {sanitized_ua_results}")
+    else:
+        print(f"Sanitized files found: {sanitized_params}, {sanitized_gsa_results}, {sanitized_ua_results}")
+
+onstart:
+    conditional_onstart(workflow)
+
+
+# manually cleanup temporary networks
+# see the following issues on why temp() doesnt work with checkpoints
+# https://github.com/snakemake/snakemake/issues/2982
+onsuccess:
+
+    # copy network for circular dependency issue
+    copy_nc = Path("results", SCENARIO, "copy.nc")
+    if copy_nc.exists():    
+        shell(f"rm {copy_nc}")
+
+    # networks to remove 
+    networks = ["n"]
+    if not config["metadata"]["networks"]:
+        networks.append("network")
+
+    # pre-solve GSA networks
+    gsa_networks = Path("results", SCENARIO, "gsa", "modelruns")
+    if gsa_networks.exists():
+        for run in gsa_networks.iterdir():
+            for network in networks:
+                n = Path(run, f"{network}.nc")
+                # try/except faster than checking if file exists
+                try:
+                    os.remove(n)
+                except FileNotFoundError:
+                    pass
+        
+    # pre-solve UA networks
+    ua_networks = Path("results", SCENARIO, "ua", "modelruns")
+    if ua_networks.exists():
+        for run in ua_networks.iterdir():
+            for network in networks:
+                n = Path(run, f"{network}.nc")
+                # try/except faster than checking if file exists
+                try:
+                    os.remove(n)
+                except FileNotFoundError:
+                    pass
+
+###
+# GSA specific parameters
+###
+
+# Cache for model runs to avoid repeated file reads
+_gsa_modelruns_cache = None
+
+def get_gsa_modelruns() -> range:
+    """number of gsa model runs - cached to avoid repeated file reads"""
+    global _gsa_modelruns_cache
+    if _gsa_modelruns_cache is not None:
+        return _gsa_modelruns_cache
+    
+    params_file = f"results/{SCENARIO}/gsa/parameters.csv"
+    if Path(params_file).exists():
+        gsa_params = pd.read_csv(params_file)
+        gsa_groups = gsa_params.group.unique().tolist()
+        _gsa_modelruns_cache = range((len(gsa_groups) + 1) * config["gsa"]["replicates"])
+        return _gsa_modelruns_cache
+    else:
+        _gsa_modelruns_cache = range(0)
+        return _gsa_modelruns_cache
+
+
+def get_gsa_result_files() -> list[str]:
+    """All gsa results files"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/gsa/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return list(set(results.name.to_list()))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+
+def get_gsa_plots() -> list[str]:
+    """Gsa plots"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/gsa/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        plots_temp = results.gsa_plot.dropna().str.split(";").to_list()
+        return list(set(chain(*plots_temp)))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+###
+# UA specific parameters
+###
+
+def get_ua_result_files():
+    """All ua results files"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/ua/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return list(set(results.name.to_list()))
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+
+def get_ua_scatterplots():
+    """UA scatterplots"""
+    scenario = config["scenario"]["name"]
+    plots_f = f"results/{scenario}/ua/plots.csv"
+    if Path(plots_f).exists():
+        return pd.read_csv(plots_f)["plot"].to_list()
+    else:
+
+        return []
+
+def get_ua_barplots():
+    """UA barplots"""
+    scenario = config["scenario"]["name"]
+    results_f = f"results/{scenario}/ua/results.csv"
+    if Path(results_f).exists():
+        results = pd.read_csv(results_f)
+        return results.ua_plot.dropna().to_list()
+    else:
+        # File doesn't exist yet - return empty list
+        # This can happen during DAG construction or when running clean_all
+        return []
+
+def get_ua_modelruns():
+    """Number of ua model runs"""
+    sampling = config["uncertainity"]["sample"].lower()
+    replicates = config["uncertainity"]["replicates"]
+    parameters = config["uncertainity"]["parameters"]
+    if sampling == 'lhs':
+        return range(replicates)
+    elif sampling == 'sobol':
+        return range((2**replicates) * (len(parameters) + 2))
+    else:
+        raise ValueError(f"{sampling} is not a valid selection")
+
+###
+# Additional rules
+###
+
 include: "rules/prepare.smk"
 include: "rules/sample.smk"
 include: "rules/solve.smk"
 include: "rules/results.smk"
 
+###
+# Main execution
+###
+
 rule all:
+    shell:
+        "echo Provide target rule. Availabe options are ['snakemake gsa', 'snakemake ua']"
+
+rule gsa:
     input:
-        expand("results/{scenario}/modelruns/{run}/network.nc", scenario=SCENARIO, run=MODELRUNS),
-        expand("results/{scenario}/SA/{result}.csv", scenario=SCENARIO, result=RESULT_FILES),
-        expand("results/{scenario}/heatmaps/{result}.png", scenario=SCENARIO, result=PLOTS),
-        expand("results/{scenario}/barplots/{result}.png", scenario=SCENARIO, result=PLOTS)
+        expand("results/{scenario}/gsa/heatmaps/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
+        expand("results/{scenario}/gsa/barplots/{plot}.png", scenario=SCENARIO, plot=get_gsa_plots()),
+        expand("results/{scenario}/gsa/rankings.csv", scenario=SCENARIO)
 
-rule clean:
-    shell:
-        "rm -rf results/* && rm -rf results/* && rm -rf modelruns/* && rm -rf temp/* "
+rule ua:
+    input:
+        expand("results/{scenario}/ua/scatterplots/{plot}.png", scenario=SCENARIO, plot=get_ua_scatterplots()),
+        expand("results/{scenario}/ua/barplots/{plot}.png", scenario=SCENARIO, plot=get_ua_barplots()),
 
-rule clean_plots:
+###
+# Testing solve resources on hpc
+###
+
+rule test_solve:
+    input:
+        expand("results/{scenario}/gsa/modelruns/testing/0/network.nc", scenario=SCENARIO)
+
+### 
+# Cleaning rules
+###
+
+rule clean_all:
+    params:
+        scenario=config["scenario"]["name"]
     shell:
-        "rm -f results/{modelrun}/*.pdf"
+        "rm -rf results/{params.scenario}/*"
+
+rule clean_gsa:
+    params:
+        scenario=config["scenario"]["name"]
+    shell:
+        "rm -rf results/{params.scenario}/gsa/*"
+
+rule clean_ua:
+    params:
+        scenario=config["scenario"]["name"]
+    shell:
+        "rm -rf results/{params.scenario}/ua/*"
+
+rule clean_generate:
+    shell:
+        "rm config/generated_parameters.csv"
 
 rule make_dag:
     shell:
-        "snakemake all --dag | dot -Tpdf > dag.pdf"
+        "snakemake ua --dag | dot -Tpng > dag.png"

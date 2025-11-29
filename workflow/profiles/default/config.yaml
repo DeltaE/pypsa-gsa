@@ -1,10 +1,11 @@
 executor: local
 jobs: 999
-local-cores: 1
+local-cores: 32  # Allow 4 jobs in parallel (4 * 8 threads = 32 cores)
 cores: 10
 latency-wait: 5
 use-envmodules: True
 use-conda: False
+# quiet: all
 default-resources:
   - runtime=2
   - mem_mb_per_cpu=16000

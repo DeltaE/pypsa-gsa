@@ -1,14 +1,15 @@
 """Analyzes objective value results from model"""
 
-from math import ceil
 from SALib.analyze import morris as analyze_morris
 from SALib.plotting import morris as plot_morris
 import numpy as np
 import pandas as pd
 import utils
 import matplotlib.pyplot as plt
+from utils import configure_logging
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,13 +48,12 @@ def sa_results(
         If the input sample is scaled
     """
 
-    problem = utils.create_salib_problem(parameters)
+    problem = utils.create_salib_problem(parameters, "morris")
     si = analyze_morris.analyze(problem, X, Y, print_to_console=False, scaled=scaled)
     return si
 
 
 def plot_si(si: np.array, name: str) -> tuple[plt.figure, plt.axes]:
-
     # save graphical resutls
     title = name
     fig, axs = plt.subplots(1, figsize=(10, 8))
@@ -67,21 +67,22 @@ def plot_si(si: np.array, name: str) -> tuple[plt.figure, plt.axes]:
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        result_name = snakemake.wildcards.result
+        result_name = snakemake.wildcards.sa_result
         parameters_f = snakemake.input.parameters
         sample_f = snakemake.input.sample
         results_f = snakemake.input.results
         scaled = snakemake.params.scaled
         csv = snakemake.output.csv
         png = snakemake.output.png
+        configure_logging(snakemake)
     else:
-        result_name = "com_ashp_capacity"
-        parameters_f = "results/Testing/parameters.csv"
-        sample_f = "results/Testing/sample_scaled.csv"
-        results_f = "results/Testing/results/marginal_cost_carbon.csv"
+        result_name = "carbon"
+        parameters_f = "results/ct/gsa/parameters.csv"
+        sample_f = "results/ct/gsa/sample_scaled.csv"
+        results_f = "results/ct/gsa/results/carbon_co2.csv"
         scaled = True
-        csv = "results/Testing/SA/marginal_cost_carbon.csv"
-        png = "results/Testing/SA/marginal_cost_carbon.png"
+        csv = "results/ct/gsa/SA/carbon_co2.csv"
+        png = "results/ct/gsa/SA/carbon_co2.png"
 
     params = pd.read_csv(parameters_f)
     X = pd.read_csv(sample_f).to_numpy()
