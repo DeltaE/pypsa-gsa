@@ -19,5 +19,6 @@ latency-wait: 10  # wait 10 seconds for files
 use-envmodules: False
 use-conda: False
 
+# this is taken care of by the HPC automatically 
 # make Snakemake load venv automatically
-precommand: "source ~/envs/gsa/load_env.sh"
+# precommand: "source ~/envs/gsa/load_env.sh"
