@@ -1,0 +1,18 @@
+executor: "slurm"
+
+default-resources:
+  mem_mb: 4000
+  runtime: 10
+  disk_mb: 2000
+  threads: 1
+  slurm_account: "def-tniet-ab"
+  # slurm_partition: "default" # auto-assigned by cluster
+
+jobname: "{rule}.{wildcards}.{jobid}"
+
+jobs: 100 
+keep-going: True
+rerun-incomplete: True
+latency-wait: 60  # wait 10 seconds for files 
+use-envmodules: False
+use-conda: False
