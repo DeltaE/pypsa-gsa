@@ -5,8 +5,10 @@ default-resources:
   runtime: 10
   disk_mb: 2000
   threads: 1
-  slurm_account: "def-tniet-ab"
-  # slurm_partition: "default" # auto-assigned by cluster
+  slurm_account: '"def-tniet-ab_cpu"'
+# slurm_partition: "" # auto-assigned by cluster
+  cores: 1
+  mem_mb_per_cpu: 4000
 
 jobname: "{rule}.{wildcards}.{jobid}"
 
