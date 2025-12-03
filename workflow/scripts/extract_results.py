@@ -99,6 +99,10 @@ def _get_p_total(
 
     year = n.investment_periods[0]  # already checked that len == 1
     df = getattr(n, component)[var].loc[year]
+
+    if df.empty:
+        return 0
+
     df = df[slicer]
 
     # only get power injected into the grid
@@ -257,10 +261,10 @@ if __name__ == "__main__":
         csv = snakemake.output.csv
         configure_logging(snakemake)
     else:
-        network = "results/ct/gsa/modelruns/0/network.nc"
-        results_f = "results/ct/gsa/results.csv"
-        csv = "results/ct/gsa/modelruns/0/results.csv"
-        model_run = 0
+        network = "results/nd/gsa/modelruns/408/network.nc"
+        results_f = "results/nd/gsa/results.csv"
+        csv = "results/nd/gsa/modelruns/408/results.csv"
+        model_run = 408
 
     n = pypsa.Network(network)
 
