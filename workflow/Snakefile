@@ -42,8 +42,6 @@ onstart:
 
 
 # manually cleanup temporary networks
-# see the following issues on why temp() doesnt work with checkpoints
-# https://github.com/snakemake/snakemake/issues/2982
 onsuccess:
 
     # copy network for circular dependency issue

@@ -6,35 +6,6 @@ def get_solver_options(wildards) -> dict[str,str|float]:
         # print(f"Can not get {profile} solving options")
         return {}
 
-def get_network_from_checkpoint(wildcards):
-    """Get network file from checkpoint output for specific run.
-    Directly construct path since checkpoint creates all files at once."""
-    return f"results/{wildcards.scenario}/{wildcards.mode}/modelruns/{wildcards.run}/n.nc"
-
-def get_constraints_from_checkpoint(wildcards):
-    """Get constraints file from checkpoint output for specific run.
-    Directly construct path since checkpoint creates all files at once."""
-    return f"results/{wildcards.scenario}/{wildcards.mode}/modelruns/{wildcards.run}/constraints.csv"
-
-def get_sanitized_parameters(wildcards):
-    """Get sanitized parameters file"""
-    return f"results/{wildcards.scenario}/gsa/parameters.csv"
-
-def get_sample_checkpoint_done(wildcards):
-    """Get a single file from checkpoint to ensure it's evaluated once.
-    This creates a single dependency rather than querying checkpoint for each run."""
-    if wildcards.mode == "gsa":
-        # Return the scaled_sample file which is created once by the checkpoint
-        return checkpoints.apply_gsa_sample_to_network.get(
-            scenario=wildcards.scenario, mode="gsa"
-        ).output.scaled_sample
-    elif wildcards.mode == "ua":
-        return checkpoints.apply_ua_sample_to_network.get(
-            scenario=wildcards.scenario, mode="ua"
-        ).output.scaled_sample
-    else:
-        raise ValueError(f"Invalid mode: {wildcards.mode}")
-
 rule solve_network:
     message: "Solving network"
     wildcard_constraints:
@@ -46,11 +17,11 @@ rule solve_network:
         solving_opts = config["solving"]["options"],
         model_opts = config["model_options"],
     input:
-        # Single checkpoint dependency evaluated once per mode, not per run
-        _checkpoint_done = get_sample_checkpoint_done,
-        sanitized_parameters = get_sanitized_parameters,
-        network = get_network_from_checkpoint,
-        constraints = get_constraints_from_checkpoint,
+        # Ensure sample application runs before solving
+        _sample_done = "results/{scenario}/{mode}/sample_scaled.csv",
+        sanitized_parameters = "results/{scenario}/gsa/parameters.csv",
+        network = "results/{scenario}/{mode}/modelruns/{run}/n.nc",
+        constraints = "results/{scenario}/{mode}/modelruns/{run}/constraints.csv",
         pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
         ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
         ng_international_f = "results/{scenario}/constraints/ng_international.csv",

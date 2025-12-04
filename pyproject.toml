@@ -1,7 +1,7 @@
 [project]
 name = "pypsa-gsa"
 version = "0.1.0"
-description = "Global Scenario Analysis Workflow for PyPSA"
+description = "Global Sensitivity Analysis Workflow for PyPSA"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -236,8 +236,6 @@ rule heatmap:
         "Generating heat map"
     input:
         rules.combine_sa_results.output,
-        # sanitized_parameters = lambda x: checkpoints.sanitize_parameters.get(scenario=SCENARIO).output,
-        # sanitized_results = lambda x: checkpoints.sanitize_results.get(scenario=SCENARIO, mode="gsa").output,
         params = "results/{scenario}/gsa/parameters.csv",
         results = "results/{scenario}/gsa/results.csv",
         csvs = get_gsa_plotting_csvs
@@ -260,8 +258,6 @@ rule barplot:
         "Generating barplot"
     input:
         rules.combine_sa_results.output,
-        # sanitized_parameters = lambda x: checkpoints.sanitize_parameters.get(scenario=SCENARIO).output,
-        # sanitized_results = lambda x: checkpoints.sanitize_results.get(scenario=SCENARIO, mode="gsa").output,
         params = "results/{scenario}/gsa/parameters.csv",
         results = "results/{scenario}/gsa/results.csv",
         csvs = get_gsa_plotting_csvs
