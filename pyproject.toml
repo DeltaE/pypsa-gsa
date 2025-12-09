@@ -21,4 +21,5 @@ dependencies = [
     "salib>=1.5.1",
     "seaborn>=0.13.2",
     "snakemake==8.20.5",
+    "xarray==2025.4.0",
 ]
