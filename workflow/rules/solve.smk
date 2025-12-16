@@ -32,10 +32,11 @@ rule solve_network:
         import_export_flows_f = "results/{scenario}/constraints/import_export_flows.csv",
     output:
         network = temp("results/{scenario}/{mode}/modelruns/{run}/network.nc") if not config['metadata']['networks'] else "results/{scenario}/{mode}/modelruns/{run}/network.nc",
-    threads: lambda wildcards: config["solving"]["solver_options"][config["solver"]["name"]]["threads"]
-    resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 8000),
-        runtime=2
+    # specify in profile
+    # threads: lambda wildcards: config["solving"]["solver_options"][config["solver"]["name"]]["threads"]
+    # resources:
+    #	mem_mb_per_cpu=1500,
+    #   runtime=5
     benchmark:
         "benchmarks/solve/{scenario}_{mode}_{run}.txt"
     log: 
@@ -68,10 +69,11 @@ rule test_solve_network:
         import_export_flows_f = "results/{scenario}/constraints/import_export_flows.csv",
     output:
         network = temp("results/{scenario}/{mode}/modelruns/testing/0/network.nc") if not config['metadata']['networks'] else "results/{scenario}/{mode}/modelruns/testing/0/network.nc",
-    threads: 12
-    resources:
-        mem_mb=2000,
-        runtime=2
+    # specify in profile
+    # threads: 2
+    # resources:
+    #     mem_mb_per_cpu=16000,
+    #     runtime=10
     benchmark:
         "benchmarks/solve/{scenario}_{mode}_testing.txt"
     log: 
