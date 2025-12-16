@@ -6,15 +6,28 @@ default-resources:
   disk_mb: 2000
   threads: 1
   slurm_account: '"def-tniet-ab_cpu"'
-# slurm_partition: "" # auto-assigned by cluster
-  cores: 1
-  mem_mb_per_cpu: 4000
+  slurm_partition: '"cpubase_bycore_b1"' # auto-assigned by cluster
+  cores: 2
+  mem_mb_per_cpu: 8000
+
+set-threads:
+  solve_network: 2
+  test_solve_network: 2
+
+set-resources:
+  solve_network:
+    mem_mb_per_cup: 16000
+    runtime: 10
+  test_solve_network:
+    mem_mb_per_cpu: 16000
+    runtime: 10
+    
 
 jobname: "{rule}.{wildcards}.{jobid}"
 
 jobs: 100 
 keep-going: True
 rerun-incomplete: True
-latency-wait: 60  # wait 10 seconds for files 
+latency-wait: 15  # wait 15 seconds for files 
 use-envmodules: False
 use-conda: False
