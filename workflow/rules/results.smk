@@ -77,15 +77,13 @@ rule extract_results:
     log: 
         "logs/extract_results/{scenario}_{mode}_{run}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 4000),
+        runtime=5
     benchmark:
         "benchmarks/extract_gsa_results/{scenario}_{mode}_{run}.txt"
-    # Removed from solve group to allow independent resource allocation
-    # Input dependency ensures it runs after solve_network completes
     group:
-        "extract_results"
-        # "solve_{scenario}_{mode}_{run}"
+        # "extract_results"
+        "solve_{scenario}_{mode}_{run}"
     script:
         "../scripts/extract_results.py"
 
@@ -105,12 +103,12 @@ rule combine_results:
     log: 
         "logs/combine_results/{scenario}_{mode}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/combine_results/{scenario}_{mode}.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     run:
         import pandas as pd
         data = [pd.read_csv(str(x)) for x in input.results]
@@ -137,12 +135,12 @@ rule parse_gsa_results:
     log: 
         "logs/parse_results/{scenario}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/parse_results/{scenario}.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     run:
         import pandas as pd
         from pathlib import Path 
@@ -171,12 +169,12 @@ rule calculate_SA:
     log: 
         "logs/calculate_sa/{scenario}_{sa_result}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/calculate_sa/{scenario}_{sa_result}.txt"
     group:
-        "results"
+        "calculate_sa_{scenario}_{sa_result}"
     script: 
         "../scripts/calculate_sa.py"
 
@@ -189,12 +187,12 @@ rule combine_sa_results:
     log: 
         "logs/combine_sa_results/{scenario}_gsa.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/combine_sa_results/{scenario}_gsa.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     run:
         import pandas as pd
         from pathlib import Path 
@@ -222,12 +220,12 @@ rule calculate_rankings:
     log: 
         "logs/calculate_rankings/{scenario}_gsa.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/calculate_rankings/{scenario}_gsa.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     script: 
         "../scripts/calculate_rankings.py"
 
@@ -244,12 +242,12 @@ rule heatmap:
     log: 
         "logs/create_heatmap/{scenario}_{plot}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/create_heatmap/{scenario}_{plot}.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     script:
         "../scripts/plot_gsa_heatmap.py"
 
@@ -266,12 +264,12 @@ rule barplot:
     log: 
         "logs/create_barplot/{scenario}_{plot}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/create_barplot/{scenario}_{plot}.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     script:
         "../scripts/plot_gsa_barplot.py"
 
@@ -295,12 +293,12 @@ rule parse_ua_results:
     log: 
         "logs/parse_results/{scenario}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 200),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/parse_results/{scenario}.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     run:
         import pandas as pd
         from pathlib import Path 
@@ -324,12 +322,12 @@ rule plot_ua_scatter:
     log: 
         "logs/plot_ua/{scenario}_{plot}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/plot_ua/{scenario}_{plot}.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     script:
         "../scripts/plot_ua_scatter.py"
 
@@ -347,11 +345,11 @@ rule plot_ua_barplots:
     log: 
         "logs/plot_ua/{scenario}_{plot}.log"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
-        runtime=1
+        mem_mb_per_cpu=lambda wc, input: max(1.25 * input.size_mb, 2000),
+        runtime=5
     benchmark:
         "benchmarks/plot_ua/{scenario}_{plot}.txt"
-    group:
-        "results"
+    #group:
+    #    "results"
     script:
         "../scripts/plot_ua_barplot.py"
