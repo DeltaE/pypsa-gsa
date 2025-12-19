@@ -11,10 +11,10 @@ rule generate_tct_data:
         tct_aeo = "results/{scenario}/generated/tct_aeo.csv",
         tct_gsa = "results/{scenario}/generated/tct_gsa.csv",
     resources:
-        mem_mb=100,
-        runtime=3
-    group:
-        "generate_data"
+        mem_mb_per_cpu=1000,
+        runtime=5
+    # group:
+    #     "generate_data"
     script:
         "../scripts/process_tct.py"
 
@@ -26,10 +26,10 @@ rule retrieve_co2L_data:
         co2_2005 = "resources/emissions/co2_2005.csv",
         co2_2030 = "resources/emissions/co2_2005_50pct.csv",
     resources:
-        mem_mb=200,
-        runtime=3
-    group:
-        "generate_data"
+        mem_mb_per_cpu=1000,
+        runtime=5
+    # group:
+    #     "generate_data"
     script:
         "../scripts/retrieve_co2L.py"
 
@@ -45,10 +45,10 @@ rule generate_co2L_data:
     output:
         co2_gsa = "results/{scenario}/generated/co2L_gsa.csv"
     resources:
-        mem_mb=200,
-        runtime=3
-    group:
-        "generate_data"
+        mem_mb_per_cpu=1000,
+        runtime=5
+    # group:
+    #     "generate_data"
     script:
         "../scripts/process_co2L.py"
 
@@ -61,10 +61,10 @@ rule append_generated_parameters:
     output:
         csv=expand("results/{{scenario}}/generated/{param_f}", param_f = config["gsa"]["parameters"])
     resources:
-        mem_mb=200,
-        runtime=3
-    group:
-        "generate_data"
+        mem_mb_per_cpu=1000,
+        runtime=5
+    # group:
+    #     "generate_data"
     run:
         import pandas as pd
         dfs = []
@@ -100,10 +100,10 @@ rule sanitize_parameters:
     benchmark:
         "benchmarks/sanitize_parameters/{scenario}.txt"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
-        runtime=1
-    group:
-        "generate_data"
+        mem_mb_per_cpu=1000,
+        runtime=5
+    # group:
+    #     "generate_data"
     script:
         "../scripts/sanitize_params.py"
 
@@ -118,14 +118,14 @@ rule sanitize_results:
     output:
         results="results/{scenario}/{mode}/results.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     benchmark:
         "benchmarks/sanitize_results/{scenario}_{mode}.txt"
     log: 
         "logs/sanitize_results/{scenario}_{mode}.log"
-    group:
-        "generate_data"
+    # group:
+    #     "generate_data"
     script:
         "../scripts/sanitize_results.py"
     

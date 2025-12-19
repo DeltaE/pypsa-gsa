@@ -5,8 +5,8 @@ rule copy_network:
     output:
         n = temp("results/{scenario}/copy.nc")
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     group:
         "prepare_data"
     benchmark:
@@ -21,8 +21,8 @@ rule copy_pop_layout:
     output:
         csv = "results/{scenario}/constraints/pop_layout.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     group:
         "prepare_data"
     benchmark:
@@ -40,8 +40,8 @@ rule process_reeds_policy:
     output:
         policy = "results/{scenario}/constraints/{policy}.csv",
     resources:
-        mem_mb=100,
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     group:
         "prepare_data"
     benchmark:
@@ -57,8 +57,8 @@ rule copy_tct_data:
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
-        runtime=1
+        runtime=5,
+        mem_mb_per_cpu=1000
     group:
         "prepare_data"
     run:
@@ -76,8 +76,8 @@ rule copy_ev_policy_data:
     output:
         csv="results/{scenario}/constraints/ev_policy.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     group:
         "prepare_data"
     shell:
@@ -98,8 +98,8 @@ rule retrieve_natural_gas_data:
         "benchmarks/retrieve_ng/benchmark.txt"
     retries: 3
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 100),
-        runtime=2
+        mem_mb_per_cpu=1000,
+        runtime=5
     group:
         "prepare_data"
     script:
@@ -117,8 +117,8 @@ rule process_natural_gas:
         ng_domestic = "results/{scenario}/constraints/ng_domestic.csv",
         ng_international = "results/{scenario}/constraints/ng_international.csv",
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     benchmark:
         "benchmarks/process_ng/{scenario}.txt"
     log: 
@@ -147,8 +147,8 @@ rule process_interchange_data:
         capacities = "results/{scenario}/constraints/import_export_capacity.csv",
         costs = "results/{scenario}/constraints/import_export_costs.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 5000),
-        runtime=3
+        mem_mb_per_cpu=1000,
+        runtime=5
     benchmark:
         "benchmarks/process_interchanges/{scenario}.txt"
     log: 
@@ -168,8 +168,8 @@ rule add_import_export_to_network:
     output:
         network = "results/{scenario}/base.nc",
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 500),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     group:
         "prepare_data"
     script:
@@ -186,8 +186,8 @@ rule prepare_static_values:
     output:
         parameters="results/{scenario}/ua/set_values.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     benchmark:
         "benchmarks/prepare_set_values/{scenario}.txt"
     log: 
@@ -208,8 +208,8 @@ rule prepare_ua_params:
     output:
         parameters="results/{scenario}/ua/parameters.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     benchmark:
         "benchmarks/prepare_ua_params/{scenario}.txt"
     log: 
@@ -231,8 +231,8 @@ rule sanitize_ua_plot_params:
     output:
         plots="results/{scenario}/ua/plots.csv"
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 300),
-        runtime=1
+        mem_mb_per_cpu=1000,
+        runtime=5
     benchmark:
         "benchmarks/prepare_ua_params/{scenario}.txt"
     log: 
