@@ -9,7 +9,7 @@ Uncertainty Analysis Workflow for PyPSA-USA
 
 ## Intro
 
-This repo contains the code used for the paper "xxx". Broadly, the workflow allows users to run a uncertainty analysis over [PyPSA-USA](https://github.com/PyPSA/pypsa-usa) networks. Included is 1. Uncertainty Parameterization. 2. Global Sensitivity Analysis (GSA). 3. Uncertainty Propogation (UP). This readme walks through how to configure and run the workflow. 
+This repo contains the code used for the paper "xxx". Broadly, the workflow allows users to run a uncertainty analysis over [PyPSA-USA](https://github.com/PyPSA/pypsa-usa) networks. Included is 1. Uncertainty Parameterization. 2. Global Sensitivity Analysis (GSA). 3. Uncertainty Analysis (UA). This readme walks through how to configure and run the workflow. 
 
 ## Install 
 
@@ -65,7 +65,7 @@ This section will walk through how configure the workflow. The results in this p
 
 ### Scenario
 
-To run a new scenario (ie. the GSA and UP workflow), give a new scenario name in the `config/config.yaml` file. Additionally, for the scenario, you can select if CH4 is counted against the emission budget. As CH4 can lead to eaisly lead to infeasabilities if running with a CO2 limit, users have the option to track CH4, but not count it against the emission limit. 
+To run a new scenario (ie. the GSA and UA workflow), give a new scenario name in the `config/config.yaml` file. Additionally, for the scenario, you can select if CH4 is counted against the emission budget. As CH4 can lead to eaisly lead to infeasabilities if running with a CO2 limit, users have the option to track CH4, but not count it against the emission limit. 
 
 ```yaml
 scenario: 
@@ -153,9 +153,9 @@ The following table shows how to configure the GSA results. See the file `config
 | plots | What plots for the variable to be applied to (ie. if you want to plot multiple results against each other) |
 | unit | Unit for the plot | 
 
-### Uncertainty Propogation
+### Uncertainty Analysis
 
-The following UP configuration options are available:
+The following UA configuration options are available:
 
 ```yaml
 uncertainity:
@@ -169,9 +169,9 @@ uncertainity:
   plots: config/plots_ua.csv
 ```
 
-The `uncertainty.sample` is the sampling method to use. Only Latin Hypercube Sampling (LHS) and Sobol Sampling are supported, and are generated using [SALib](https://salib.readthedocs.io/en/latest/). `uncertainty.replicates` modifies the number of samples, with information on how it is used [here](https://salib.readthedocs.io/en/latest/api/SALib.sample.html#module-SALib.sample.latin) for LHS and [here](https://salib.readthedocs.io/en/latest/api/SALib.sample.html#module-SALib.sample.sobol) for Sobol. `uncertainty.parameters` specifies what parameters to include in the sample; these values will typically be the most impactful parameters identified from the GSA (and written out to the file `results/{scenario}/gsa/rankings_top_n.csv`). All other parameters in the `config/parameters.csv` file will take on their average value. `uncertainty.results` and `uncertainty.plots` describes the results and plots to extract from the UP. Details on how to format these files is given below. 
+The `uncertainty.sample` is the sampling method to use. Only Latin Hypercube Sampling (LHS) and Sobol Sampling are supported, and are generated using [SALib](https://salib.readthedocs.io/en/latest/). `uncertainty.replicates` modifies the number of samples, with information on how it is used [here](https://salib.readthedocs.io/en/latest/api/SALib.sample.html#module-SALib.sample.latin) for LHS and [here](https://salib.readthedocs.io/en/latest/api/SALib.sample.html#module-SALib.sample.sobol) for Sobol. `uncertainty.parameters` specifies what parameters to include in the sample; these values will typically be the most impactful parameters identified from the GSA (and written out to the file `results/{scenario}/gsa/rankings_top_n.csv`). All other parameters in the `config/parameters.csv` file will take on their average value. `uncertainty.results` and `uncertainty.plots` describes the results and plots to extract from the UA. Details on how to format these files is given below. 
 
-The following table shows how to configure the UP results. See the file `config/results_ua.csv` for an example: 
+The following table shows how to configure the UA results. See the file `config/results_ua.csv` for an example: 
 
 | Column Header | Description |
 |---|---|
@@ -183,7 +183,7 @@ The following table shows how to configure the UP results. See the file `config/
 | barplot* | What barplots to group the result on |
 | unit* | Unit for the barplot | 
 
-The following table shows how to configure plots generated from the UP. See the file `config/plots_ua.csv` for an example:
+The following table shows how to configure plots generated from the UA. See the file `config/plots_ua.csv` for an example:
 
 | Column Header | Description |
 |---|---|
@@ -198,7 +198,7 @@ The following table shows how to configure plots generated from the UP. See the 
 | group | Subplot group | 
 | xhue | Legend Title (for scatter) or y label (for bar) | 
 
-*TODO: Move this to the dedicated UP plotting config. 
+*TODO: Move this to the dedicated UA plotting config. 
 
 ### Solver
 
@@ -231,23 +231,7 @@ solving:
 
 ## How to Run
 
-[`snakemake`](https://snakemake.readthedocs.io/en/stable/) is used for workflow orchastration. This section will walk through how to use `snakemake` to execute the workflow. 
-
-### Sankemake Profile
-
-If running locally, default `snakemake` configuration options will likley be fine. If you do want to tune `snakemake` resources, update the `workflow/profiles/default/config.yaml` file. Information on how to write profiles can be found [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#executing-profiles). 
-
-### Tuning Resources for HPC
-
-If you are deploying the workflow to a HPC, some manual resource tuning may need to happen. First, ensure you change the `snakemake.profile.executor` to the HPC [scheduler](https://snakemake.readthedocs.io/en/stable/tutorial/additional_features.html). All rules are placed in groups for easier scheduling, and will likely **not** need to change. Depending on your PyPSA network, the resouces allocated to each rule may need to change (particullarly with the solve). Dyanmically allocated resources based on file size are set by default as a starting point. You can use the `snakemake.profile.set-resource` argument to override the default. For example, to change the solve to allocate `20GB` of memory, add the following to the `snakemake.profile` (more info [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#executing-profiles)). 
-
-```yaml
-set-resources:
-    solve_network:
-        mem: 20000MB
-```
-
-Additionally, benchmarks files are written out for each rule in the `benchmarks/` directory to inspect resouce usage after the workflow has run. Finally, instructions on how to run a single solve for both the GSA and UP workflow to guess resource requirements are given below. 
+[`snakemake`](https://snakemake.readthedocs.io/en/stable/) is used for workflow orchastration. This section will walk through how to use `snakemake` to execute the workflow. Information on how to tune resources for both local and HPC execution can be found at the end of the section. 
 
 ### Generate Network Specific Data
 
@@ -303,27 +287,85 @@ Memory Efficiency: 5.43% of 1.52 TB (1.52 TB/node)
 
 All results will be available in the `results/{scenario}/gsa/` directory. 
 
-### Uncertainty Propogation
+### Uncertainty Analysis
 
 Once the GSA has completed, you can check what parameters are the most influential in the `results/{scenario}/gsa/rankings_top_n.csv` file. These are the parameters to copy over the to `uncertainty.parameters` config option. All other uncertain will be locked to their average value, while these uncertain parameters will be included in the UP. 
 
 Once the uncertain parameters have been inputted, do a **dry run** of the uncertainity propogation with the following command: 
 
 ```bash
-snakemake up -n
+snakemake ua -n
 ```
 
 You should see many hundreds or thouands of steps be prompted. If everything looks correct, run the workflow (for real!) with the command: 
 
 ```bash
-snakemake up
+snakemake ua
 ```
 
-All results will be available in the `results/{scenario}/up/` directory.
+All results will be available in the `results/{scenario}/ua/` directory.
 
-### Result Dashboard
+### Tuning Resources
 
-Parsing through static images to understand the GSA and UP results can be very difficult; as there is so much data! A dashboard is available to help users decipher and understand their results. To locally run the dashboard for your results, run the following commands. Note, this dashboard is designed to analyze data at an ISO level, and is not compatiable for smaller zones. 
+Two snakemake profiles are provided by default; one to run locally and one to run on a High Performance Computer (HPC). Information on `snakemake` profiles can be found [here](https://snakemake.readthedocs.io/en/stable/executing/cli.html#executing-profiles). 
+
+#### Local Profile
+
+If running locally, the default `snakemake` configuration options will likley be fine. If you do want to tune the `snakemake` resources for local execution, update the `workflow/profiles/default/config.yaml` file. 
+
+#### HPC Profile
+
+If you are deploying the workflow to a HPC, some manual resource tuning will need to happen. Default resources can be found in the `workflow/profiles/slurm/config.yaml` file. Depending on your PyPSA network, the resouceses allocated to the solve rule will likley need to change. Once the input data has been generated, and **before** you run the GSA, you can run a single model to see the efficiency of the resources allocation. Moreover, ensure to specify the slurm profile in the snakemake call.  
+
+```bash
+snakemake test_solve --workflow-profile workflow/profiles/slurm/
+```
+
+Once complete, inspect the resources either through benchmark files: 
+
+```bash
+(gsa) [trevor23@login1 pypsa-gsa]$ cat benchmarks/solve/az_gsa_testing.txt
+s       h:m:s   max_rss max_vms max_uss max_pss io_in   io_out  mean_load       cpu_time
+292.8917        0:04:52 17330.54        24511.36        17270.87        17289.28        13.11   0.05    154.39  452.49
+```
+
+Or directly from the scheduler using the job number:
+
+```bash
+(gsa) [trevor23@login1 pypsa-gsa]$ seff 16085566
+Job ID: 16085566
+Cluster: fir
+User/Group: trevor23/trevor23
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 2
+CPU Utilized: 00:07:41
+CPU Efficiency: 76.32% of 00:10:04 core-walltime
+Job Wall-clock time: 00:05:02
+Memory Utilized: 20.90 GB
+Memory Efficiency: 66.87% of 31.25 GB (15.62 GB/core)
+```
+
+If resource tuning needs to happen, change the `threads`, `runtime`, and `mem_mb_per_cpu` parameters directly in the `workflow/profiles/slurm/config.yaml` file. 
+
+
+```yaml
+set-threads:
+  solve_network: 2
+  test_solve_network: 2
+
+set-resources:
+  solve_network:
+    mem_mb_per_cpu: 16000
+    runtime: 12
+  test_solve_network:
+    mem_mb_per_cpu: 16000
+    runtime: 12
+```
+
+## Result Dashboard
+
+Parsing through static images to understand the GSA and UA results can be very difficult; as there is so much data! A dashboard is available to help users decipher and understand their results. To locally run the dashboard for your results, run the following commands. Note, this dashboard is designed to analyze data at an ISO level, and is not compatiable for smaller zones. 
 
 ```bash
 # move to the dashboard directory
