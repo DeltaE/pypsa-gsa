@@ -1,7 +1,7 @@
 
 # name of base pypsa network
 scenario: 
-  name: "nh"
+  name: "or"
 
 model_options:
   ch4: false # if true, ch4 counts against emission budget. Else, ch4 tracked, but not counted against budget.
@@ -11,8 +11,8 @@ model_options:
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  network: "nh/elec_s20_c1m_ec_lv1.0_3h_E-G.nc"
-  pop_layout: "nh/pop_layout_elec_s20_c1m.csv"
+  network: "or/elec_s30_c3m_ec_lv1.0_3h_E-G.nc"
+  pop_layout: "or/pop_layout_elec_s30_c3m.csv"
   era5_year: 2018
 
 # write out GSA associated metadata with each run
@@ -51,27 +51,27 @@ uncertainity:
   # sobol -> N=2^m (m is a power of 2) -> N ~ 10d
   # lhs -> N = r -> N ~ > 10d
   sample: lhs # (lhs|sobol)
-  replicates: 1100
+  replicates: 1400
   parameters: # naems or groups 
+  - capex_wind
   - eff_trn_lpg
   - elec_export_price
   - elec_import_price
-  - elec_import_rec_price
   - elec_trade_flow
+  - ev_policy
   - gwp
   - lpg_cost
   - ng_leakage_downstream
   - ng_marginal_cost_export
   - ng_marginal_cost_import
-  - rps
-
+  - ptc_solar
   results: config/results.csv # results to extract from ua
   plots: config/plots_ua.csv
 
 # Choose a solver
 solver:
-  name: gurobi # (cbc|gurobi|cplex|highs)
-  options: gurobi-default # see solving config
+  name: cplex # (cbc|gurobi|cplex|highs)
+  options: cplex-default # see solving config
 
 
 
