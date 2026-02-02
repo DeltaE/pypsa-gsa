@@ -11,7 +11,7 @@ module load netcdf
 module load scipy-stack
 module load arrow
 module load ipopt
-module load gurobi/11.0.3
+# module load gurobi/11.0.3 # uncomment if using HPC license
 module load mycplex/22.1.2
 # must load python after mpi
 module load python/3.11
