@@ -1089,7 +1089,11 @@ def callback_filter_ua2_on_result_type_and_name(
     result_name: str,
     interval: list[int],
 ) -> list[dict[str, Any]]:
+    if not data:
+        return []
     df = pd.DataFrame(data)
+    if df.empty:
+        return []
     df = filter_ua2_on_result_name(df, result_name)
     df = remove_ua_outliers(df, interval)
     return df.to_dict("records")
@@ -1109,7 +1113,11 @@ def callback_filter_ua2_data_for_map(
     interval: list[int],
 ) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
+    if not data:
+        return []
     df = pd.DataFrame(data)
+    if df.empty:
+        return []
     df = filter_ua2_on_result_name(df, result_name)
     df = remove_ua_outliers(df, interval)
     df = get_average_ua2_data(df)
