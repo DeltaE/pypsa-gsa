@@ -17,11 +17,19 @@ set-threads:
 
 set-resources:
   solve_network:
-    mem_mb_per_cpu: 12000
-    runtime: 20
+    mem_mb_per_cpu: 30000
+    runtime: 60
+    # mem_mb_per_cpu: 6000
+    # runtime: 15
+    # mem_mb_per_cpu: 16000
+    # runtime: 20
   test_solve_network:
-    mem_mb_per_cpu: 12000
-    runtime: 20
+    mem_mb_per_cpu: 30000
+    runtime: 60
+    # mem_mb_per_cpu: 6000
+    # runtime: 15
+    # mem_mb_per_cpu: 16000
+    # runtime: 20
     
 
 jobname: "{rule}.{wildcards}.{jobid}"
