@@ -55,6 +55,7 @@ if __name__ == "__main__":
         ]
 
     df = pd.read_csv(input_f, index_col="param")
+    df = df.fillna(0)
     ranked = rank_params(df)
     top_n_data = get_top_n_params(ranked, top_n, subset)
 
