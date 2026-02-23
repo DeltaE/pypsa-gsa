@@ -6,7 +6,7 @@ rule copy_network:
         n = temp("results/{scenario}/copy.nc")
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     group:
         "prepare_data"
     benchmark:
@@ -22,7 +22,7 @@ rule copy_pop_layout:
         csv = "results/{scenario}/constraints/pop_layout.csv"
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     group:
         "prepare_data"
     benchmark:
@@ -41,7 +41,7 @@ rule process_reeds_policy:
         policy = "results/{scenario}/constraints/{policy}.csv",
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     group:
         "prepare_data"
     benchmark:
@@ -57,7 +57,7 @@ rule copy_tct_data:
     output:
         csv="results/{scenario}/constraints/tct.csv"
     resources:
-        runtime=5,
+        runtime=10,
         mem_mb_per_cpu=1000
     group:
         "prepare_data"
@@ -77,7 +77,7 @@ rule copy_ev_policy_data:
         csv="results/{scenario}/constraints/ev_policy.csv"
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     group:
         "prepare_data"
     shell:
@@ -99,7 +99,7 @@ rule retrieve_natural_gas_data:
     retries: 3
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     group:
         "prepare_data"
     script:
@@ -118,7 +118,7 @@ rule process_natural_gas:
         ng_international = "results/{scenario}/constraints/ng_international.csv",
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     benchmark:
         "benchmarks/process_ng/{scenario}.txt"
     log: 
@@ -148,7 +148,7 @@ rule process_interchange_data:
         costs = "results/{scenario}/constraints/import_export_costs.csv"
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     benchmark:
         "benchmarks/process_interchanges/{scenario}.txt"
     log: 
@@ -169,7 +169,7 @@ rule add_import_export_to_network:
         network = "results/{scenario}/base.nc",
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     group:
         "prepare_data"
     script:
@@ -187,7 +187,7 @@ rule prepare_static_values:
         parameters="results/{scenario}/ua/set_values.csv"
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     benchmark:
         "benchmarks/prepare_set_values/{scenario}.txt"
     log: 
@@ -209,7 +209,7 @@ rule prepare_ua_params:
         parameters="results/{scenario}/ua/parameters.csv"
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     benchmark:
         "benchmarks/prepare_ua_params/{scenario}.txt"
     log: 
@@ -232,7 +232,7 @@ rule sanitize_ua_plot_params:
         plots="results/{scenario}/ua/plots.csv"
     resources:
         mem_mb_per_cpu=1000,
-        runtime=5
+        runtime=10
     benchmark:
         "benchmarks/prepare_ua_params/{scenario}.txt"
     log: 
