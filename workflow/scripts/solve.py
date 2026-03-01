@@ -7,6 +7,7 @@ https://github.com/PyPSA/pypsa-usa/blob/master/workflow/scripts/solve_network.py
 import numpy as np
 import pandas as pd
 import pypsa
+import xarray as xr
 
 from typing import Optional
 import yaml
@@ -210,7 +211,7 @@ def no_economic_retirement_constraint(n):
 
 
 def add_technology_capacity_target_constraints(
-    n: pypsa.Network, data: pd.DataFrame, sample: pd.DataFrame
+    n: pypsa.Network, data: pd.DataFrame, sample: pd.DataFrame, relax: float = 1.0
 ):
     """
     Add Technology Capacity Target (TCT) constraint to the network.
@@ -415,6 +416,9 @@ def add_technology_capacity_target_constraints(
             )
 
             rhs = target["max"] - round(lhs_existing, 5)
+
+            # if target["name"] == "tct_battery":
+            #    rhs = round(rhs * relax, 3)
 
             n.model.add_constraints(
                 lhs <= rhs,
@@ -941,7 +945,6 @@ def add_transmission_limit(n, factor):
         carrier_attribute="AC, DC",
     )
 
-
 def add_cooling_heat_pump_constraints(n):
     """
     Adds constraints to the cooling heat pumps.
@@ -973,15 +976,17 @@ def add_cooling_heat_pump_constraints(n):
             n.model["Link-p_nom"].loc[heating_hps]
             - n.model["Link-p_nom"].loc[cooling_hps]
         )
-        rhs = 0
+        rhs = 0.01
 
-        n.model.add_constraints(lhs == rhs, name=f"Link-{hp_type}_cooling_capacity")
+        # add upper and lower boud on the difference 
+        n.model.add_constraints(lhs <= rhs, name=f"Link-{hp_type}_cooling_capacity_upper")
+        n.model.add_constraints(lhs >= -rhs, name=f"Link-{hp_type}_cooling_capacity_lower")
 
     def add_hp_generation_constraint(n, hp_type):
         heating_hps = n.links[n.links.index.str.endswith(hp_type)].index
         if heating_hps.empty:
             return
-        cooling_hps = n.links[n.links.index.str.endswith(f"{hp_type}-cooling")].index
+        cooling_hps = n.links[n.links.index.str.endswith(f"{hp_type}-cool")].index
 
         heating_hp_p = n.model["Link-p"].loc[:, heating_hps]
         cooling_hp_p = n.model["Link-p"].loc[:, cooling_hps]
@@ -1000,6 +1005,37 @@ def add_cooling_heat_pump_constraints(n):
         rhs = max_gen
 
         n.model.add_constraints(lhs <= rhs, name=f"Link-{hp_type}_cooling_generation")
+
+#        heating_hps = n.links.index[n.links.index.str.endswith(hp_type)]
+#        if heating_hps.empty:
+#            return
+#        cooling_hps = n.links.index[n.links.index.str.endswith(f"{hp_type}-cool")]
+
+#        p_var = n.model["Link-p"]
+#        p_nom_var = n.model["Link-p_nom"]
+
+        # convert efficies to dataarrays
+#        eff_h = xr.DataArray(n.links_t["efficiency"][heating_hps], 
+                             dims=["snapshot", "Link"])
+        
+        # use heating labels to ensure perfect alignment
+#        eff_c = xr.DataArray(n.links_t["efficiency"][cooling_hps].values, 
+                             coords=eff_h.coords, 
+                             dims=["snapshot", "Link"])
+
+        # align Dispatch Variables
+#        var_h = p_var.sel(Link=heating_hps)
+#        var_c = p_var.sel(Link=cooling_hps).assign_coords(Link=heating_hps)
+
+#        lhs = (var_h * eff_h) + (var_c * eff_c)
+
+#        var_p_nom = p_nom_var.sel({"Link-ext": heating_hps}).rename({"Link-ext": "Link"})
+#        rhs = var_p_nom * eff_h
+
+#        n.model.add_constraints(
+#            lhs <= rhs, 
+#            name=f"Link-{hp_type}_cooling_generation"
+#        )
 
     for hp_type in ("ashp", "gshp"):
         add_hp_capacity_constraint(n, hp_type)
@@ -1140,7 +1176,7 @@ def extra_functionality(n, sns):
         add_imports_rec_constraint(n)
     if "tct" in opts:
         add_technology_capacity_target_constraints(
-            n, opts["tct"]["data"], opts["tct"]["sample"]
+            n, opts["tct"]["data"], opts["tct"]["sample"], opts["tct"]["relax"]
         )
     if "ev_gen" in opts:
         add_ev_generation_constraint(
@@ -1317,31 +1353,32 @@ if __name__ == "__main__":
         constraints_meta = snakemake.input.constraints
         configure_logging(snakemake)
     else:
-        in_network = "results/testing/gsa/modelruns/testing/0/n.nc"
-        solver_name = "gurobi"
+        in_network = "results/tx/gsa/modelruns/1234/n.nc"
+        solver_name = "cplex"
         solving_opts_config = "config/solving.yaml"
         model_opts = {
             "economic_retirement": False,
             "coal_oil_investment": False,
             "nat_gas_import_relax": 1.5,
+            "trn_capacity_relax": 1.0
         }
         solving_log = ""
         out_network = ""
-        pop_f = "results/testing/constraints/pop_layout.csv"
-        ng_dommestic_f = "results/testing/constraints/ng_domestic.csv"
-        ng_international_f = "results/testing/constraints/ng_international.csv"
-        rps_f = "results/testing/constraints/rps.csv"
-        ces_f = "results/testing/constraints/ces.csv"
-        tct_f = "results/testing/constraints/tct.csv"
-        ev_policy_f = "results/testing/constraints/ev_policy.csv"
-        import_export_flows_f = "results/testing/constraints/import_export_flows.csv"
-        constraints_meta = "results/testing/gsa/modelruns/testing/0/constraints.csv"
+        pop_f = "results/tx/constraints/pop_layout.csv"
+        ng_dommestic_f = "results/tx/constraints/ng_domestic.csv"
+        ng_international_f = "results/tx/constraints/ng_international.csv"
+        rps_f = "results/tx/constraints/rps.csv"
+        ces_f = "results/tx/constraints/ces.csv"
+        tct_f = "results/tx/constraints/tct.csv"
+        ev_policy_f = "results/tx/constraints/ev_policy.csv"
+        import_export_flows_f = "results/tx/constraints/import_export_flows.csv"
+        constraints_meta = "results/tx/gsa/modelruns/1234/constraints.csv"
 
         with open(solving_opts_config, "r") as f:
             solving_opts_all = yaml.safe_load(f)
 
         solving_opts = solving_opts_all["solving"]["options"]
-        solver_opts = solving_opts_all["solving"]["solver_options"]["gurobi-default"]
+        solver_opts = solving_opts_all["solving"]["solver_options"]["cplex-default"]
 
     n = pypsa.Network(in_network)
 
@@ -1491,6 +1528,7 @@ if __name__ == "__main__":
     extra_fn["tct"] = {}
     extra_fn["tct"]["data"] = pd.read_csv(tct_f, index_col=0)
     extra_fn["tct"]["sample"] = constraints[constraints.attribute == "tct"].round(5)
+    extra_fn["tct"]["relax"] = 1.0
 
     target_names = extra_fn["tct"]["data"].name.to_list()
     sample_names = extra_fn["tct"]["sample"].name.to_list()
@@ -1557,6 +1595,14 @@ if __name__ == "__main__":
         raise ValueError("Too many samples for ind_heat_ff_production")
 
     ###
+    # Transmission level capacity relaxation
+    ###
+    relax_factor = model_opts.get("trn_capacity_relax", 1)
+    if relax_factor != 1:
+        links = n.links[n.links.carrier.isin(["AC", "gas trade", "gas pipeline", "imports", "imports_rec", "exports"])]
+        n.links.loc[links.index, "p_nom"] = links.p_nom * relax_factor
+
+    ###
     # Loss of Load Probability Constraint
     ###
     extra_fn["lolp"] = {}
@@ -1582,6 +1628,9 @@ if __name__ == "__main__":
         extra_fn["rps"]["data"].pct -= 0.02
         # relax load shedding by 2%
         extra_fn["lolp"]["relax"] += 0.02
+        # increase capacity by 2%
+        # need to manually set what component, else nothing happens
+        extra_fn["tct"]["relax"] += 0.02
 
     if solving_status != "optimal":
         raise RuntimeError(f"Solving status '{solving_status}'")

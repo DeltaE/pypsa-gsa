@@ -8,7 +8,7 @@ configfile: "config/config.yaml"
 configfile: "config/api.yaml"
 configfile: "config/solving.yaml"
 
-localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate
+localrules: all, gsa, ua, clean_all, clean_gsa, clean_ua, clean_generate, test_solve
 
 wildcard_constraints:
     scenario="[a-zA-Z0-9_]+",

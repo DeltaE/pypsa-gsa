@@ -1,18 +1,19 @@
 
 # name of base pypsa network
 scenario: 
-  name: "nh"
+  name: "tx"
 
 model_options:
   ch4: false # if true, ch4 counts against emission budget. Else, ch4 tracked, but not counted against budget.
   coal_oil_investment: true # if true, coal and oil investment is allowed.
   economic_retirement: false # if true, allow system to recoup costs by retiring assets
   nat_gas_import_relax: 1.5 # relax import energy upper bound constraint by this factor
+  trn_capacity_relax: 1 # relax elec and nat gas capacity limits by this factor
 
 # Any additional files needed from pypsa-usa for constraints
 pypsa_usa:
-  network: "nh/elec_s20_c1m_ec_lv1.0_3h_E-G.nc"
-  pop_layout: "nh/pop_layout_elec_s20_c1m.csv"
+  network: "tx/elec_s80_c8m_ec_lv1.0_3h_E-G.nc"
+  pop_layout: "tx/pop_layout_elec_s80_c8m.csv"
   era5_year: 2018
 
 # write out GSA associated metadata with each run
@@ -51,27 +52,26 @@ uncertainity:
   # sobol -> N=2^m (m is a power of 2) -> N ~ 10d
   # lhs -> N = r -> N ~ > 10d
   sample: lhs # (lhs|sobol)
-  replicates: 1100
+  replicates: 1400
   parameters: # naems or groups 
+  - capex_wind
   - eff_trn_lpg
-  - elec_export_price
-  - elec_import_price
-  - elec_import_rec_price
   - elec_trade_flow
+  - ev_policy
   - gwp
   - lpg_cost
   - ng_leakage_downstream
+  - ng_leakage_upstream
   - ng_marginal_cost_export
   - ng_marginal_cost_import
-  - rps
-
+  - ptc_wind
   results: config/results.csv # results to extract from ua
   plots: config/plots_ua.csv
 
 # Choose a solver
 solver:
-  name: gurobi # (cbc|gurobi|cplex|highs)
-  options: gurobi-default # see solving config
+  name: cplex # (cbc|gurobi|cplex|highs)
+  options: cplex-default # see solving config
 
 
 

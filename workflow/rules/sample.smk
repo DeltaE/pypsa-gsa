@@ -40,7 +40,7 @@ rule create_sample:
         sample_file = "results/{scenario}/{mode}/sample.csv",
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 250),
-        runtime=1
+        runtime=5
     log: 
         "logs/create_sample/{scenario}_{mode}.log"
     benchmark:
@@ -81,9 +81,10 @@ rule apply_gsa_sample_to_network:
         n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=get_gsa_modelruns())),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
         meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=get_gsa_modelruns())
+    threads: 1
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
-        runtime=1
+        mem_mb_per_cpu=8000,
+        runtime=100
     benchmark:
         "benchmarks/apply_sample/{scenario}_{mode}.txt"
     group:
@@ -119,9 +120,10 @@ rule apply_ua_sample_to_network:
         n = temp(expand("results/{{scenario}}/{{mode}}/modelruns/{run}/n.nc", run=get_ua_modelruns())),
         scaled_sample = "results/{scenario}/{mode}/sample_scaled.csv",
         meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/{run}/constraints.csv", run=get_ua_modelruns())
+    threads: 1
     resources:
-        mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
-        runtime=1
+        mem_mb_per_cpu=8000,
+        runtime=100
     benchmark:
         "benchmarks/apply_sample/{scenario}_{mode}.txt"
     group:
@@ -159,7 +161,47 @@ rule test_apply_gsa_sample_to_network:
         meta_constriant = "results/{scenario}/{mode}/modelruns/testing/0/constraints.csv",
     resources:
         mem_mb=lambda wc, input: max(1.25 * input.size_mb, 600),
-        runtime=1
+        runtime=3
+    benchmark:
+        "benchmarks/apply_sample/{scenario}_{mode}.txt"
+    group:
+        "{scenario}_{mode}_testing"
+    log: 
+        "logs/apply_sample/{scenario}_{mode}.log"
+    script:
+        "../scripts/apply_sample.py"
+
+
+rule test_apply_ua_sample_to_network:
+    message: "Applying sample"
+    wildcard_constraints:
+        mode="ua"
+    params:
+        root_dir = "results/{scenario}/{mode}/modelruns/",
+        meta_yaml = config["metadata"]["yaml"],
+        meta_csv = config["metadata"]["csv"],
+        testing = True,
+    input: 
+        sanitized_parameters = get_sanitized_parameters_file,
+        parameters = "results/{scenario}/{mode}/parameters.csv",
+        set_values_file = get_static_values,
+        sample_file = "results/{scenario}/{mode}/sample.csv",
+        network = "results/{scenario}/base.nc",
+        pop_layout_f = "results/{scenario}/constraints/pop_layout.csv",
+        ng_domestic_f = "results/{scenario}/constraints/ng_domestic.csv",
+        ng_international_f = "results/{scenario}/constraints/ng_international.csv",
+        rps_f = "results/{scenario}/constraints/rps.csv",
+        ces_f = "results/{scenario}/constraints/ces.csv",
+        ev_policy_f = "results/{scenario}/constraints/ev_policy.csv",
+        elec_trade_f = "results/{scenario}/constraints/import_export_flows.csv"
+    output:
+        n = expand("results/{{scenario}}/{{mode}}/modelruns/testing/0/n.nc", run=get_ua_modelruns()),
+        scaled_sample = "results/{scenario}/{mode}/testing/sample_scaled.csv",
+        meta_constriant = expand("results/{{scenario}}/{{mode}}/modelruns/testing/0/constraints.csv", run=get_ua_modelruns())
+    threads: 1
+    resources:
+        mem_mb_per_cpu=800,
+        runtime=3
     benchmark:
         "benchmarks/apply_sample/{scenario}_{mode}.txt"
     group:
