@@ -1,9 +1,15 @@
 """Main app interface."""
 
+import os
 from typing import Any
 import dash
-from dash import Dash, html, dcc, Input, State, dash_table
-from dash_extensions.enrich import DashProxy, ServersideOutputTransform, Serverside, Output
+from dash import html, dcc, Input, State
+from dash_extensions.enrich import (
+    DashProxy,
+    ServersideOutputTransform,
+    Serverside,
+    Output,
+)
 import dash_bootstrap_components as dbc
 import pandas as pd
 
@@ -95,8 +101,11 @@ app = DashProxy(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
-    transforms=[ServersideOutputTransform()]
+    transforms=[ServersideOutputTransform()],
 )
+
+# Expose the Flask server for gunicorn
+server = app.server
 
 SIDEBAR_WIDTH = 3
 CONTENT_WIDTH = int(12 - SIDEBAR_WIDTH)
@@ -645,6 +654,7 @@ def update_plotting_type_dropdown_options(
     else:
         logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")
         return ([{"label": "Data Table", "value": "data_table"}], "data_table")
+
 
 # removed patch_color callback due to cross-tab conditional rendering conflicts
 
@@ -1282,7 +1292,9 @@ def callback_remove_input_data_filters(_: int) -> tuple[str, str]:
     ],
     prevent_initial_call=True,
 )
-def callback_select_remove_all_gsa_params(plotting_type: str, btn1: int, btn2: int) -> list[str]:
+def callback_select_remove_all_gsa_params(
+    plotting_type: str, btn1: int, btn2: int
+) -> list[str]:
     """Select/remove all parameters when button is clicked."""
     if plotting_type == "map":
         return dash.no_update
@@ -1312,7 +1324,9 @@ def callback_select_remove_all_gsa_params(plotting_type: str, btn1: int, btn2: i
     ],
     prevent_initial_call=True,
 )
-def callback_select_remove_all_gsa_results(plotting_type: str, btn1: int, btn2: int, btn3: int) -> list[str]:
+def callback_select_remove_all_gsa_results(
+    plotting_type: str, btn1: int, btn2: int, btn3: int
+) -> list[str]:
     """Select/remove all results when button is clicked."""
     if plotting_type == "map":
         return dash.no_update
@@ -1755,4 +1769,6 @@ def disable_cr_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
 
 # Run the server
 if __name__ == "__main__":
-    app.run(debug=True)
+    # app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="[IP_ADDRESS]", port=port, debug=True)
