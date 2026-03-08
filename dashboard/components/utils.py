@@ -346,18 +346,18 @@ def get_cr_data_by_state(root: Path, state: str) -> pd.DataFrame:
 
 def _get_cr_run_results(root: Path, state: str) -> pd.DataFrame:
     """Get CR run results."""
-    results_f = Path(root, "data", "state", state, "ua_runs.csv")
+    results_f = Path(root, "data", "state", state, "ua_runs.parquet")
     if not results_f.exists():
         logger.error(f"No result data for {state}: {results_f}")
         return pd.DataFrame()
-    df = pd.read_csv(results_f, index_col=0)
+    df = pd.read_parquet(results_f).reset_index()
     return df.round(2).drop(columns=["state"])
 
 
 def _get_cr_run_samples(root: Path, state: str) -> list[str]:
     """Get CR run samples."""
     names_f = Path(root, "data", "state", state, "ua_params.json")
-    samples_f = Path(root, "data", "state", state, "sample_data.csv")
+    samples_f = Path(root, "data", "state", state, "sample_data.parquet")
 
     if not names_f.exists():
         logger.error(f"No Custom Result names for {state}: {names_f}")
@@ -368,7 +368,9 @@ def _get_cr_run_samples(root: Path, state: str) -> list[str]:
     if not samples_f.exists():
         logger.error(f"No Custom Result sample for {state}: {samples_f}")
         return pd.DataFrame()
-    sample = pd.read_csv(samples_f, index_col="run").drop(columns=["state"])
+    
+    # Read parquet and reset the run index
+    sample = pd.read_parquet(samples_f).reset_index().set_index("run").drop(columns=["state"])
 
     if not all(x in sample.columns for x in names):
         missing = [x for x in names if x not in sample.columns]
@@ -389,7 +391,9 @@ def get_discrete_color_scale_options() -> list[str]:
         [
             k
             for k in px.colors.qualitative.__dict__.keys()
-            if not k.startswith("__") and not k.endswith("_r")
+            if not k.startswith("__") 
+            and not k.endswith("_r") 
+            and k not in ("swatches", "_swatches") # errors on these. idk why
         ]
     )
 

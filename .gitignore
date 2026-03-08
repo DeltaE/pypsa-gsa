@@ -6,6 +6,7 @@ config/pypsa-usa/
 logs/*
 benchmarks/*
 dashboard/data/*
+dashboard/file_system_backend/*
 
 
 # Byte-compiled / optimized / DLL files

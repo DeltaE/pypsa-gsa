@@ -293,6 +293,11 @@ def get_ua_scatter_plot(
     # drop outlier data
     df_melted = df_melted.dropna(subset=["value"])
 
+    # Prune data to avoid huge dash payloads
+    if len(df_melted) > 1000:
+        logger.debug(f"Downsampling UA scatter plot from {len(df_melted)} to 1000 points")
+        df_melted = df_melted.sample(n=1000, random_state=42)
+
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
     result_type = kwargs.get("result_type", None)
     ylabel = get_y_label(df_melted, result_type)
@@ -610,6 +615,11 @@ def get_ua_violin_plot(
     df = df.reset_index()
     df_melted = _melt_results(df)
 
+    # Prune data to avoid huge dash payloads
+    if len(df_melted) > 1000:
+        logger.debug(f"Downsampling from {len(df_melted)} to 1000 points")
+        df_melted = df_melted.sample(n=1000, random_state=42)
+
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
     result_type = kwargs.get("result_type", None)
     ylabel = get_y_label(df_melted, result_type)
@@ -702,6 +712,11 @@ def get_ua_box_whisker(
 
     df = df.reset_index()
     df_melted = _melt_results(df)
+
+    # Prune data to avoid huge dash payloads
+    if len(df_melted) > 1000:
+        logger.debug(f"Downsampling from {len(df_melted)} to 1000 points")
+        df_melted = df_melted.sample(n=1000, random_state=42)
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
     result_type = kwargs.get("result_type", None)

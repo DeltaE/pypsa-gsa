@@ -27,7 +27,8 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "fixed_cost": "Fixed Cost",
     "gshp": "Constraints",
     "gwp": "Methane",
-    "itc": "Investment Tax Credit",
+    "itc": "Tax Credit",
+    "ptc": "Tax Credit",
     "leakage": "Methane",
     "lifetime": "Lifetime",
     "lv": "Constraints",
@@ -49,6 +50,7 @@ PARAM_ATTRIBUTE_NICE_NAMES = {
     "imports_co2": "Import Emissions",
     "e_nom": "Natural Gas",  # only one e_nom
     "ind_heat_ff_production": "Constraints",
+    "dr": "Demand Response",
 }
 
 PWR_CARRIERS = [
@@ -228,6 +230,12 @@ def assign_parameter_filters(params: pd.DataFrame) -> pd.DataFrame:
             raise ValueError(f"Invalid carrier: {carrier}")
 
     params["attribute_nice_name"] = params.attribute.map(PARAM_ATTRIBUTE_NICE_NAMES)
+    
+    # Override for Production Tax Credit (PTC) and Demand Response
+    params.loc[params.name.str.startswith("ptc_"), "attribute_nice_name"] = "Tax Credit"
+    params.loc[params.name == "demand_response", "attribute_nice_name"] = "Demand Response"
+    params.loc[params.name == "elec_import_co2", "attribute_nice_name"] = "Import Emissions"
+    
     params["attribute"] = params.attribute_nice_name.str.replace(" ", "_").str.lower()
     params["sector"] = params.carrier.map(_assign_sector)
     fuel_cost_mask = params.component == "stores_t"
@@ -329,7 +337,7 @@ if __name__ == "__main__":
 
         if empty:
             pass
-            # sa.to_csv(filtered_data, index=True)
+            # sa.to_parquet(filtered_data, index=True)
         dfs.append(sa)
 
     if not dfs:
@@ -337,7 +345,7 @@ if __name__ == "__main__":
         raise ValueError("No GSA data found.")
 
     df = pd.concat(dfs, axis=0)
-    df.to_csv(Path(root, "dashboard", "data", "system", "sa.csv"), index=True)
+    df.to_parquet(Path(root, "dashboard", "data", "system", "sa.parquet"), index=True)
 
     # model run results ua
 
@@ -366,10 +374,10 @@ if __name__ == "__main__":
 
         if empty:
             pass
-            # ua.to_csv(filtered_data, index=True)
+            # ua.to_parquet(filtered_data, index=True)
 
-        ua.to_csv(
-            Path(root, "dashboard", "data", "state", state.upper(), "ua_runs.csv"),
+        ua.to_parquet(
+            Path(root, "dashboard", "data", "state", state.upper(), "ua_runs.parquet"),
             index=True,
         )
         dfs.append(ua)
@@ -380,7 +388,9 @@ if __name__ == "__main__":
 
     df = pd.concat(dfs, axis=0)
     df = df.round(2)
-    df.to_csv(Path(root, "dashboard", "data", "system", "ua_runs.csv"), index=True)
+    df.to_parquet(
+        Path(root, "dashboard", "data", "system", "ua_runs.parquet"), index=True
+    )
 
     # model parameters
 
@@ -423,8 +433,8 @@ if __name__ == "__main__":
             "notes",
         ]
     ]
-    params.to_csv(
-        Path(root, "dashboard", "data", "system", "parameters.csv"), index=False
+    params.to_parquet(
+        Path(root, "dashboard", "data", "system", "parameters.parquet"), index=False
     )
 
     # get nice names
@@ -466,9 +476,14 @@ if __name__ == "__main__":
             sample_data["run"] = sample_data.index
             sample_data["state"] = state.upper()
             sample_data = sample_data.set_index(["run", "state"])
-            sample_data.to_csv(
+            sample_data.to_parquet(
                 Path(
-                    root, "dashboard", "data", "state", state.upper(), "sample_data.csv"
+                    root,
+                    "dashboard",
+                    "data",
+                    "state",
+                    state.upper(),
+                    "sample_data.parquet",
                 ),
                 index=True,
             )

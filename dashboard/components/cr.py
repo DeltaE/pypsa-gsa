@@ -265,6 +265,11 @@ def get_cr_scatter_plot(
 
     x_name = id_var_nice_name if nice_names else id_var
 
+    # Prune data to avoid huge dash payloads
+    if len(df_melted) > 1000:
+        logger.debug(f"Downsampling CR scatter plot from {len(df_melted)} to 1000 points")
+        df_melted = df_melted.sample(n=1000, random_state=42)
+
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
     result_type = kwargs.get("result_type", None)
     ylabel = get_y_label(df_melted, result_type)

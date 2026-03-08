@@ -2,7 +2,8 @@
 
 from typing import Any
 import dash
-from dash import dcc, html, Input, Output, State
+from dash import Dash, html, dcc, Input, State, dash_table
+from dash_extensions.enrich import DashProxy, ServersideOutputTransform, Serverside, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
 
@@ -90,10 +91,11 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-app = dash.Dash(
+app = DashProxy(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
+    transforms=[ServersideOutputTransform()]
 )
 
 SIDEBAR_WIDTH = 3
@@ -347,8 +349,10 @@ app.layout = html.Div(
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
-    State(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
-    State(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
+    [
+        State(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+        State(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
+    ],
 )
 def render_tab_content(
     active_tab: str,
@@ -642,13 +646,46 @@ def update_plotting_type_dropdown_options(
         logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")
         return ([{"label": "Data Table", "value": "data_table"}], "data_table")
 
+# removed patch_color callback due to cross-tab conditional rendering conflicts
 
 #############################
 # Enable/disable option cards
 #############################
 
 
-@app.callback(
+app.clientside_callback(
+    f"""
+    function(active_tab) {{
+        var hidden = {{"display": "none"}};
+        var visible = {{"display": "block"}};
+        
+        var plotting_style = visible;
+        var state_options = hidden;
+        var input_data_options = hidden;
+        var gsa_options = hidden;
+        var ua_options = hidden;
+        var ua2_options = hidden;
+        var cr_options = hidden;
+
+        if (active_tab === "{ids.DATA_TAB}") {{
+            state_options = visible;
+            input_data_options = visible;
+        }} else if (active_tab === "{ids.SA_TAB}") {{
+            state_options = visible;
+            gsa_options = visible;
+        }} else if (active_tab === "{ids.UA_TAB}") {{
+            state_options = visible;
+            ua_options = visible;
+        }} else if (active_tab === "{ids.UA2_TAB}") {{
+            state_options = visible;
+            ua2_options = visible;
+        }} else if (active_tab === "{ids.CR_TAB}") {{
+            cr_options = visible;
+        }}
+
+        return [plotting_style, state_options, input_data_options, gsa_options, ua_options, ua2_options, cr_options];
+    }}
+    """,
     [
         Output(ids.PLOTTING_OPTIONS_BLOCK, "style"),
         Output(ids.STATE_OPTIONS_BLOCK, "style"),
@@ -660,49 +697,49 @@ def update_plotting_type_dropdown_options(
     ],
     Input(ids.TABS, "active_tab"),
 )
-def callback_show_hide_option_blocks(
-    active_tab: str,
-) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str]]:
-    """Show/hide option blocks based on active tab."""
-    # Default style to hide blocks
-    hidden = {"display": "none"}
-    visible = {"display": "block"}
+# def callback_show_hide_option_blocks(
+#     active_tab: str,
+# ) -> tuple[dict[str, str], dict[str, str], dict[str, str], dict[str, str]]:
+#     """Show/hide option blocks based on active tab."""
+#     # Default style to hide blocks
+#     hidden = {"display": "none"}
+#     visible = {"display": "block"}
 
-    # Start with all hidden
-    plotting_style = hidden
-    state_options = hidden
-    input_data_options = hidden
-    gsa_options = hidden
-    ua_options = hidden
-    ua2_options = hidden
-    cr_options = hidden
+#     # Start with all hidden
+#     plotting_style = hidden
+#     state_options = hidden
+#     input_data_options = hidden
+#     gsa_options = hidden
+#     ua_options = hidden
+#     ua2_options = hidden
+#     cr_options = hidden
 
-    plotting_style = visible
+#     plotting_style = visible
 
-    if active_tab == ids.DATA_TAB:
-        state_options = visible
-        input_data_options = visible
-    elif active_tab == ids.SA_TAB:
-        state_options = visible
-        gsa_options = visible
-    elif active_tab == ids.UA_TAB:
-        state_options = visible
-        ua_options = visible
-    elif active_tab == ids.UA2_TAB:
-        state_options = visible
-        ua2_options = visible
-    elif active_tab == ids.CR_TAB:
-        cr_options = visible
+#     if active_tab == ids.DATA_TAB:
+#         state_options = visible
+#         input_data_options = visible
+#     elif active_tab == ids.SA_TAB:
+#         state_options = visible
+#         gsa_options = visible
+#     elif active_tab == ids.UA_TAB:
+#         state_options = visible
+#         ua_options = visible
+#     elif active_tab == ids.UA2_TAB:
+#         state_options = visible
+#         ua2_options = visible
+#     elif active_tab == ids.CR_TAB:
+#         cr_options = visible
 
-    return (
-        plotting_style,
-        state_options,
-        input_data_options,
-        gsa_options,
-        ua_options,
-        ua2_options,
-        cr_options,
-    )
+#     return (
+#         plotting_style,
+#         state_options,
+#         input_data_options,
+#         gsa_options,
+#         ua_options,
+#         ua2_options,
+#         cr_options,
+#     )
 
 
 ###################################
@@ -710,26 +747,41 @@ def callback_show_hide_option_blocks(
 ###################################
 
 
-@app.callback(
+app.clientside_callback(
+    """
+    function(value) {
+        var params_slider_open = false;
+        var params_dropdown_open = false;
+        if (value === "rank") {
+            params_slider_open = true;
+        } else if (value === "name") {
+            params_dropdown_open = true;
+        } else {
+            params_slider_open = true;
+            params_dropdown_open = true;
+        }
+        return [params_slider_open, params_dropdown_open];
+    }
+    """,
     [
         Output(ids.GSA_PARAMS_SLIDER_COLLAPSE, "is_open"),
         Output(ids.GSA_PARAMS_RESULTS_COLLAPSE, "is_open"),
     ],
     Input(ids.GSA_PARAM_SELECTION_RB, "value"),
 )
-def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
-    """Enable/disable GSA parameter selection collapse based on filtering mode."""
-    params_slider_open = False
-    params_dropdown_open = False
-    if value == "rank":
-        params_slider_open = True
-    elif value == "name":
-        params_dropdown_open = True
-    else:
-        logger.debug(f"Invalid GSA radio button value: {value}")
-        params_slider_open = True
-        params_dropdown_open = True
-    return params_slider_open, params_dropdown_open
+# def callback_enable_disable_gsa_param_selection(value: str) -> tuple[bool, bool]:
+#     """Enable/disable GSA parameter selection collapse based on filtering mode."""
+#     params_slider_open = False
+#     params_dropdown_open = False
+#     if value == "rank":
+#         params_slider_open = True
+#     elif value == "name":
+#         params_dropdown_open = True
+#     else:
+#         logger.debug(f"Invalid GSA radio button value: {value}")
+#         params_slider_open = True
+#         params_dropdown_open = True
+#     return params_slider_open, params_dropdown_open
 
 
 #################
@@ -754,14 +806,14 @@ def callback_update_ua_emissions(
     if isinstance(states, str):
         states = [states]
     if not states:
-        return {}
+        return Serverside({})
     if len(states) == 1:
         if not states[0]:
-            return {}
+            return Serverside({})
     if emission_target:
-        return {x: EMISSIONS[x] for x in states}
+        return Serverside({x: EMISSIONS[x] for x in states})
     else:
-        return {}
+        return Serverside({})
 
 
 @app.callback(
@@ -774,10 +826,10 @@ def callback_update_inputs_data(states: str | list[str]) -> list[dict[str, Any]]
     logger.debug(f"State dropdown value: {states}")
     if not states:
         logger.debug("No states selected from dropdown")
-        return []
+        return Serverside([])
     states.append("all")
     data = RAW_PARAMS[RAW_PARAMS.state.isin(states)].to_dict("records")
-    return data
+    return Serverside(data)
 
 
 @app.callback(
@@ -797,17 +849,17 @@ def callback_update_inputs_data_attribute(
     logger.debug(f"Attribute value: {attribute}")
     if not data:
         logger.debug("No data provided")
-        return [], [], True
+        return Serverside([]), [], True
     if not attribute:
         logger.debug("No attribute provided")
-        return data, [], True
+        return Serverside(data), [], True
     df = pd.DataFrame(data)
     df = df[df.attribute == attribute]
     if df.empty:
         logger.debug("No data found for the given attribute")
-        return [], [], True
+        return Serverside([]), [], True
     options = [{"label": sector, "value": sector} for sector in df.sector.unique()]
-    return df.to_dict("records"), options, False
+    return Serverside(df.to_dict("records")), options, False
 
 
 @app.callback(
@@ -823,16 +875,16 @@ def callback_update_inputs_data_attribute_sector(
     logger.debug(f"Sector value: {sector}")
     if not data:
         logger.debug("No data provided")
-        return []
+        return Serverside([])
     if not sector:
         logger.debug("No sector provided")
-        return data
+        return Serverside(data)
     df = pd.DataFrame(data)
     df = df[df.sector == sector]
     if df.empty:
         logger.debug("No data found for the given sector")
-        return []
-    return df.to_dict("records")
+        return Serverside([])
+    return Serverside(df.to_dict("records"))
 
 
 @app.callback(
@@ -868,9 +920,9 @@ def callback_filter_gsa_on_state(states: str | list[str]) -> list[dict[str, Any]
     logger.debug(f"States dropdown value: {states}")
     if not states:
         logger.debug("No states selected from dropdown")
-        return []
+        return Serverside([])
     data = RAW_GSA[RAW_GSA.state.isin(states)].to_dict("records")
-    return data
+    return Serverside(data)
 
 
 @app.callback(
@@ -887,7 +939,7 @@ def callback_normalize_mu_star_data(
     """
     df = pd.DataFrame(gsa_state_data)
     logger.debug(f"Normalizing GSA data of shape: {df.shape}")
-    return normalize_mu_star_data(df).to_dict("records")
+    return Serverside(normalize_mu_star_data(df).to_dict("records"))
 
 
 @app.callback(
@@ -919,7 +971,7 @@ def callback_filter_gsa_data_for_data_table(
         results=results,
         keep_state=True,  # need to keep for correct formatting of data table
     )
-    return df.reset_index().to_dict("records")
+    return Serverside(df.reset_index().to_dict("records"))
 
 
 @app.callback(
@@ -952,7 +1004,7 @@ def callback_filter_gsa_data_for_heatmap(
         results=results,
         keep_state=False,
     )
-    return df.reset_index().to_dict("records")
+    return Serverside(df.reset_index().to_dict("records"))
 
 
 @app.callback(
@@ -985,7 +1037,7 @@ def callback_filter_gsa_data_for_barchart(
         results=results,
         keep_state=False,
     )
-    return df.reset_index().to_dict("records")
+    return Serverside(df.reset_index().to_dict("records"))
 
 
 @app.callback(
@@ -1012,7 +1064,7 @@ def callback_filter_gsa_data_for_map(
         logger.debug("Using nice names for GSA map")
         nn = {x["value"]: x["label"] for x in GSA_PARM_OPTIONS}
         df = df.replace(nn)
-    return df.reset_index(names="state").to_dict("records")
+    return Serverside(df.reset_index(names="state").to_dict("records"))
 
 
 #####
@@ -1031,8 +1083,8 @@ def callback_filter_ua_on_state(states: str | list[str]) -> list[dict[str, Any]]
     logger.debug(f"State dropdown value: {states}")
     if not states:
         logger.debug("No States selected from dropdown")
-        return []
-    return RAW_UA[RAW_UA.state.isin(states)].to_dict("records")
+        return Serverside([])
+    return Serverside(RAW_UA[RAW_UA.state.isin(states)].to_dict("records"))
 
 
 @app.callback(
@@ -1053,7 +1105,7 @@ def callback_filter_ua_on_result_sector_and_type(
     df = pd.DataFrame(data)
     df = filter_ua_on_result_sector_and_type(df, result_sector, result_type, METADATA)
     df = remove_ua_outliers(df, interval)
-    return df.to_dict("records")
+    return Serverside(df.to_dict("records"))
 
 
 ###########################
@@ -1072,8 +1124,8 @@ def callback_filter_ua2_on_state(states: str | list[str]) -> list[dict[str, Any]
     logger.debug(f"State dropdown value: {states}")
     if not states:
         logger.debug("No States selected from dropdown")
-        return []
-    return RAW_UA[RAW_UA.state.isin(states)].to_dict("records")
+        return Serverside([])
+    return Serverside(RAW_UA[RAW_UA.state.isin(states)].to_dict("records"))
 
 
 @app.callback(
@@ -1090,13 +1142,13 @@ def callback_filter_ua2_on_result_type_and_name(
     interval: list[int],
 ) -> list[dict[str, Any]]:
     if not data:
-        return []
+        return Serverside([])
     df = pd.DataFrame(data)
     if df.empty:
-        return []
+        return Serverside([])
     df = filter_ua2_on_result_name(df, result_name)
     df = remove_ua_outliers(df, interval)
-    return df.to_dict("records")
+    return Serverside(df.to_dict("records"))
 
 
 @app.callback(
@@ -1114,14 +1166,14 @@ def callback_filter_ua2_data_for_map(
 ) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
     if not data:
-        return []
+        return Serverside([])
     df = pd.DataFrame(data)
     if df.empty:
-        return []
+        return Serverside([])
     df = filter_ua2_on_result_name(df, result_name)
     df = remove_ua_outliers(df, interval)
     df = get_average_ua2_data(df)
-    return df.reset_index(drop=True).to_dict("records")
+    return Serverside(df.reset_index(drop=True).to_dict("records"))
 
 
 ###########################
@@ -1230,7 +1282,7 @@ def callback_remove_input_data_filters(_: int) -> tuple[str, str]:
     ],
     prevent_initial_call=True,
 )
-def callback_select_remove_all_gsa_params(plotting_type: str, *args: Any) -> list[str]:
+def callback_select_remove_all_gsa_params(plotting_type: str, btn1: int, btn2: int) -> list[str]:
     """Select/remove all parameters when button is clicked."""
     if plotting_type == "map":
         return dash.no_update
@@ -1260,7 +1312,7 @@ def callback_select_remove_all_gsa_params(plotting_type: str, *args: Any) -> lis
     ],
     prevent_initial_call=True,
 )
-def callback_select_remove_all_gsa_results(plotting_type: str, *args: Any) -> list[str]:
+def callback_select_remove_all_gsa_results(plotting_type: str, btn1: int, btn2: int, btn3: int) -> list[str]:
     """Select/remove all results when button is clicked."""
     if plotting_type == "map":
         return dash.no_update
@@ -1409,7 +1461,7 @@ def callback_modify_state_dropdown_value(states: str | list[str], multi: str) ->
     prevent_initial_call="initial_duplicate",  # for the allow duplicates
 )
 def callback_update_states_dropdown(
-    options: list[dict[str, str]], *args: Any
+    options: list[dict[str, str]], btn1: int, btn2: int
 ) -> list[str]:
     """Callback to select or remove all states in the states dropdown."""
     ctx = dash.callback_context
@@ -1526,50 +1578,54 @@ def callback_update_ua2_result_summary_type_dropdown(
 ########################
 
 
-@app.callback(
+app.clientside_callback(
+    """
+    function(state_value) {
+        return !state_value;
+    }
+    """,
     Output(ids.CR_PARAMETER_DROPDOWN, "disabled"),
     Input(ids.CR_STATE_DROPDOWN, "value"),
 )
-def callback_enable_cr_parameter_dropdown(state_value: str) -> bool:
-    """Enable CR parameter dropdown only when state dropdown has a value."""
-    return not bool(state_value)
 
 
-@app.callback(
+app.clientside_callback(
+    """
+    function(parameter_value, result_value) {
+        return !(parameter_value && result_value && result_value.length > 0);
+    }
+    """,
     Output(ids.CR_INTERVAL_SLIDER, "disabled"),
     [
         Input(ids.CR_PARAMETER_DROPDOWN, "value"),
         Input(ids.CR_RESULT_DROPDOWN, "value"),
     ],
 )
-def callback_enable_cr_interval_slider(
-    parameter_value: str, result_value: list[str]
-) -> bool:
-    """Enable CR interval slider only when both parameter and result dropdowns have values."""
-    return not (bool(parameter_value) and bool(result_value))
 
 
-@app.callback(
+app.clientside_callback(
+    """
+    function(sector_value) {
+        return !sector_value;
+    }
+    """,
     Output(ids.CR_RESULT_TYPE_DROPDOWN, "disabled"),
     Input(ids.CR_SECTOR_DROPDOWN, "value"),
 )
-def callback_enable_cr_result_type_dropdown(sector_value: str) -> bool:
-    """Enable CR result type dropdown only when sector dropdown has a value."""
-    return not bool(sector_value)
 
 
-@app.callback(
+app.clientside_callback(
+    """
+    function(sector_value, result_type_value) {
+        return !(sector_value && result_type_value);
+    }
+    """,
     Output(ids.CR_RESULT_DROPDOWN, "disabled"),
     [
         Input(ids.CR_SECTOR_DROPDOWN, "value"),
         Input(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
     ],
 )
-def callback_enable_cr_result_dropdown(
-    sector_value: str, result_type_value: str
-) -> bool:
-    """Enable CR result dropdown only when both sector and result type dropdowns have values."""
-    return not (bool(sector_value) and bool(result_type_value))
 
 
 @app.callback(
@@ -1638,19 +1694,19 @@ def callback_update_cr_data(
     """Update CR parameter dropdown value based on state."""
     if not state:
         logger.debug("State not provided")
-        return {}
+        return Serverside({})
     if not results:
         logger.debug("Results not provided")
-        return {}
+        return Serverside({})
     if not parameter:
         logger.debug("Parameter not provided")
-        return {}
+        return Serverside({})
 
     df = CR_DATA[state]
     cols = []
     if parameter not in df.columns:
         logger.error(f"Parameter {parameter} not in CR data for {state}")
-        return {}
+        return Serverside({})
     cols.append(parameter)
     for result in results:
         if result not in df.columns:
@@ -1661,7 +1717,7 @@ def callback_update_cr_data(
     filtered = df[cols]
     filtered = remove_ua_outliers(filtered, interval)  # ua is same as cr
 
-    return filtered.to_dict(orient="records")
+    return Serverside(filtered.to_dict(orient="records"))
 
 
 @app.callback(
