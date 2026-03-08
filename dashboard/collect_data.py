@@ -329,7 +329,7 @@ if __name__ == "__main__":
 
         if empty:
             pass
-            # sa.to_csv(filtered_data, index=True)
+            # sa.to_parquet(filtered_data, index=True)
         dfs.append(sa)
 
     if not dfs:
@@ -337,7 +337,7 @@ if __name__ == "__main__":
         raise ValueError("No GSA data found.")
 
     df = pd.concat(dfs, axis=0)
-    df.to_csv(Path(root, "dashboard", "data", "system", "sa.csv"), index=True)
+    df.to_parquet(Path(root, "dashboard", "data", "system", "sa.parquet"), index=True)
 
     # model run results ua
 
@@ -366,10 +366,10 @@ if __name__ == "__main__":
 
         if empty:
             pass
-            # ua.to_csv(filtered_data, index=True)
+            # ua.to_parquet(filtered_data, index=True)
 
-        ua.to_csv(
-            Path(root, "dashboard", "data", "state", state.upper(), "ua_runs.csv"),
+        ua.to_parquet(
+            Path(root, "dashboard", "data", "state", state.upper(), "ua_runs.parquet"),
             index=True,
         )
         dfs.append(ua)
@@ -380,7 +380,7 @@ if __name__ == "__main__":
 
     df = pd.concat(dfs, axis=0)
     df = df.round(2)
-    df.to_csv(Path(root, "dashboard", "data", "system", "ua_runs.csv"), index=True)
+    df.to_parquet(Path(root, "dashboard", "data", "system", "ua_runs.parquet"), index=True)
 
     # model parameters
 
@@ -423,8 +423,8 @@ if __name__ == "__main__":
             "notes",
         ]
     ]
-    params.to_csv(
-        Path(root, "dashboard", "data", "system", "parameters.csv"), index=False
+    params.to_parquet(
+        Path(root, "dashboard", "data", "system", "parameters.parquet"), index=False
     )
 
     # get nice names
@@ -466,9 +466,9 @@ if __name__ == "__main__":
             sample_data["run"] = sample_data.index
             sample_data["state"] = state.upper()
             sample_data = sample_data.set_index(["run", "state"])
-            sample_data.to_csv(
+            sample_data.to_parquet(
                 Path(
-                    root, "dashboard", "data", "state", state.upper(), "sample_data.csv"
+                    root, "dashboard", "data", "state", state.upper(), "sample_data.parquet"
                 ),
                 index=True,
             )

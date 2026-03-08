@@ -496,9 +496,18 @@ def _get_gsa_map_figure(
         logger.debug("No GSA map data found")
         rankings = no_data
     else:
-        rankings = pd.DataFrame(data, dtype=str)
-        rankings = rankings.set_index("state").astype(str)
-        rankings = rankings.loc[:, str(top_n)].rename("value")
+        rankings = pd.DataFrame(data)
+        rankings = rankings.set_index("state")
+        
+        # Parquet preserves integer column names, but CSV sometimes loads as strings.
+        # We can safely use `top_n` as integer, or fallback to string if needed.
+        if top_n in rankings.columns:
+            rankings = rankings.loc[:, top_n].rename("value").astype(str)
+        elif str(top_n) in rankings.columns:
+            rankings = rankings.loc[:, str(top_n)].rename("value").astype(str)
+        else:
+            logger.error(f"Ranking column {top_n} not found in data")
+            rankings = rankings.iloc[:, 0].rename("value").astype(str)
 
     rankings = (
         no_data.join(rankings, how="left", lsuffix="_drop")

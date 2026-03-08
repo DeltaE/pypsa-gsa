@@ -346,11 +346,11 @@ def get_cr_data_by_state(root: Path, state: str) -> pd.DataFrame:
 
 def _get_cr_run_results(root: Path, state: str) -> pd.DataFrame:
     """Get CR run results."""
-    results_f = Path(root, "data", "state", state, "ua_runs.csv")
+    results_f = Path(root, "data", "state", state, "ua_runs.parquet")
     if not results_f.exists():
         logger.error(f"No result data for {state}: {results_f}")
         return pd.DataFrame()
-    df = pd.read_csv(results_f, index_col=0)
+    df = pd.read_parquet(results_f).reset_index()
     return df.round(2).drop(columns=["state"])
 
 

@@ -11,7 +11,6 @@ from .utils import (
     get_metadata,
     get_gsa_params_dropdown_options,
     get_gsa_results_dropdown_options,
-    get_ua2_result_dropdown_options,
     get_ua_results_dropdown_options,
     get_cr_params_dropdown_options,
     STATES,
@@ -20,10 +19,10 @@ from .utils import (
 root = Path(__file__).parent.parent
 METADATA = get_metadata(root)
 
-RAW_GSA = pd.read_csv("data/system/sa.csv")
-RAW_UA = pd.read_csv("data/system/ua_runs.csv")
+RAW_GSA = pd.read_parquet("data/system/sa.parquet").reset_index()
+RAW_UA = pd.read_parquet("data/system/ua_runs.parquet").reset_index()
 
-RAW_PARAMS = pd.read_csv("data/system/parameters.csv")
+RAW_PARAMS = pd.read_parquet("data/system/parameters.parquet").reset_index()
 param_nice_names = {x: y["label"] for x, y in METADATA["parameters"].items()}
 RAW_PARAMS["nice_name"] = RAW_PARAMS.name.map(
     lambda x: param_nice_names[x] if x in param_nice_names else x
