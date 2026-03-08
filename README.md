@@ -265,25 +265,7 @@ You should see many hundreds or thouands of steps be prompted. If everything loo
 snakemake gsa
 ```
 
-If you are running on an HPC and want to test the resources required for each solve, you can run the workflow through to **one** solve with the following command, then check the resouces required with the `seff` command and the job number.  
-
-```bash 
-snakemake test_solve
-```
-
-```bash
-$ seff 54867276
-Job ID: 54867276
-Cluster: 
-User/Group: 
-State: TIMEOUT (exit code 0)
-Cores: 1
-CPU Utilized: 03:51:58
-CPU Efficiency: 96.61% of 04:00:06 core-walltime
-Job Wall-clock time: 04:00:06
-Memory Utilized: 84.31 GB
-Memory Efficiency: 5.43% of 1.52 TB (1.52 TB/node)
-```
+If you are running on an HPC and want to test the resources required for each solve, you can run the workflow through to **one** solve. See the [Tuning Resources](#tuning-resources) section for more information.
 
 All results will be available in the `results/{scenario}/gsa/` directory. 
 
@@ -302,6 +284,8 @@ You should see many hundreds or thouands of steps be prompted. If everything loo
 ```bash
 snakemake ua
 ```
+
+If you are running on an HPC and want to test the resources required for each solve, you can run the workflow through to **one** solve. See the [Tuning Resources](#tuning-resources) section for more information.
 
 All results will be available in the `results/{scenario}/ua/` directory.
 
@@ -392,8 +376,6 @@ python collect_data.py
 # run the dashboard
 python app.py
 ``` -->
-
-
 
 ## References
 

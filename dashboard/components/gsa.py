@@ -6,6 +6,7 @@ from .utils import (
     _unflatten_dropdown_options,
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
+    DEFAULT_PLOTLY_THEME,
 )
 from .data import GSA_RESULT_OPTIONS, GSA_PARM_OPTIONS
 from . import ids as ids
@@ -442,7 +443,7 @@ def get_gsa_barchart(
         id_vars=["param"], var_name="result", value_name="value"
     )
 
-    color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
+    color_theme = kwargs.get("color_scale", DEFAULT_PLOTLY_THEME)
 
     fig = px.bar(
         df_melted,
@@ -462,6 +463,7 @@ def get_gsa_barchart(
         legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),
         xaxis=dict(range=[0, 1], title_standoff=10),
         margin=dict(l=20, r=20, t=60, b=20),
+        template=color_theme,
     )
 
     return fig
@@ -589,7 +591,18 @@ def get_gsa_map(
         logger.debug(f"User input for top params of: {num_maps}")
 
     color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
-    categories = set(pd.DataFrame(gsa_map_data).set_index("state").values.ravel())
+    
+    # Organize categories by priority rank (cols 1, 2, 3...) and frequency
+    df_map = pd.DataFrame(gsa_map_data).set_index("state")
+    cols = sorted(df_map.columns, key=lambda x: int(x))
+    
+    categories = []
+    for col in cols:
+        val_counts = df_map[col].value_counts()
+        for val in val_counts.index:
+            if val not in categories and pd.notna(val) and val != "No Data":
+                categories.append(val)
+                
     color_map = _get_gsa_map_color_map(color_scale, categories)
     color_map.update({"No Data": "lightgrey"})  # Modify in-place instead of reassigning
     logger.debug(f"Color map: {color_map}")
