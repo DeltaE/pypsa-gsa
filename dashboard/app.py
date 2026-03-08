@@ -1213,8 +1213,11 @@ def callback_update_color_options(
         if plotting_type in ["heatmap"]:
             logger.debug("Updating continuous color options")
             return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
-        else:
+        elif plotting_type in ["map_actual", "map_hex"]:
+            logger.debug("Updating discrete color options")
             return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+        else:
+            return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
     elif active_tab == ids.UA2_TAB:
         if plotting_type in ["map_actual", "map_hex"]:
             return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
