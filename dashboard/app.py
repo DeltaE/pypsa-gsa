@@ -2,7 +2,7 @@
 
 from typing import Any
 import dash
-from dash import dcc, html, Input, Output, State
+from dash import Dash, html, dcc, Input, State, dash_table
 from dash_extensions.enrich import DashProxy, ServersideOutputTransform, Serverside, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
