@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.env
+
+.git/
+.gitignore
+.github/
+
+# Development specific directories
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local data in the root (but dashboard/data will be copied per Dockerfile since it's in dashboard folder)
+results/
+logs/
+benchmarks/
+resources/
+config/
+workflow/
+
+# Dash cache
+dashboard/file_system_backend/

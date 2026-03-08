@@ -1,0 +1,11 @@
+dash>=3.0.4
+dash-bootstrap-components>=2.0.3
+dash-core-components>=2.0.0
+dash-html-components>=2.0.0
+dash-extensions>=1.0.18
+pandas>=2.2.3
+fastparquet>=2024.11.0
+geopandas
+gunicorn
+scipy
+numpy
