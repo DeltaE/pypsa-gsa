@@ -1773,5 +1773,7 @@ def disable_cr_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
 # Run the server
 if __name__ == "__main__":
     # app.run(debug=True)
+    # Cloud Run sets the PORT environment variable.
+    # If it's not there (like when running locally), it defaults to 8050
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="[IP_ADDRESS]", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=False)

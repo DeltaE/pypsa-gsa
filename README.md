@@ -349,11 +349,11 @@ set-resources:
 
 ## Result Dashboard
 
-Parsing through static images to understand the GSA and UA results can be very difficult; as there is so much data! A dashboard is available to help users decipher and understand their results. To locally run the dashboard for your results, run the following commands. Note, this dashboard is designed to analyze data at an ISO level, and is not compatiable for smaller zones. 
+Parsing through static images to understand the GSA and UA results can be very difficult; as there is so much data! A dashboard is available to help users decipher and understand their results. Users can either build and view the dashboard locally, or view an online version.
 
-First, [install Docker](https://docs.docker.com/engine/install/) if needed. 
+### Local Viewing
 
-Then, run the following command:
+To locally run the dashboard and view results, run the following docker commands. This assumes docker is installed on your system. If not, see [installation instructions](https://docs.docker.com/engine/install/). 
 
 ```bash 
 # Build and run the container locally
@@ -376,6 +376,61 @@ python collect_data.py
 # run the dashboard
 python app.py
 ``` -->
+
+### Dashboard Deployment
+
+Online dashboard is available [here]().
+
+#### Developer Dashboard Instructions
+
+The dashboard is hosted through Google Cloud Run. To update the dashboard, ensure the [Google Cloud CLI](https://docs.cloud.google.com/sdk/docs/install-sdk#linux) is installed. 
+
+Authenticate with Google Cloud:
+
+```bash 
+gcloud auth configure-docker us-central1-docker.pkg.dev
+```
+
+Get the project ID: 
+
+```bash 
+gcloud config get-value project
+```
+
+Build and tag the image:
+
+```bash 
+docker build -t us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa-dashboard/app:v[version] .
+```
+
+Push to the cloud: 
+
+```bash 
+docker push us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa-dashboard/app:v[version]
+```
+
+Deploy to Cloud Run 
+
+```bash 
+gcloud run deploy dash-service \
+    --image us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa-dashboard/app:v[version] \
+    --platform managed \
+    --region us-central1 \
+    --allow-unauthenticated
+```
+
+If you get a `error from registry: Unauthenticated request.` error, try running the following command:
+
+```bash 
+sudo usermod -aG docker $USER # Add user to docker group
+newgrp docker # Apply changes
+```
+
+And then reauthenticate with google cloud:
+
+```bash 
+gcloud auth configure-docker us-central1-docker.pkg.dev
+```
 
 ## References
 
