@@ -377,11 +377,11 @@ python collect_data.py
 python app.py
 ``` -->
 
-### Dashboard Deployment
+### Online Viewing
 
 Online dashboard is available [here]().
 
-#### Developer Dashboard Instructions
+#### Developer Depolyment Instructions
 
 The dashboard is hosted through Google Cloud Run. To update the dashboard, ensure the [Google Cloud CLI](https://docs.cloud.google.com/sdk/docs/install-sdk#linux) is installed. 
 
@@ -416,7 +416,9 @@ gcloud run deploy dash-service \
     --image us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa-dashboard/app:v[version] \
     --platform managed \
     --region us-central1 \
-    --allow-unauthenticated
+    --allow-unauthenticated \
+    --memory 4Gi \
+    --session-affinity
 ```
 
 If you get a `error from registry: Unauthenticated request.` error, try running the following command:

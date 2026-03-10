@@ -9,6 +9,7 @@ from dash_extensions.enrich import (
     ServersideOutputTransform,
     Serverside,
     Output,
+    FileSystemStore,
 )
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -101,7 +102,11 @@ app = DashProxy(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
-    transforms=[ServersideOutputTransform()],
+    transforms=[
+        ServersideOutputTransform(
+            backends=[FileSystemStore(cache_dir="/tmp/dash_cache")]
+        )
+    ],
 )
 
 # Expose the Flask server for gunicorn
