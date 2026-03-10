@@ -379,60 +379,7 @@ python app.py
 
 ### Online Viewing
 
-Online dashboard is available [here]().
-
-#### Developer Depolyment Instructions
-
-The dashboard is hosted through Google Cloud Run. To update the dashboard, ensure the [Google Cloud CLI](https://docs.cloud.google.com/sdk/docs/install-sdk#linux) is installed. 
-
-Authenticate with Google Cloud:
-
-```bash 
-gcloud auth configure-docker us-central1-docker.pkg.dev
-```
-
-Get the project ID: 
-
-```bash 
-gcloud config get-value project
-```
-
-Build and tag the image:
-
-```bash 
-docker build -t us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa-dashboard/app:v[version] .
-```
-
-Push to the cloud: 
-
-```bash 
-docker push us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa-dashboard/app:v[version]
-```
-
-Deploy to Cloud Run 
-
-```bash 
-gcloud run deploy dash-service \
-    --image us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa-dashboard/app:v[version] \
-    --platform managed \
-    --region us-central1 \
-    --allow-unauthenticated \
-    --memory 4Gi \
-    --session-affinity
-```
-
-If you get a `error from registry: Unauthenticated request.` error, try running the following command:
-
-```bash 
-sudo usermod -aG docker $USER # Add user to docker group
-newgrp docker # Apply changes
-```
-
-And then reauthenticate with google cloud:
-
-```bash 
-gcloud auth configure-docker us-central1-docker.pkg.dev
-```
+Online dashboard is available [here](). For developer deployment instructions, see [here](dashboard/README.md)
 
 ## References
 
