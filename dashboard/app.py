@@ -9,8 +9,8 @@ from dash_extensions.enrich import (
     ServersideOutputTransform,
     Serverside,
     Output,
-    FileSystemStore,
 )
+from dash_extensions.enrich import FileSystemBackend
 import dash_bootstrap_components as dbc
 import pandas as pd
 
@@ -104,7 +104,7 @@ app = DashProxy(
     suppress_callback_exceptions=True,
     transforms=[
         ServersideOutputTransform(
-            backends=[FileSystemStore(cache_dir="/tmp/dash_cache")]
+            backends=[FileSystemBackend(cache_dir="/tmp/dash_cache")]
         )
     ],
 )
