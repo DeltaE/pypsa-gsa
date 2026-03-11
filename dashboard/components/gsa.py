@@ -407,15 +407,11 @@ def normalize_mu_star_data(data: pd.DataFrame) -> pd.DataFrame:
         logger.debug("No GSA data to normalize")
         return pd.DataFrame()
 
-    df = data.copy().set_index("param")
+    df = data.set_index("param")
 
-    for column in df.columns:
-        if column == "state":
-            continue
-        max_value = df[column].max()
-        df[column] = df[column].div(max_value)
-
-    return df.reset_index()
+    cols_to_norm = [c for c in df.columns if c != "state"]
+    df[cols_to_norm] = df[cols_to_norm] / df[cols_to_norm].max()
+    return df.copy().reset_index()
 
 
 def get_gsa_barchart(
@@ -500,7 +496,7 @@ def _get_gsa_map_figure(
     else:
         rankings = pd.DataFrame(data)
         rankings = rankings.set_index("state")
-        
+
         # Parquet preserves integer column names, but CSV sometimes loads as strings.
         # We can safely use `top_n` as integer, or fallback to string if needed.
         if top_n in rankings.columns:
@@ -539,7 +535,7 @@ def _get_gsa_map_figure(
         showlakes=False,
         showcountries=False,
     )
-    
+
     # defaults for the hex map
     # overwrite for the actual map
     scale = kwargs.get("scale", 5.9)
@@ -591,18 +587,18 @@ def get_gsa_map(
         logger.debug(f"User input for top params of: {num_maps}")
 
     color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
-    
+
     # Organize categories by priority rank (cols 1, 2, 3...) and frequency
     df_map = pd.DataFrame(gsa_map_data).set_index("state")
     cols = sorted(df_map.columns, key=lambda x: int(x))
-    
+
     categories = []
     for col in cols:
         val_counts = df_map[col].value_counts()
         for val in val_counts.index:
             if val not in categories and pd.notna(val) and val != "No Data":
                 categories.append(val)
-                
+
     color_map = _get_gsa_map_color_map(color_scale, categories)
     color_map.update({"No Data": "lightgrey"})  # Modify in-place instead of reassigning
     logger.debug(f"Color map: {color_map}")
@@ -612,7 +608,7 @@ def get_gsa_map(
     scale = kwargs.get("scale", 5.9)
     lat = kwargs.get("lat", 44)
     lon = kwargs.get("lon", -100)
-    
+
     if num_maps == 1:
         return dcc.Graph(
             id=ids.GSA_MAP,
