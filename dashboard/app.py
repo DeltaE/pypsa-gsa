@@ -1445,9 +1445,9 @@ def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, 
             num_params: str(num_params),
         }
 
-    if plotting_type == "map":
+    if plotting_type.startswith("map"):
         num_params = 10  # limit as maps are heavy to render
-        top_n = 4
+        top_n = 3
     else:
         num_params = len(GSA_PARM_OPTIONS)
         top_n = 6
