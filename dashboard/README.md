@@ -34,14 +34,12 @@ Create a repository in artifact registry:
 Build and tag the image:
 
 ```bash 
-docker build . --tag us-central1-docker.pkg.dev/pypsa-usa-489820/pypsa-usa/app:v1
 docker build . --tag us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa/app:v[VERSION]
 ```
 
 Push to the cloud: 
 
 ```bash 
-docker push us-central1-docker.pkg.dev/pypsa-usa-489820/pypsa-usa/app:v1
 docker push us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa/app:v[VERSION]
 ```
 
