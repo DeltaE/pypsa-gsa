@@ -13,11 +13,17 @@ from .utils import (
     get_gsa_results_dropdown_options,
     get_ua_results_dropdown_options,
     get_cr_params_dropdown_options,
+    _build_sector_mapper_cache,
+    _build_result_mapper_cache,
     STATES,
 )
 
 root = Path(__file__).parent.parent
 METADATA = get_metadata(root)
+
+# Pre-computed mapper caches – built once at startup, re-used in every callback
+SECTOR_MAPPER_CACHE = _build_sector_mapper_cache(METADATA)
+RESULT_MAPPER_CACHE = _build_result_mapper_cache(METADATA)
 
 RAW_GSA = pd.read_parquet("data/system/sa.parquet").reset_index()
 RAW_UA = pd.read_parquet("data/system/ua_runs.parquet").reset_index()

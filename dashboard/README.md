@@ -45,7 +45,7 @@ docker push us-central1-docker.pkg.dev/pypsa-usa-489820/pypsa-usa/app:v1
 docker push us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa/app:v[VERSION]
 ```
 
-Deploy to Cloud Run 
+Deploy to Cloud Run. Cached data is stored in a Google Cloud Storage bucket.
 
 ```bash 
 gcloud run deploy dash-service \
@@ -54,7 +54,11 @@ gcloud run deploy dash-service \
     --region us-central1 \
     --allow-unauthenticated \
     --memory 8Gi \
-    --session-affinity
+    --session-affinity \
+    --execution-environment gen2 \
+    --add-volume=name=gcs_fuse_cache,type=cloud-storage,bucket=[BUCKET_NAME] \
+    --add-volume-mount=volume=gcs_fuse_cache,mount-path=/mnt/dash_cache \
+    --set-env-vars=CACHE_DIR=/mnt/dash_cache
 ```
 
 If you get a `error from registry: Unauthenticated request.` error, try running the following command:

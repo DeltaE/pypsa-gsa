@@ -8,6 +8,8 @@ from .data import (
     UA_RESULT_OPTIONS,
     SECTOR_DROPDOWN_OPTIONS,
     RESULT_TYPE_DROPDOWN_OPTIONS,
+    SECTOR_MAPPER_CACHE,
+    RESULT_MAPPER_CACHE,
 )
 
 from .styles import DATA_TABLE_STYLE
@@ -17,8 +19,6 @@ from .utils import (
     DEFAULT_LEGEND,
     DEFAULT_OPACITY,
     get_emission_limits,
-    get_ua_param_result_mapper,
-    get_ua_param_sector_mapper,
     get_y_label,
     DEFAULT_2005_EMISSION_LIMIT,
     DEFAULT_2030_EMISSION_LIMIT,
@@ -105,6 +105,7 @@ def ua_percentile_interval_slider() -> html.Div:
                     "always_visible": False,
                     "template": "{value}%",
                 },
+                updatemode="mouseup",
             ),
         ],
     )
@@ -138,16 +139,10 @@ def _filter_ua_on_result_sector(
     if sector == "all":
         return df
 
-    sector_mapper = get_ua_param_sector_mapper(metadata)
-
-    results = ["run", "state"]
-    for result in sector_mapper:
-        if result["label"] == sector:
-            results.append(result["value"])
-    # results = [x["value"] for x in sector_mapper if x["label"] == sector]
-
-    cols = [x for x in results if x in df]
-    return df[cols]
+    # Use pre-computed cache: {sector_label -> [result_value, ...]}
+    result_values = SECTOR_MAPPER_CACHE.get(sector, [])
+    keep = ["run", "state"] + [v for v in result_values if v in df.columns]
+    return df[[c for c in keep if c in df.columns]]
 
 
 def _filter_ua_on_result_type(
@@ -159,9 +154,8 @@ def _filter_ua_on_result_type(
         logger.debug("No UA data found")
         return df
 
-    result_mapper = get_ua_param_result_mapper(metadata)
-
-    cols = list(set([x["value"] for x in result_mapper if x["label"] == result_type]))
+    # Use pre-computed cache: {result_type_label -> [result_value, ...]}
+    cols = list(set(RESULT_MAPPER_CACHE.get(result_type, [])))
 
     # marginal cost is an edge case when in the UA page we only want to show the average
     if result_type == "marginal_cost":
@@ -175,33 +169,27 @@ def _filter_ua_on_result_type(
 
 
 def remove_ua_outliers(df: pd.DataFrame, interval: list[int]) -> pd.DataFrame:
-    """Replace UA outliers with NaN values."""
+    """Replace UA outliers with NaN values (values outside the interval are set to NaN)."""
     # intervals defined as ints, but pandas quantile expects [0,1]
-    interval_low, interval_high = (
-        round(min(interval) / 100, 2),
-        round(max(interval) / 100, 2),
-    )
+    interval_low = round(min(interval) / 100, 2)
+    interval_high = round(max(interval) / 100, 2)
     logger.debug(
         f"Removing UA outliers with interval {interval_low} and {interval_high}"
     )
 
-    df_out = df.copy()
-    for col in df.columns:
-        if col == "run":  # shouldnt really happen, but just in case
-            df_out[col] = df[col]
-        elif col == "state":  # for processing ua2 data
-            df_out[col] = df[col]
-        else:
-            lower_bound = df[col].quantile(interval_low)
-            upper_bound = df[col].quantile(interval_high)
-            # logger.debug(
-            #     f"Removing UA outliers from {col} with interval {interval_low} and {interval_high}"
-            # )
-            df_out[col] = df[col].where(
-                (df[col] >= lower_bound) & (df[col] <= upper_bound)
-            )
+    # Only clip numeric columns that are not the run index or state label
+    non_numeric = [c for c in df.columns if c in ("run", "state")]
+    numeric_cols = df.select_dtypes(include="number").columns.difference(non_numeric)
 
-    return df_out
+    df = df.copy()
+    if len(numeric_cols):
+        lo = df[numeric_cols].quantile(interval_low)
+        hi = df[numeric_cols].quantile(interval_high)
+        df[numeric_cols] = df[numeric_cols].where(
+            df[numeric_cols].ge(lo) & df[numeric_cols].le(hi)
+        )
+
+    return df
 
 
 def _read_serialized_ua_data(data: dict[str, Any]) -> pd.DataFrame:
@@ -295,7 +283,9 @@ def get_ua_scatter_plot(
 
     # Prune data to avoid huge dash payloads
     if len(df_melted) > 1000:
-        logger.debug(f"Downsampling UA scatter plot from {len(df_melted)} to 1000 points")
+        logger.debug(
+            f"Downsampling UA scatter plot from {len(df_melted)} to 1000 points"
+        )
         df_melted = df_melted.sample(n=1000, random_state=42)
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)

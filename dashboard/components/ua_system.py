@@ -83,6 +83,7 @@ def ua2_percentile_interval_slider() -> html.Div:
                     "always_visible": False,
                     "template": "{value}%",
                 },
+                updatemode='mouseup',
             ),
         ],
     )

@@ -285,6 +285,26 @@ def get_ua_param_result_mapper(metadata: dict = None) -> list[dict[str, str]]:
     return options
 
 
+def _build_sector_mapper_cache(metadata: dict) -> dict[str, list[str]]:
+    """Build a {sector_label -> [result_value, ...]} lookup for fast filtering."""
+    cache: dict[str, list[str]] = {}
+    for value, data in metadata["results"].items():
+        for key in ("sector", "sector2"):
+            label = data.get(key)
+            if label:
+                cache.setdefault(label, []).append(value)
+    return cache
+
+
+def _build_result_mapper_cache(metadata: dict) -> dict[str, list[str]]:
+    """Build a {result_type_label -> [result_value, ...]} lookup for fast filtering."""
+    cache: dict[str, list[str]] = {}
+    for value, data in metadata["results"].items():
+        label = data.get("result", "")
+        cache.setdefault(label, []).append(value)
+    return cache
+
+
 def get_cr_params_dropdown_options(
     root: str, state: str, flatten: bool = True
 ) -> list[dict[str, str]]:

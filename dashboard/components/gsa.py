@@ -106,6 +106,7 @@ def gsa_params_slider() -> html.Div:
                 included=False,
                 marks=marks,
                 tooltip={"placement": "bottom", "always_visible": False},
+                updatemode='mouseup',
             ),
         ],
     )
