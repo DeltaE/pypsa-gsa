@@ -330,6 +330,8 @@ def get_gsa_heatmap(
         )
 
     df = pd.DataFrame(data).set_index("param")
+    if "state" in df.columns:
+        df = df.drop(columns=["state"])
     logger.debug(f"Heatmap GSA data shape: {df.shape}")
 
     if nice_names:

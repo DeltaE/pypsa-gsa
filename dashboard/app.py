@@ -317,7 +317,6 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_STATE_DATA),
                 dcc.Store(id=ids.GSA_STATE_NORMED_DATA),
                 dcc.Store(id=ids.GSA_DATA_TABLE_DATA),
-                dcc.Store(id=ids.GSA_HM_DATA),
                 dcc.Store(id=ids.GSA_BAR_DATA),
                 dcc.Store(id=ids.GSA_MAP_DATA),
                 dcc.Store(id=ids.UA_STATE_DATA),
@@ -349,7 +348,6 @@ app.layout = html.Div(
     [
         Input(ids.TABS, "active_tab"),
         Input(ids.GSA_DATA_TABLE_DATA, "data"),
-        Input(ids.GSA_HM_DATA, "data"),
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.UA_RUN_DATA, "data"),
@@ -370,7 +368,6 @@ app.layout = html.Div(
 def render_tab_content(
     active_tab: str,
     gsa_data_table_data: list[dict[str, Any]] | None,
-    gsa_hm_data: list[dict[str, Any]] | None,
     gsa_bar_data: list[dict[str, Any]] | None,
     gsa_map_data: list[dict[str, Any]] | None,
     ua_run_data: list[dict[str, Any]] | None,
@@ -398,7 +395,7 @@ def render_tab_content(
         if plotting_type == "heatmap":
             view = dcc.Graph(
                 id=ids.GSA_HEATMAP,
-                figure=get_gsa_heatmap(gsa_hm_data, color_scale=color),
+                figure=get_gsa_heatmap(gsa_data_table_data, color_scale=color),
             )
         elif plotting_type == "data_table":
             view = get_gsa_data_table(gsa_data_table_data)
@@ -967,7 +964,7 @@ def callback_normalize_mu_star_data(
     ],
     State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
 )
-def callback_filter_gsa_data_for_data_table(
+def callback_filter_gsa_data_for_table_and_heatmap(
     gsa_state_data: list[dict[str, Any]],
     param_option: str,
     params_dropdown: str | list[str],
@@ -975,6 +972,11 @@ def callback_filter_gsa_data_for_data_table(
     results: str | list[str],
     plotting_type: str,
 ) -> list[dict[str, Any]]:
+    """Unified store for both the data table and heatmap views.
+
+    Uses keep_state=True so the data table can display the state column.
+    The heatmap renderer (get_gsa_heatmap) drops the state column before plotting.
+    """
     if plotting_type == "map":  # map updates some dropdowns
         return dash.no_update
     df = filter_gsa_data(
@@ -983,40 +985,7 @@ def callback_filter_gsa_data_for_data_table(
         params_dropdown=params_dropdown,
         params_slider=params_slider,
         results=results,
-        keep_state=True,  # need to keep for correct formatting of data table
-    )
-    return Serverside(df.reset_index().to_dict("records"))
-
-
-@app.callback(
-    Output(ids.GSA_HM_DATA, "data"),
-    [
-        Input(ids.GSA_STATE_DATA, "data"),
-        Input(ids.GSA_PARAM_SELECTION_RB, "value"),
-        Input(ids.GSA_PARAM_DROPDOWN, "value"),
-        Input(ids.GSA_PARAMS_SLIDER, "value"),
-        Input(ids.GSA_RESULTS_DROPDOWN, "value"),
-    ],
-    State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
-)
-def callback_filter_gsa_data_for_heatmap(
-    gsa_state_data: list[dict[str, Any]] | None,
-    param_option: str,
-    params_dropdown: str | list[str],
-    params_slider: int,
-    results: str | list[str],
-    plotting_type: str,
-) -> list[dict[str, Any]]:
-    """Update the GSA SI data for the data table."""
-    if plotting_type == "map":  # map updates some dropdowns
-        return dash.no_update
-    df = filter_gsa_data(
-        data=gsa_state_data,
-        param_option=param_option,
-        params_dropdown=params_dropdown,
-        params_slider=params_slider,
-        results=results,
-        keep_state=False,
+        keep_state=True,
     )
     return Serverside(df.reset_index().to_dict("records"))
 
