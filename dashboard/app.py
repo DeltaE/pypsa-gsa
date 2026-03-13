@@ -363,6 +363,8 @@ def render_data_tab(
     plotting_type: str,
     color: str,
 ) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.DATA_TAB:
+        return dash.no_update
     if active_tab != ids.DATA_TAB:
         return dash.no_update
     logger.debug("Rendering Data tab")
@@ -399,6 +401,8 @@ def render_sa_tab(
     plotting_type: str,
     color: str,
 ) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.SA_TAB:
+        return dash.no_update
     if active_tab != ids.SA_TAB:
         return dash.no_update
     logger.debug("Rendering SA tab")
@@ -462,6 +466,8 @@ def render_ua_tab(
     color: str,
     ua_result_type: str,
 ) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.UA_TAB:
+        return dash.no_update
     if active_tab != ids.UA_TAB:
         return dash.no_update
     logger.debug("Rendering UA tab")
@@ -537,6 +543,8 @@ def render_ua2_tab(
     plotting_type: str,
     color: str,
 ) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.UA2_TAB:
+        return dash.no_update
     if active_tab != ids.UA2_TAB:
         return dash.no_update
     logger.debug("Rendering UA2 tab")
@@ -612,6 +620,8 @@ def render_cr_tab(
     color: str,
     cr_result_type: str,
 ) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.CR_TAB:
+        return dash.no_update
     if active_tab != ids.CR_TAB:
         return dash.no_update
     logger.debug("Rendering CR tab")
