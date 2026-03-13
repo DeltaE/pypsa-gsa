@@ -8,6 +8,7 @@ import plotly.express as px
 import numpy as np
 from .data import (
     RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS,
+    RESULT_SUMMARY_NICE_NAMES,
 )
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -17,7 +18,6 @@ from .utils import (
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
     DEFAULT_PLOTLY_THEME,
-    _unflatten_dropdown_options,
 )
 from .styles import DATA_TABLE_STYLE
 import logging
@@ -92,7 +92,7 @@ def ua2_percentile_interval_slider() -> html.Div:
 def apply_nice_names(df: pd.DataFrame) -> pd.DataFrame:
     """Apply nice names."""
     logger.debug("Applying nice names")
-    ua2_results = _unflatten_dropdown_options(RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS)
+    ua2_results = RESULT_SUMMARY_NICE_NAMES
     return df.rename(columns=ua2_results)
 
 

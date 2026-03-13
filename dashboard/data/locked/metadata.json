@@ -62,7 +62,7 @@
                 "unit": "USD"
             },
             "marginal_cost_elec": {
-                "label": "Marginal Cost Average(Electricity)",
+                "label": "Marginal Cost Average (Electricity)",
                 "label2": "System Electricity Cost",
                 "sector": "system",
                 "sector2": "power",

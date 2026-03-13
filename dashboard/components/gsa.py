@@ -3,12 +3,11 @@
 from typing import Any
 from dash import dcc, html, dash_table
 from .utils import (
-    _unflatten_dropdown_options,
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
     DEFAULT_PLOTLY_THEME,
 )
-from .data import GSA_RESULT_OPTIONS, GSA_PARM_OPTIONS
+from .data import GSA_RESULT_OPTIONS, GSA_PARM_OPTIONS, GSA_PARM_NICE_NAMES, GSA_RESULT_NICE_NAMES
 from . import ids as ids
 from .styles import BUTTON_STYLE, DATA_TABLE_STYLE
 import dash_bootstrap_components as dbc
@@ -336,9 +335,7 @@ def get_gsa_heatmap(
 
     if nice_names:
         logger.debug("Applying nice names to GSA heatmap")
-        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
-        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
-        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+        df = df.rename(columns=GSA_RESULT_NICE_NAMES).rename(index=GSA_PARM_NICE_NAMES)
 
     color_scale = kwargs.get("color_scale", DEFAULT_CONTINOUS_COLOR_SCALE)
     logger.debug(f"GSA heatmap color scale: {color_scale}")
@@ -382,9 +379,7 @@ def get_gsa_data_table(
 
     if nice_names:
         logger.debug("Applying nice names to GSA data table")
-        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
-        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
-        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+        df = df.rename(columns=GSA_RESULT_NICE_NAMES).rename(index=GSA_PARM_NICE_NAMES)
 
     df = df.reset_index()
 
@@ -433,9 +428,7 @@ def get_gsa_barchart(
 
     if nice_names:
         logger.debug("Applying nice names to GSA barchart")
-        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
-        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
-        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+        df = df.rename(columns=GSA_RESULT_NICE_NAMES).rename(index=GSA_PARM_NICE_NAMES)
 
     # melt to get it in long format for plotting
     df_melted = df.reset_index().melt(

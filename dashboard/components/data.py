@@ -53,6 +53,10 @@ GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(METADATA, list(RAW_GSA))
 # UA_PARAM_OPTIONS = get_ua_params_dropdown_options(METADATA) # need state
 UA_RESULT_OPTIONS = get_ua_results_dropdown_options(METADATA)
 
+GSA_PARM_NICE_NAMES = {x["value"]: x["label"] for x in GSA_PARM_OPTIONS}
+GSA_RESULT_NICE_NAMES = {x["value"]: x["label"] for x in GSA_RESULT_OPTIONS}
+UA_RESULT_NICE_NAMES = {x["value"]: x["label"] for x in UA_RESULT_OPTIONS}
+
 CR_PARAM_OPTIONS = {
     state: get_cr_params_dropdown_options(root, state) for state in STATES
 }
@@ -108,3 +112,4 @@ RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS = sorted(
     ],
     key=lambda x: x["label"],
 )
+RESULT_SUMMARY_NICE_NAMES = {x["value"]: x["label"] for x in RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS}

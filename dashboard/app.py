@@ -1194,16 +1194,10 @@ def callback_filter_ua2_on_result_type_and_name(
 
 @app.callback(
     Output(ids.UA2_MAP_DATA, "data"),
-    [
-        Input(ids.UA2_STATE_DATA, "data"),
-        Input(ids.UA2_RESULTS_DROPDOWN, "value"),
-        Input(ids.UA2_INTERVAL_SLIDER, "value"),
-    ],
+    Input(ids.UA2_RUN_DATA, "data"),
 )
 def callback_filter_ua2_data_for_map(
     data: list[dict[str, Any]],
-    result_name: str,
-    interval: list[int],
 ) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
     if not data:
@@ -1211,8 +1205,6 @@ def callback_filter_ua2_data_for_map(
     df = pd.DataFrame(data)
     if df.empty:
         return Serverside([])
-    df = filter_ua2_on_result_name(df, result_name)
-    df = remove_ua_outliers(df, interval)
     df = get_average_ua2_data(df)
     return Serverside(df.reset_index(drop=True).to_dict("records"))
 

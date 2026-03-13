@@ -5,11 +5,11 @@ from dash import dcc, html, dash_table
 import pandas as pd
 
 from .data import (
-    UA_RESULT_OPTIONS,
     SECTOR_DROPDOWN_OPTIONS,
     RESULT_TYPE_DROPDOWN_OPTIONS,
     SECTOR_MAPPER_CACHE,
     RESULT_MAPPER_CACHE,
+    UA_RESULT_NICE_NAMES,
 )
 
 from .styles import DATA_TABLE_STYLE
@@ -24,7 +24,6 @@ from .utils import (
     DEFAULT_2030_EMISSION_LIMIT,
 )
 from . import ids as ids
-from .utils import _unflatten_dropdown_options
 import plotly.graph_objects as go
 import plotly.express as px
 import numpy as np
@@ -203,8 +202,7 @@ def _read_serialized_ua_data(data: dict[str, Any]) -> pd.DataFrame:
 def _apply_nice_names(df: pd.DataFrame) -> pd.DataFrame:
     """Apply nice names."""
     logger.debug("Applying nice names")
-    ua_results = _unflatten_dropdown_options(UA_RESULT_OPTIONS)
-    return df.rename(columns=ua_results)
+    return df.rename(columns=UA_RESULT_NICE_NAMES)
 
 
 def _melt_results(df: pd.DataFrame) -> pd.DataFrame:
