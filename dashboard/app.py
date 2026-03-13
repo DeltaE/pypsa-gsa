@@ -319,9 +319,8 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_DATA_TABLE_DATA),
                 dcc.Store(id=ids.GSA_BAR_DATA),
                 dcc.Store(id=ids.GSA_MAP_DATA),
-                dcc.Store(id=ids.UA_STATE_DATA),
+                dcc.Store(id=ids.UA_SHARED_STATE_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
-                dcc.Store(id=ids.UA2_STATE_DATA),
                 dcc.Store(id=ids.UA2_RUN_DATA),
                 dcc.Store(id=ids.UA2_MAP_DATA),
                 dcc.Store(id=ids.CR_DATA),
@@ -1124,11 +1123,11 @@ def callback_filter_gsa_data_for_map(
 
 
 @app.callback(
-    Output(ids.UA_STATE_DATA, "data"),
+    Output(ids.UA_SHARED_STATE_DATA, "data"),
     Input(ids.STATE_DROPDOWN, "value"),
 )
 def callback_filter_ua_on_state(states: str | list[str]) -> list[dict[str, Any]]:
-    """Update the UA store data based on the selected States."""
+    """Update the shared UA store data based on the selected States."""
     if isinstance(states, str):
         states = [states]
     logger.debug(f"State dropdown value: {states}")
@@ -1141,7 +1140,7 @@ def callback_filter_ua_on_state(states: str | list[str]) -> list[dict[str, Any]]
 @app.callback(
     Output(ids.UA_RUN_DATA, "data"),
     [
-        Input(ids.UA_STATE_DATA, "data"),
+        Input(ids.UA_SHARED_STATE_DATA, "data"),
         Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
         Input(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
         Input(ids.UA_INTERVAL_SLIDER, "value"),
@@ -1165,24 +1164,9 @@ def callback_filter_ua_on_result_sector_and_type(
 
 
 @app.callback(
-    Output(ids.UA2_STATE_DATA, "data"),
-    Input(ids.STATE_DROPDOWN, "value"),
-)
-def callback_filter_ua2_on_state(states: str | list[str]) -> list[dict[str, Any]]:
-    """Update the UA store data based on the selected States."""
-    if isinstance(states, str):
-        states = [states]
-    logger.debug(f"State dropdown value: {states}")
-    if not states:
-        logger.debug("No States selected from dropdown")
-        return Serverside([])
-    return Serverside(RAW_UA[RAW_UA.state.isin(states)].to_dict("records"))
-
-
-@app.callback(
     Output(ids.UA2_RUN_DATA, "data"),
     [
-        Input(ids.UA2_STATE_DATA, "data"),
+        Input(ids.UA_SHARED_STATE_DATA, "data"),
         Input(ids.UA2_RESULTS_DROPDOWN, "value"),
         Input(ids.UA2_INTERVAL_SLIDER, "value"),
     ],
