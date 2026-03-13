@@ -3,12 +3,11 @@
 from typing import Any
 from dash import dcc, html, dash_table
 from .utils import (
-    _unflatten_dropdown_options,
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
     DEFAULT_PLOTLY_THEME,
 )
-from .data import GSA_RESULT_OPTIONS, GSA_PARM_OPTIONS
+from .data import GSA_RESULT_OPTIONS, GSA_PARM_OPTIONS, GSA_PARM_NICE_NAMES, GSA_RESULT_NICE_NAMES
 from . import ids as ids
 from .styles import BUTTON_STYLE, DATA_TABLE_STYLE
 import dash_bootstrap_components as dbc
@@ -106,6 +105,7 @@ def gsa_params_slider() -> html.Div:
                 included=False,
                 marks=marks,
                 tooltip={"placement": "bottom", "always_visible": False},
+                updatemode='mouseup',
             ),
         ],
     )
@@ -329,13 +329,13 @@ def get_gsa_heatmap(
         )
 
     df = pd.DataFrame(data).set_index("param")
+    if "state" in df.columns:
+        df = df.drop(columns=["state"])
     logger.debug(f"Heatmap GSA data shape: {df.shape}")
 
     if nice_names:
         logger.debug("Applying nice names to GSA heatmap")
-        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
-        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
-        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+        df = df.rename(columns=GSA_RESULT_NICE_NAMES).rename(index=GSA_PARM_NICE_NAMES)
 
     color_scale = kwargs.get("color_scale", DEFAULT_CONTINOUS_COLOR_SCALE)
     logger.debug(f"GSA heatmap color scale: {color_scale}")
@@ -379,9 +379,7 @@ def get_gsa_data_table(
 
     if nice_names:
         logger.debug("Applying nice names to GSA data table")
-        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
-        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
-        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+        df = df.rename(columns=GSA_RESULT_NICE_NAMES).rename(index=GSA_PARM_NICE_NAMES)
 
     df = df.reset_index()
 
@@ -407,15 +405,11 @@ def normalize_mu_star_data(data: pd.DataFrame) -> pd.DataFrame:
         logger.debug("No GSA data to normalize")
         return pd.DataFrame()
 
-    df = data.copy().set_index("param")
+    df = data.set_index("param")
 
-    for column in df.columns:
-        if column == "state":
-            continue
-        max_value = df[column].max()
-        df[column] = df[column].div(max_value)
-
-    return df.reset_index()
+    cols_to_norm = [c for c in df.columns if c != "state"]
+    df[cols_to_norm] = df[cols_to_norm] / df[cols_to_norm].max()
+    return df.copy().reset_index()
 
 
 def get_gsa_barchart(
@@ -434,9 +428,7 @@ def get_gsa_barchart(
 
     if nice_names:
         logger.debug("Applying nice names to GSA barchart")
-        gsa_params = _unflatten_dropdown_options(GSA_PARM_OPTIONS)
-        gsa_results = _unflatten_dropdown_options(GSA_RESULT_OPTIONS)
-        df = df.rename(columns=gsa_results).rename(index=gsa_params)
+        df = df.rename(columns=GSA_RESULT_NICE_NAMES).rename(index=GSA_PARM_NICE_NAMES)
 
     # melt to get it in long format for plotting
     df_melted = df.reset_index().melt(
@@ -500,7 +492,7 @@ def _get_gsa_map_figure(
     else:
         rankings = pd.DataFrame(data)
         rankings = rankings.set_index("state")
-        
+
         # Parquet preserves integer column names, but CSV sometimes loads as strings.
         # We can safely use `top_n` as integer, or fallback to string if needed.
         if top_n in rankings.columns:
@@ -539,7 +531,7 @@ def _get_gsa_map_figure(
         showlakes=False,
         showcountries=False,
     )
-    
+
     # defaults for the hex map
     # overwrite for the actual map
     scale = kwargs.get("scale", 5.9)
@@ -591,18 +583,18 @@ def get_gsa_map(
         logger.debug(f"User input for top params of: {num_maps}")
 
     color_scale = kwargs.get("color_scale", DEFAULT_DISCRETE_COLOR_SCALE)
-    
+
     # Organize categories by priority rank (cols 1, 2, 3...) and frequency
     df_map = pd.DataFrame(gsa_map_data).set_index("state")
     cols = sorted(df_map.columns, key=lambda x: int(x))
-    
+
     categories = []
     for col in cols:
         val_counts = df_map[col].value_counts()
         for val in val_counts.index:
             if val not in categories and pd.notna(val) and val != "No Data":
                 categories.append(val)
-                
+
     color_map = _get_gsa_map_color_map(color_scale, categories)
     color_map.update({"No Data": "lightgrey"})  # Modify in-place instead of reassigning
     logger.debug(f"Color map: {color_map}")
@@ -612,7 +604,7 @@ def get_gsa_map(
     scale = kwargs.get("scale", 5.9)
     lat = kwargs.get("lat", 44)
     lon = kwargs.get("lon", -100)
-    
+
     if num_maps == 1:
         return dcc.Graph(
             id=ids.GSA_MAP,

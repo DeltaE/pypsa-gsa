@@ -349,11 +349,11 @@ set-resources:
 
 ## Result Dashboard
 
-Parsing through static images to understand the GSA and UA results can be very difficult; as there is so much data! A dashboard is available to help users decipher and understand their results. To locally run the dashboard for your results, run the following commands. Note, this dashboard is designed to analyze data at an ISO level, and is not compatiable for smaller zones. 
+Parsing through static images to understand the GSA and UA results can be very difficult; as there is so much data! A dashboard is available to help users decipher and understand their results. Users can either build and view the dashboard locally, or view an online version.
 
-First, [install Docker](https://docs.docker.com/engine/install/) if needed. 
+### Local Viewing
 
-Then, run the following command:
+To locally run the dashboard and view results, run the following docker commands. This assumes docker is installed on your system. If not, see [installation instructions](https://docs.docker.com/engine/install/). 
 
 ```bash 
 # Build and run the container locally
@@ -376,6 +376,10 @@ python collect_data.py
 # run the dashboard
 python app.py
 ``` -->
+
+### Online Viewing
+
+Online dashboard is available [here](). For developer deployment instructions, see [here](dashboard/README.md)
 
 ## References
 

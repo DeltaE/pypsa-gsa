@@ -10,6 +10,7 @@ from dash_extensions.enrich import (
     Serverside,
     Output,
 )
+from dash_extensions.enrich import FileSystemBackend
 import dash_bootstrap_components as dbc
 import pandas as pd
 
@@ -90,18 +91,21 @@ import logging
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 logger = logging.getLogger(__name__)
+cache_dir = os.environ.get("CACHE_DIR", "/mnt/dash_cache")
 
 app = DashProxy(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
-    transforms=[ServersideOutputTransform()],
+    transforms=[
+        ServersideOutputTransform(backends=[FileSystemBackend(cache_dir=cache_dir)])
+    ],
 )
 
 # Expose the Flask server for gunicorn
@@ -313,12 +317,10 @@ app.layout = html.Div(
                 dcc.Store(id=ids.GSA_STATE_DATA),
                 dcc.Store(id=ids.GSA_STATE_NORMED_DATA),
                 dcc.Store(id=ids.GSA_DATA_TABLE_DATA),
-                dcc.Store(id=ids.GSA_HM_DATA),
                 dcc.Store(id=ids.GSA_BAR_DATA),
                 dcc.Store(id=ids.GSA_MAP_DATA),
-                dcc.Store(id=ids.UA_STATE_DATA),
+                dcc.Store(id=ids.UA_SHARED_STATE_DATA),
                 dcc.Store(id=ids.UA_RUN_DATA),
-                dcc.Store(id=ids.UA2_STATE_DATA),
                 dcc.Store(id=ids.UA2_RUN_DATA),
                 dcc.Store(id=ids.UA2_MAP_DATA),
                 dcc.Store(id=ids.CR_DATA),
@@ -335,254 +337,322 @@ app.layout = html.Div(
     ]
 )
 
-########################
-# Update tab content
-########################
+############################
+# Per-tab content renderers
+############################
+
+##
+# Input Data tab
+##
 
 
 @app.callback(
-    Output(ids.TAB_CONTENT, "children"),
+    Output(ids.TAB_CONTENT, "children", allow_duplicate=True),
+    [
+        Input(ids.TABS, "active_tab"),
+        Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
+        Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+        Input(ids.COLOR_DROPDOWN, "value"),
+    ],
+    prevent_initial_call=True,
+)
+def render_data_tab(
+    active_tab: str,
+    inputs_data: list[dict[str, Any]] | None,
+    plotting_type: str,
+    color: str,
+) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.DATA_TAB:
+        return dash.no_update
+    if active_tab != ids.DATA_TAB:
+        return dash.no_update
+    logger.debug("Rendering Data tab")
+    if plotting_type == "data_table":
+        view = get_inputs_data_table(inputs_data)
+    elif plotting_type == "barchart":
+        view = get_input_data_barchart(inputs_data, color_scale=color)
+    else:
+        view = html.Div([dbc.Alert("No plotting type selected", color="info")])
+    return html.Div([dbc.Card([dbc.CardBody([view])])])
+
+
+##
+# Sensitivity Analysis tab
+##
+
+
+@app.callback(
+    Output(ids.TAB_CONTENT, "children"),  # primary output — no allow_duplicate needed
     [
         Input(ids.TABS, "active_tab"),
         Input(ids.GSA_DATA_TABLE_DATA, "data"),
-        Input(ids.GSA_HM_DATA, "data"),
         Input(ids.GSA_BAR_DATA, "data"),
         Input(ids.GSA_MAP_DATA, "data"),
+        Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+        Input(ids.COLOR_DROPDOWN, "value"),
+    ],
+)
+def render_sa_tab(
+    active_tab: str,
+    gsa_data_table_data: list[dict[str, Any]] | None,
+    gsa_bar_data: list[dict[str, Any]] | None,
+    gsa_map_data: list[dict[str, Any]] | None,
+    plotting_type: str,
+    color: str,
+) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.SA_TAB:
+        return dash.no_update
+    if active_tab != ids.SA_TAB:
+        return dash.no_update
+    logger.debug("Rendering SA tab")
+    if plotting_type == "heatmap":
+        view = dcc.Graph(
+            id=ids.GSA_HEATMAP,
+            figure=get_gsa_heatmap(gsa_data_table_data, color_scale=color),
+        )
+    elif plotting_type == "data_table":
+        view = get_gsa_data_table(gsa_data_table_data)
+    elif plotting_type == "barchart":
+        view = dcc.Graph(
+            id=ids.GSA_BAR_CHART,
+            figure=get_gsa_barchart(gsa_bar_data, color_scale=color),
+        )
+    elif plotting_type == "map_actual":
+        view = get_gsa_map(
+            gsa_map_data,
+            STATE_SHAPE_ACTUAL,
+            color_scale=color,
+            scale=6.0,
+            lat=44,
+            lon=-95,
+        )
+    elif plotting_type == "map_hex":
+        view = get_gsa_map(
+            gsa_map_data,
+            STATE_SHAPE_HEX,
+            color_scale=color,
+            scale=5.9,
+            lat=44,
+            lon=-100,
+        )
+    else:
+        return html.Div([dbc.Alert("No plotting type selected", color="info")])
+    return html.Div([dbc.Card([dbc.CardBody([view])])])
+
+
+##
+# Uncertainty Analysis (State) tab
+##
+
+
+@app.callback(
+    Output(ids.TAB_CONTENT, "children", allow_duplicate=True),
+    [
+        Input(ids.TABS, "active_tab"),
         Input(ids.UA_RUN_DATA, "data"),
+        Input(ids.UA_EMISSIONS, "data"),
+        Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+        Input(ids.COLOR_DROPDOWN, "value"),
+    ],
+    State(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
+    prevent_initial_call=True,
+)
+def render_ua_tab(
+    active_tab: str,
+    ua_run_data: list[dict[str, Any]] | None,
+    ua_emissions: list[dict[str, Any]] | None,
+    plotting_type: str,
+    color: str,
+    ua_result_type: str,
+) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.UA_TAB:
+        return dash.no_update
+    if active_tab != ids.UA_TAB:
+        return dash.no_update
+    logger.debug("Rendering UA tab")
+    if plotting_type == "data_table":
+        view = get_ua_data_table(ua_run_data)
+    elif plotting_type == "barchart":
+        view = dcc.Graph(
+            id=ids.UA_BAR_CHART,
+            figure=get_ua_barchart(
+                ua_run_data,
+                template=color,
+                result_type=ua_result_type,
+                emissions=ua_emissions if ua_result_type == "emissions" else None,
+            ),
+        )
+    elif plotting_type == "violin":
+        view = dcc.Graph(
+            id=ids.UA_VIOLIN,
+            figure=get_ua_violin_plot(
+                ua_run_data,
+                template=color,
+                result_type=ua_result_type,
+                emissions=ua_emissions if ua_result_type == "emissions" else None,
+            ),
+        )
+    elif plotting_type == "scatter":
+        view = dcc.Graph(
+            id=ids.UA_SCATTER,
+            figure=get_ua_scatter_plot(
+                ua_run_data,
+                template=color,
+                result_type=ua_result_type,
+                emissions=ua_emissions if ua_result_type == "emissions" else None,
+            ),
+        )
+    elif plotting_type == "histogram":
+        view = get_ua_histogram(ua_run_data, template=color, result_type=ua_result_type)
+    elif plotting_type == "box_whisker":
+        view = dcc.Graph(
+            id=ids.UA_BOX_WHISKER,
+            figure=get_ua_box_whisker(
+                ua_run_data,
+                template=color,
+                result_type=ua_result_type,
+                emissions=ua_emissions if ua_result_type == "emissions" else None,
+            ),
+        )
+    else:
+        return html.Div([dbc.Alert("No plotting type selected", color="info")])
+    return html.Div([dbc.Card([dbc.CardBody([view])])])
+
+
+##
+# Uncertainty Analysis (System) tab
+##
+
+
+@app.callback(
+    Output(ids.TAB_CONTENT, "children", allow_duplicate=True),
+    [
+        Input(ids.TABS, "active_tab"),
         Input(ids.UA2_RUN_DATA, "data"),
         Input(ids.UA2_MAP_DATA, "data"),
+        Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+        Input(ids.COLOR_DROPDOWN, "value"),
+    ],
+    prevent_initial_call=True,
+)
+def render_ua2_tab(
+    active_tab: str,
+    ua2_run_data: list[dict[str, Any]] | None,
+    ua2_map_data: list[dict[str, Any]] | None,
+    plotting_type: str,
+    color: str,
+) -> html.Div:
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.UA2_TAB:
+        return dash.no_update
+    if active_tab != ids.UA2_TAB:
+        return dash.no_update
+    logger.debug("Rendering UA2 tab")
+    if plotting_type == "data_table":
+        view = get_ua2_data_table(ua2_run_data)
+    elif plotting_type == "map_actual":
+        view = get_ua2_map(
+            ua2_map_data,
+            STATE_SHAPE_ACTUAL,
+            color_scale=color,
+            scale=5.9,
+            lat=44,
+            lon=-95,
+            metadata=METADATA,
+        )
+    elif plotting_type == "map_hex":
+        view = get_ua2_map(
+            ua2_map_data,
+            STATE_SHAPE_HEX,
+            color_scale=color,
+            scale=5.9,
+            lat=44,
+            lon=-100,
+            metadata=METADATA,
+        )
+    elif plotting_type == "boxplot":
+        view = dcc.Graph(
+            id=ids.UA2_BOX_PLOT,
+            figure=get_ua2_plot(
+                ua2_run_data,
+                template=color,
+                result_type="boxplot",
+                metadata=METADATA,
+            ),
+        )
+    elif plotting_type == "violin":
+        view = dcc.Graph(
+            id=ids.UA2_VIOLIN,
+            figure=get_ua2_plot(
+                ua2_run_data,
+                template=color,
+                result_type="violin",
+                metadata=METADATA,
+            ),
+        )
+    else:
+        return html.Div([dbc.Alert("No plotting type selected", color="info")])
+    return html.Div([dbc.Card([dbc.CardBody([view])])])
+
+
+##
+# Custom Result tab
+##
+
+
+@app.callback(
+    Output(ids.TAB_CONTENT, "children", allow_duplicate=True),
+    [
+        Input(ids.TABS, "active_tab"),
         Input(ids.CR_DATA, "data"),
-        Input(ids.INPUTS_DATA_BY_ATTRIBUTE_CARRIER, "data"),
-        Input(ids.UA_EMISSIONS, "data"),
         Input(ids.CR_EMISSIONS, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
     ],
-    [
-        State(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
-        State(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
-    ],
+    State(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
+    prevent_initial_call=True,
 )
-def render_tab_content(
+def render_cr_tab(
     active_tab: str,
-    gsa_data_table_data: list[dict[str, Any]] | None,
-    gsa_hm_data: list[dict[str, Any]] | None,
-    gsa_bar_data: list[dict[str, Any]] | None,
-    gsa_map_data: list[dict[str, Any]] | None,
-    ua_run_data: list[dict[str, Any]] | None,
-    ua2_run_data: list[dict[str, Any]] | None,
-    ua2_map_data: list[dict[str, Any]] | None,
     cr_data: list[dict[str, Any]] | None,
-    inputs_data: list[dict[str, Any]] | None,
-    ua_emissions: list[dict[str, Any]] | None,
     cr_emissions: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
-    ua_result_type: str,
     cr_result_type: str,
 ) -> html.Div:
-    logger.debug(f"Rendering tab content for: {active_tab}")
-    if active_tab == ids.DATA_TAB:
-        if plotting_type == "data_table":
-            view = get_inputs_data_table(inputs_data)
-        elif plotting_type == "barchart":
-            view = get_input_data_barchart(inputs_data, color_scale=color)
-        else:
-            view = html.Div([dbc.Alert("No plotting type selected", color="info")])
-        return html.Div([dbc.Card([dbc.CardBody([view])])])
-    elif active_tab == ids.SA_TAB:
-        if plotting_type == "heatmap":
-            view = dcc.Graph(
-                id=ids.GSA_HEATMAP,
-                figure=get_gsa_heatmap(gsa_hm_data, color_scale=color),
-            )
-        elif plotting_type == "data_table":
-            view = get_gsa_data_table(gsa_data_table_data)
-        elif plotting_type == "barchart":
-            view = dcc.Graph(
-                id=ids.GSA_BAR_CHART,
-                figure=get_gsa_barchart(gsa_bar_data, color_scale=color),
-            )
-        elif plotting_type == "map_actual":
-            view = get_gsa_map(
-                gsa_map_data,
-                STATE_SHAPE_ACTUAL,
-                color_scale=color,
-                scale=6.0,
-                lat=44,
-                lon=-95,
-            )
-        elif plotting_type == "map_hex":
-            view = get_gsa_map(
-                gsa_map_data,
-                STATE_SHAPE_HEX,
-                color_scale=color,
-                scale=5.9,
-                lat=44,
-                lon=-100,
-            )
-        else:
-            return html.Div([dbc.Alert("No plotting type selected", color="info")])
-        return html.Div([dbc.Card([dbc.CardBody([view])])])
-    elif active_tab == ids.UA_TAB:
-        if plotting_type == "data_table":
-            view = get_ua_data_table(ua_run_data)
-        elif plotting_type == "barchart":
-            view = dcc.Graph(
-                id=ids.UA_BAR_CHART,
-                figure=get_ua_barchart(
-                    ua_run_data,
-                    template=color,
-                    result_type=ua_result_type,
-                    emissions=ua_emissions if ua_result_type == "emissions" else None,
-                ),
-            )
-        elif plotting_type == "violin":
-            view = dcc.Graph(
-                id=ids.UA_VIOLIN,
-                figure=get_ua_violin_plot(
-                    ua_run_data,
-                    template=color,
-                    result_type=ua_result_type,
-                    emissions=ua_emissions if ua_result_type == "emissions" else None,
-                ),
-            )
-        elif plotting_type == "scatter":
-            view = dcc.Graph(
-                id=ids.UA_SCATTER,
-                figure=get_ua_scatter_plot(
-                    ua_run_data,
-                    template=color,
-                    result_type=ua_result_type,
-                    emissions=ua_emissions if ua_result_type == "emissions" else None,
-                ),
-            )
-        elif plotting_type == "histogram":
-            view = get_ua_histogram(
-                ua_run_data, template=color, result_type=ua_result_type
-            )
-        elif plotting_type == "box_whisker":
-            view = dcc.Graph(
-                id=ids.UA_BOX_WHISKER,
-                figure=get_ua_box_whisker(
-                    ua_run_data,
-                    template=color,
-                    result_type=ua_result_type,
-                    emissions=ua_emissions if ua_result_type == "emissions" else None,
-                ),
-            )
-        else:
-            return html.Div([dbc.Alert("No plotting type selected", color="info")])
-        return html.Div([dbc.Card([dbc.CardBody([view])])])
-    elif active_tab == ids.UA2_TAB:
-        if plotting_type == "data_table":
-            view = get_ua2_data_table(ua2_run_data)
-        elif plotting_type == "map_actual":
-            view = get_ua2_map(
-                ua2_map_data,
-                STATE_SHAPE_ACTUAL,
-                color_scale=color,
-                scale=5.9,
-                lat=44,
-                lon=-95,
-                metadata=METADATA,
-            )
-        elif plotting_type == "map_hex":
-            view = get_ua2_map(
-                ua2_map_data,
-                STATE_SHAPE_HEX,
-                color_scale=color,
-                scale=5.9,
-                lat=44,
-                lon=-100,
-                metadata=METADATA,
-            )
-        elif plotting_type == "boxplot":
-            view = dcc.Graph(
-                id=ids.UA2_BOX_PLOT,
-                figure=get_ua2_plot(
-                    ua2_run_data,
-                    template=color,
-                    result_type="boxplot",
-                    metadata=METADATA,
-                ),
-            )
-        elif plotting_type == "violin":
-            view = dcc.Graph(
-                id=ids.UA2_VIOLIN,
-                figure=get_ua2_plot(
-                    ua2_run_data,
-                    template=color,
-                    result_type="violin",
-                    metadata=METADATA,
-                ),
-            )
-        else:
-            return html.Div([dbc.Alert("No plotting type selected", color="info")])
-        return html.Div([dbc.Card([dbc.CardBody([view])])])
-    elif active_tab == ids.CR_TAB:
-        if plotting_type == "data_table":
-            view = get_cr_data_table(cr_data)
-        elif plotting_type == "scatter":
-            view = dcc.Graph(
-                id=ids.UA_SCATTER,
-                figure=get_cr_scatter_plot(
-                    cr_data,
-                    template=color,
-                    marginal=None,
-                    result_type=cr_result_type,
-                    emissions=cr_emissions if cr_result_type == "emissions" else None,
-                ),
-            )
-        elif plotting_type == "scatter-box":
-            view = dcc.Graph(
-                id=ids.UA_SCATTER,
-                figure=get_cr_scatter_plot(
-                    cr_data,
-                    template=color,
-                    marginal="box",
-                    result_type=cr_result_type,
-                    emissions=cr_emissions if cr_result_type == "emissions" else None,
-                ),
-            )
-        elif plotting_type == "scatter-histogram":
-            view = dcc.Graph(
-                id=ids.UA_SCATTER,
-                figure=get_cr_scatter_plot(
-                    cr_data,
-                    template=color,
-                    marginal="histogram",
-                    result_type=cr_result_type,
-                    emissions=cr_emissions if cr_result_type == "emissions" else None,
-                ),
-            )
-        elif plotting_type == "scatter-rug":
-            view = dcc.Graph(
-                id=ids.UA_SCATTER,
-                figure=get_cr_scatter_plot(
-                    cr_data,
-                    template=color,
-                    marginal="rug",
-                    result_type=cr_result_type,
-                    emissions=cr_emissions if cr_result_type == "emissions" else None,
-                ),
-            )
-        elif plotting_type == "scatter-violin":
-            view = dcc.Graph(
-                id=ids.UA_SCATTER,
-                figure=get_cr_scatter_plot(
-                    cr_data,
-                    template=color,
-                    marginal="violin",
-                    result_type=cr_result_type,
-                    emissions=cr_emissions if cr_result_type == "emissions" else None,
-                ),
-            )
-        else:
-            return html.Div([dbc.Alert("Custom Result", color="info")])
-        return html.Div([dbc.Card([dbc.CardBody([view])])])
-    logger.error(f"No active tab selected: {active_tab}")
-    return html.Div([dbc.Alert("No active tab selected", color="info")])
+    if dash.ctx.triggered_id != ids.TABS and active_tab != ids.CR_TAB:
+        return dash.no_update
+    if active_tab != ids.CR_TAB:
+        return dash.no_update
+    logger.debug("Rendering CR tab")
+    if plotting_type == "data_table":
+        view = get_cr_data_table(cr_data)
+    elif plotting_type in (
+        "scatter",
+        "scatter-box",
+        "scatter-histogram",
+        "scatter-rug",
+        "scatter-violin",
+    ):
+        marginal_map = {
+            "scatter": None,
+            "scatter-box": "box",
+            "scatter-histogram": "histogram",
+            "scatter-rug": "rug",
+            "scatter-violin": "violin",
+        }
+        view = dcc.Graph(
+            id=ids.UA_SCATTER,
+            figure=get_cr_scatter_plot(
+                cr_data,
+                template=color,
+                marginal=marginal_map[plotting_type],
+                result_type=cr_result_type,
+                emissions=cr_emissions if cr_result_type == "emissions" else None,
+            ),
+        )
+    else:
+        return html.Div([dbc.Alert("Custom Result", color="info")])
+    return html.Div([dbc.Card([dbc.CardBody([view])])])
 
 
 @app.callback(
@@ -655,8 +725,6 @@ def update_plotting_type_dropdown_options(
         logger.debug(f"Invalid active tab for plotting type dropdown: {active_tab}")
         return ([{"label": "Data Table", "value": "data_table"}], "data_table")
 
-
-# removed patch_color callback due to cross-tab conditional rendering conflicts
 
 #############################
 # Enable/disable option cards
@@ -963,7 +1031,7 @@ def callback_normalize_mu_star_data(
     ],
     State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
 )
-def callback_filter_gsa_data_for_data_table(
+def callback_filter_gsa_data_for_table_and_heatmap(
     gsa_state_data: list[dict[str, Any]],
     param_option: str,
     params_dropdown: str | list[str],
@@ -971,6 +1039,11 @@ def callback_filter_gsa_data_for_data_table(
     results: str | list[str],
     plotting_type: str,
 ) -> list[dict[str, Any]]:
+    """Unified store for both the data table and heatmap views.
+
+    Uses keep_state=True so the data table can display the state column.
+    The heatmap renderer (get_gsa_heatmap) drops the state column before plotting.
+    """
     if plotting_type == "map":  # map updates some dropdowns
         return dash.no_update
     df = filter_gsa_data(
@@ -979,40 +1052,7 @@ def callback_filter_gsa_data_for_data_table(
         params_dropdown=params_dropdown,
         params_slider=params_slider,
         results=results,
-        keep_state=True,  # need to keep for correct formatting of data table
-    )
-    return Serverside(df.reset_index().to_dict("records"))
-
-
-@app.callback(
-    Output(ids.GSA_HM_DATA, "data"),
-    [
-        Input(ids.GSA_STATE_DATA, "data"),
-        Input(ids.GSA_PARAM_SELECTION_RB, "value"),
-        Input(ids.GSA_PARAM_DROPDOWN, "value"),
-        Input(ids.GSA_PARAMS_SLIDER, "value"),
-        Input(ids.GSA_RESULTS_DROPDOWN, "value"),
-    ],
-    State(ids.PLOTTING_TYPE_DROPDOWN, "value"),
-)
-def callback_filter_gsa_data_for_heatmap(
-    gsa_state_data: list[dict[str, Any]] | None,
-    param_option: str,
-    params_dropdown: str | list[str],
-    params_slider: int,
-    results: str | list[str],
-    plotting_type: str,
-) -> list[dict[str, Any]]:
-    """Update the GSA SI data for the data table."""
-    if plotting_type == "map":  # map updates some dropdowns
-        return dash.no_update
-    df = filter_gsa_data(
-        data=gsa_state_data,
-        param_option=param_option,
-        params_dropdown=params_dropdown,
-        params_slider=params_slider,
-        results=results,
-        keep_state=False,
+        keep_state=True,
     )
     return Serverside(df.reset_index().to_dict("records"))
 
@@ -1083,11 +1123,11 @@ def callback_filter_gsa_data_for_map(
 
 
 @app.callback(
-    Output(ids.UA_STATE_DATA, "data"),
+    Output(ids.UA_SHARED_STATE_DATA, "data"),
     Input(ids.STATE_DROPDOWN, "value"),
 )
 def callback_filter_ua_on_state(states: str | list[str]) -> list[dict[str, Any]]:
-    """Update the UA store data based on the selected States."""
+    """Update the shared UA store data based on the selected States."""
     if isinstance(states, str):
         states = [states]
     logger.debug(f"State dropdown value: {states}")
@@ -1100,7 +1140,7 @@ def callback_filter_ua_on_state(states: str | list[str]) -> list[dict[str, Any]]
 @app.callback(
     Output(ids.UA_RUN_DATA, "data"),
     [
-        Input(ids.UA_STATE_DATA, "data"),
+        Input(ids.UA_SHARED_STATE_DATA, "data"),
         Input(ids.UA_RESULTS_TYPE_DROPDOWN, "value"),
         Input(ids.UA_RESULTS_SECTOR_DROPDOWN, "value"),
         Input(ids.UA_INTERVAL_SLIDER, "value"),
@@ -1124,24 +1164,9 @@ def callback_filter_ua_on_result_sector_and_type(
 
 
 @app.callback(
-    Output(ids.UA2_STATE_DATA, "data"),
-    Input(ids.STATE_DROPDOWN, "value"),
-)
-def callback_filter_ua2_on_state(states: str | list[str]) -> list[dict[str, Any]]:
-    """Update the UA store data based on the selected States."""
-    if isinstance(states, str):
-        states = [states]
-    logger.debug(f"State dropdown value: {states}")
-    if not states:
-        logger.debug("No States selected from dropdown")
-        return Serverside([])
-    return Serverside(RAW_UA[RAW_UA.state.isin(states)].to_dict("records"))
-
-
-@app.callback(
     Output(ids.UA2_RUN_DATA, "data"),
     [
-        Input(ids.UA2_STATE_DATA, "data"),
+        Input(ids.UA_SHARED_STATE_DATA, "data"),
         Input(ids.UA2_RESULTS_DROPDOWN, "value"),
         Input(ids.UA2_INTERVAL_SLIDER, "value"),
     ],
@@ -1163,16 +1188,10 @@ def callback_filter_ua2_on_result_type_and_name(
 
 @app.callback(
     Output(ids.UA2_MAP_DATA, "data"),
-    [
-        Input(ids.UA2_STATE_DATA, "data"),
-        Input(ids.UA2_RESULTS_DROPDOWN, "value"),
-        Input(ids.UA2_INTERVAL_SLIDER, "value"),
-    ],
+    Input(ids.UA2_RUN_DATA, "data"),
 )
 def callback_filter_ua2_data_for_map(
     data: list[dict[str, Any]],
-    result_name: str,
-    interval: list[int],
 ) -> list[dict[str, Any]]:
     """Update the GSA barchart."""
     if not data:
@@ -1180,8 +1199,6 @@ def callback_filter_ua2_data_for_map(
     df = pd.DataFrame(data)
     if df.empty:
         return Serverside([])
-    df = filter_ua2_on_result_name(df, result_name)
-    df = remove_ua_outliers(df, interval)
     df = get_average_ua2_data(df)
     return Serverside(df.reset_index(drop=True).to_dict("records"))
 
@@ -1414,9 +1431,9 @@ def callback_update_gsa_top_n_range(plotting_type: str) -> tuple[int, dict[int, 
             num_params: str(num_params),
         }
 
-    if plotting_type == "map":
+    if plotting_type.startswith("map"):
         num_params = 10  # limit as maps are heavy to render
-        top_n = 4
+        top_n = 3
     else:
         num_params = len(GSA_PARM_OPTIONS)
         top_n = 6
@@ -1773,5 +1790,7 @@ def disable_cr_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
 # Run the server
 if __name__ == "__main__":
     # app.run(debug=True)
+    # Cloud Run sets the PORT environment variable.
+    # If it's not there (like when running locally), it defaults to 8050
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="[IP_ADDRESS]", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=False)

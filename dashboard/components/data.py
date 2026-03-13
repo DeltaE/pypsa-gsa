@@ -13,11 +13,17 @@ from .utils import (
     get_gsa_results_dropdown_options,
     get_ua_results_dropdown_options,
     get_cr_params_dropdown_options,
+    _build_sector_mapper_cache,
+    _build_result_mapper_cache,
     STATES,
 )
 
 root = Path(__file__).parent.parent
 METADATA = get_metadata(root)
+
+# Pre-computed mapper caches – built once at startup, re-used in every callback
+SECTOR_MAPPER_CACHE = _build_sector_mapper_cache(METADATA)
+RESULT_MAPPER_CACHE = _build_result_mapper_cache(METADATA)
 
 RAW_GSA = pd.read_parquet("data/system/sa.parquet").reset_index()
 RAW_UA = pd.read_parquet("data/system/ua_runs.parquet").reset_index()
@@ -34,13 +40,22 @@ RAW_PARAMS["group_nice_name"] = RAW_PARAMS.group.map(
 
 # ISO_SHAPE = gpd.read_file("data/locked/iso.geojson")
 STATE_SHAPE_ACTUAL = gpd.read_file("data/locked/states.geojson")
+# Simplify state boundaries
+STATE_SHAPE_ACTUAL["geometry"] = STATE_SHAPE_ACTUAL.geometry.simplify(
+    tolerance=0.05, preserve_topology=True
+)
 STATE_SHAPE_HEX = gpd.read_file("data/locked/states_hex.geojson")
+
 
 GSA_PARM_OPTIONS = get_gsa_params_dropdown_options(METADATA)
 GSA_RESULT_OPTIONS = get_gsa_results_dropdown_options(METADATA, list(RAW_GSA))
 
 # UA_PARAM_OPTIONS = get_ua_params_dropdown_options(METADATA) # need state
 UA_RESULT_OPTIONS = get_ua_results_dropdown_options(METADATA)
+
+GSA_PARM_NICE_NAMES = {x["value"]: x["label"] for x in GSA_PARM_OPTIONS}
+GSA_RESULT_NICE_NAMES = {x["value"]: x["label"] for x in GSA_RESULT_OPTIONS}
+UA_RESULT_NICE_NAMES = {x["value"]: x["label"] for x in UA_RESULT_OPTIONS}
 
 CR_PARAM_OPTIONS = {
     state: get_cr_params_dropdown_options(root, state) for state in STATES
@@ -97,3 +112,4 @@ RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS = sorted(
     ],
     key=lambda x: x["label"],
 )
+RESULT_SUMMARY_NICE_NAMES = {x["value"]: x["label"] for x in RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS}

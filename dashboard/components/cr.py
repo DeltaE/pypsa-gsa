@@ -119,6 +119,7 @@ def cr_percentile_interval_slider() -> html.Div:
                     "always_visible": False,
                     "template": "{value}%",
                 },
+                updatemode="mouseup",
             ),
         ],
     )
@@ -316,7 +317,7 @@ def get_cr_scatter_plot(
         if marginal != "histogram":
             scatter_fig.update_traces(marker_symbol="x")
 
-        print(df_melted)
+        logger.debug("CR scatter stores data: %d rows", len(df_melted))
 
         # plot on secondary only if primary is already in use
         if df_melted.empty:
