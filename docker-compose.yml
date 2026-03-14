@@ -6,6 +6,7 @@ services:
     environment:
       - PORT=8080
       - PYTHONUNBUFFERED=1
-    # This allows you to edit code locally and see changes without rebuilding
     volumes:
       - ./dashboard:/app/dashboard
+    env_file:
+      - ./dashboard/.env
