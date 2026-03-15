@@ -97,7 +97,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-cache_dir = os.environ.get("CACHE_DIR", "/mnt/dash_cache")
+cache_dir = os.path.join(os.path.dirname(__file__), "file_system_backend")
 
 app = DashProxy(
     __name__,
@@ -1216,34 +1216,50 @@ def callback_filter_ua2_data_for_map(
     [
         Input(ids.TABS, "active_tab"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+        State(ids.COLOR_DROPDOWN, "value"),
     ],
 )
 def callback_update_color_options(
-    active_tab: str, plotting_type: str
+    active_tab: str, plotting_type: str, current_value: str | None = None
 ) -> tuple[str, list[str]]:
+    """Update the color options. What an abomanation of a function :|"""
     logger.debug(f"Updating color options for: {plotting_type} in {active_tab}")
     if active_tab == ids.DATA_TAB:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
     elif active_tab == ids.UA_TAB:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
     elif active_tab == ids.SA_TAB:
         if plotting_type in ["heatmap"]:
             logger.debug("Updating continuous color options")
-            return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+            new_value = DEFAULT_CONTINOUS_COLOR_SCALE
+            options = get_continuous_color_scale_options()
         elif plotting_type in ["map_actual", "map_hex"]:
             logger.debug("Updating discrete color options")
-            return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+            new_value = DEFAULT_DISCRETE_COLOR_SCALE
+            options = get_discrete_color_scale_options()
         else:
-            return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+            new_value = DEFAULT_PLOTLY_THEME
+            options = get_plotly_plotting_themes()
     elif active_tab == ids.UA2_TAB:
         if plotting_type in ["map_actual", "map_hex"]:
-            return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+            new_value = DEFAULT_CONTINOUS_COLOR_SCALE
+            options = get_continuous_color_scale_options()
         else:
-            return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+            new_value = DEFAULT_PLOTLY_THEME
+            options = get_plotly_plotting_themes()
     elif active_tab == ids.CR_TAB:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
     else:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
+
+    if current_value in options:
+        return current_value, options
+    else:
+        return new_value, options
 
 
 ######################
@@ -1793,4 +1809,4 @@ if __name__ == "__main__":
     # Cloud Run sets the PORT environment variable.
     # If it's not there (like when running locally), it defaults to 8050
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True)
