@@ -247,7 +247,7 @@ def get_ua_data_table(
         if col != "param"
     ]
 
-    df = df.reset_index()
+    df = df.reset_index().fillna(0)
 
     return dash_table.DataTable(
         data=df.to_dict("records"),

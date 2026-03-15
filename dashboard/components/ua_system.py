@@ -83,7 +83,7 @@ def ua2_percentile_interval_slider() -> html.Div:
                     "always_visible": False,
                     "template": "{value}%",
                 },
-                updatemode='mouseup',
+                updatemode="mouseup",
             ),
         ],
     )
@@ -130,7 +130,7 @@ def get_ua2_data_table(
         if col != "param"
     ]
 
-    df = df.reset_index()
+    df = df.reset_index().fillna(0)
 
     return dash_table.DataTable(
         data=df.to_dict("records"),
