@@ -28,6 +28,7 @@ from components.data import (
     SECTOR_DROPDOWN_OPTIONS_IDV,
     CR_PARAM_OPTIONS,
     CR_DATA,
+    SECTOR_DROPDOWN_OPTIONS_NO_ALL,
     SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG,
     SECTOR_DROPDOWN_OPTIONS_TRADE,
     STATE_SHAPE_ACTUAL,
@@ -1578,7 +1579,7 @@ def callback_update_ua_results_sector_dropdown_options(
     if result_type == "cost":
         options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "marginal_cost":
-        options = SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG
+        options = SECTOR_DROPDOWN_OPTIONS_NO_ALL
     elif result_type == "emissions":
         options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "new_capacity":
