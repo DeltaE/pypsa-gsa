@@ -10,9 +10,10 @@ from dash_extensions.enrich import (
     Serverside,
     Output,
 )
-from dash_extensions.enrich import FileSystemBackend
+from dash_extensions.enrich import RedisBackend, FileSystemBackend
 import dash_bootstrap_components as dbc
 import pandas as pd
+from urllib.parse import urlparse
 
 from components.data import (
     EMISSIONS,
@@ -91,20 +92,37 @@ import logging
 
 # Configure logging
 logging.basicConfig(
-    level=logging.WARNING,
+    level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 logger = logging.getLogger(__name__)
-cache_dir = os.path.join(os.path.dirname(__file__), "file_system_backend")
+
+REDIS_URL = os.environ.get("REDIS_URL")
+
+print(REDIS_URL)
+
+if REDIS_URL:
+    logger.info("Using Redis backend")
+    parsed = urlparse(REDIS_URL)
+    backend = RedisBackend(
+        host=parsed.hostname,
+        port=parsed.port,
+        password=parsed.password,
+        ssl=True,
+    )
+else:
+    logger.info("Using file system backend")
+    cache_dir = os.path.join(os.path.dirname(__file__), "file_system_backend")
+    backend = FileSystemBackend(cache_dir=cache_dir)
 
 app = DashProxy(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
     transforms=[
-        ServersideOutputTransform(backends=[FileSystemBackend(cache_dir=cache_dir)])
+        ServersideOutputTransform(backends=[backend], default_compression=True)
     ],
 )
 

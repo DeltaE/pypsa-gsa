@@ -9,3 +9,4 @@ geopandas
 gunicorn
 scipy
 numpy
+redis>=5.0.0
