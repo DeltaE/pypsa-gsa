@@ -371,7 +371,7 @@
                 "label": "Load Shifted (Total)",
                 "sector": "system",
                 "result": "demand_response",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "MWh"
             },
