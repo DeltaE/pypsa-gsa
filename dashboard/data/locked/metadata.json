@@ -114,7 +114,7 @@
                 "sector": "service",
                 "sector2": "power",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
@@ -123,7 +123,7 @@
                 "label2": "Residential Space Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
@@ -132,7 +132,8 @@
                 "label2": "Residential Water Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
+                "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_space_cool_res": {
@@ -140,7 +141,7 @@
                 "label2": "Residential Space Cool Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
@@ -149,7 +150,7 @@
                 "label2": "Residential Energy Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
@@ -159,7 +160,7 @@
                 "sector": "service",
                 "sector2": "power",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
@@ -168,7 +169,7 @@
                 "label2": "Commercial Space Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
@@ -177,7 +178,7 @@
                 "label2": "Commercial Water Heat Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
@@ -186,13 +187,59 @@
                 "label2": "Commercial Space Cool Cost",
                 "sector": "service",
                 "result": "marginal_cost",
-                "visible": true,
+                "visible": false,
                 "summary": false,
                 "unit": "USD/MWh"
             },
             "marginal_cost_energy_com": {
                 "label": "Marginal Cost (Energy)",
                 "label2": "Commercial Energy Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": false,
+                "summary": false,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_elec_srvc": {
+                "label": "Marginal Cost (Electricity)",
+                "label2": "Service Electricity Cost",
+                "sector": "service",
+                "sector2": "power",
+                "result": "marginal_cost",
+                "visible": true,
+                "summary": false,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_space_heat_srvc": {
+                "label": "Marginal Cost (Space Heat)",
+                "label2": "Service Space Heat Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "summary": false,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_water_heat_srvc": {
+                "label": "Marginal Cost (Water Heat)",
+                "label2": "Service Water Heat Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "summary": false,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_space_cool_srvc": {
+                "label": "Marginal Cost (Space Cool)",
+                "label2": "Service Space Cool Cost",
+                "sector": "service",
+                "result": "marginal_cost",
+                "visible": true,
+                "summary": false,
+                "unit": "USD/MWh"
+            },
+            "marginal_cost_energy_srvc": {
+                "label": "Marginal Cost (Energy)",
+                "label2": "Service Energy Cost",
                 "sector": "service",
                 "result": "marginal_cost",
                 "visible": true,

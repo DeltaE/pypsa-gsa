@@ -267,11 +267,14 @@ def correct_params(params: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_ur_params_expanded(
-    ua_params: dict[str, str], params: pd.DataFrame, metadata: dict[str, Any], state: str
+    ua_params: dict[str, str],
+    params: pd.DataFrame,
+    metadata: dict[str, Any],
+    state: str,
 ) -> dict[str, str]:
     """Expands the CR parameters to be index names, rather than group names."""
     cr_params = {}
-    state_mask = (params.state == 'all') | (params.state == state.upper())
+    state_mask = (params.state == "all") | (params.state == state.upper())
     state_params = params[state_mask]
     for group, _ in ua_params.items():
         temp = state_params[state_params.group == group]
@@ -302,6 +305,36 @@ def check_metadata(
             raise ValueError(f"Result {result} not found in metadata results.")
 
 
+def create_service_averages(root: Path, state: str) -> None:
+    """Creates service sector marginal costs as they got missed in the main workflow.
+
+    This is the same logic as in "extract_results.py", but just done here so the full
+    workflow does not need to be run again.
+    """
+    metrics = ["elec", "energy", "space_heat", "space_cool", "water_heat"]
+
+    results_dir = Path(root, "results", state.lower(), "ua", "results")
+    if not results_dir.exists():
+        logger.warning(f"Results directory not found for {state}")
+        return
+
+    for metric in metrics:
+        srvc_name = f"marginal_cost_{metric}_srvc.csv"
+        res_name = f"marginal_cost_{metric}_res.csv"
+        com_name = f"marginal_cost_{metric}_com.csv"
+
+        res_f = Path(results_dir, res_name)
+        com_f = Path(results_dir, com_name)
+        srvc_f = Path(results_dir, srvc_name)
+
+        if res_f.exists() and com_f.exists() and not srvc_f.exists():
+            df_res = pd.read_csv(res_f)
+            df_com = pd.read_csv(com_f)
+            df_srvc = df_res.copy()
+            df_srvc["value"] = (df_res["value"] + df_com["value"]) / 2.0
+            df_srvc.to_csv(srvc_f, index=False)
+
+
 if __name__ == "__main__":
     # ensure metadata exists for all params/results
     metadata = json.load(
@@ -318,6 +351,10 @@ if __name__ == "__main__":
             check_metadata(metadata, params, results)
         except FileNotFoundError:
             continue
+
+    # hack solution to avoid needing to rerun workflow
+    for state in STATES:
+        create_service_averages(root, state)
 
     # sensitivity measures
 
@@ -344,7 +381,6 @@ if __name__ == "__main__":
 
         if empty:
             pass
-            # sa.to_parquet(filtered_data, index=True)
         dfs.append(sa)
 
     if not dfs:
@@ -411,9 +447,11 @@ if __name__ == "__main__":
             base_params_data.append(get_base_params_file(root, state.lower()))
             state_params = get_state_params(root, state.lower())
             dfs.append(state_params)
-            
+
     if base_params_data:
-        base_params = pd.concat(base_params_data, axis=0).drop_duplicates(subset=["name"])
+        base_params = pd.concat(base_params_data, axis=0).drop_duplicates(
+            subset=["name"]
+        )
         dfs.append(base_params)
     if not dfs:
         logger.error("No data found.")
