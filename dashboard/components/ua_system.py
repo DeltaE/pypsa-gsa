@@ -9,6 +9,7 @@ import numpy as np
 from .data import (
     RESULT_SUMMARY_TYPE_DROPDOWN_OPTIONS,
     RESULT_SUMMARY_NICE_NAMES,
+    SECTOR_DROPDOWN_OPTIONS_NO_ALL,
 )
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -29,9 +30,24 @@ def ua2_options_block() -> html.Div:
     """UA system options block component."""
     return html.Div(
         [
+            ua2_sector_dropdown(),
             ua2_result_type_dropdown(),
             ua2_result_dropdown(),
             ua2_percentile_interval_slider(),
+        ],
+    )
+
+
+def ua2_sector_dropdown() -> html.Div:
+    """UA2 sector dropdown component."""
+    return html.Div(
+        [
+            html.H6("Select Sector"),
+            dcc.Dropdown(
+                id=ids.UA2_RESULTS_SECTOR_DROPDOWN,
+                options=SECTOR_DROPDOWN_OPTIONS_NO_ALL,
+                value="system",
+            ),
         ],
     )
 
@@ -83,7 +99,7 @@ def ua2_percentile_interval_slider() -> html.Div:
                     "always_visible": False,
                     "template": "{value}%",
                 },
-                updatemode='mouseup',
+                updatemode="mouseup",
             ),
         ],
     )
@@ -130,7 +146,7 @@ def get_ua2_data_table(
         if col != "param"
     ]
 
-    df = df.reset_index()
+    df = df.reset_index().fillna(0)
 
     return dash_table.DataTable(
         data=df.to_dict("records"),

@@ -13,7 +13,6 @@ from dash_extensions.enrich import (
 from dash_extensions.enrich import RedisBackend, FileSystemBackend
 import dash_bootstrap_components as dbc
 import pandas as pd
-import redis
 from urllib.parse import urlparse
 
 from components.data import (
@@ -29,6 +28,7 @@ from components.data import (
     SECTOR_DROPDOWN_OPTIONS_IDV,
     CR_PARAM_OPTIONS,
     CR_DATA,
+    SECTOR_DROPDOWN_OPTIONS_NO_ALL,
     SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG,
     SECTOR_DROPDOWN_OPTIONS_TRADE,
     STATE_SHAPE_ACTUAL,
@@ -45,6 +45,7 @@ from components.utils import (
     DEFAULT_DISCRETE_COLOR_SCALE,
     get_plotly_plotting_themes,
     get_ua2_result_dropdown_options,
+    get_ua2_result_types_dropdown_options,
 )
 from components.gsa import (
     GSA_RB_OPTIONS,
@@ -102,7 +103,12 @@ logger = logging.getLogger(__name__)
 
 REDIS_URL = os.environ.get("REDIS_URL")
 
-print(REDIS_URL)
+if REDIS_URL:
+    logger.warning(
+        "Redis URL found, but not using Redis backend. "
+        "See https://github.com/DeltaE/pypsa-gsa/issues/72."
+    )
+    REDIS_URL = None
 
 if REDIS_URL:
     logger.info("Using Redis backend")
@@ -122,9 +128,7 @@ app = DashProxy(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
-    transforms=[
-        ServersideOutputTransform(backends=[backend], default_compression=True)
-    ],
+    transforms=[ServersideOutputTransform(backends=[backend])],
 )
 
 # Expose the Flask server for gunicorn
@@ -1197,6 +1201,8 @@ def callback_filter_ua2_on_result_type_and_name(
 ) -> list[dict[str, Any]]:
     if not data:
         return Serverside([])
+    if not result_name:
+        return Serverside([])
     df = pd.DataFrame(data)
     if df.empty:
         return Serverside([])
@@ -1235,34 +1241,50 @@ def callback_filter_ua2_data_for_map(
     [
         Input(ids.TABS, "active_tab"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+        State(ids.COLOR_DROPDOWN, "value"),
     ],
 )
 def callback_update_color_options(
-    active_tab: str, plotting_type: str
+    active_tab: str, plotting_type: str, current_value: str | None = None
 ) -> tuple[str, list[str]]:
+    """Update the color options. What an abomanation of a function :|"""
     logger.debug(f"Updating color options for: {plotting_type} in {active_tab}")
     if active_tab == ids.DATA_TAB:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
     elif active_tab == ids.UA_TAB:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
     elif active_tab == ids.SA_TAB:
         if plotting_type in ["heatmap"]:
             logger.debug("Updating continuous color options")
-            return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+            new_value = DEFAULT_CONTINOUS_COLOR_SCALE
+            options = get_continuous_color_scale_options()
         elif plotting_type in ["map_actual", "map_hex"]:
             logger.debug("Updating discrete color options")
-            return DEFAULT_DISCRETE_COLOR_SCALE, get_discrete_color_scale_options()
+            new_value = DEFAULT_DISCRETE_COLOR_SCALE
+            options = get_discrete_color_scale_options()
         else:
-            return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+            new_value = DEFAULT_PLOTLY_THEME
+            options = get_plotly_plotting_themes()
     elif active_tab == ids.UA2_TAB:
         if plotting_type in ["map_actual", "map_hex"]:
-            return DEFAULT_CONTINOUS_COLOR_SCALE, get_continuous_color_scale_options()
+            new_value = DEFAULT_CONTINOUS_COLOR_SCALE
+            options = get_continuous_color_scale_options()
         else:
-            return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+            new_value = DEFAULT_PLOTLY_THEME
+            options = get_plotly_plotting_themes()
     elif active_tab == ids.CR_TAB:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
     else:
-        return DEFAULT_PLOTLY_THEME, get_plotly_plotting_themes()
+        new_value = DEFAULT_PLOTLY_THEME
+        options = get_plotly_plotting_themes()
+
+    if current_value in options:
+        return current_value, options
+    else:
+        return new_value, options
 
 
 ######################
@@ -1557,7 +1579,7 @@ def callback_update_ua_results_sector_dropdown_options(
     if result_type == "cost":
         options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "marginal_cost":
-        options = SECTOR_DROPDOWN_OPTIONS_SYSTEM_POWER_NG
+        options = SECTOR_DROPDOWN_OPTIONS_NO_ALL
     elif result_type == "emissions":
         options = SECTOR_DROPDOWN_OPTIONS_SYSTEM
     elif result_type == "new_capacity":
@@ -1598,21 +1620,51 @@ def callback_update_ua_results_sector_dropdown_options(
 
 @app.callback(
     [
+        Output(ids.UA2_RESULTS_TYPE_DROPDOWN, "options"),
+        Output(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+    ],
+    [
+        Input(ids.UA2_RESULTS_SECTOR_DROPDOWN, "value"),
+        Input(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+    ],
+)
+def callback_update_ua2_result_type_dropdown_options(
+    sector: str | None,
+    existing_value: str | None,
+) -> tuple[list[dict[str, str]], str]:
+    """Update UA2 result type dropdown options based on sector."""
+    options = get_ua2_result_types_dropdown_options(METADATA, sector)
+    
+    if not existing_value:
+        existing_value = "cost"
+    if existing_value not in [x["value"] for x in options]:
+        existing_value = "cost"
+    if any(x["value"] == existing_value for x in options):
+        value = existing_value
+    else:
+        value = options[0]["value"]
+        
+    return options, value
+
+
+@app.callback(
+    [
         Output(ids.UA2_RESULTS_DROPDOWN, "options"),
         Output(ids.UA2_RESULTS_DROPDOWN, "value"),
     ],
     [
         Input(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+        Input(ids.UA2_RESULTS_SECTOR_DROPDOWN, "value"),
         Input(ids.UA2_RESULTS_DROPDOWN, "value"),
     ],
 )
 def callback_update_ua2_result_summary_type_dropdown(
-    result_type: str, existing_value: str | None
+    result_type: str, sector: str | None, existing_value: str | None
 ) -> list[dict[str, str]]:
     logger.debug(
-        f"Updating UA2 (result summary) result dropdown options for: {result_type}"
+        f"Updating UA2 (result summary) result dropdown options for: {result_type} and sector: {sector}"
     )
-    options = get_ua2_result_dropdown_options(METADATA, result_type)
+    options = get_ua2_result_dropdown_options(METADATA, result_type, sector)
 
     if not existing_value:
         existing_value = "objective_cost"
@@ -1812,4 +1864,4 @@ if __name__ == "__main__":
     # Cloud Run sets the PORT environment variable.
     # If it's not there (like when running locally), it defaults to 8050
     port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True)

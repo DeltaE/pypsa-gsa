@@ -158,7 +158,7 @@ def _filter_ua_on_result_type(
 
     # marginal cost is an edge case when in the UA page we only want to show the average
     if result_type == "marginal_cost":
-        cols = [x for x in cols if x.endswith(("_elec", "_energy", "_gas"))]
+        cols = [x for x in cols if x.endswith(("_elec", "_energy", "_gas", "_ind", "_srvc", "_trn", "_res", "_com"))]
 
     if not cols:
         logger.debug(f"No columns found for result type {result_type}")
@@ -247,7 +247,7 @@ def get_ua_data_table(
         if col != "param"
     ]
 
-    df = df.reset_index()
+    df = df.reset_index().fillna(0)
 
     return dash_table.DataTable(
         data=df.to_dict("records"),
