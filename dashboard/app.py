@@ -44,6 +44,7 @@ from components.utils import (
     DEFAULT_DISCRETE_COLOR_SCALE,
     get_plotly_plotting_themes,
     get_ua2_result_dropdown_options,
+    get_ua2_result_types_dropdown_options,
 )
 from components.gsa import (
     GSA_RB_OPTIONS,
@@ -1199,6 +1200,8 @@ def callback_filter_ua2_on_result_type_and_name(
 ) -> list[dict[str, Any]]:
     if not data:
         return Serverside([])
+    if not result_name:
+        return Serverside([])
     df = pd.DataFrame(data)
     if df.empty:
         return Serverside([])
@@ -1616,21 +1619,51 @@ def callback_update_ua_results_sector_dropdown_options(
 
 @app.callback(
     [
+        Output(ids.UA2_RESULTS_TYPE_DROPDOWN, "options"),
+        Output(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+    ],
+    [
+        Input(ids.UA2_RESULTS_SECTOR_DROPDOWN, "value"),
+        Input(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+    ],
+)
+def callback_update_ua2_result_type_dropdown_options(
+    sector: str | None,
+    existing_value: str | None,
+) -> tuple[list[dict[str, str]], str]:
+    """Update UA2 result type dropdown options based on sector."""
+    options = get_ua2_result_types_dropdown_options(METADATA, sector)
+    
+    if not existing_value:
+        existing_value = "cost"
+    if existing_value not in [x["value"] for x in options]:
+        existing_value = "cost"
+    if any(x["value"] == existing_value for x in options):
+        value = existing_value
+    else:
+        value = options[0]["value"]
+        
+    return options, value
+
+
+@app.callback(
+    [
         Output(ids.UA2_RESULTS_DROPDOWN, "options"),
         Output(ids.UA2_RESULTS_DROPDOWN, "value"),
     ],
     [
         Input(ids.UA2_RESULTS_TYPE_DROPDOWN, "value"),
+        Input(ids.UA2_RESULTS_SECTOR_DROPDOWN, "value"),
         Input(ids.UA2_RESULTS_DROPDOWN, "value"),
     ],
 )
 def callback_update_ua2_result_summary_type_dropdown(
-    result_type: str, existing_value: str | None
+    result_type: str, sector: str | None, existing_value: str | None
 ) -> list[dict[str, str]]:
     logger.debug(
-        f"Updating UA2 (result summary) result dropdown options for: {result_type}"
+        f"Updating UA2 (result summary) result dropdown options for: {result_type} and sector: {sector}"
     )
-    options = get_ua2_result_dropdown_options(METADATA, result_type)
+    options = get_ua2_result_dropdown_options(METADATA, result_type, sector)
 
     if not existing_value:
         existing_value = "objective_cost"

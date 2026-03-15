@@ -253,20 +253,77 @@ def get_ua_results_dropdown_options(metadata: dict) -> list[dict[str, str]]:
     return options
 
 
+def get_ua2_result_types_dropdown_options(
+    metadata: dict, sector: str | None = None
+) -> list[dict[str, str]]:
+    """Get the UA2 result types dropdown options.
+
+    If a sector is provided, it returns the result types available for that sector.
+    Otherwise, it returns the overall result summary types.
+    """
+    if not sector:
+        options = []
+        for x, y in metadata["nice_names"]["results_summary"].items():
+            options.append({"label": y, "value": x})
+        return sorted(options, key=lambda x: x["label"])
+
+    available_results = set()
+    for value, data in metadata["results"].items():
+        if not data.get("visible", True):
+            continue
+        label2_val = data.get("label2", "")
+        is_service_match = sector == "service" and (
+            "Residential" in label2_val or "Commercial" in label2_val
+        )
+        is_direct_match = data.get("sector") == sector or data.get("sector2") == sector
+        if is_direct_match or is_service_match:
+            available_results.add(data.get("result", ""))
+
+    options = []
+    for x, y in metadata["nice_names"]["results"].items():
+        if x in available_results:
+            options.append({"label": y, "value": x})
+
+    if not options:
+        options = [{"label": "", "value": ""}]
+    return sorted(options, key=lambda x: x["label"])
+
+
 def get_ua2_result_dropdown_options(
-    metadata: dict, result_type: str
+    metadata: dict, result_type: str, sector: str | None = None
 ) -> list[dict[str, str]]:
     """Get the UA result summary type dropdown options."""
     options = []
     for value, data in metadata["results"].items():
         if not data.get("visible", True):
             continue
-        summary = data.get("summary", False)
+
         result_value = data.get("result", "")
-        if summary and result_value == result_type:
-            options.append({"label": data["label"], "value": value})
+        if result_value != result_type:
+            continue
+
+        if sector:
+            keywords = ["Residential", "Commercial"]
+            is_service_match = sector == "service" and any(
+                k in data.get("label2", "") for k in keywords
+            )
+            is_direct_match = (
+                data.get("sector") == sector or data.get("sector2") == sector
+            )
+            if is_direct_match or is_service_match:
+                label = (
+                    data.get("label2", data.get("label"))
+                    if is_service_match
+                    else data.get("label")
+                )
+                options.append({"label": label, "value": value})
+        else:
+            summary = data.get("summary", False)
+            if summary:
+                options.append({"label": data["label"], "value": value})
+
     if not options:
-        logger.debug(f"No results found for {result_type}")
+        logger.debug(f"No results found for {result_type} (sector: {sector})")
         options = [{"label": "", "value": ""}]
     return options
 
@@ -413,7 +470,7 @@ def _get_cr_run_samples(root: Path, state: str) -> list[str]:
 
     if not all(x in sample.columns for x in names):
         missing = [x for x in names if x not in sample.columns]
-        logger.error(f"Missing result from {state}: {missing}")
+        # logger.error(f"Missing result from {state}: {missing}")
         return pd.DataFrame()
 
     return sample[list(names)]
