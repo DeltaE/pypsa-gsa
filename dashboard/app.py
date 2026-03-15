@@ -101,7 +101,12 @@ logger = logging.getLogger(__name__)
 
 REDIS_URL = os.environ.get("REDIS_URL")
 
-print(REDIS_URL)
+if REDIS_URL:
+    logger.warning(
+        "Redis URL found, but not using Redis backend. "
+        "See https://github.com/DeltaE/pypsa-gsa/issues/72."
+    )
+    REDIS_URL = None
 
 if REDIS_URL:
     logger.info("Using Redis backend")
@@ -121,9 +126,7 @@ app = DashProxy(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
-    transforms=[
-        ServersideOutputTransform(backends=[backend], default_compression=True)
-    ],
+    transforms=[ServersideOutputTransform(backends=[backend])],
 )
 
 # Expose the Flask server for gunicorn
