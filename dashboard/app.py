@@ -630,6 +630,7 @@ def render_ua2_tab(
         Input(ids.CR_EMISSIONS, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
+        Input(ids.CR_SHOW_LINE_BEST_FIT_RB, "value"),
     ],
     State(ids.CR_RESULT_TYPE_DROPDOWN, "value"),
     prevent_initial_call=True,
@@ -640,6 +641,7 @@ def render_cr_tab(
     cr_emissions: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
+    show_line_best_fit: bool,
     cr_result_type: str,
 ) -> html.Div:
     if dash.ctx.triggered_id != ids.TABS and active_tab != ids.CR_TAB:
@@ -671,6 +673,7 @@ def render_cr_tab(
                 marginal=marginal_map[plotting_type],
                 result_type=cr_result_type,
                 emissions=cr_emissions if cr_result_type == "emissions" else None,
+                show_line_best_fit=show_line_best_fit,
             ),
         )
     else:
@@ -1634,7 +1637,7 @@ def callback_update_ua2_result_type_dropdown_options(
 ) -> tuple[list[dict[str, str]], str]:
     """Update UA2 result type dropdown options based on sector."""
     options = get_ua2_result_types_dropdown_options(METADATA, sector)
-    
+
     if not existing_value:
         existing_value = "cost"
     if existing_value not in [x["value"] for x in options]:
@@ -1643,7 +1646,7 @@ def callback_update_ua2_result_type_dropdown_options(
         value = existing_value
     else:
         value = options[0]["value"]
-        
+
     return options, value
 
 
@@ -1847,6 +1850,23 @@ def callback_update_cr_emissions(
 )
 def disable_cr_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
     if result_type == "emissions":
+        return [
+            {"label": "True", "value": True, "disabled": False},
+            {"label": "False", "value": False, "disabled": False},
+        ]
+    else:
+        return [
+            {"label": "True", "value": True, "disabled": True},
+            {"label": "False", "value": False, "disabled": True},
+        ]
+
+
+@app.callback(
+    Output(ids.CR_SHOW_LINE_BEST_FIT_RB, "options"),
+    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+)
+def disable_cr_show_line_best_fit_rb(plotting_type: str) -> list[dict[str, str]]:
+    if plotting_type != "data_table":
         return [
             {"label": "True", "value": True, "disabled": False},
             {"label": "False", "value": False, "disabled": False},

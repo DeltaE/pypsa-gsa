@@ -17,6 +17,7 @@ from .data import SECTOR_DROPDOWN_OPTIONS_NO_ALL, METADATA, RAW_GSA
 from . import ids as ids
 from .styles import DATA_TABLE_STYLE
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -36,6 +37,7 @@ def cr_options_block() -> html.Div:
             cr_parameter_dropdown(),
             cr_percentile_interval_slider(),
             cr_emission_target_rb(),
+            cr_show_line_best_fit(),
         ],
     )
 
@@ -145,6 +147,26 @@ def cr_emission_target_rb() -> html.Div:
     )
 
 
+def cr_show_line_best_fit() -> html.Div:
+    """Custom Result show line best fit rb component."""
+    return html.Div(
+        [
+            html.H6("Show Line Best Fit"),
+            dcc.RadioItems(
+                id=ids.CR_SHOW_LINE_BEST_FIT_RB,
+                options=[
+                    {"label": "True", "value": True},
+                    {"label": "False", "value": False},
+                ],
+                value=False,
+                inline=True,
+                className="me-3",
+                labelStyle={"marginRight": "20px"},
+            ),
+        ],
+    )
+
+
 def _read_serialized_cr_data(data: dict[str, Any]) -> pd.DataFrame:
     """Read serialized CR data."""
     return pd.DataFrame(data)
@@ -217,6 +239,7 @@ def get_cr_scatter_plot(
     nice_names: bool = True,
     marginal: str = None,
     emissions: list[dict[str, Any]] | None = None,
+    show_line_best_fit: bool = False,
     **kwargs,
 ) -> go.Figure:
     """UA scatter plot component."""
@@ -268,7 +291,9 @@ def get_cr_scatter_plot(
 
     # Prune data to avoid huge dash payloads
     if len(df_melted) > 1000:
-        logger.debug(f"Downsampling CR scatter plot from {len(df_melted)} to 1000 points")
+        logger.debug(
+            f"Downsampling CR scatter plot from {len(df_melted)} to 1000 points"
+        )
         df_melted = df_melted.sample(n=1000, random_state=42)
 
     color_theme = kwargs.get("template", DEFAULT_PLOTLY_THEME)
@@ -346,6 +371,30 @@ def get_cr_scatter_plot(
                     side="right",
                     showgrid=False,
                 ),
+            )
+
+    if show_line_best_fit:
+        logger.info("Adding line(s) of best fit to CR scatter plot")
+        for result_name in df_melted["result"].unique():
+            subset = df_melted[df_melted["result"] == result_name].dropna(
+                subset=[x_name, "value"]
+            )
+            if len(subset) < 2:
+                continue
+            x_vals = subset[x_name].values
+            y_vals = subset["value"].values
+            coeffs = np.polyfit(x_vals, y_vals, 1)
+            x_line = np.linspace(x_vals.min(), x_vals.max(), 200)
+            y_line = np.polyval(coeffs, x_line)
+            fig.add_trace(
+                go.Scatter(
+                    x=x_line,
+                    y=y_line,
+                    mode="lines",
+                    line=dict(color="black", width=2, dash="dash"),
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
             )
 
     if emissions:
