@@ -266,6 +266,67 @@ def correct_params(params: pd.DataFrame) -> pd.DataFrame:
     return params
 
 
+def scale_absolute_per_unit_params(
+    params: pd.DataFrame, root: Path, states: list[str]
+) -> pd.DataFrame:
+    """Rescale min_value/max_value for absolute per_unit parameters.
+
+    Parameters with ``range='absolute'`` and ``unit='per_unit'`` store
+    multiplicative factors in min_value/max_value rather than the real
+    physical quantities used in the model.  For each such parameter, the
+    actual reference (base) value is the constant value stored in
+    ``sample_scaled.csv`` (the sample files contain the scaled value which
+    equals ``factor × reference``; since the reference is the same for every
+    sample run, the first row is sufficient).
+
+    The function multiplies min_value/max_value by the reference and updates
+    the ``unit`` column from ``'per_unit'`` to ``'mwh'`` so the Input Data
+    bar chart displays the correct physical scale.
+    """
+    mask = (params["range"] == "absolute") & (params["unit"] == "per_unit")
+    if not mask.any():
+        return params
+
+    param_names = params.loc[mask, "name"].unique().tolist()
+    logger.debug(f"Rescaling absolute per_unit params: {param_names}")
+
+    # Collect one reference value per parameter from the first available state
+    reference_values: dict[str, float] = {}
+    for state in states:
+        sample_f = Path(root, "results", state.lower(), "ua", "sample_scaled.csv")
+        if not sample_f.exists():
+            continue
+        try:
+            # Read only the columns we need from the first row to avoid loading
+            # the entire (potentially large) file.
+            sample_row = pd.read_csv(sample_f, nrows=1)
+            for pname in param_names:
+                if pname not in reference_values and pname in sample_row.columns:
+                    reference_values[pname] = float(sample_row[pname].iloc[0])
+        except Exception as exc:
+            logger.warning(f"Could not read sample_scaled.csv for {state}: {exc}")
+
+    if not reference_values:
+        logger.warning("No reference values found for absolute per_unit rescaling.")
+        return params
+
+    # Apply the scaling
+    for pname, ref in reference_values.items():
+        param_mask = mask & (params["name"] == pname)
+        if not param_mask.any():
+            continue
+        params.loc[param_mask, "min_value"] = params.loc[param_mask, "min_value"] * ref
+        params.loc[param_mask, "max_value"] = params.loc[param_mask, "max_value"] * ref
+        params.loc[param_mask, "unit"] = "mwh"
+        logger.debug(
+            f"Rescaled {pname}: ref={ref:.3e}, "
+            f"new range=[{params.loc[param_mask, 'min_value'].iloc[0]:.3e}, "
+            f"{params.loc[param_mask, 'max_value'].iloc[0]:.3e}] mwh"
+        )
+
+    return params
+
+
 def get_ur_params_expanded(
     ua_params: dict[str, str],
     params: pd.DataFrame,
@@ -460,6 +521,7 @@ if __name__ == "__main__":
     params = pd.concat(dfs, axis=0)
     params = assign_parameter_filters(params)
     params = correct_params(params)
+    params = scale_absolute_per_unit_params(params, root, list(STATES.keys()))
     params = params[
         [
             "name",
