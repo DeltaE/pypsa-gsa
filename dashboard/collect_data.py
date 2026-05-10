@@ -396,19 +396,19 @@ def create_service_averages(root: Path, state: str) -> None:
             df_srvc.to_csv(srvc_f, index=False)
 
 
-def scale_rps_ces_for_plotting(sample_data: pd.DataFrame, root: Path, state: str) -> pd.DataFrame:
+def scale_rps_ces_for_plotting(
+    sample_data: pd.DataFrame, root: Path, state: str
+) -> pd.DataFrame:
     """Uses unscaled rps and ces for plotting (ie percentage instead of MWh)."""
-    unscaled_state_data = Path(
-        root, "results", state.lower(), "ua", "sample.csv"
-    )
-    
+    unscaled_state_data = Path(root, "results", state.lower(), "ua", "sample.csv")
+
     rps_file = Path(root, "dashboard", "data", "locked", "rps.csv")
     if rps_file.exists():
         rps_df = pd.read_csv(rps_file)
         rps_pct_map = rps_df.set_index("region")["pct"].to_dict()
     else:
         rps_pct_map = {}
-        
+
     if unscaled_state_data.exists():
         unscaled_sample = pd.read_csv(unscaled_state_data)
         for col in unscaled_sample.columns:
@@ -420,7 +420,28 @@ def scale_rps_ces_for_plotting(sample_data: pd.DataFrame, root: Path, state: str
                         sample_data[col] = val * pct * 100
                     else:
                         sample_data[col] = val * 100
-                        
+    return sample_data
+
+
+def correct_export_costs_direction_for_plotting(
+    sample_data: pd.DataFrame,
+) -> pd.DataFrame:
+    """Reverses the order of export cost samples for plotting.
+
+    Just a visual fix for exports being represented as negative
+    values in the model.
+    """
+    for param in ["ng_marginal_cost_export", "elec_export_price"]:
+        if param in sample_data.columns:
+            temp = (
+                sample_data[param]
+                .reset_index()
+                .rename(columns={"index": "run", param: "value"})
+            )
+            temp = temp.sort_values(by="value")
+            temp["value"] = temp["value"].values[::-1]
+            temp = temp.sort_values(by="run")
+            sample_data[param] = temp["value"].values
     return sample_data
 
 
@@ -611,6 +632,7 @@ if __name__ == "__main__":
         else:
             sample_data = pd.read_csv(state_data)
             sample_data = scale_rps_ces_for_plotting(sample_data, root, state)
+            sample_data = correct_export_costs_direction_for_plotting(sample_data)
 
             sample_data["run"] = sample_data.index
             sample_data["state"] = state.upper()
