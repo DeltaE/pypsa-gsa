@@ -476,10 +476,12 @@ def _get_cr_run_samples(root: Path, state: str) -> list[str]:
     sample = sample[list(names)]
 
     # Export link marginal costs are negative in the reference network, so
-    # ng_exports values in sample_scaled.csv are also negative (ref * sample).
-    # Just a plotting fix, the underlying network has correct negative costs.
-    if "ng_exports" in sample.columns:
-        sample["ng_exports"] = sample["ng_exports"] * (-1)
+    # export values in sample_scaled.csv are also negative (ref * sample).
+    # This is just a plotting fix, the underlying network has correct negative costs.
+    if "ng_marginal_cost_export" in sample.columns:
+        sample["ng_marginal_cost_export"] = sample["ng_marginal_cost_export"] * (-1)
+    if "elec_export_price" in sample.columns:
+        sample["elec_export_price"] = sample["elec_export_price"] * (-1)
 
     return sample
 

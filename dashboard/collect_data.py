@@ -396,6 +396,34 @@ def create_service_averages(root: Path, state: str) -> None:
             df_srvc.to_csv(srvc_f, index=False)
 
 
+def scale_rps_ces_for_plotting(sample_data: pd.DataFrame, root: Path, state: str) -> pd.DataFrame:
+    """Uses unscaled rps and ces for plotting (ie percentage instead of MWh)."""
+    unscaled_state_data = Path(
+        root, "results", state.lower(), "ua", "sample.csv"
+    )
+    
+    rps_file = Path(root, "dashboard", "data", "locked", "rps.csv")
+    if rps_file.exists():
+        rps_df = pd.read_csv(rps_file)
+        rps_pct_map = rps_df.set_index("region")["pct"].to_dict()
+    else:
+        rps_pct_map = {}
+        
+    if unscaled_state_data.exists():
+        unscaled_sample = pd.read_csv(unscaled_state_data)
+        for col in unscaled_sample.columns:
+            if "rps" in col.lower() or "ces" in col.lower():
+                if col in sample_data.columns:
+                    val = unscaled_sample[col]
+                    if "rps" in col.lower() and state.upper() in rps_pct_map:
+                        pct = rps_pct_map[state.upper()]
+                        sample_data[col] = val * pct * 100
+                    else:
+                        sample_data[col] = val * 100
+                        
+    return sample_data
+
+
 if __name__ == "__main__":
     # ensure metadata exists for all params/results
     metadata = json.load(
@@ -582,6 +610,8 @@ if __name__ == "__main__":
             continue
         else:
             sample_data = pd.read_csv(state_data)
+            sample_data = scale_rps_ces_for_plotting(sample_data, root, state)
+
             sample_data["run"] = sample_data.index
             sample_data["state"] = state.upper()
             sample_data = sample_data.set_index(["run", "state"])
