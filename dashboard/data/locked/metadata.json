@@ -4490,7 +4490,7 @@
               "sector": "power",
               "param": "rps",
               "visible": true,
-              "unit": "mwh"
+              "unit": "%"
             },
             "ces": {
               "label": "Clean Energy Standard",
