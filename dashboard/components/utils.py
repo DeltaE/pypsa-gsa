@@ -473,7 +473,17 @@ def _get_cr_run_samples(root: Path, state: str) -> list[str]:
         # logger.error(f"Missing result from {state}: {missing}")
         return pd.DataFrame()
 
-    return sample[list(names)]
+    sample = sample[list(names)]
+
+    # Export link marginal costs are negative in the reference network, so
+    # export values in sample_scaled.csv are also negative (ref * sample).
+    # This is just a plotting fix, the underlying network has correct negative costs.
+    if "ng_marginal_cost_export" in sample.columns:
+        sample["ng_marginal_cost_export"] = sample["ng_marginal_cost_export"] * (-1)
+    if "elec_export_price" in sample.columns:
+        sample["elec_export_price"] = sample["elec_export_price"] * (-1)
+
+    return sample
 
 
 def get_continuous_color_scale_options() -> list[str]:

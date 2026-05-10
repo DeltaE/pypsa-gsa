@@ -345,8 +345,8 @@ def _apply_static_sample(
 
 
 def _apply_dynamic_sample(
-    n: pypsa.Network, c: str, car: str, attr: str, value: int | float
-) -> tuple[float, float]:
+    n: pypsa.Network, name: str, c: str, car: str, attr: str, value: int | float
+) -> dict[str, float]:
     """Applies a time dependent value to the network.
 
     Returns mean value applied and difference from mean ref value.
@@ -358,6 +358,14 @@ def _apply_dynamic_sample(
     name_to_carrier = df_static.carrier.to_dict()
     name_carrier_map = {x: name_to_carrier[x] for x in df_t.columns}
     names = [x for x, y in name_carrier_map.items() if y == car]
+
+    # else samples for plotting cancel out
+    if name == "ng_marginal_cost_import":
+        trade_links = get_ng_trade_links(n, "imports")
+        names = [x for x in names if x in trade_links]
+    elif name == "ng_marginal_cost_export":
+        trade_links = get_ng_trade_links(n, "exports")
+        names = [x for x in names if x in trade_links]
 
     # some edge cases where renewable profiles are not applied to network
     if not names:
@@ -885,7 +893,7 @@ def apply_sample(
                 raise ValueError(f"{attr} for {car} can not be absolute")
             if car == "res-elec" and attr == "p_set":
                 pass
-            sampled = _apply_dynamic_sample(n, c, car, attr, value)
+            sampled = _apply_dynamic_sample(n, str(name), c, car, attr, value)
         # if the value is applied to a time-independent value
         else:
             sampled = _apply_static_sample(n, c, car, attr, value, absolute)
