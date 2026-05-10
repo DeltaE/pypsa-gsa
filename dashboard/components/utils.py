@@ -479,7 +479,7 @@ def _get_cr_run_samples(root: Path, state: str) -> list[str]:
     # ng_exports values in sample_scaled.csv are also negative (ref * sample).
     # Just a plotting fix, the underlying network has correct negative costs.
     if "ng_exports" in sample.columns:
-        sample["ng_exports"] = -sample["ng_exports"]
+        sample["ng_exports"] = sample["ng_exports"] * (-1)
 
     return sample
 
