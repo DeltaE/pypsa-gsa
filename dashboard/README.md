@@ -11,7 +11,7 @@ gcloud auth login
 Set the project ID: 
 
 ```bash 
-gcloud config set project [PROJECT_ID]
+gcloud config set project pypsa-usa-489820
 ```
 
 Configure docker authentication:
@@ -34,13 +34,13 @@ Create a repository in artifact registry:
 Build and tag the image:
 
 ```bash 
-docker build . --tag us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa/app:v[VERSION]
+docker build . --tag us-central1-docker.pkg.dev/pypsa-usa-489820/pypsa-usa/app:v[VERSION]
 ```
 
 Push to the cloud: 
 
 ```bash 
-docker push us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa/app:v[VERSION]
+docker push us-central1-docker.pkg.dev/pypsa-usa-489820/pypsa-usa/app:v[VERSION]
 ```
 
 Deploy to Cloud Run. Cached data can be stored via a Redis instance. Do not use a Google Cloud Storage bucket as the caching exceeds the 1 file write per second and can lead to crashes. 
@@ -49,7 +49,7 @@ Set the `REDIS_URL` environment variable to your Redis connection string (ie. st
 
 ```bash 
 gcloud run deploy dash-service \
-    --image us-central1-docker.pkg.dev/[PROJECT_ID]/pypsa-usa/app:v[VERSION] \
+    --image us-central1-docker.pkg.dev/pypsa-usa-489820/pypsa-usa/app:v[VERSION] \
     --platform managed \
     --region us-central1 \
     --allow-unauthenticated \
