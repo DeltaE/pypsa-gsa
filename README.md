@@ -4,8 +4,8 @@
 [![Anaconda](https://img.shields.io/badge/Anaconda-%2344A833.svg?style=for-the-badge&logo=anaconda&logoColor=white)](https://github.com/mamba-org/mamba)
 [![License](https://img.shields.io/pypi/l/pypsa.svg)](LICENSE)
 
-<img width="191" height="20" alt="image" src="https://github.com/user-attachments/assets/32f7e559-0ab5-4d8a-8e9b-61b5b08a7221" />
-
+[![Zenodo Data](https://zenodo.org/badge/DOI/10.5281/zenodo.20348340.svg)](https://doi.org/10.5281/zenodo.20348340)
+[![Zenodo Code](https://zenodo.org/badge/DOI/10.5281/zenodo.20349002.svg)](https://doi.org/10.5281/zenodo.20349002)
 
 # PyPSA-USA: Near Term Emission Targets
 Uncertainty Analysis Workflow for PyPSA-USA
