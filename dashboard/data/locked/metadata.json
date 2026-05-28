@@ -362,7 +362,7 @@
                 "result": "emissions",
                 "visible": true,
                 "summary": true,
-                "unit": "T CO2e"
+                "unit": "MMT CO2e"
             },
             "carbon_ch4": {
                 "label": "CH4",
@@ -371,7 +371,7 @@
                 "result": "emissions",
                 "visible": true,
                 "summary": true,
-                "unit": "T CO2e"
+                "unit": "MMT CO2e"
             },
             "carbon_total": {
                 "label": "Total",
@@ -380,7 +380,7 @@
                 "result": "emissions",
                 "visible": true,
                 "summary": true,
-                "unit": "T CO2e"
+                "unit": "MMT CO2e"
             },
             "load_shedding": {
                 "label": "Load Shed",
