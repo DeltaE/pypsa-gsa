@@ -14,7 +14,7 @@ Uncertainty Analysis Workflow for PyPSA-USA
 
 ## Intro
 
-This repo contains the code used for the paper "xxx". Broadly, the workflow allows users to run a uncertainty analysis over [PyPSA-USA](https://github.com/PyPSA/pypsa-usa) networks. Included is 1. Uncertainty Parameterization. 2. Global Sensitivity Analysis (GSA). 3. Uncertainty Analysis (UA). This readme walks through how to configure and run the workflow. 
+This repo contains the code used for the paper "[Near Term Emission Targets Need Immediate Attention in the USA](https://arxiv.org/abs/2607.01471)". Broadly, the workflow allows users to run a uncertainty analysis over [PyPSA-USA](https://github.com/PyPSA/pypsa-usa) networks. Included is 1. Uncertainty Parameterization. 2. Global Sensitivity Analysis (GSA). 3. Uncertainty Analysis (UA). This readme walks through how to configure and run the workflow. 
 
 ## Install 
 
