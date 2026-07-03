@@ -7,6 +7,8 @@
 [![Zenodo Data](https://zenodo.org/badge/DOI/10.5281/zenodo.20348340.svg)](https://doi.org/10.5281/zenodo.20348340)
 [![Zenodo Code](https://zenodo.org/badge/DOI/10.5281/zenodo.20349002.svg)](https://doi.org/10.5281/zenodo.20349002)
 
+[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg)](https://arxiv.org/abs/2607.01471)
+
 # PyPSA-USA: Near Term Emission Targets
 Uncertainty Analysis Workflow for PyPSA-USA
 
