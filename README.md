@@ -18,7 +18,7 @@ This repo contains the code used for the paper "[Near Term Emission Targets Need
 
 ## Install 
 
-Installation requires uses to clone the GitHub repository and install required dependencies. 
+Installation requires users to clone the GitHub repository and install required dependencies. 
 
 ### Clone the Repository 
 
