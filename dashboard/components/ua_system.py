@@ -19,6 +19,7 @@ from .utils import (
     DEFAULT_HEIGHT,
     DEFAULT_LEGEND,
     DEFAULT_PLOTLY_THEME,
+    add_state_labels_to_figure,
 )
 from .styles import DATA_TABLE_STYLE
 import logging
@@ -34,6 +35,27 @@ def ua2_options_block() -> html.Div:
             ua2_result_type_dropdown(),
             ua2_result_dropdown(),
             ua2_percentile_interval_slider(),
+            ua2_hex_label_rb(),
+        ],
+    )
+
+
+def ua2_hex_label_rb() -> html.Div:
+    """UA2 hex map label toggle component."""
+    return html.Div(
+        [
+            html.H6("Show Hex Labels"),
+            dcc.RadioItems(
+                id=ids.UA2_HEX_LABEL_RB,
+                options=[
+                    {"label": "True", "value": True, "disabled": True},
+                    {"label": "False", "value": False, "disabled": True},
+                ],
+                value=True,
+                inline=True,
+                className="me-3",
+                labelStyle={"marginRight": "20px"},
+            ),
         ],
     )
 
@@ -355,6 +377,10 @@ def _get_ua2_map_figure(
         ),
     )
 
+    add_labels = kwargs.get("show_labels", True)
+    if add_labels:
+        add_state_labels_to_figure(fig, gdf)
+
     return fig
 
 
@@ -380,6 +406,7 @@ def get_ua2_map(
     scale = kwargs.get("scale", 5.9)
     lat = kwargs.get("lat", 44)
     lon = kwargs.get("lon", -100)
+    show_labels = kwargs.get("show_labels", True)
 
     # for extracting ylabels
     metadata = kwargs.get("metadata", {})
@@ -395,6 +422,7 @@ def get_ua2_map(
             lat=lat,
             lon=lon,
             metadata=metadata,
+            show_labels=show_labels,
         ),
         # style={"height": "400px"},
     )

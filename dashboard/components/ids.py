@@ -51,6 +51,8 @@ GSA_PARAM_SELECTION_RB = "gsa-param-selection-rb"
 UA_EMISSION_TARGET_RB = "ua-emission-target-rb"
 CR_EMISSION_TARGET_RB = "cr-emission-target-rb"
 CR_SHOW_LINE_BEST_FIT_RB = "cr-show-line-best-fit-rb"
+GSA_HEX_LABEL_RB = "gsa-hex-label-rb"
+UA2_HEX_LABEL_RB = "ua2-hex-label-rb"
 
 # sliders
 GSA_PARAMS_SLIDER = "gsa-range-slider"

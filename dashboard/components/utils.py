@@ -2,6 +2,7 @@
 
 from typing import Any
 import pandas as pd
+import geopandas as gpd
 from pathlib import Path
 import json
 import plotly.colors as pc
@@ -518,3 +519,29 @@ def get_emission_limits(emissions: list[dict[str, Any]]) -> tuple[float, float]:
         emissions_2030 += data["2030_mmt"]
 
     return emissions_2005, emissions_2030
+
+
+def add_state_labels_to_figure(
+    fig: "plotly.graph_objects.Figure",
+    gdf: gpd.GeoDataFrame,
+) -> "plotly.graph_objects.Figure":
+    """Add two-letter state ID labels to each hexagon on a choropleth figure.
+
+    Computes the centroid of each hex polygon in ``gdf`` and overlays a
+    ``Scattergeo`` text trace with the STATE_ID value.
+    """
+    import plotly.graph_objects as go
+
+    centroids = gdf.geometry.centroid
+    fig.add_trace(
+        go.Scattergeo(
+            lon=centroids.x.tolist(),
+            lat=centroids.y.tolist(),
+            text=gdf["STATE_ID"].tolist(),
+            mode="text",
+            textfont=dict(size=10, color="black", family="Arial Black"),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+    return fig
