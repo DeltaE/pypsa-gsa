@@ -6,6 +6,7 @@ from .utils import (
     DEFAULT_CONTINOUS_COLOR_SCALE,
     DEFAULT_DISCRETE_COLOR_SCALE,
     DEFAULT_PLOTLY_THEME,
+    add_state_labels_to_figure,
 )
 from .data import GSA_RESULT_OPTIONS, GSA_PARM_OPTIONS, GSA_PARM_NICE_NAMES, GSA_RESULT_NICE_NAMES
 from . import ids as ids
@@ -80,6 +81,27 @@ def gsa_options_block() -> html.Div:
                 is_open=True,
             ),
             gsa_results_dropdown(),
+            gsa_hex_label_rb(),
+        ],
+    )
+
+
+def gsa_hex_label_rb() -> html.Div:
+    """GSA hex map label toggle component."""
+    return html.Div(
+        [
+            html.H6("Show Hex Labels"),
+            dcc.RadioItems(
+                id=ids.GSA_HEX_LABEL_RB,
+                options=[
+                    {"label": "True", "value": True, "disabled": True},
+                    {"label": "False", "value": False, "disabled": True},
+                ],
+                value=True,
+                inline=True,
+                className="me-3",
+                labelStyle={"marginRight": "20px"},
+            ),
         ],
     )
 
@@ -559,6 +581,10 @@ def _get_gsa_map_figure(
         ),
     )
 
+    add_labels = kwargs.get("show_labels", True)
+    if add_labels:
+        add_state_labels_to_figure(fig, gdf)
+
     return fig
 
 
@@ -604,6 +630,7 @@ def get_gsa_map(
     scale = kwargs.get("scale", 5.9)
     lat = kwargs.get("lat", 44)
     lon = kwargs.get("lon", -100)
+    show_labels = kwargs.get("show_labels", True)
 
     if num_maps == 1:
         return dcc.Graph(
@@ -617,6 +644,7 @@ def get_gsa_map(
                 scale=scale,
                 lat=lat,
                 lon=lon,
+                show_labels=show_labels,
             ),
             style={"height": "400px"},
         )
@@ -645,6 +673,7 @@ def get_gsa_map(
                                 scale=scale,
                                 lat=lat,
                                 lon=lon,
+                                show_labels=show_labels,
                             ),
                             style={
                                 # "height": "300px",

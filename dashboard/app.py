@@ -412,6 +412,7 @@ def render_data_tab(
         Input(ids.GSA_MAP_DATA, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
+        Input(ids.GSA_HEX_LABEL_RB, "value"),
     ],
 )
 def render_sa_tab(
@@ -421,6 +422,7 @@ def render_sa_tab(
     gsa_map_data: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
+    show_hex_labels: bool,
 ) -> html.Div:
     if dash.ctx.triggered_id != ids.TABS and active_tab != ids.SA_TAB:
         return dash.no_update
@@ -456,6 +458,7 @@ def render_sa_tab(
             scale=5.9,
             lat=44,
             lon=-100,
+            show_labels=show_hex_labels,
         )
     else:
         return html.Div([dbc.Alert("No plotting type selected", color="info")])
@@ -554,6 +557,7 @@ def render_ua_tab(
         Input(ids.UA2_MAP_DATA, "data"),
         Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
         Input(ids.COLOR_DROPDOWN, "value"),
+        Input(ids.UA2_HEX_LABEL_RB, "value"),
     ],
     prevent_initial_call=True,
 )
@@ -563,6 +567,7 @@ def render_ua2_tab(
     ua2_map_data: list[dict[str, Any]] | None,
     plotting_type: str,
     color: str,
+    show_hex_labels: bool,
 ) -> html.Div:
     if dash.ctx.triggered_id != ids.TABS and active_tab != ids.UA2_TAB:
         return dash.no_update
@@ -590,6 +595,7 @@ def render_ua2_tab(
             lat=44,
             lon=-100,
             metadata=METADATA,
+            show_labels=show_hex_labels,
         )
     elif plotting_type == "boxplot":
         view = dcc.Graph(
@@ -1005,6 +1011,36 @@ def disable_ua_emissions_target_rb(result_type: str) -> list[dict[str, str]]:
             {"label": "True", "value": True, "disabled": True},
             {"label": "False", "value": False, "disabled": True},
         ]
+
+
+@app.callback(
+    Output(ids.GSA_HEX_LABEL_RB, "options"),
+    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+)
+def disable_gsa_hex_label_rb(
+    plotting_type: str,
+) -> list[dict[str, str]]:
+    """Enable the GSA hex label toggle only when a hex map is selected."""
+    is_hex = plotting_type == "map_hex"
+    return [
+        {"label": "True", "value": True, "disabled": not is_hex},
+        {"label": "False", "value": False, "disabled": not is_hex},
+    ]
+
+
+@app.callback(
+    Output(ids.UA2_HEX_LABEL_RB, "options"),
+    Input(ids.PLOTTING_TYPE_DROPDOWN, "value"),
+)
+def disable_ua2_hex_label_rb(
+    plotting_type: str,
+) -> list[dict[str, str]]:
+    """Enable the UA2 hex label toggle only when a hex map is selected."""
+    is_hex = plotting_type == "map_hex"
+    return [
+        {"label": "True", "value": True, "disabled": not is_hex},
+        {"label": "False", "value": False, "disabled": not is_hex},
+    ]
 
 
 #####
